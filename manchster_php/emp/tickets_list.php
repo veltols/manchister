@@ -1,0 +1,313 @@
+<?php
+$page_title = $page_description = $page_keywords = $page_author = lang("Tickets_List");
+
+$pageDataController = $POINTER . "get_tickets_list";
+$addNewTicketController = $POINTER . "add_tickets_list";
+$updateTicketController = $POINTER . "update_tickets_list";
+
+$pageId = 55006;
+$subPageId = 200;
+include("app/assets.php");
+
+$thsStt = isset($_GET['stt']) ? (int) test_inputs($_GET['stt']) : 0;
+if ($thsStt == 0) {
+	//all
+	$subPageId = 200;
+	$extra_id = 0;
+} else if ($thsStt == 1) {
+	//open
+	$subPageId = 300;
+	$extra_id = 1;
+} else if ($thsStt == 2) {
+	//in progress
+	$subPageId = 400;
+	$extra_id = 2;
+} else if ($thsStt == 3) {
+	//Closed
+	$subPageId = 500;
+	$extra_id = 3;
+}
+
+
+?>
+
+
+
+<div class="pageHeader">
+	<div class="pageNav">
+		<?php
+		include('tickets_list_nav.php');
+		?>
+	</div>
+
+	<div class="pageOptions">
+		<a class="pageLink pageLinkWithTxt" onclick="showModal('newTicketModal');">
+			<div class="linkTxt"><?= lang("new_ticket"); ?></div>
+		</a>
+	</div>
+</div>
+
+
+
+
+
+
+<div class="tableContainer" id="appsListDtd">
+	<div class="table">
+		<div class="tableHeader">
+			<div class="tr">
+				<div class="th"><?= lang("REF"); ?></div>
+				<div class="th"><?= lang("Description"); ?></div>
+				<div class="th"><?= lang("category"); ?></div>
+				<div class="th"><?= lang("last_updated"); ?></div>
+				<div class="th"><?= lang("updated_by"); ?></div>
+				<div class="th"><?= lang("Priority"); ?></div>
+				<div class="th"><?= lang("Status"); ?></div>
+				<div class="th"><?= lang("Options"); ?></div>
+			</div>
+		</div>
+		<div class="tableBody" id="listData"></div>
+	</div>
+</div>
+
+
+
+
+<script>
+	async function bindData(data) {
+
+		$('#listData').html('<?= lang(''); ?>');
+		var listCount = 0;
+
+		for (i = 0; i < data.length; i++) {
+			var btns = '';
+			btns += '<a href="<?= $POINTER; ?>tickets/view/?ticket_id=' + data[i]["ticket_id"] + '" class="dataActionBtn hasTooltip">' +
+				'	<i class="fa-regular fa-eye"></i>' +
+				'	<div class="tooltip"><?= lang("Details"); ?></div>' +
+				'</a>';
+
+
+			//btns= '---';
+			var dt = '<div class="tr levelRow" id="ticket-' + data[i]["ticket_id"] + '">' +
+				'	<div class="td">' + data[i]["ticket_ref"] + '</div>' +
+				'	<div class="td">' + data[i]["ticket_description"] + '</div>' +
+				'	<div class="td">' + data[i]["category_name"] + '</div>' +
+				'	<div class="td">' + data[i]["last_updated"] + '</div>' +
+				'	<div class="td">' + data[i]["updated_by"] + '</div>' +
+				'	<div class="td"> <span style="min-width:1em;display: block;background:#' + data[i]["priority_color"] + ';color:#FFF;padding: 0.5em;font-weight: bold;text-transform: uppercase;">' + data[i]["ticket_priority"] + '</span></div>' +
+				'	<div class="td"> <span style="min-width:1em;display: block;background:#' + data[i]["status_color"] + ';color:#FFF;padding: 0.5em;font-weight: bold;text-transform: uppercase;">' + data[i]["ticket_status"] + '</span></div>' +
+				'	<div class="td ">' +
+				'		<div class="tblBtnsGroup">' +
+				btns +
+				'		</div>' +
+				'	</div>' +
+				'</div>';
+
+			$('#listData').append(dt);
+			listCount++;
+		}
+
+		if (listCount == 0) {
+			$('#listData').html('<div class="tr"><div class="td"><br><?= lang("No_records_found"); ?><br><div class="tblBtnsGroup">' +
+				'<a onclick="addNewTicket();" class="tableBtn tableBtnInfo">Add New Ticket</a>' +
+				'</div><br></div></div>');
+		}
+
+	}
+
+	function addNewTicket() {
+		showModal('newTicketModal');
+	}
+
+</script>
+
+
+
+<?php
+include("../public/app/footer_records.php");
+?>
+
+
+
+<?php
+include("app/footer.php");
+?>
+
+
+
+
+<!-- Modals START -->
+<div class="modal" id="newTicketModal">
+	<div class="modalHeader">
+		<h1><?= lang("Add_New_Ticket", "AAR"); ?></h1>
+		<i onclick="closeModal();" class="fa-solid fa-times"></i>
+	</div>
+	<div class="modalBody">
+		<div class="row pageForm" id="newTicketForm">
+
+
+
+			<!-- ELEMENT START -->
+			<div class="col-1">
+				<div class="formElement">
+					<label><?= lang("added_by", "AAR"); ?></label>
+					<select class="inputer new-added_by" data-name="added_by" data-den="0" data-req="1"
+						data-type="text">
+						<option value="0" selected><?= lang(data: "Please_Select", trans: "AAR"); ?></option>
+						<?php
+						$myDeptId = 0;
+						$qu_employees_list_sel = "SELECT `department_id` FROM  `employees_list` WHERE `employee_id` = $USER_ID";
+						$qu_employees_list_EXE = mysqli_query($KONN, $qu_employees_list_sel);
+						if (mysqli_num_rows($qu_employees_list_EXE)) {
+							$employees_list_DATA = mysqli_fetch_array($qu_employees_list_EXE);
+							$myDeptId = (int) $employees_list_DATA[0];
+						}
+
+
+						$qu_SEL_sel = "SELECT `employee_id`, CONCAT(`first_name`, ' ', `last_name`) AS `namer` FROM  `employees_list` WHERE  ( (`department_id` = $myDeptId) AND (`is_deleted` = 0) AND (`is_hidden` = 0)) ORDER BY `employee_id` ASC";
+						$qu_SEL_EXE = mysqli_query($KONN, $qu_SEL_sel);
+						if (mysqli_num_rows($qu_SEL_EXE)) {
+							while ($SEL_REC = mysqli_fetch_assoc($qu_SEL_EXE)) {
+								$emp_id = (int) $SEL_REC['employee_id'];
+								$namer = $SEL_REC['namer'];
+								?>
+								<option value="<?= $emp_id; ?>"><?= $namer; ?></option>
+								<?php
+							}
+						}
+						?>
+					</select>
+				</div>
+			</div>
+			<!-- ELEMENT END -->
+			<script>
+				$('.new-added_by').val(<?= $USER_ID; ?>);
+			</script>
+
+			<!-- ELEMENT START -->
+			<div class="col-2">
+				<div class="formElement">
+					<label><?= lang("Category", "AAR"); ?></label>
+					<select class="inputer" data-name="category_id" data-den="0" data-req="1" data-type="text">
+						<option value="0" selected><?= lang(data: "Please_Select", trans: "AAR"); ?></option>
+						<?php
+						$qu_SEL_sel = "SELECT `category_id`, `category_name` FROM  `support_tickets_list_cats` ORDER BY `category_id` ASC";
+						$qu_SEL_EXE = mysqli_query($KONN, $qu_SEL_sel);
+						if (mysqli_num_rows($qu_SEL_EXE)) {
+							while ($SEL_REC = mysqli_fetch_assoc($qu_SEL_EXE)) {
+								$category_id = (int) $SEL_REC['category_id'];
+								$category_name = $SEL_REC['category_name'];
+								?>
+								<option value="<?= $category_id; ?>"><?= $category_name; ?></option>
+								<?php
+							}
+						}
+						?>
+					</select>
+				</div>
+			</div>
+			<!-- ELEMENT END -->
+
+			<!-- ELEMENT START -->
+			<div class="col-2">
+				<div class="formElement">
+					<label><?= lang("Priority", "AAR"); ?></label>
+					<select class="inputer" data-name="priority_id" data-den="0" data-req="1" data-type="text">
+						<option value="0" selected><?= lang(data: "Please_Select", trans: "AAR"); ?></option>
+						<?php
+						$qu_SEL_sel = "SELECT `priority_id`, `priority_name` FROM  `sys_list_priorities` ORDER BY `priority_id` ASC";
+						$qu_SEL_EXE = mysqli_query($KONN, $qu_SEL_sel);
+						if (mysqli_num_rows($qu_SEL_EXE)) {
+							while ($SEL_REC = mysqli_fetch_assoc($qu_SEL_EXE)) {
+								$priority_id = (int) $SEL_REC['priority_id'];
+								$priority_name = $SEL_REC['priority_name'];
+								?>
+								<option value="<?= $priority_id; ?>"><?= $priority_name; ?></option>
+
+								<?php
+							}
+						}
+						?>
+					</select>
+				</div>
+			</div>
+			<!-- ELEMENT END -->
+
+
+			<!-- ELEMENT START -->
+			<div class="col-1">
+				<div class="formElement">
+					<label><?= lang("ticket_subject", "AAR"); ?></label>
+					<input type="text" class="inputer" data-name="ticket_subject" data-den="" data-req="1"
+						data-type="text">
+				</div>
+			</div>
+			<!-- ELEMENT END -->
+
+
+			<!-- ELEMENT START -->
+			<div class="col-1">
+				<div class="formElement">
+					<label><?= lang("ticket_description", "AAR"); ?></label>
+					<textarea type="text" class="inputer" data-name="ticket_description" data-den="" data-req="1"
+						data-type="text" rows="5"></textarea>
+				</div>
+			</div>
+			<!-- ELEMENT END -->
+
+
+			<!-- ELEMENT START -->
+			<div class="col-1">
+				<div class="formElement">
+					<label><?= lang("Attachment", "AAR"); ?></label>
+					<input type="file" class="inputer" data-name="ticket_attachment" data-den="" data-req="0"
+						data-type="file">
+				</div>
+			</div>
+			<!-- ELEMENT END -->
+
+
+
+
+
+
+			<!-- ELEMENT START -->
+			<div class="col-1">
+				<div class="formElement"><br><br></div>
+			</div>
+			<div class="col-2">
+				<div class="formElement">
+					<button class="submitBtn" type="button"
+						onclick="submitForm('newTicketForm', '<?= $addNewTicketController; ?>');"><?= lang("Create_Ticket", "AAR"); ?></button>
+				</div>
+			</div>
+			<!-- ELEMENT END -->
+
+			<!-- ELEMENT START -->
+			<div class="col-2">
+				<div class="formElement">
+					<button class="cancelBtn" type="button"
+						onclick="closeModal();"><?= lang("Cancel", "AAR"); ?></button>
+				</div>
+			</div>
+			<!-- ELEMENT END -->
+
+		</div>
+	</div>
+</div>
+<!-- Modals END -->
+
+
+
+
+
+
+<script>
+	function afterFormSubmission() {
+		closeModal();
+		goToFirstPage();
+		setTimeout(function () {
+			window.location.reload();
+		}, 400);
+	}
+</script>

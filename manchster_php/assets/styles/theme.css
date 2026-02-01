@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Aref+Ruqaa&display=swap');
+
+/* Main Colors */
+:root {
+	--primary: #075295;
+}
+:root {
+	--secondary: #4e7499;
+}
+
+:root { --tertiary  : #c5e2f4; }
+:root { --grey      : #efefef; }
+:root { --textColor : #38211b; }
+:root { --darkWhite : #f6f5f5; }
+
+:root { --default : #2bbbad; }
+:root { --info    : #0099CC; }
+:root { --success : #00C851; }
+:root { --warning : #FF8800; }
+:root { --danger  : #CC0000; }
+/* Sub Colors */
+:root { --black    : #000000; }
+:root { --white    : #FFFFFF; }
+:root { --grey     : #dae2e4; }
+
+
+body {
+	user-select: none;
+	user-select: none;
+	-moz-user-select: none;
+}

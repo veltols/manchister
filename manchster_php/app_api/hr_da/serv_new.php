@@ -1,0 +1,114 @@
+<?php
+
+$IAM_ARRAY;
+
+$RES = false;
+$idder = "";
+$token_value = $falseToken;
+if ($IS_LOGGED == true && $USER_ID != 0) {
+
+
+
+	if (
+		isset($_POST['da_warning_id']) &&
+		isset($_POST['da_remark']) &&
+		isset($_POST['da_type_id']) &&
+		isset($_POST['employee_id'])
+	) {
+
+
+
+		//todo
+		//authorize inputs
+		$da_id = 0;
+		$da_warning_id = (int) test_inputs($_POST['da_warning_id']);
+		$da_remark = "" . test_inputs($_POST['da_remark']);
+		$da_type_id = (int) test_inputs($_POST['da_type_id']);
+		$employee_id = (int) test_inputs($_POST['employee_id']);
+
+		$added_by = $USER_ID;
+		$added_date = date('Y-m-d H:i:00');
+
+		$da_status_id = 1;
+
+
+
+
+		$atpsListQryIns = "INSERT INTO `hr_disp_actions` (
+											`da_warning_id`, 
+											`da_remark`, 
+											`da_type_id`, 
+											`employee_id`, 
+											`da_status_id`, 
+											`added_by`, 
+											`added_date` 
+											) VALUES ( ?, ?, ?, ?, ?, ?, ? );";
+
+		if ($atpsListStmtIns = mysqli_prepare($KONN, $atpsListQryIns)) {
+			if (mysqli_stmt_bind_param($atpsListStmtIns, "isiiiis", $da_warning_id, $da_remark, $da_type_id, $employee_id, $da_status_id, $added_by, $added_date)) {
+				if (mysqli_stmt_execute($atpsListStmtIns)) {
+					$da_id = (int) mysqli_insert_id($KONN);
+					mysqli_stmt_close(statement: $atpsListStmtIns);
+
+
+					$log_action = 'Disciplinary_Request_Added';
+					$log_remark = $da_remark;
+					$logger_type = 'employees_list';
+					$logged_by = $USER_ID;
+					if (InsertSysLog('hr_disp_actions', $da_id, $log_action, $log_remark, $logger_type, $logged_by, 'int')) {
+						$IAM_ARRAY['success'] = true;
+						$IAM_ARRAY['message'] = "Succeed";
+					} else {
+						$IAM_ARRAY['success'] = false;
+						$IAM_ARRAY['message'] = "log Failed-548";
+					}
+
+
+				} else {
+					//Execute failed 
+					reportError(mysqli_stmt_error($atpsListStmtIns), 'employees_list', $EMPLOYEE_ID);
+					$IAM_ARRAY['success'] = false;
+					$IAM_ARRAY['message'] = "ERR-12-57";
+				}
+			} else {
+				//bind failed 
+				reportError(mysqli_stmt_error($atpsListStmtIns), 'employees_list', $EMPLOYEE_ID);
+				$IAM_ARRAY['success'] = false;
+				$IAM_ARRAY['message'] = "ERR-12-56";
+			}
+		} else {
+			//prepare failed 
+			reportError('hr_disp_actions failed to prepare stmt ', 'employees_list', $EMPLOYEE_ID);
+			$IAM_ARRAY['success'] = false;
+			$IAM_ARRAY['message'] = "ERR-12-55";
+		}
+
+
+
+	} else {
+		//No request
+		$IAM_ARRAY['success'] = false;
+		$IAM_ARRAY['message'] = "ERR-12-4556";
+	}
+
+
+
+
+
+
+
+
+
+} else {
+	$IAM_ARRAY['success'] = false;
+	$IAM_ARRAY['message'] = "ERR-100";
+}
+
+
+
+
+
+header('Content-Type: application/json');
+echo json_encode(array($IAM_ARRAY));
+
+

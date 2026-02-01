@@ -1,0 +1,165 @@
+:root {
+    --primary: #7b6231;
+    --secondary: #c38f2a;
+    --dark: #1a1a1a;
+    --light: #f8f9fa;
+    --glass: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --text-primary: #333;
+    --text-light: #fff;
+    --font-heading: 'Montserrat', sans-serif;
+    --font-body: 'Tajawal', sans-serif;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-body);
+    background: radial-gradient(circle at top right, #2a2a2a, #000);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Background Pattern/Animation */
+.bg-pattern {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/uploads/pattern04.png');
+    /* Legacy asset */
+    opacity: 0.05;
+    z-index: -1;
+    animation: drift 60s linear infinite;
+}
+
+@keyframes drift {
+    from {
+        background-position: 0 0;
+    }
+
+    to {
+        background-position: 1000px 1000px;
+    }
+}
+
+/* Glassmorphism Utilities */
+.glass-panel {
+    background: var(--glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+    padding: 2rem;
+}
+
+/* Login Page Specifics */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2rem;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 450px;
+    text-align: center;
+    animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.login-logo img {
+    max-height: 120px;
+    margin-bottom: 2rem;
+    filter: drop-shadow(0 2px 10px rgba(195, 143, 42, 0.3));
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.form-input {
+    width: 100%;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: var(--text-light);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-input:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--secondary);
+    box-shadow: 0 0 15px rgba(195, 143, 42, 0.2);
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: 600;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(195, 143, 42, 0.4);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+/* Animations */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.error-msg {
+    color: #ff6b6b;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    display: none;
+}
+
+.error-msg.visible {
+    display: block;
+    animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-5px);
+    }
+
+    75% {
+        transform: translateX(5px);
+    }
+}

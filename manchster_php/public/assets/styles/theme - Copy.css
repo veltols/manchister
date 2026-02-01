@@ -1,0 +1,121 @@
+/* Main Colors */
+:root {
+	--primary-light: #075295;
+}
+:root {
+	--primary: #243649;
+}
+:root {
+	--secondary: #4e7499;
+}
+
+:root {
+	--third: #c5e2f4;
+}
+
+
+:root {
+	--body-bg-02: #fafafa;
+}
+
+
+:root {
+	--shadow-color: rgba(0, 0, 0, 0.2);
+}
+
+:root {
+	--default: #2bbbad;
+}
+
+:root {
+	--on-default: #000000;
+}
+
+:root {
+	--info: #0099CC;
+}
+
+:root {
+	--on-info: #FFFFFF;
+}
+
+:root {
+	--success: #00C851;
+}
+
+:root {
+	--on-success: #FFFFFF;
+}
+
+:root {
+	--warning: #FF8800;
+}
+
+:root {
+	--on-warning: #FFFFFF;
+}
+
+:root {
+	--danger: #CC0000;
+}
+
+:root {
+	--on-danger: #FFFFFF;
+}
+
+/* Sub Colors */
+:root {
+	--black: #000000;
+}
+
+:root {
+	--white: #FFFFFF;
+}
+
+:root {
+	--grey: #dae2e4;
+}
+
+:root {
+	--on-grey: #000;
+}
+
+
+
+.bg-default {
+	background: var(--default);
+	color: var(--on-default);
+}
+
+.bg-info {
+	background: var(--info);
+	color: var(--on-info);
+}
+
+.bg-success {
+	background: var(--success);
+	color: var(--on-success);
+}
+
+.bg-warning {
+	background: var(--warning);
+	color: var(--on-warning);
+}
+
+.bg-danger {
+	background: var(--danger);
+	color: var(--on-danger);
+}
+
+
+
+
+
+
+
+
+body {
+	user-select: none;
+	user-select: none;
+	-moz-user-select: none;
+}

@@ -1,0 +1,88 @@
+html {
+    overflow-x: hidden;
+	 box-sizing: border-box;
+}
+
+body {
+	width:100%;
+	min-width:700px;
+	max-width:1025px;
+	margin:0 auto;
+	font-size:100%;
+	font-family: 'Montserrat', serif;
+	overflow-x: hidden !important;
+	overflow-y: auto;
+}
+
+* {
+	transition: all 0.3s ease;
+	margin:0;
+	padding:0;
+}
+*,
+*::before,
+*::after {
+  box-sizing: inherit; 
+}
+
+.pc_only {
+	display: none !important;
+}
+
+.mob_only {
+	display: none !important;
+}
+
+.tablet_only {
+	display: block;
+}
+
+.text-start {
+	text-align: start;
+}
+.text-center {
+	text-align: center;
+}
+.text-end {
+	text-align: end;
+}
+a {
+	text-decoration: none;
+	color: inherit;
+}
+
+
+
+
+
+.row {
+	width: 98%;
+	margin: 0 auto;
+	display: flex;
+	justify-content: space-between;
+	align-items: start;
+	flex-wrap: wrap;
+}
+.col-1 {
+	width: 98%;
+	margin: 1%;
+}
+.col-2 {
+	width: 46%;
+	margin: 1%;
+}
+.col-3 {
+	width: 31%;
+	margin: 1%;
+}
+.col-4 {
+	width: 22%;
+	margin: 1%;
+}
+
+.mnuBtn {
+	display: none !important;
+}
+
+
+

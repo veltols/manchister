@@ -1,0 +1,47 @@
+<?php
+
+
+if ($item_id != 0) {
+
+	//check if mapped
+	$qu_m_strategic_plans_internal_maps_sel = "SELECT * FROM  `m_strategic_plans_internal_maps` WHERE `milestone_id` = $item_id";
+	$qu_m_strategic_plans_internal_maps_EXE = mysqli_query($KONN, $qu_m_strategic_plans_internal_maps_sel);
+	$m_strategic_plans_internal_maps_DATA;
+	if( mysqli_num_rows($qu_m_strategic_plans_internal_maps_EXE) > 0 ){
+		$IAM_ARRAY['success'] = false;
+		$IAM_ARRAY['message'] = "Milestone-KPI is mapped, please delete the map first";
+		
+	} else {
+
+		//remove all milestones
+		$qu_m_strategic_plans_milestones_del = "DELETE FROM `m_strategic_plans_milestones` WHERE `milestone_id` = $item_id";
+		if (mysqli_query($KONN, $qu_m_strategic_plans_milestones_del)) {
+
+
+			$IAM_ARRAY['success'] = true;
+			$IAM_ARRAY['message'] = "All Good";
+
+
+		} else {
+			$IAM_ARRAY['success'] = false;
+			$IAM_ARRAY['message'] = "ERR-TACT-2223";
+		}
+
+	}
+
+
+
+
+
+
+
+
+
+
+} else {
+	$IAM_ARRAY['success'] = false;
+	$IAM_ARRAY['message'] = "ERR-541642323";
+}
+
+
+

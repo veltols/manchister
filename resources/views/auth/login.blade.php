@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - IQC System</title>
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif']
+                    },
+                    backgroundImage: {
+                        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #004F68 0%, #00384a 100%);
+            position: relative;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        
+        /* Animated Background Blobs */
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(70px);
+            opacity: 0.7;
+            animation: blob 20s infinite;
+        }
+        
+        .blob-1 {
+            width: 500px;
+            height: 500px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            top: -10%;
+            left: -10%;
+            animation-delay: 0s;
+        }
+        
+        .blob-2 {
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            top: 50%;
+            right: -5%;
+            animation-delay: 4s;
+        }
+        
+        .blob-3 {
+            width: 450px;
+            height: 450px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            bottom: -10%;
+            left: 30%;
+            animation-delay: 8s;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 640px) {
+            .blob { width: 300px; height: 300px; }
+            .blob-1 { top: -20%; left: -20%; }
+            .blob-2 { top: auto; bottom: -10%; right: -10%; }
+            .blob-3 { display: none; }
+        }
+        
+        @keyframes blob {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+            }
+            25% {
+                transform: translate(30px, -50px) scale(1.1);
+            }
+            50% {
+                transform: translate(-20px, 30px) scale(0.9);
+            }
+            75% {
+                transform: translate(40px, 20px) scale(1.05);
+            }
+        }
+        
+        /* Glass Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        
+        /* Input Focus Effect */
+        .premium-input {
+            transition: all 0.3s ease;
+        }
+        
+        .premium-input:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2);
+        }
+        
+        /* Button Hover */
+        .premium-button {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .premium-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .premium-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .premium-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4);
+        }
+        
+        /* Fade In Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-fade-in {
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        /* Floating Animation */
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+        
+        .float {
+            animation: float 6s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-start pt-12 lg:pt-0 lg:items-center justify-center p-4 font-sans">
+    
+    <!-- Animated Background Blobs -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+    
+    <!-- Login Container -->
+    <div class="relative z-10 w-full max-w-6xl flex items-center gap-12">
+        
+        <!-- Left Side - Branding -->
+        <div class="hidden lg:flex flex-1 flex-col items-center text-white animate-fade-in">
+            <div class="float mb-8">
+                <div class="w-40 h-40 rounded-3xl bg-white/10 backdrop-blur-lg border border-white/20 flex items-center justify-center shadow-2xl p-6">
+                    <img src="{{ asset('images/logo.png') }}" alt="IQC Logo" class="w-full h-full object-contain">
+                </div>
+            </div>
+            
+            <h1 class="font-display text-5xl font-bold mb-4 text-center">
+                Welcome to<br/>
+                <span class="bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">IQC System</span>
+            </h1>
+            
+            <p class="text-xl text-white/80 text-center max-w-md leading-relaxed">
+                Empowering excellence through intelligent workforce management and seamless operations.
+            </p>
+            
+            <div class="mt-12 flex gap-6">
+                <div class="flex flex-col items-center gap-2">
+                    <div class="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-lg border border-white/20 flex items-center justify-center">
+                        <i class="fa-solid fa-shield-halved text-2xl text-cyan-300"></i>
+                    </div>
+                    <span class="text-sm text-white/70 font-medium">Secure</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                    <div class="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-lg border border-white/20 flex items-center justify-center">
+                        <i class="fa-solid fa-bolt text-2xl text-yellow-300"></i>
+                    </div>
+                    <span class="text-sm text-white/70 font-medium">Fast</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                    <div class="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-lg border border-white/20 flex items-center justify-center">
+                        <i class="fa-solid fa-gem text-2xl text-pink-300"></i>
+                    </div>
+                    <span class="text-sm text-white/70 font-medium">Premium</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Side - Login Form -->
+        <div class="flex-1 w-full animate-fade-in" style="animation-delay: 0.2s;">
+            
+            <!-- Mobile Logo -->
+            <div class="lg:hidden flex justify-center mb-8">
+                <div class="w-32 h-32 rounded-3xl bg-white/10 backdrop-blur-lg border border-white/20 flex items-center justify-center shadow-2xl p-4">
+                    <img src="{{ asset('images/logo.png') }}" alt="IQC Logo" class="w-full h-full object-contain">
+                </div>
+            </div>
+
+            <div class="glass-card rounded-3xl p-6 md:p-10 max-w-md mx-auto">
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 mb-4 shadow-lg">
+                        <i class="fa-solid fa-user text-2xl text-white"></i>
+                    </div>
+                    <h2 class="font-display text-3xl font-bold text-slate-800 mb-2">Welcome Back</h2>
+                    <p class="text-slate-500">Please enter your credentials to continue</p>
+                </div>
+
+                @if($errors->any())
+                    <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3">
+                        <i class="fa-solid fa-circle-exclamation text-red-500 mt-0.5"></i>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-red-800">{{ $errors->first() }}</p>
+                        </div>
+                    </div>
+                @endif
+
+                <form action="{{ route('login.post') }}" method="POST" class="space-y-5">
+                    @csrf
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-user text-indigo-600 mr-2"></i>Username
+                        </label>
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                name="username" 
+                                class="premium-input w-full px-4 py-3.5 rounded-xl border-2 border-slate-200 bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/10 transition-all outline-none text-slate-700 font-medium" 
+                                placeholder="Enter your username" 
+                                required
+                                autofocus>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-lock text-indigo-600 mr-2"></i>Password
+                        </label>
+                        <div class="relative">
+                            <input 
+                                type="password" 
+                                name="password" 
+                                class="premium-input w-full px-4 py-3.5 rounded-xl border-2 border-slate-200 bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/10 transition-all outline-none text-slate-700 font-medium" 
+                                placeholder="Enter your password" 
+                                required>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between text-sm">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600">
+                            <span class="text-slate-600">Remember me</span>
+                        </label>
+                        <a href="#" class="font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
+                            Forgot password?
+                        </a>
+                    </div>
+
+                    <button 
+                        type="submit" 
+                        class="premium-button w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl shadow-lg relative overflow-hidden">
+                        <span class="relative z-10 flex items-center justify-center gap-2">
+                            Sign In
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </span>
+                    </button>
+                </form>
+
+                <div class="mt-8 pt-6 border-t border-slate-200 text-center">
+                    <p class="text-sm text-slate-600">
+                        New partner? 
+                        <a href="{{ route('rc.portal.wizard.step1') }}" class="font-bold text-indigo-600 hover:text-indigo-800 transition-colors">
+                            Register here
+                        </a>
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Mobile Logo -->
+            <div class="lg:hidden text-center mt-8">
+                <p class="text-white/80 text-sm">© 2024 IQC System. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

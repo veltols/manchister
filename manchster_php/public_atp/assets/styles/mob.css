@@ -1,0 +1,1815 @@
+html {
+    overflow-x: hidden;
+	 box-sizing: border-box;
+}
+
+body {
+	width:100%;
+	min-width:100px;
+	max-width:699px;
+	margin:0 auto;
+	font-size:100%;
+	font-family: 'DM Sans';
+	overflow-x: hidden !important;
+	background: var(--body-bg);
+	overflow-y: auto;
+}
+
+* {
+	transition: all 0.3s ease;
+	margin:0;
+	padding:0;
+}
+*,
+*::before,
+*::after {
+  box-sizing: inherit; 
+}
+
+.pc_only {
+	display: none !important;
+}
+
+.mob_only {
+	display: block !important;
+}
+
+.tablet_only {
+	display: none;
+}
+
+.text-start {
+	text-align: start;
+}
+.text-center {
+	text-align: center;
+}
+.text-end {
+	text-align: end;
+}
+a {
+	text-decoration: none;
+	color: inherit;
+}
+
+
+.row {
+	width: 98%;
+	margin: 0 auto;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-wrap: wrap;
+}
+.col-1 {
+	width: 98%;
+}
+.col-2 {
+	width: 98%;
+}
+.col-3 {
+	width: 98%;
+}
+.col-4 {
+	width: 98%;
+}
+
+
+
+
+.userLiner {
+  width: 100%;
+	margin: 0 auto;
+	display: flex;
+	justify-content: space-between;
+	align-items: stretch;
+	position: fixed;
+	z-index: 501;
+	top: 0;
+	left: 0;
+}
+
+.userLiner .logoCol {
+  width: 100%;
+	margin: 0 auto;
+	display: flex;
+	justify-content: start;
+	align-items: center;
+}
+
+.userLiner .asideBtn {
+	width: 15%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+.userLiner .asideBtn i {
+	display: block;
+	font-size: 1.2em;
+	cursor: pointer;
+}
+
+.userLiner .logoCol .mainLogo {
+	width: 50%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	margin-inline-start: 5%;
+}
+
+.userLiner .logoCol .mainLogo .mainLogoImg {
+	width: 100%;
+	padding: 0.5em 0;
+}
+
+.userLiner .logoCol .themeIcons {
+	width: 20%;
+	padding-inline-end: 1em;
+	display: flex;
+	justify-content: end;
+	align-items: center;
+	margin-inline-start: 5%;
+	display: none;
+}
+
+.userLiner .logoCol .themeIcons .themeIcon {
+	display: block;
+	margin: 0 0.5em;
+	font-size: 1.2em;
+	cursor: pointer;
+	opacity: 0.7;
+}
+.userLiner .logoCol .themeIcons .themeIcon:hover {
+	opacity: 1;
+}
+
+.userLiner .userOptions { 
+  width: 0%;
+	position: relative;
+	display: flex;
+	justify-content: center;
+	align-items: stretch;
+	display: none;
+}
+
+
+.userLiner .userOptions .userName {
+	width: 100%;
+	font-weight: bold;
+	letter-spacing: 1px;
+	text-transform: capitalize;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	
+}
+
+.userLiner .userOptions .userName .empLogoImg {
+	width: 1.8em;
+	height: 1.8em;
+	margin-inline-end: 5%;
+}
+
+.userLiner .userOptions .userName span {
+	width: 50%;
+	text-align: center;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: 0.9em;
+}
+
+.userLiner .userOptions .userName:hover {
+	cursor: pointer;
+	background: rgba(0,0,0,0.3);
+}
+
+.userLiner .userOptions .userOptionsMenu {
+	position: absolute;
+	width: 100%;
+	top: 100%;
+	left: 0;
+	background: var(--white);
+	display: flex;
+	justify-content: space-between;
+	align-items: stretch;
+	flex-direction: column;
+	box-shadow: 1px 2px 5px var(--shadow-color);
+}
+
+.userOptionsMenuHidden {
+	display: none !important;
+}
+
+.userLiner .userOptions .userOptionsMenu .userOpt {
+	width: 100%;
+	margin: 0 auto;
+	padding: 0.8em 1em;
+	display: flex;
+	justify-content: start;
+	align-items: center;
+}
+.userLiner .userOptions .userOptionsMenu .userOpt:hover {
+	cursor: pointer;
+	background: rgba(0,0,0,0.05);
+}
+
+.userLiner .userOptions .userOptionsMenu .userOpt i {
+	display: block;
+	width: 13%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 0.2em;
+}
+
+.userLiner .userOptions .userOptionsMenu .userOpt span {
+	display: block;
+	width: 80%;
+	display: flex;
+	justify-content: start;
+	align-items: center;
+	padding: 0.2em;
+	text-transform: capitalize;
+}
+
+.mainAside {
+	width: 100%;
+	background: var(--white);
+	height: 100%;
+	position: fixed;
+	top: 0;
+	left: -0%;
+	z-index: 500;
+	padding-top: 4.5em;
+	box-shadow: 1px 2px 5px var(--shadow-color);
+	transition: all 1s ease-in-out !important;
+}
+.mainAsideHidden {
+	left: -105% !important;
+}
+
+.mainAside .asideLogo {
+	width: 100%;
+	display: none;
+}
+.mainAside .asideLogo .ptLogo {
+	width: 75%;
+	display: block;
+	margin: 0 auto;
+	padding: 0.5em;
+}
+
+.mainAside .asideMenu {
+	width: 100%;
+	margin: 0 auto;
+	display: flex;
+	justify-content: space-between;
+	align-items: start;
+	flex-direction: column;
+	margin-top: 5%;
+}
+.mainAside .asideMenu .mnuItem {
+	width: 100%;
+	margin: 2% auto;
+	display: flex;
+	justify-content: start;
+	align-items: center;
+	padding: 0.5em 10%;
+}
+.mainAside .asideMenu .mnuItemSelected {
+	background: var(--primary) !important;
+	color: var(--white) !important;
+}
+
+.mainAside .asideMenu .mnuItem:hover {
+	background: rgba(0,0,0,0.05);
+}
+.mainAside .asideMenu .mnuItem:hover i {
+	opacity: 1 !important;
+}
+
+.mainAside .asideMenu .mnuItem i {
+	margin-inline-end: 0.5em;
+	opacity: 0.4;
+}
+
+.mainAside .asideMenu .mnuItem span {
+	
+}
+
+.mainAside .asideMenuHr {
+	width: 85%;
+	margin: 5% auto;
+	height: 1px;
+	background: var(--shadow-color);
+}
+
+
+#mainArticle {
+	width: 95%;
+	margin: 0 auto;
+	padding: calc(3em + 1.5%) 1% 1% 1%;
+}
+.mainArticleFull {
+	padding-left: 1% !important;
+}
+.articleContainer {
+	width: 98%;
+	margin: 0 auto;
+	padding-bottom: 7em;
+}
+
+.pageMainTitle {
+	width: 100%;
+	margin: 0 auto;
+}
+.pageMainTitle h5 {
+	width: 100%;
+	margin: 0 auto;
+	text-align: start;
+	color: var(--secondary);
+}
+.pageMainTitle h1 {
+	width: 100%;
+	margin: 0 auto;
+	text-transform: uppercase;
+	font-size: 1.2em;
+	letter-spacing: 1px;
+	opacity: 0.4;
+	margin-top: 0;
+	padding-top: 0;
+	text-align: start;
+	color: var(--primary);
+}
+
+.pageMainTitle .breadCrumbs {
+	width: 100%;
+	margin: 0 auto;
+	display: flex;
+	justify-content: start;
+	align-items: center;
+	font-size: 0.6em;
+}
+
+.pageMainTitle .breadCrumbs a {
+	display: block;
+	margin: 0 0.4em;
+	opacity: 0.3;
+}
+.pageMainTitle .breadCrumbs span {
+	display: block;
+	opacity: 0.3;
+}
+.pageMainTitle .breadCrumbs a.hasLink:hover {
+	opacity: 0.8;
+}
+
+
+
+
+
+
+
+.kpiContainer {
+	width: 95%;
+	margin: 1% auto;
+	display: flex;
+	justify-content: space-between;
+	align-items: stretch;
+	flex-wrap: wrap;
+}
+.kpiContainer .kpiTitle {
+	width: 100%;
+	margin: 2% auto;
+	color: var(--primary);
+	font-weight: bold;
+	font-size: 1.0em;
+	letter-spacing: 1px;
+	border-bottom: 1px solid var(--primary);
+	padding: 0.5em;
+	opacity: 0.5;
+}
+
+.kpiContainer .kpiBox {
+	width: 100%;
+	border-radius: 10px;
+	padding: 0.5em;
+	box-shadow: 6px 6px 2px var(--shadow-color);
+	margin: 1% 0;
+	display: flex;
+	justify-content: space-between;
+	align-items: stretch;
+}
+
+.kpiContainer .kpiBox .colA {
+	width: 50%;
+	margin: 0 auto;
+	display: flex;
+	justify-content: center;
+	align-items: end;
+	flex-direction: column;
+}
+.kpiContainer .kpiBox .colA .dataValue {
+	width: 100%;
+	margin: 0 auto;
+	font-size: 3em;
+	text-align: end;
+}
+.kpiContainer .kpiBox .colA .dataValue .dataUnit {
+	width: 100%;
+	margin: 0 auto;
+	font-size: 0.5em !important;
+}
+
+.kpiContainer .kpiBox .colA .dataName {
+	width: 60%;
+	text-align: end;
+	text-transform: capitalize;
+	min-height: 3em;
+}
+
+
+
+.kpiContainer .kpiBox .colB {
+	width: 50%;
+	margin: 0 auto;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+.kpiContainer .kpiBox .colB .dataIcon {
+	width: 100%;
+	margin: 0 auto;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.kpiContainer .kpiBox .colB .dataIcon i {
+	width: 100%;
+	margin: 0 auto;
+	text-align: center;
+	font-size: 2em;
+}
+
+
+
+
+.pageOptions {
+	width: 100%;
+	margin: 0 auto;
+	padding: 0.5em;
+	display: flex;
+	justify-content: space-between;
+	align-items: stretch;
+	flex-wrap: wrap;
+}
+
+.pageOptions .pageOptionsButtons {
+	width: 100%;
+	margin: 0 auto;
+	padding: 0.8em 0.5em;
+	display: flex;
+	justify-content: center;
+	align-items: stretch;
+}
+
+.pageOptions .vr {
+	background: var(--shadow-color);
+	width: 0.8em;
+	height: 2em;
+	opacity: 0;
+	display: none;
+}
+
+.pageOptions .pageLink {
+	background: var(--white);
+	width: 2.5em;
+	height: 2.5em;
+	border: 1px solid var(--shadow-color);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	margin-inline-end: 0.8em;
+	cursor: pointer;
+	border-radius: 3px;
+}
+.pageOptions .pageLink i {
+	color: var(--primary);
+	font-size: 1.0em;
+}
+
+.pageOptions .pageLinkActive {
+	background: var(--primary);
+}
+.pageLinkActive i {
+	color: var(--white) !important;
+}
+
+
+.pageOptions .pageSearchForm {
+	width: 100%;
+	margin: 0 auto;
+	padding: 0.8em 0.5em;
+	display: flex;
+	justify-content: end;
+	align-items: stretch;
+}
+.pageOptions .pageSearchForm input {
+	font-family: inherit;
+	width: 80%;
+	border: 1px solid var(--shadow-color);
+	padding: 0 0.5em;
+	border-radius: 3px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.dataContainer {
+	width: 100%;
+	margin: 0 auto;
+	display: flex;
+	justify-content: space-between;
+	align-items: stretch;
+	flex-wrap: wrap;
+}
+.data-list-view {
+	width: 100%;
+	margin: 1% auto;
+	background: var(--white);
+	border: 1px solid var(--shadow-color);
+	box-shadow: 1px 2px 5px var(--shadow-color);
+	padding: 0.5em;
+	display: flex;
+	justify-content: space-between;
+	align-items: start;
+	flex-wrap: wrap;
+	border-radius: 3px;
+}
+
+
+
+
+
+
+
+
+.data-tiles-view {
+	width: 100%;
+	margin: 1% auto;
+	background: var(--white);
+	border: 1px solid var(--shadow-color);
+	box-shadow: 1px 2px 5px var(--shadow-color);
+	padding: 0.5em;
+	display: flex;
+	justify-content: space-between;
+	align-items: start;
+	flex-wrap: wrap;
+	border-radius: 3px;
+}
+
+
+
+
+
+.dataElement .col-1 {
+	width: 98%;
+	margin: 1%;
+}
+.dataElement .col-2 {
+	width: 98%;
+	margin: 1%;
+}
+.dataElement .col-3 {
+	width: 98%;
+	margin: 1%;
+}
+.dataElement .col-4 {
+	width: 98%;
+	margin: 1%;
+}
+.dataElement .dataView .property {
+	color: var(--secondary);
+	text-transform: capitalize;
+	opacity: 0.7;
+	font-weight: bold;
+	font-size: 0.8em;
+	font-size: 0.7em !important;
+}
+.dataElement .dataView .value {
+	color: var(--primary);
+	text-transform: uppercase;
+	font-size: 1.2em;
+	font-size: 0.7em !important;
+}
+
+.data-tiles-view .dataView .property {
+	font-size: 0.7em !important;
+}
+.data-tiles-view .dataView .value {
+	font-size: 0.7em !important;
+}
+
+.dataElement .dataOptions {
+	width: 98%;
+	margin: 1%;
+	display: flex;
+	justify-content: center;
+	align-items: stretch;
+	flex-wrap: nowrap;
+}
+.data-tiles-view .dataOptions {
+	justify-content: end !important;
+}
+.dataElement .dataOptions .dataActionBtn {
+	background: var(--primary);
+	border: 1px solid var(--shadow-color);
+	width: 3em;
+	height: 3em;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	margin:0 0.4em;
+	cursor: pointer;
+}
+.data-tiles-view .dataOptions .dataActionBtn {
+	background: var(--secondary) !important;
+}
+.dataElement .dataOptions .dataActionBtn i {
+	color: var(--white);
+}
+.data-tiles-view .dataOptions .dataActionBtn {
+	width: 2em;
+	height: 2em;
+}
+
+.dataElement {
+	transition: all 1s ease-in-out !important;
+	position: relative;
+}
+.dataElement .elementStt {
+	position: absolute;
+	left: 0;
+	top: 0;
+	height: 100%;
+	width: 1%;
+}
+
+
+.noData {
+	width: 100%;
+	margin: 0 auto;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+	text-transform: uppercase;
+}
+
+.noData img {
+	width: 8%;
+	margin-bottom: 1em;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.panelFooter {
+	position: fixed;
+	left: 0%;
+	bottom: 0;
+	z-index: 300;
+	width: 100%;
+	margin: 0 auto;
+	padding: 0.7em 3%;
+	background: var(--white);
+	border-top: 2px solid var(--shadow-color);
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.panelFooter .pagintationPerPage {
+	width: 100%;
+	display: flex;
+	justify-content: space-between;
+	align-items: start;
+	flex-wrap: nowrap;
+	flex-direction: column;
+}
+.panelFooter .pagintationPerPage span {
+	width: 100%;
+	text-align: start;
+	text-transform: capitalize;
+	color: var(--secondary);
+	font-size: 0.7em;
+	display: none;
+}
+
+.panelFooter .pagintationPerPage select {
+	width: 100%;
+	text-align: center;
+	background: var(--white);
+	color: var(--primary);
+	border: 1px solid var(--shadow-color);
+}
+
+
+.panelFooter .pagintationPages {
+	width: 100%;
+	display: flex;
+	justify-content: space-between;
+	align-items: stretch;
+	flex-wrap: nowrap;
+}
+.panelFooter .pagintationPages .pageCounter {
+	font-weight: bold;
+	color: var(--primary);
+}
+.panelFooter .pagintationPages span {
+	cursor: pointer;
+	color: var(--secondary);
+}
+
+
+
+
+
+
+
+
+
+
+.hasTooltip {
+	position: relative;
+}
+.hasTooltip .tooltip {
+	position: absolute;
+	top: 110%;
+	width: 8em;
+	background: var(--primary);
+	color: var(--on-primary);
+	border-radius: 3px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 0.3em;
+	text-align: center;
+	text-transform: capitalize;
+	font-size: 0.6em;
+	opacity: 0.8;
+	display: none;
+}
+.hasTooltip:hover .tooltip {
+	display: flex !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+
+Modal Start
+*/
+
+#modalDarker {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 500 !important;
+	background: rgba(0,0,0,0.0);
+	display: none;
+}
+#modalDarker img {
+	position: absolute;
+	width: 4%;
+	left: 48%;
+	top: 50%;
+	background: #FFF;
+	padding: 1%;
+	display: none;
+}
+.modalDarkerShowed {
+	display: block !important;
+}
+.modalDarkerShowed01 {
+	background: rgba(0,0,0,0.5) !important;
+}
+.modalDarkerShowed01 img {
+	display: block !important;
+}
+
+
+.modal {
+	position: fixed;
+	top: 0;
+	left: 110%;
+	width: 90%;
+	height: 100%;
+	z-index: 998;
+	transition: all 0.8s ease !important;
+	border-left: 20px solid var(--primary);
+}
+.modalShowed {
+	left: 10% !important;
+}
+.modal .modalData {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 610;
+	background: #FFF;
+	overflow-y: auto;
+}
+.modal .modalHeader {
+	width: 100%;
+	margin: 0 auto;
+	padding: 1% 0;
+}
+.modal .modalHeader h1 {
+	width: 98%;
+	margin: 0 auto;
+	padding: 0.5%;
+	border-bottom: 1px solid rgba(0,0,0,0.5);
+	text-transform: capitalize;
+}
+.modal .modalBody {
+	width: 98%;
+	margin: 0 auto;
+	display: flex;
+	justify-content: flex-start;
+	align-items: flex-start;
+}
+.modal .modalBody .modalForm {
+	width: 67.5%;
+	padding-right: 0.5%;
+	border-right: 1px dotted rgba(0,0,0,0.3);
+}
+.modal .modalBody .modalForm .panel {
+	width: 100% !important;
+}
+.modal .modalBody .modalAction {
+	width: 30%;
+}
+.modalActionResults {
+	width: 100%;
+	margin: 3% auto;
+	display: block;
+}
+.modalActionResults span {
+	width: 98%;
+	margin: 1% auto;
+	padding: 1%;
+	display: block;
+	border: 2px solid;
+	font-size: 12px;
+	border-radius: 3px;
+}
+.modalActionResults span i {
+	display: inline-block;
+	vertical-align: middle;
+	margin-right: 1%;
+}
+.modalActionResults span p {
+	display: inline-block;
+	vertical-align: middle;
+	text-transform: capitalize;
+}
+.modalActionResults .success {
+	border-color: var(--bs-success);
+	color: var(--bs-success);
+}
+.modalActionResults .warning {
+	border-color: var(--bs-warning);
+	color: var(--bs-warning);
+}
+.modalActionResults .error {
+	border-color: var(--bs-danger);
+	color: var(--bs-danger);
+}
+.modalAction .modalActionBtns {
+	width: 100%;
+	margin: 3% auto;
+	display: block;
+	text-align: center;
+}
+.modalAction .modalActionBtns button {
+	width: 100%;
+	margin: 2% auto;
+	display: block;
+	padding: 2% 0;
+	border: none;
+}
+.modalAction .modalActionBtns button:hover {
+	cursor: pointer;
+	opacity: 0.7;
+}
+.modalAction .modalActionBtns button.actionBtn {
+	background: var(--primary);
+	color: #FFF;
+	text-transform: capitalize;
+}
+.modalAction .modalActionBtns button.actionBtnDanger {
+	background: var(--bs-danger);
+	color: #FFF;
+	text-transform: capitalize;
+}
+
+.modalAction .modalActionBtns button.actionBtnSuccess {
+	background: var(--bs-success);
+	color: #FFF;
+	text-transform: capitalize;
+}
+
+
+.actionBtn {
+	width: 100%;
+	margin: 0% auto;
+	padding: 2% 0;
+	border: none;
+	background: var(--mainBlue);
+	color: #FFF;
+	text-transform: capitalize;
+}
+.actionBtnDanger {
+	width: 100%;
+	margin: 0% auto;
+	padding: 2% 0;
+	border: none;
+	background: var(--bs-danger);
+	color: #FFF;
+	text-transform: capitalize;
+}
+.actionBtnSuccess {
+	width: 100%;
+	margin: 0% auto;
+	padding: 2% 0;
+	border: none;
+	background: var(--bs-success);
+	color: #FFF;
+	text-transform: capitalize;
+}
+/*
+modal form CSS
+*/
+
+.form-group {
+	width: 100%;
+	margin: 10px auto;
+}
+.form-group label {
+	display: block;
+	text-transform: capitalize;
+	margin: 3px auto;
+	color: var(--darkBlue);
+	font-size: 13px;
+	font-weight: normal;
+	font-family: inherit;
+	text-align: left;
+}
+.form-group input {
+	display: block;
+	margin: 3px auto;
+	width: 96%;
+	padding: 10px;
+	border-radius: 2px;
+	border: 1px solid;
+}
+
+.form-group textarea {
+	display: block;
+	margin: 3px auto;
+	width: 96%;
+	padding: 10px;
+}
+
+.form-group select {
+	display: block;
+	margin: 3px auto;
+	width: 98%;
+	padding: 10px 1%;
+}
+
+.form-group select.sized option {
+	padding: 7px 3px;
+	cursor: pointer;
+}
+
+.noter {
+	display: block;
+	margin: 0 auto;
+	width: 95%;
+	color: var(--color-red-dark);
+	font-size: 12px;
+}
+
+
+
+/*
+
+Modal end
+*/
+
+
+
+
+
+
+
+
+/*
+Search form
+*/
+
+.propertySearch {
+	width: 100%;
+	margin: 0 auto;
+	display: flex;
+	justify-content: space-between;
+	align-items: stretch;
+}
+
+.propertySearch .propertySearchForm {
+	width: 25%;
+	background: var(--darkWhite);
+}
+.propertySearch .propertySearchResult {
+	width: 74%;
+	min-height: 30em;
+}
+.propertySearch .propertySearchResultDt {
+	width: 100%;
+	margin: 0 auto;
+	display: flex;
+	justify-content: start;
+	align-items: stretch;
+	flex-wrap: wrap;
+}
+
+.propertyBox {
+	width: 30%;
+	background: var(--darkWhite);
+	margin: 1%;
+	box-shadow: 1px 2px 5px rgba(0,0,0,0.1);
+	border: 1px solid rgba(0,0,0,0.1);
+	border-radius: 5px;
+}
+.propertyBox .imager {
+	width: 98%;
+	margin: 0 auto;
+	padding: 5%;
+	text-align: center;
+}
+.propertyBox .imager img {
+	width: 100%;
+	height: 10em;
+	object-fit: cover;
+	margin: 0 auto;
+	display: block;
+}
+.propertyBox .namer {
+	width: 95%;
+	margin: 0 auto;
+	font-size: 1.4em;
+	font-weight: bold;
+}
+.propertyBox .loc {
+	width: 90%;
+	margin: 0 auto;
+	font-size: 1.0em;
+	min-height: 3em;
+}
+.propertyBox .propBtn {
+	width: 95%;
+	margin: 3% auto;
+	font-size: 1.2em;
+	background: var(--primary);
+	color: #FFF;
+	text-align: center;
+	padding: 0.3em 0;
+	margin-top: 5%;
+	cursor: pointer;
+}
+.propertyBox .propBtn:hover {
+	opacity: 0.7;
+}
+
+
+
+.srchCompleter {
+	width: 100%;
+	margin: 0% auto;
+	display: block;
+	position: relative;
+}
+.srchCompleter .lister {
+	width: 100%;
+	background: #FFF;
+	position: absolute;
+	left: 0;
+	top: 100%;
+	z-index: 20;
+	border: 1px solid;
+	border-top: none;
+	min-height: 10em;
+	max-height: 15em;
+	overflow-y: scroll;
+}
+.srchCompleter .listerHidden {
+	display: none;
+}
+.srchCompleter .lister .listerItm {
+	width: 100%;
+	margin: 0% auto;
+	border-bottom: 1px dotted;
+	padding: 0.3em;
+}
+.srchCompleter .lister .listerItm:hover {
+	cursor: pointer;
+	background: var(--grey);
+}
+.srchCompleter .lister .listerItm span {
+	width: 100%;
+	margin: 0% auto;
+	display: block;
+	font-size: 0.7em;
+}
+
+
+
+
+
+
+
+
+.srchElement {
+	width: 90%;
+	margin: 2% auto;
+	display: block;
+	margin-top: 5%;
+}
+.srchElement label {
+	display: block;
+	width: 100%;
+	margin: 2% auto;
+	text-transform: uppercase;
+	font-weight: bold;
+}
+.srchElement input, 
+.srchElement select {
+	display: block;
+	width: 100%;
+	margin: 2% auto;
+	padding: 0.5em;
+}
+
+.srchElement .boxSelect {
+	width: 100%;
+	margin: 2% auto;
+	display: flex;
+	justify-content: space-between;
+	align-items: stretch;
+	flex-wrap: nowrap;
+}
+.srchElement .boxSelect .boxSelector {
+	text-align: center;
+	background: #FFF;
+	padding: 0.8em;
+	width: 30%;
+	cursor: pointer;
+	border-radius: 10px;
+}
+.srchElement .boxSelect .boxSelector:hover {
+	background: var(--grey);
+}
+.srchElement .boxSelect .boxSelectorSelected {
+	text-align: center;
+	background: var(--primary);
+	color: #FFF;
+}
+.srchElement .boxSelect .boxSelector span {
+	display: block;
+	width: 100%;
+	margin: 2% auto;
+	text-align: center;
+	font-size: 0.7em;
+}
+
+.btnerDiv {
+	display: block;
+	width: 20%;
+	margin:0;
+	text-align: center;
+	background: var(--primary);
+	color: #FFF;
+	cursor: pointer;
+}
+.btnerDiv .btner {
+	display: block;
+	width: 100%;
+	margin: 2% auto;
+	text-align: center;
+	background: var(--primary);
+	color: #FFF;
+	padding: 0.5em;
+	cursor: pointer;
+}
+
+.btnerDiv .btner:hover {
+	opacity: 0.7;
+}
+
+#selectedLocs {
+	width: 100%;
+	margin: 0 auto;
+	display: flex;
+	justify-content: start;
+	align-items: stretch;
+	flex-wrap: wrap;
+}
+
+#selectedLocs .addedLoc {
+	margin: 0.1em;
+	padding: 0.3em;
+	background: var(--primary);
+	color: #FFF;
+	border-radius: 10px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-wrap: nowrap;
+	cursor: pointer;
+	min-width: 25%;
+}
+#selectedLocs .addedLoc:hover {
+	opacity: 0.7;
+}
+#selectedLocs .addedLoc span {
+	font-size: 0.8em;
+	margin-right: 5%;
+}
+#selectedLocs .addedLoc strong {}
+
+.propertyDetails {
+	width: 100%;
+	margin: 2% auto;
+}
+
+
+
+
+.Pimages {
+	width: 100%;
+	margin: 0 auto;
+	display: flex;
+	justify-content: start;
+	align-items: stretch;
+	flex-wrap: wrap;
+}
+.Pimages img {
+	width: 20%;
+	height: 8em;
+	margin: 1%;
+	object-fit: cover;
+	cursor: pointer;
+}
+
+.pDataContainer {
+	width: 100%;
+	margin: 0 auto;
+	display: flex;
+	justify-content: space-between;
+	align-items: stretch;
+	flex-wrap: wrap;
+}
+.pDataContainer .pDataHR {
+	width: 100%;
+	
+}
+.pDataContainer .pData {
+	width: 28%;
+	margin: 1%;
+	background: var(--darkWhite);
+	border-radius: 5px;
+	box-shadow: 1px 2px 5px rgba(0,0,0,0.1);
+	border: 1px solid rgba(0,0,0,0.1);
+}
+.pDataContainer .pData .pDataName {
+	padding: 0.5em;
+	font-weight: bold;
+}
+.pDataContainer .pData .pDataValue {
+	padding: 0.5em;
+}
+
+.bigImage {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 999;
+}
+.bigImageHidden {
+	display: none !important;
+}
+.bigImage .bigImageDarker {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 999;
+	background: rgba(0,0,0,0.5);
+}
+.bigImage .bigImageView {
+	position: fixed;
+	top: 10%;
+	left: 10%;
+	width: 80%;
+	height: 80%;
+	z-index: 999;
+}
+.bigImage .bigImageView img {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+
+
+
+.accountForm {
+	width: 100% !important;
+	margin: 2% auto;
+	background: var(--white);
+	border-radius: 10px;
+	padding: 1em 3%;
+	border: 1px solid rgba(0,0,0,0.1);
+}
+.accountForm h1 {
+	width: 100%;
+	margin: 0 auto;
+	border-bottom: 1px solid rgba(0,0,0,0.3);
+	padding: 1% 0;
+	text-transform: uppercase;
+	font-size: 1.2em;
+	font-weight: 500;
+	letter-spacing: 1px;
+}
+.accountForm .secDesc, 
+.accountForm p {
+	text-align: start;
+	opacity: 0.7;
+	line-height: 1.8;
+}
+
+
+.accoutnData {
+	width: 100%;
+	margin: 0 auto;
+}
+
+.accFormGroup {
+	width: 100%;
+	margin: 0% auto;
+	padding: 0.5em 0;
+	margin-bottom: 2%;
+	border: 1px solid  var(--primary);
+	background: #f4f5ff;
+	box-shadow: 1px 2px 2px rgba(0,0,0,0.05);
+	border-radius: 5px;
+}
+.accFormGroup .labels {
+	width: 95%;
+	margin: 0 auto;
+	display: block;
+	margin-bottom: 1%;
+}
+.accFormGroup .labels label {
+	width: 100%;
+	margin: 0 auto;
+	display: block;
+	text-transform: capitalize;
+	color:  var(--primary);
+	font-weight: 500;
+}
+.accFormGroup .labels span {
+	text-transform: capitalize;
+	color:  var(--danger);
+	font-weight: 500;
+	font-size: 0.7em;
+	margin-left: 3%;
+}
+.accFormGroup .inputs {
+	width: 100%;
+	position: relative;
+}
+.hasError {
+	border-color: var(--danger) !important;
+}
+.hasError label {
+	border-color: var(--danger) !important;
+	color: var(--danger) !important;
+}
+
+
+.accFormGroup .inputs .dedfaulter {
+	position: absolute;
+	top: 0%;
+	left: -5%;
+	width: 5%;
+	height: 100%;
+	z-index: 20;
+	text-align: center;
+	background: var(--primary);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border-top-left-radius: 10px;
+	border-bottom-left-radius: 10px;
+	transform: scale(0);
+	transform-origin: center right;
+	opacity: 0;
+	color: #FFF;
+}
+.accFormGroup .inputs .dedfaulter:hover {
+	opacity: 0.5 !important;
+	cursor: pointer;
+}
+.defaulterShown .dedfaulter {
+	transform: scale(1) !important;
+	opacity: 1 !important;;
+}
+
+
+
+
+
+
+.accFormGroup .inputs input,
+.accFormGroup .inputs textarea,
+.accFormGroup .inputs select {
+	width: 90%;
+	margin: 0 auto;
+	padding: 0.5em;
+	border: none;
+	border-bottom: 2px solid rgba(0,0,0,0.3);
+	background: #FFF;
+	font-family: inherit;
+	display: block;
+	background: #f4f5ff;
+}
+
+select, select option {
+	text-transform: capitalize !important;
+}
+
+input:focus, 
+textarea:focus {
+	outline: none;
+	border-bottom: 2px solid var(--secondary) !important;
+}
+
+.examSelector {
+	width: 90%;
+	margin: 0 auto;
+	padding: 1em;
+	border: none;
+	border: 2px solid var(--primary);
+	background: #FFF;
+	font-family: inherit;
+	display: block;
+}
+select.examSelector {
+	height: 20em;
+}
+
+.examSelector option {
+	text-transform: capitalize !important;
+	padding: 0.5em;
+	font-size: 1.2em;
+}
+
+
+.examAddBtn {
+	display: block;
+	width: 90%;
+	margin: 0 auto;
+	background: var(--secondary);
+	text-align: center;
+	padding: 1em 0;
+	color: #FFF;
+	border-radius: 5px;
+	text-transform: uppercase;
+	font-weight: 500;
+}
+
+
+
+
+.saveFormBar {
+	position: fixed;
+	bottom: 0;
+	left: 0%;
+	width: 100%;
+	z-index: 210;
+	background: #FFF;
+	display: flex;
+	justify-content: end;
+	align-items: center;
+	flex-wrap: nowrap;
+	padding: 1em;
+	border-top: 1px solid var(--primary);
+	opacity: 1;
+}
+.saveFormBar .pageFormBtn {
+	background: var(--primary);
+	padding: 0.5em 1em;
+	border-radius: 5px;
+	color: #FFF;
+	margin-left: 1%;
+}
+.saveFormBar .pageFormBtn:hover {
+	cursor: pointer;
+	opacity: 0.7;
+}
+.saveFormBar .pageFormBtnSec {
+	background: var(--warning) !important;
+}
+.saveFormBarHidden {
+	bottom: -20% !important;
+	opacity: 0;
+}
+
+
+
+
+
+
+
+
+
+
+.linksIcons {
+	width: 100%;
+	margin: 0 auto;
+	display: flex;
+	justify-content: space-between;
+	align-items: stretch;
+	flex-wrap: wrap;
+}
+.linksIcons a {
+	width: 21%;
+	display: block;
+	margin: 2%;
+	border: 2px solid #000;
+	text-align: center;
+	padding: 2%;
+	text-transform: uppercase;
+}
+.linksIcons a:hover {
+	cursor: pointer;
+	background: rgba(0,0,0,0.05);
+	transform: scale(1.05);
+}
+.linksIcons a i {
+	display: block;
+	margin-bottom: 5%;
+	font-size: 2em;
+}
+
+
+
+/*
+site alert info
+*/
+
+.siteAlertContainer {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 888;
+	transform: scale(1);
+	opacity: 1;
+}
+.siteAlertHidden {
+	transform: scale(0) !important;
+	opacity: 0 !important;
+}
+
+
+
+.siteAlertHidden01 {
+	transform: scale(0) !important;
+}
+.siteAlertHidden02 {
+	opacity: 0 !important;
+}
+
+.siteAlertContainer .siteAlertBG {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0,0,0,0.2);
+	z-index: 888;
+}
+.siteAlertContainer .siteAlertBody {
+	position: fixed;
+	width: 30%;
+	height: 50%;
+	top: 15%;
+	left: 35%;
+	background: #FFF;
+	z-index: 999;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border-radius: 5px;
+}
+.siteAlertContainer .siteAlertBody .flexer {
+	width: 70%;
+	margin: 0 auto;
+	text-align: center;
+}
+.siteAlertContainer .siteAlertBody .flexer i {
+	display: block;
+	margin: 5% auto;
+	font-size: 3em;
+}
+
+.siteAlert-gd i.fa-circle-xmark {
+	display: none !important;
+}
+.siteAlert-bd i.fa-circle-check {
+	display: none !important;
+}
+
+.siteAlertContainer .siteAlertBody .flexer i.fa-circle-check {
+	color: var(--success);
+}
+.siteAlertContainer .siteAlertBody .flexer i.fa-circle-xmark {
+	color: var(--danger);
+}
+.siteAlertContainer .siteAlertBody .flexer p {
+	display: block;
+	text-transform: capitalize;
+	margin: 5% auto;
+	width: 100%;
+}
+.siteAlertContainer .siteAlertBody .flexer .alertBtner {
+	display: block;
+	text-transform: uppercase;
+	margin: 5% auto;
+	width: 100%;
+	padding: 0.5em 0;
+	border-radius: 5px;
+	font-weight: bold;
+	color: #FFF;
+	background: var(--info);
+	margin-top: 10%;
+}
+.siteAlertContainer .siteAlertBody .flexer .alertBtner:hover {
+	opacity: 0.7;
+	cursor: pointer;
+}
+
+
+
+.userVerifiedBadge {
+	font-size: 0.5em !important;
+	color: var(--success) !important;
+	vertical-align: middle;
+	margin-left: 1em;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
