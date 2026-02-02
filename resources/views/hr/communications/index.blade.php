@@ -9,10 +9,10 @@
     <!-- Header with Action Button -->
     <div class="flex items-center justify-between">
         <div>
-            <h2 class="text-2xl font-display font-bold text-slate-800">Communications Log</h2>
+            <h2 class="text-2xl font-display font-bold text-premium">Communications Log</h2>
             <p class="text-sm text-slate-500 mt-1">{{ $records->total() }} total logs</p>
         </div>
-        <button onclick="openModal('addCommModal')" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
+        <button onclick="openModal('addCommModal')" class="inline-flex items-center gap-2 px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
             <i class="fa-solid fa-plus"></i>
             <span>New Log</span>
         </button>
@@ -95,7 +95,7 @@
     <div class="modal-backdrop" onclick="closeModal('addCommModal')"></div>
     <div class="modal-content max-w-lg p-6">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-display font-bold text-slate-800">New Communication Log</h2>
+            <h2 class="text-2xl font-display font-bold text-premium">New Communication Log</h2>
             <button onclick="closeModal('addCommModal')" class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
                 <i class="fa-solid fa-times text-xl"></i>
             </button>
@@ -131,7 +131,7 @@
 
             <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
                 <button type="button" onclick="closeModal('addCommModal')" class="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">Cancel</button>
-                <button type="submit" class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">Save Log</button>
+                <button type="submit" class="px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">Save Log</button>
             </div>
         </form>
     </div>

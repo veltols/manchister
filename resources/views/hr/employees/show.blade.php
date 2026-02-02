@@ -13,7 +13,7 @@
                 <a href="{{ route('hr.employees.index') }}" class="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 text-sm font-semibold mb-3">
                     <i class="fa-solid fa-arrow-left"></i>Back to List
                 </a>
-                <h1 class="text-3xl font-display font-bold text-slate-800">
+                <h1 class="text-3xl font-display font-bold text-premium">
                     {{ $employee->first_name }} {{ $employee->last_name }}
                     @if($employee->is_new == 1)
                         <span class="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-bold shadow-md ml-3">

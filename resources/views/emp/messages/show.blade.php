@@ -9,7 +9,7 @@
     <!-- Sidebar / Chat List -->
     <div class="hidden md:flex w-1/3 premium-card flex-col overflow-hidden">
         <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-            <h2 class="text-lg font-display font-bold text-slate-800">Inbox</h2>
+            <h2 class="text-lg font-display font-bold text-premium">Inbox</h2>
             <a href="{{ route('emp.messages.index') }}" class="text-slate-500 hover:text-indigo-600 transition-colors">
                 <i class="fa-solid fa-arrow-left mr-2"></i>Back
             </a>
@@ -34,7 +34,7 @@
                     {{ substr($otherUser->first_name, 0, 1) }}
                 </div>
                 <div>
-                    <h3 class="font-bold text-slate-800">{{ $otherUser->first_name }} {{ $otherUser->last_name }}</h3>
+                    <h3 class="font-bold text-premium">{{ $otherUser->first_name }} {{ $otherUser->last_name }}</h3>
                     <div class="text-xs text-green-500 flex items-center gap-1">
                         <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                         Online
@@ -92,7 +92,7 @@
                     <i class="fa-solid fa-paperclip"></i>
                 </button>
                 <input type="text" name="message" class="flex-1 premium-input px-6 py-3 text-sm rounded-full" placeholder="Type a message..." required autocomplete="off">
-                <button type="submit" class="w-12 h-12 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg">
+                <button type="submit" class="w-12 h-12 rounded-full premium-button from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg">
                     <i class="fa-solid fa-paper-plane"></i>
                 </button>
             </div>

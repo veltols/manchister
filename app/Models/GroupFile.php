@@ -12,6 +12,10 @@ class GroupFile extends Model
     protected $table = 'z_groups_list_files';
     protected $primaryKey = 'file_id';
     public $timestamps = false;
-
     protected $guarded = [];
+
+    public function uploader()
+    {
+        return $this->belongsTo(EmployeesList::class, 'added_by', 'employee_id');
+    }
 }

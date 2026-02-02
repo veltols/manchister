@@ -1,65 +1,67 @@
 @extends('layouts.app')
 
-@section('title', 'Settings')
-@section('subtitle', 'System configuration')
+@section('title', 'System Settings')
+@section('subtitle', 'Manage System Lists and Configurations')
 
 @section('content')
-<div class="space-y-6">
-    
-    <!-- Header -->
-    <div class="premium-card p-8">
-        <h1 class="text-3xl font-display font-bold text-slate-800 mb-2">
-            <i class="fa-solid fa-cogs text-indigo-600 mr-3"></i>System Settings
-        </h1>
-        <p class="text-slate-500">Manage system-wide configurations and dropdown lists</p>
-    </div>
+    <div class="h-[calc(100vh-12rem)] flex gap-6 animate-fade-in-up">
 
-    <!-- Settings Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        <!-- Leave Types -->
-        <a href="{{ route('admin.settings.leave_types') }}" class="block group">
-            <div class="premium-card p-8 text-center hover:shadow-xl transition-all duration-200">
-                <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
-                    <i class="fa-solid fa-calendar-alt text-white text-2xl"></i>
+        <!-- Sidebar Navigation for Settings -->
+        <div class="w-64 flex flex-col gap-2 shrink-0">
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest px-4 mb-2">General</h3>
+
+            <a href="{{ route('admin.users.index') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white hover:shadow-sm text-slate-600 hover:text-indigo-600 transition-all">
+                <i class="fa-solid fa-users w-5 text-center"></i>
+                <span class="font-bold text-sm">Users</span>
+            </a>
+
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest px-4 mb-2 mt-4">HR & Ops</h3>
+
+            <a href="{{ route('admin.settings.leave_types') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white hover:shadow-sm text-slate-600 hover:text-indigo-600 transition-all">
+                <i class="fa-solid fa-calendar-days w-5 text-center"></i>
+                <span class="font-bold text-sm">Leave Types</span>
+            </a>
+
+            <a href="{{ route('admin.settings.support_categories') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white hover:shadow-sm text-slate-600 hover:text-indigo-600 transition-all">
+                <i class="fa-solid fa-headset w-5 text-center"></i>
+                <span class="font-bold text-sm">Support Routes</span>
+            </a>
+
+            <a href="{{ route('admin.settings.priorities') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white hover:shadow-sm text-slate-600 hover:text-indigo-600 transition-all">
+                <i class="fa-solid fa-flag w-5 text-center"></i>
+                <span class="font-bold text-sm">Priorities</span>
+            </a>
+
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest px-4 mb-2 mt-4">Assets</h3>
+
+            <a href="{{ route('admin.settings.asset_categories') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white hover:shadow-sm text-slate-600 hover:text-indigo-600 transition-all">
+                <i class="fa-solid fa-layer-group w-5 text-center"></i>
+                <span class="font-bold text-sm">Asset Categories</span>
+            </a>
+
+            <a href="{{ route('admin.settings.asset_statuses') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white hover:shadow-sm text-slate-600 hover:text-indigo-600 transition-all">
+                <i class="fa-solid fa-tags w-5 text-center"></i>
+                <span class="font-bold text-sm">Asset Statuses</span>
+            </a>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 premium-card p-10 flex items-center justify-center bg-slate-50 border-dashed">
+            <div class="text-center">
+                <div
+                    class="w-16 h-16 rounded-full bg-indigo-50 text-indigo-200 flex items-center justify-center mx-auto mb-4 text-3xl">
+                    <i class="fa-solid fa-sliders"></i>
                 </div>
-                <h3 class="font-bold text-lg text-slate-800 mb-2 group-hover:text-indigo-600 transition-colors">Leave Types</h3>
-                <p class="text-sm text-slate-500">Manage annual, sick, and unpaid leave definitions</p>
+                <h2 class="text-xl font-bold text-slate-700">Select a Category</h2>
+                <p class="text-slate-500 mt-2">Choose a setting from the sidebar to manage.</p>
             </div>
-        </a>
-
-        <!-- Asset Categories -->
-        <a href="{{ route('admin.settings.asset_categories') }}" class="block group">
-            <div class="premium-card p-8 text-center hover:shadow-xl transition-all duration-200">
-                <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
-                    <i class="fa-solid fa-laptop text-white text-2xl"></i>
-                </div>
-                <h3 class="font-bold text-lg text-slate-800 mb-2 group-hover:text-indigo-600 transition-colors">Asset Categories</h3>
-                <p class="text-sm text-slate-500">Define Electronics, Furniture, Vehicles etc.</p>
-            </div>
-        </a>
-
-        <!-- Departments -->
-        <a href="{{ route('hr.departments.index') }}" class="block group">
-            <div class="premium-card p-8 text-center hover:shadow-xl transition-all duration-200">
-                <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
-                    <i class="fa-solid fa-building text-white text-2xl"></i>
-                </div>
-                <h3 class="font-bold text-lg text-slate-800 mb-2 group-hover:text-indigo-600 transition-colors">Departments</h3>
-                <p class="text-sm text-slate-500">Manage organization structure</p>
-            </div>
-        </a>
-
-        <!-- User Roles (Placeholder) -->
-        <div class="premium-card p-8 text-center opacity-60">
-            <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-200 flex items-center justify-center shadow-lg">
-                <i class="fa-solid fa-user-shield text-slate-400 text-2xl"></i>
-            </div>
-            <h3 class="font-bold text-lg text-slate-600 mb-2">Roles & Permissions</h3>
-            <p class="text-sm text-slate-400">Coming Soon</p>
         </div>
 
     </div>
-
-</div>
 @endsection

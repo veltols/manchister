@@ -11,6 +11,7 @@ use App\Models\User; // Legacy users_list model if exists or create new one
 use App\Models\EmployeeCred; // Create this model
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
@@ -22,6 +23,7 @@ class UserController extends Controller
         $users = DB::table('users_list')
             ->join('employees_list', 'users_list.user_id', '=', 'employees_list.employee_id')
             ->select('employees_list.*', 'users_list.user_id', 'users_list.user_type', 'users_list.user_email as login_email')
+            ->orderBy('users_list.record_id', 'desc')
             ->paginate(20);
 
         return view('admin.users.index', compact('users'));
@@ -43,6 +45,7 @@ class UserController extends Controller
             'email' => 'required|email|unique:employees_list,employee_email',
             'password' => 'required|string|min:6',
             'department_id' => 'required|exists:employees_list_departments,department_id',
+            'user_type' => 'required|in:emp,hr,admin_hr,sys_admin,root,eqa',
         ]);
 
         DB::beginTransaction();
@@ -55,11 +58,11 @@ class UserController extends Controller
             $employee->last_name = $request->last_name;
             $employee->employee_email = $request->email;
             $employee->department_id = $request->department_id;
-            
+
             // Generate Code: Initials of first/last name
             $initials = strtoupper(substr($request->first_name, 0, 1) . substr($request->last_name, 0, 1));
             $employee->employee_code = $initials; // Legacy logic seems to use initials?
-            
+
             // Defaults as per legacy or nullable
             $employee->title_id = 0;
             $employee->gender_id = 0;
@@ -76,7 +79,7 @@ class UserController extends Controller
             // Legacy uses Bcrypt cost 12. Laravel default is often Bcrypt.
             // Explicitly matching legacy config:
             $hashedPassword = password_hash($request->password, PASSWORD_BCRYPT, ["cost" => 12]);
-            
+
             DB::table('employees_list_pass')->insert([
                 'employee_id' => $employeeId,
                 'pass_value' => $hashedPassword,
@@ -89,19 +92,23 @@ class UserController extends Controller
             ]);
 
             // 4. Create User Entry
-            // Get User Type from Department
-            $department = Department::find($request->department_id);
-            $userType = $department->user_type ?? 'NA'; // Assuming user_type column exists in dept model or table
+            // Use selected user_type from form
+            $userType = $request->user_type ?? 'emp'; // Default to emp if not set
 
             DB::table('users_list')->insert([
                 'user_id' => $employeeId,
                 'user_email' => $request->email,
                 'user_type' => $userType,
                 'int_ext' => 'int',
-                'user_family' => 'employees_list'
+                'user_family' => 'employees_list',
+                'is_active' => 1,
+                'user_lang' => 'en',
+                'user_theme_id' => 1
             ]);
 
-            // 5. System Log (Optional but good for parity)
+            // 5. System Log
+            \Log::info("User successfully created: " . $request->email . " User ID: " . $employeeId);
+
             DB::table('sys_logs')->insert([
                 'related_table' => 'employees_list',
                 'related_id' => $employeeId,
@@ -119,7 +126,33 @@ class UserController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error("User creation failed: " . $e->getMessage());
             return back()->withInput()->with('error', 'Failed to create user: ' . $e->getMessage());
         }
+    }
+
+    public function show($id)
+    {
+        $user = DB::table('users_list')
+            ->join('employees_list', 'users_list.user_id', '=', 'employees_list.employee_id')
+            ->join('employees_list_departments', 'employees_list.department_id', '=', 'employees_list_departments.department_id')
+            ->where('users_list.user_id', $id) // Assuming ID passed is user_id/employee_id not record_id
+            ->select('employees_list.*', 'users_list.*', 'employees_list_departments.department_name')
+            ->first();
+
+        if (!$user) {
+            // Try searching by record_id just in case
+            $user = DB::table('users_list')
+                ->join('employees_list', 'users_list.user_id', '=', 'employees_list.employee_id')
+                ->join('employees_list_departments', 'employees_list.department_id', '=', 'employees_list_departments.department_id')
+                ->where('users_list.record_id', $id)
+                ->select('employees_list.*', 'users_list.*', 'employees_list_departments.department_name')
+                ->first();
+        }
+
+        if (!$user)
+            abort(404);
+
+        return view('admin.users.show', compact('user'));
     }
 }

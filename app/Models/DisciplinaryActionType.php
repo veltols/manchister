@@ -12,6 +12,5 @@ class DisciplinaryActionType extends Model
     protected $table = 'hr_disp_actions_types';
     protected $primaryKey = 'da_type_id';
     public $timestamps = false;
-
     protected $guarded = [];
 }

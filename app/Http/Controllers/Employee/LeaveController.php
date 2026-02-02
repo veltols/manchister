@@ -13,9 +13,12 @@ class LeaveController extends Controller
 {
     public function index()
     {
+        $user = Auth::user();
+        $employeeId = $user->employee ? $user->employee->employee_id : 0;
+
         // Get leaves for the logged-in employee only
         $leaves = HrLeave::with('type')
-            ->where('employee_id', Auth::id()) // Assuming LegacyUser ID matches employee_id
+            ->where('employee_id', $employeeId)
             ->orderBy('leave_id', 'desc')
             ->paginate(15);
 
@@ -33,14 +36,17 @@ class LeaveController extends Controller
             'leave_remarks' => 'required|string',
         ]);
 
+        $user = Auth::user();
+        $employeeId = $user->employee ? $user->employee->employee_id : 0;
+
         $leave = new HrLeave();
-        $leave->employee_id = Auth::id();
+        $leave->employee_id = $employeeId;
         $leave->leave_type_id = $request->leave_type_id;
         $leave->start_date = $request->start_date;
         $leave->end_date = $request->end_date;
         $leave->leave_remarks = $request->leave_remarks;
         $leave->submission_date = now();
-        $leave->leave_status_id = 0; // Pending
+        $leave->leave_status_id = 1; // Pending (1 matches permission_status_id normally)
 
         $start = Carbon::parse($request->start_date);
         $end = Carbon::parse($request->end_date);

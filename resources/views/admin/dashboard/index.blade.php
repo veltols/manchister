@@ -17,7 +17,7 @@
                 </div>
                 <p class="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Tickets</p>
                 <div class="flex items-end gap-2 mt-2">
-                    <h3 class="text-3xl font-bold text-slate-800">{{ $totalTickets }}</h3>
+                    <h3 class="text-3xl font-bold text-premium">{{ $totalTickets }}</h3>
                 </div>
             </div>
 
@@ -102,7 +102,7 @@
                 </div>
                 <p class="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Assets</p>
                 <div class="flex items-end gap-2 mt-2">
-                    <h3 class="text-3xl font-bold text-slate-800">{{ $totalAssets }}</h3>
+                    <h3 class="text-3xl font-bold text-premium">{{ $totalAssets }}</h3>
                 </div>
             </div>
 
@@ -166,7 +166,7 @@
     <!-- RECENT TICKETS -->
     <div class="premium-card overflow-hidden">
         <div class="p-6 border-b border-slate-100 bg-white flex justify-between items-center">
-            <h3 class="font-display font-bold text-lg text-slate-800">Recent Support Tickets</h3>
+            <h3 class="font-display font-bold text-lg text-premium">Recent Support Tickets</h3>
             <a href="{{ route('emp.tickets.index') }}" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium">View All</a>
         </div>
         <div class="overflow-x-auto">

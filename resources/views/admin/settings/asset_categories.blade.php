@@ -12,7 +12,7 @@
             <a href="{{ route('admin.settings.index') }}" class="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 text-sm font-semibold mb-2">
                 <i class="fa-solid fa-arrow-left"></i>Back to Settings
             </a>
-            <h1 class="text-2xl font-display font-bold text-slate-800">Asset Categories</h1>
+            <h1 class="text-2xl font-display font-bold text-premium">Asset Categories</h1>
         </div>
     </div>
 
@@ -20,7 +20,7 @@
         
         <!-- Form -->
         <div class="premium-card p-6">
-            <h3 class="text-lg font-display font-bold text-slate-800 mb-4">Add Category</h3>
+            <h3 class="text-lg font-display font-bold text-premium mb-4">Add Category</h3>
             <form action="{{ route('admin.settings.asset_categories.store') }}" method="POST">
                 @csrf
                 <div class="space-y-4">
@@ -33,7 +33,7 @@
                         <input type="color" name="category_color" class="w-full h-12 border border-slate-200 rounded-xl p-2 bg-white cursor-pointer" value="#243649">
                     </div>
                 </div>
-                <button type="submit" class="w-full mt-6 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
+                <button type="submit" class="w-full mt-6 px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
                     <i class="fa-solid fa-plus mr-2"></i>Add Category
                 </button>
             </form>

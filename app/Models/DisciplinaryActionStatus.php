@@ -12,6 +12,5 @@ class DisciplinaryActionStatus extends Model
     protected $table = 'hr_disp_actions_status';
     protected $primaryKey = 'da_status_id';
     public $timestamps = false;
-
     protected $guarded = [];
 }

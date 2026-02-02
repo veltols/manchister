@@ -14,12 +14,18 @@ class DepartmentController extends Controller
         $departments = Department::with(['mainDepartment', 'lineManager'])
             ->orderBy('department_id', 'desc')
             ->paginate(15);
-            
+
         $employees = Employee::where('is_deleted', 0)->where('is_hidden', 0)->orderBy('first_name')->get();
         // For parent department selection, exclude those that shouldn't be parents if needed, or just list clear ones
         $allDepartments = Department::orderBy('department_name')->get();
 
         return view('hr.departments.index', compact('departments', 'employees', 'allDepartments'));
+    }
+
+    public function orgChart()
+    {
+        $departments = Department::orderBy('department_name')->get();
+        return view('hr.departments.chart', compact('departments'));
     }
 
     public function store(Request $request)

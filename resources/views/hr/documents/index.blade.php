@@ -9,10 +9,10 @@
     <!-- Header with Action Button -->
     <div class="flex items-center justify-between">
         <div>
-            <h2 class="text-2xl font-display font-bold text-slate-800">Documents & Policies</h2>
+            <h2 class="text-2xl font-display font-bold text-premium">Documents & Policies</h2>
             <p class="text-sm text-slate-500 mt-1">{{ $documents->total() }} total documents</p>
         </div>
-        <button onclick="openModal('addDocModal')" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
+        <button onclick="openModal('addDocModal')" class="inline-flex items-center gap-2 px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
             <i class="fa-solid fa-cloud-arrow-up"></i>
             <span>Upload Document</span>
         </button>
@@ -51,7 +51,7 @@
                     <i class="fa-solid fa-file-pdf text-2xl"></i>
                 </div>
                 <div class="flex-1">
-                    <h3 class="font-bold text-slate-800 line-clamp-2 mb-2" title="{{ $doc->document_title }}">{{ $doc->document_title }}</h3>
+                    <h3 class="font-bold text-premium line-clamp-2 mb-2" title="{{ $doc->document_title }}">{{ $doc->document_title }}</h3>
                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-medium">
                         <i class="fa-solid fa-tag text-xs"></i>
                         {{ $doc->type->document_type_name ?? 'General' }}
@@ -91,7 +91,7 @@
     <div class="modal-backdrop" onclick="closeModal('addDocModal')"></div>
     <div class="modal-content max-w-lg p-6">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-display font-bold text-slate-800">Upload Document</h2>
+            <h2 class="text-2xl font-display font-bold text-premium">Upload Document</h2>
             <button onclick="closeModal('addDocModal')" class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
                 <i class="fa-solid fa-times text-xl"></i>
             </button>
@@ -124,7 +124,7 @@
 
             <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
                 <button type="button" onclick="closeModal('addDocModal')" class="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">Cancel</button>
-                <button type="submit" class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">Upload</button>
+                <button type="submit" class="px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">Upload</button>
             </div>
         </form>
     </div>

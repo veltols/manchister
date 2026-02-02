@@ -39,4 +39,11 @@ class Task extends Model
     {
         return $this->belongsTo(Employee::class, 'assigned_to', 'employee_id');
     }
+
+    public function logs()
+    {
+        return $this->hasMany(SystemLog::class, 'related_id', 'task_id')
+            ->where('related_table', 'tasks_list')
+            ->orderBy('log_id', 'desc');
+    }
 }

@@ -11,22 +11,12 @@ class Department extends Model
 
     protected $table = 'employees_list_departments';
     protected $primaryKey = 'department_id';
-    public $timestamps = false; // Legacy table
+    public $timestamps = false;
 
     protected $guarded = [];
 
-    public function lineManager()
+    public function designations()
     {
-        return $this->belongsTo(Employee::class, 'line_manager_id', 'employee_id');
-    }
-
-    public function mainDepartment()
-    {
-        return $this->belongsTo(Department::class, 'main_department_id', 'department_id');
-    }
-
-    public function subDepartments()
-    {
-        return $this->hasMany(Department::class, 'main_department_id', 'department_id');
+        return $this->hasMany(Designation::class, 'department_id', 'department_id');
     }
 }

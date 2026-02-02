@@ -12,6 +12,5 @@ class DisciplinaryActionWarning extends Model
     protected $table = 'hr_disp_actions_warnings';
     protected $primaryKey = 'da_warning_id';
     public $timestamps = false;
-
     protected $guarded = [];
 }

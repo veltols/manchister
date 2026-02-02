@@ -22,14 +22,16 @@ class SupportTicketController extends Controller
 
         // Join for readable names (optional, or use Eloquent relationships)
         $query->leftJoin('support_tickets_list_cats as c', 'support_tickets_list.category_id', '=', 'c.category_id')
-              ->leftJoin('sys_list_priorities as p', 'support_tickets_list.priority_id', '=', 'p.priority_id')
-              ->leftJoin('sys_list_status as s', 'support_tickets_list.status_id', '=', 's.status_id')
-              ->select(
-                  'support_tickets_list.*',
-                  'c.category_name',
-                  'p.priority_name', 'p.priority_color',
-                  's.status_name as status_name', 's.status_color'
-              );
+            ->leftJoin('sys_list_priorities as p', 'support_tickets_list.priority_id', '=', 'p.priority_id')
+            ->leftJoin('sys_list_status as s', 'support_tickets_list.status_id', '=', 's.status_id')
+            ->select(
+                'support_tickets_list.*',
+                'c.category_name',
+                'p.priority_name',
+                'p.priority_color',
+                's.status_name as status_name',
+                's.status_color'
+            );
 
         // Filter by Status
         if ($stt == 1) {
@@ -46,7 +48,7 @@ class SupportTicketController extends Controller
         // Data for "Create Ticket" Modal
         $categories = SupportTicketCategory::all();
         $priorities = Priority::all();
-        
+
         // Employees in same department (for 'assigned_by' or similar fields if needed)
         // In legacy: SELECT ... FROM employees_list WHERE department_id = $myDeptId
         $myDeptId = 1; // Default fallback
@@ -94,15 +96,65 @@ class SupportTicketController extends Controller
         $ticket->category_id = $request->category_id;
         $ticket->priority_id = $request->priority_id;
         $ticket->ticket_attachment = $attachmentPath;
-        
+
         $ticket->added_by = $employeeId; // Logged in user
         $ticket->department_id = $departmentId;
         $ticket->ticket_added_date = now();
-        
+
         $ticket->status_id = 1; // Open
         $ticket->assigned_to = 0; // Unassigned
         $ticket->save();
 
+        // Create Initial Log
+        $log = new \App\Models\SystemLog();
+        $log->related_table = 'support_tickets_list';
+        $log->related_id = $ticket->ticket_id;
+        $log->log_action = 'Ticket_Added';
+        $log->log_remark = 'Initial ticket creation';
+        $log->log_date = now();
+        $log->logged_by = $employeeId;
+        $log->logger_type = 'employees_list';
+        $log->log_type = 'int';
+        $log->save();
+
         return redirect()->route('emp.tickets.index')->with('success', 'Ticket created successfully');
+    }
+    public function show($id)
+    {
+        $ticket = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'logs.logger'])
+            ->findOrFail($id);
+
+        $statuses = \App\Models\SupportTicketStatus::all();
+
+        return view('emp.tickets.show', compact('ticket', 'statuses'));
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status_id' => 'required|integer',
+            'log_remark' => 'required|string',
+        ]);
+
+        $ticket = SupportTicket::findOrFail($id);
+        $ticket->status_id = $request->status_id;
+        $ticket->save();
+
+        // Create Log
+        $user = Auth::user();
+        $employeeId = $user->employee ? $user->employee->employee_id : 0;
+
+        $log = new \App\Models\SystemLog();
+        $log->related_table = 'support_tickets_list';
+        $log->related_id = $id;
+        $log->log_action = 'Status Update'; // Or fetch dynamic action name
+        $log->log_remark = $request->log_remark;
+        $log->log_date = now();
+        $log->logged_by = $employeeId;
+        $log->logger_type = 'employees_list';
+        $log->log_type = 'int';
+        $log->save();
+
+        return redirect()->back()->with('success', 'Ticket status updated successfully');
     }
 }

@@ -8,7 +8,7 @@
     <div class="glass-panel p-6 flex flex-col relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
         <div class="z-10">
             <p class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Total Employees</p>
-            <h3 class="text-3xl font-bold text-slate-800">{{ $employee_count ?? 0 }}</h3>
+            <h3 class="text-3xl font-bold text-premium">{{ $employee_count ?? 0 }}</h3>
         </div>
         <div class="absolute -right-4 -bottom-4 text-slate-100 opacity-50 group-hover:scale-110 transition-transform duration-500">
             <i class="fa-solid fa-users text-8xl"></i>
@@ -22,7 +22,7 @@
     <div class="glass-panel p-6 flex flex-col relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
         <div class="z-10">
             <p class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">On Leaves</p>
-            <h3 class="text-3xl font-bold text-slate-800">{{ $leaves_count ?? 0 }}</h3>
+            <h3 class="text-3xl font-bold text-premium">{{ $leaves_count ?? 0 }}</h3>
         </div>
         <div class="absolute -right-4 -bottom-4 text-slate-100 opacity-50 group-hover:scale-110 transition-transform duration-500">
              <i class="fa-solid fa-plane-departure text-8xl"></i>
@@ -36,7 +36,7 @@
     <div class="glass-panel p-6 flex flex-col relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
         <div class="z-10">
             <p class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Departments</p>
-            <h3 class="text-3xl font-bold text-slate-800">{{ $dept_count ?? 0 }}</h3>
+            <h3 class="text-3xl font-bold text-premium">{{ $dept_count ?? 0 }}</h3>
         </div>
         <div class="absolute -right-4 -bottom-4 text-slate-100 opacity-50 group-hover:scale-110 transition-transform duration-500">
              <i class="fa-solid fa-building text-8xl"></i>
@@ -64,7 +64,7 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <!-- Chart Section -->
     <div class="lg:col-span-2 glass-panel p-6">
-        <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center">
+        <h3 class="text-lg font-bold text-premium mb-6 flex items-center">
             <i class="fa-solid fa-chart-area mr-2 text-accent"></i> Attendance Overview
         </h3>
         <div class="h-64 bg-slate-50 rounded-xl flex items-center justify-center border border-dashed border-slate-300">
@@ -74,7 +74,7 @@
 
     <!-- Quick Links -->
     <div class="glass-panel p-6">
-         <h3 class="text-lg font-bold text-slate-800 mb-6">Quick Actions</h3>
+         <h3 class="text-lg font-bold text-premium mb-6">Quick Actions</h3>
          <div class="space-y-3">
              <a href="{{ route('hr.employees.create') }}" class="flex items-center p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors group">
                  <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-green-500 shadow-sm mr-3 group-hover:scale-110 transition-transform">

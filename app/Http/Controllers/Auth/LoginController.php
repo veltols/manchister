@@ -29,7 +29,33 @@ class LoginController extends Controller
 
         if (Auth::attempt($authCredentials)) {
             $request->session()->regenerate();
-            return redirect()->intended('dashboard');
+            $request->session()->regenerate();
+
+            $user = Auth::user();
+
+            switch ($user->user_type) {
+                case 'root':
+                case 'sys_admin':
+                    return redirect()->route('admin.dashboard');
+                case 'hr':
+                case 'admin_hr':
+                    return redirect()->route('hr.dashboard');
+                case 'emp':
+                    return redirect()->route('emp.dashboard');
+                case 'eqa':
+                    // Redirect EQA to their main workspace (e.g., Training Providers List or Dashboard if exists)
+                    // Since EQA sidebar prioritizes "Training Providers" or "Dashboard", let's default to dashboard if routed or index
+                    // If no explicit eqa dashboard exists in routes relative to 'eqa.dashboard', we check.
+                    // Assuming eqa.atps.index is the main work hub if no dashboard.
+                    // But typically there is a dashboard. 
+                    // Let's assume we want a generic redirect or route checking.
+                    // For now, EQA goes to eqa.atps.index as a safe bet if no dashboard, OR create a dashboard route.
+                    // Legacy had `DIR_dashboard`.
+                    // We haven't created `eqa.dashboard` yet. I will redirect to `eqa.atps.index` for now or create the route.
+                    return redirect()->route('eqa.atps.index');
+                default:
+                    return redirect()->route('emp.dashboard'); // Fallback
+            }
         }
 
         return back()->withErrors([

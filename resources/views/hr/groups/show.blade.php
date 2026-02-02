@@ -8,7 +8,7 @@
     <div class="glass-panel p-4 flex justify-between items-center mb-4 shrink-0">
         <div>
              <a href="{{ route('hr.groups.index') }}" class="text-gray-500 hover:text-gray-700 text-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
-             <h1 class="text-xl font-bold text-gray-800 mt-1">{{ $group->group_name }}</h1>
+             <h1 class="text-xl font-bold text-premium mt-1">{{ $group->group_name }}</h1>
              <p class="text-sm text-gray-500">{{ $group->group_desc }}</p>
         </div>
         <div class="flex -space-x-2">
@@ -60,7 +60,7 @@
     <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
         <div class="bg-white rounded-lg shadow-lg w-full max-w-sm mx-4">
             <div class="flex justify-between items-center p-4 border-b">
-                <h2 class="text-lg font-bold text-gray-800">Add Member</h2>
+                <h2 class="text-lg font-bold text-premium">Add Member</h2>
                 <button onclick="closeModal('addMemberModal')" class="text-gray-500 hover:text-gray-700">
                     <i class="fa-solid fa-times"></i>
                 </button>

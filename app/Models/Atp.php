@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Atp extends Model
+class ATP extends Model
 {
     use HasFactory;
 
@@ -15,8 +15,21 @@ class Atp extends Model
 
     protected $guarded = [];
 
-    public function passwordData()
+    // Relationships
+    public function status()
     {
-        return $this->hasOne(AtpPass::class, 'atp_id', 'atp_id');
+        return $this->belongsTo(ATPStatus::class, 'status_id', 'status_id');
+    }
+
+    public function addedBy()
+    {
+        return $this->belongsTo(Employee::class, 'added_by', 'employee_id')->withDefault([
+            'last_name' => 'Admin'
+        ]);
+    }
+
+    public function logs()
+    {
+        return $this->hasMany(ATPLog::class, 'atp_id', 'atp_id')->orderBy('log_date', 'desc');
     }
 }

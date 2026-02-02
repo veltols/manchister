@@ -4,135 +4,114 @@ namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Employee;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class MessageController extends Controller
 {
     public function index()
     {
-        $userId = Auth::id();
+        $userId = Auth::user()->employee_id ?? 0;
 
         // Fetch conversations where user is A or B
-        $conversations = Conversation::with(['participantA', 'participantB'])
-            ->where('a_id', $userId)
+        $conversations = Conversation::where('a_id', $userId)
             ->orWhere('b_id', $userId)
-            ->orderBy('chat_id', 'desc')
+            ->with(['participantA', 'participantB'])
+            ->orderBy('last_updated', 'desc') // Assuming last_updated exists, else order by chat_id
             ->get();
-            
-        // Process to find the "Other" user for display
-        $conversations->each(function($chat) use ($userId) {
-            if($chat->a_id == $userId){
-                $chat->otherUser = $chat->participantB;
-            } else {
-                $chat->otherUser = $chat->participantA;
-            }
-            
-            // Count unread
-            $chat->unreadCount = Message::where('chat_id', $chat->chat_id)
-                ->where('added_by', '!=', $userId)
-                ->where('is_read', 0)
-                ->count();
-            
-            // Last message
-            $chat->lastMessage = Message::where('chat_id', $chat->chat_id)->latest('post_id')->first();
-        });
 
-        $employees = Employee::where('is_deleted', 0)
-                   ->where('employee_id', '!=', $userId)
-                   ->where('is_hidden', 0)
-                   ->orderBy('first_name')
-                   ->get();
+        // Pass available employees for new chat
+        $employees = Employee::where('employee_id', '!=', $userId)
+            ->where('is_deleted', 0)
+            ->orderBy('first_name')
+            ->get();
 
-        return view('emp.messages.index', compact('conversations', 'employees'));
+        return view('hr.messages.index', compact('conversations', 'employees'));
     }
 
     public function show($id)
     {
-        $userId = Auth::id();
-        $conversation = Conversation::with(['participantA', 'participantB'])->findOrFail($id);
+        $userId = Auth::user()->employee_id ?? 0;
 
-        if($conversation->a_id != $userId && $conversation->b_id != $userId){
-            abort(403);
-        }
+        $conversation = Conversation::where('chat_id', $id)
+            ->where(function ($q) use ($userId) {
+                $q->where('a_id', $userId)->orWhere('b_id', $userId);
+            })
+            ->with(['messages.sender'])
+            ->firstOrFail();
 
-        // Determine other user
-        if($conversation->a_id == $userId){
-            $otherUser = $conversation->participantB;
-        } else {
-            $otherUser = $conversation->participantA;
-        }
+        // Mark messages as read logic would go here (update is_seen = 1)
 
-        // Mark messages as read
-        Message::where('chat_id', $id)
-            ->where('added_by', '!=', $userId)
-            ->update(['is_read' => 1]);
-
-        $messages = Message::where('chat_id', $id)
-            ->with('sender')
-            ->orderBy('post_id', 'asc')
+        // Pass available employees for sidebar if needed, or AJAX load
+        $employees = Employee::where('employee_id', '!=', $userId)
+            ->where('is_deleted', 0)
+            ->orderBy('first_name')
             ->get();
 
-        return view('emp.messages.show', compact('conversation', 'messages', 'otherUser'));
+        $conversations = Conversation::where('a_id', $userId)
+            ->orWhere('b_id', $userId)
+            ->with(['participantA', 'participantB'])
+            ->orderBy('chat_id', 'desc')
+            ->get();
+
+        return view('hr.messages.show', compact('conversation', 'conversations', 'employees'));
     }
 
     public function store(Request $request)
     {
+        // Start new chat
         $request->validate([
-            'employee_id' => 'required|exists:employees_list,employee_id',
-            'message' => 'nullable|string', // Initial message optional if creating chat?
+            'employee_id' => 'required|exists:employees_list,employee_id'
         ]);
 
-        $userId = Auth::id();
-        $targetId = $request->employee_id;
+        $senderId = Auth::user()->employee_id ?? 0;
+        $receiverId = $request->employee_id;
 
-        // Check if chat exists
-        $chat = Conversation::where(function($q) use ($userId, $targetId){
-                $q->where('a_id', $userId)->where('b_id', $targetId);
-            })->orWhere(function($q) use ($userId, $targetId){
-                $q->where('a_id', $targetId)->where('b_id', $userId);
-            })->first();
+        // Check existing chat
+        $existing = Conversation::where(function ($q) use ($senderId, $receiverId) {
+            $q->where('a_id', $senderId)->where('b_id', $receiverId);
+        })->orWhere(function ($q) use ($senderId, $receiverId) {
+            $q->where('a_id', $receiverId)->where('b_id', $senderId);
+        })->first();
 
-        if(!$chat){
-            $chat = new Conversation();
-            $chat->a_id = $userId;
-            $chat->b_id = $targetId;
-            $chat->added_by = $userId;
-            $chat->added_date = now();
-            $chat->save();
+        if ($existing) {
+            return redirect()->route('messages.show', $existing->chat_id);
         }
 
-        // If message provided, send it
-        if($request->filled('message')){
-            $msg = new Message();
-            $msg->chat_id = $chat->chat_id;
-            $msg->added_by = $userId;
-            $msg->post_text = $request->message;
-            $msg->post_type = 'text';
-            $msg->added_date = now();
-            $msg->save();
-        }
+        $chat = new Conversation();
+        $chat->a_id = $senderId;
+        $chat->b_id = $receiverId;
+        $chat->start_time = now();
+        $chat->last_updated = now();
+        $chat->save();
 
-        return redirect()->route('emp.messages.show', $chat->chat_id);
+        return redirect()->route('messages.show', $chat->chat_id);
     }
 
     public function reply(Request $request, $id)
     {
         $request->validate([
-            'message' => 'required|string',
+            'message_text' => 'required|string'
         ]);
 
         $msg = new Message();
         $msg->chat_id = $id;
-        $msg->added_by = Auth::id();
-        $msg->post_text = $request->message;
-        $msg->post_type = 'text';
+        $msg->post_content = $request->message_text; // Assuming post_content is the field
+        $msg->added_by = Auth::user()->employee_id ?? 0;
         $msg->added_date = now();
+        $msg->is_seen = 0;
         $msg->save();
 
-        return redirect()->back();
+        // Update conversation last_updated
+        $conv = Conversation::find($id);
+        if ($conv) {
+            $conv->last_updated = now(); // Update timestamp if possible
+            $conv->save();
+        }
+
+        return redirect()->route('messages.show', $id);
     }
 }

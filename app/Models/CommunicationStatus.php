@@ -12,6 +12,5 @@ class CommunicationStatus extends Model
     protected $table = 'm_communications_list_status';
     protected $primaryKey = 'communication_status_id';
     public $timestamps = false;
-
     protected $guarded = [];
 }

@@ -13,7 +13,7 @@
             <div class="flex items-center justify-between relative z-10">
                 <div>
                     <p class="text-sm font-medium text-slate-500 mb-1">Total Employees</p>
-                    <h3 class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent count" data-target="{{ $totalEmps }}">0</h3>
+                    <h3 class="text-3xl font-bold text-premium count" data-target="{{ $totalEmps }}">0</h3>
                 </div>
                 <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                     <i class="fa-solid fa-users text-white text-xl"></i>
@@ -31,7 +31,7 @@
             <div class="flex items-center justify-between relative z-10">
                 <div>
                     <p class="text-sm font-medium text-slate-500 mb-1">Average Age</p>
-                    <h3 class="text-3xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
+                    <h3 class="text-3xl font-bold text-premium">
                         <span class="count" data-target="{{ $averageAge }}">0</span>
                         <span class="text-lg">yrs</span>
                     </h3>
@@ -49,7 +49,7 @@
             <div class="flex items-center justify-between relative z-10">
                 <div>
                     <p class="text-sm font-medium text-slate-500 mb-1">Diversity</p>
-                    <h3 class="text-3xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent">{{ $diversityStat }}</h3>
+                    <h3 class="text-3xl font-bold text-premium">{{ $diversityStat }}</h3>
                 </div>
                 <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                     <i class="fa-solid fa-venus-mars text-white text-xl"></i>
@@ -64,7 +64,7 @@
             <div class="flex items-center justify-between relative z-10">
                 <div>
                     <p class="text-sm font-medium text-slate-500 mb-1">Departments</p>
-                    <h3 class="text-3xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">{{ count($deptDataLabels) }}</h3>
+                    <h3 class="text-3xl font-bold text-premium">{{ count($deptDataLabels) }}</h3>
                 </div>
                 <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                     <i class="fa-solid fa-building text-white text-xl"></i>
@@ -83,7 +83,7 @@
         <!-- Employees by Department -->
         <div class="premium-card p-6">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-display font-bold text-slate-800">Employees by Department</h3>
+                <h3 class="text-lg font-display font-bold text-premium">Employees by Department</h3>
                 <div class="px-3 py-1 rounded-lg bg-indigo-50 text-indigo-600 text-xs font-semibold">
                     {{ array_sum($deptDataCounts) }} Total
                 </div>
@@ -96,7 +96,7 @@
         <!-- Employees by Gender -->
         <div class="premium-card p-6">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-display font-bold text-slate-800">Gender Distribution</h3>
+                <h3 class="text-lg font-display font-bold text-premium">Gender Distribution</h3>
                 <div class="px-3 py-1 rounded-lg bg-pink-50 text-pink-600 text-xs font-semibold">
                     Diversity Metrics
                 </div>
@@ -114,7 +114,7 @@
         <!-- Certifications Chart -->
         <div class="premium-card p-6 lg:col-span-2">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-display font-bold text-slate-800">Employees by Certification</h3>
+                <h3 class="text-lg font-display font-bold text-premium">Employees by Certification</h3>
                 <div class="px-3 py-1 rounded-lg bg-cyan-50 text-cyan-600 text-xs font-semibold">
                     Skills Overview
                 </div>
@@ -126,9 +126,9 @@
 
         <!-- Quick Actions -->
         <div class="premium-card p-6">
-            <h3 class="text-lg font-display font-bold text-slate-800 mb-4">Quick Actions</h3>
+            <h3 class="text-lg font-display font-bold text-premium mb-4">Quick Actions</h3>
             <div class="space-y-3">
-                <a href="{{ route('hr.employees.create') }}" class="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 transition-all group">
+                <a href="{{ route('hr.employees.create') }}" class="flex items-center gap-3 p-3 rounded-xl premium-button from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 transition-all group">
                     <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-user-plus text-white"></i>
                     </div>
@@ -139,7 +139,7 @@
                     <i class="fa-solid fa-chevron-right text-slate-400 group-hover:text-indigo-600 transition-colors"></i>
                 </a>
 
-                <a href="{{ route('hr.leaves.index') }}" class="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-cyan-50 to-blue-50 hover:from-cyan-100 hover:to-blue-100 transition-all group">
+                <a href="{{ route('hr.leaves.index') }}" class="flex items-center gap-3 p-3 rounded-xl premium-button from-cyan-50 to-blue-50 hover:from-cyan-100 hover:to-blue-100 transition-all group">
                     <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-calendar-check text-white"></i>
                     </div>
@@ -150,7 +150,7 @@
                     <i class="fa-solid fa-chevron-right text-slate-400 group-hover:text-cyan-600 transition-colors"></i>
                 </a>
 
-                <a href="{{ route('hr.performance.index') }}" class="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 transition-all group">
+                <a href="{{ route('hr.performance.index') }}" class="flex items-center gap-3 p-3 rounded-xl premium-button from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 transition-all group">
                     <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-star text-white"></i>
                     </div>

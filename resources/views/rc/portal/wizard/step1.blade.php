@@ -5,7 +5,7 @@
 @section('content')
 <div class="max-w-3xl mx-auto mt-10">
     <div class="glass-panel p-8">
-        <h1 class="text-2xl font-bold text-gray-800 mb-6">Initial Registration Form</h1>
+        <h1 class="text-2xl font-bold text-premium mb-6">Initial Registration Form</h1>
         
         <form action="{{ route('rc.portal.wizard.submit1') }}" method="POST">
             @csrf

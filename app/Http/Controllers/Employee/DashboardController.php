@@ -15,7 +15,7 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        
+
         // --- Date Logic (Default to This Month) ---
         $mode = $request->input('mode', 'this_month');
         $startDate = $request->input('start_date');
@@ -46,11 +46,11 @@ class DashboardController extends Controller
         // Status IDs: 1=Open, 2=In Progress, 3=Resolved
         // Unassigned: assigned_to = 0
         $totalTickets = SupportTicket::whereBetween('ticket_added_date', [$startDate, $endDate])->count();
-        
+
         $openTickets = SupportTicket::where('status_id', 1)
             ->whereBetween('ticket_added_date', [$startDate, $endDate])
             ->count();
-            
+
         $unassignedTickets = SupportTicket::where('assigned_to', 0)
             ->where('status_id', 1)
             ->whereBetween('ticket_added_date', [$startDate, $endDate])
@@ -81,19 +81,24 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        // --- 4. HR Stats (Placeholders as per legacy) ---
+        // --- 4. HR Stats (Real Data) ---
+        $employeeId = $user->employee ? $user->employee->employee_id : 0;
+
         $hrStats = [
-            'leave_balance' => 0,
+            'leave_balance' => 0, // Need logic for balance
             'remaining_leaves' => 0,
-            'requests' => 0,
-            'pending_approval' => 0,
+            'requests' => \Illuminate\Support\Facades\DB::table('hr_employees_leaves')->where('employee_id', $employeeId)->count(),
+            'pending_approval' => \Illuminate\Support\Facades\DB::table('hr_employees_leaves')->where('employee_id', $employeeId)->where('leave_status_id', 100)->count(),
         ];
 
+        $employeeName = $user->employee ? ($user->employee->first_name . ' ' . $user->employee->last_name) : $user->user_email;
+
         return view('emp.dashboard.index', compact(
-            'user', 
-            'announcements', 
-            'ticketStats', 
-            'assets', 
+            'user',
+            'employeeName',
+            'announcements',
+            'ticketStats',
+            'assets',
             'hrStats',
             'mode',
             'startDate',
@@ -102,6 +107,7 @@ class DashboardController extends Controller
     }
 }
 
-function compile_stats($total, $open, $unassigned, $progress, $resolved) {
+function compile_stats($total, $open, $unassigned, $progress, $resolved)
+{
     return (object) compact('total', 'open', 'unassigned', 'progress', 'resolved');
 }

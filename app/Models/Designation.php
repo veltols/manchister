@@ -14,4 +14,9 @@ class Designation extends Model
     public $timestamps = false;
 
     protected $guarded = [];
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class, 'department_id', 'department_id');
+    }
 }

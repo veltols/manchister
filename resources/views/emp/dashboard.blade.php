@@ -45,7 +45,7 @@
     <!-- Tasks List -->
     <div class="lg:col-span-2 glass-panel p-0 overflow-hidden">
         <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-            <h3 class="font-bold text-slate-800">Recent Tasks</h3>
+            <h3 class="font-bold text-premium">Recent Tasks</h3>
             <a href="{{ route('emp.tasks.index') }}" class="text-xs font-bold text-sky-500 hover:text-sky-600 uppercase tracking-wide">View All</a>
         </div>
         <div>
@@ -81,7 +81,7 @@
     <!-- Quick Actions -->
     <div class="space-y-6">
         <div class="glass-panel p-6">
-            <h3 class="font-bold text-slate-800 mb-4">Quick Links</h3>
+            <h3 class="font-bold text-premium mb-4">Quick Links</h3>
             <div class="grid grid-cols-2 gap-4">
                 <a href="{{ route('emp.leaves.index') }}" class="flex flex-col items-center justify-center p-4 rounded-xl bg-slate-50 hover:bg-sky-50 hover:text-sky-600 transition-colors border border-slate-100 group">
                     <i class="fa-solid fa-calendar-plus text-2xl mb-2 text-slate-400 group-hover:text-sky-500 transition-colors"></i>

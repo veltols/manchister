@@ -1,46 +1,51 @@
 @extends('layouts.app')
 
 @section('title', 'Notifications')
+@section('subtitle', 'Your recent alerts')
 
 @section('content')
-<div class="max-w-3xl mx-auto">
-    <div class="glass-panel p-6 mb-4 flex justify-between items-center">
-        <h1 class="text-2xl font-bold text-gray-800">
-            <i class="fa-solid fa-bell text-secondary"></i> Your Notifications
-        </h1>
-        <button class="text-sm text-secondary hover:underline">Mark all as read</button>
-    </div>
+    <div class="max-w-3xl mx-auto space-y-6 animate-fade-in-up">
 
-    <div class="space-y-3">
-        @forelse($notifications as $n)
-        <div class="glass-panel p-4 flex gap-4 items-start {{ $n->is_seen ? 'opacity-70 bg-gray-50' : 'bg-white border-blue-200 border ' }}">
-            <div class="mt-1">
-                 @if($n->is_seen)
-                    <i class="fa-regular fa-bell text-gray-400"></i>
-                 @else
-                    <i class="fa-solid fa-bell text-secondary fa-beat-fade"></i>
-                 @endif
+        <div class="premium-card overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
+                <h2 class="font-bold text-premium text-lg font-display">All Notifications</h2>
+                <button class="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors">Mark all as
+                    read</button>
             </div>
-            <div class="flex-1">
-                <p class="text-gray-800 font-medium">{{ $n->notification_text }}</p>
-                <div class="flex justify-between items-center mt-2">
-                    <span class="text-xs text-gray-400">{{ $n->notification_date }}</span>
-                    @if($n->related_page)
-                    <a href="{{ url($n->related_page) }}" class="text-xs text-secondary hover:underline">View Details <i class="fa-solid fa-arrow-right"></i></a>
-                    @endif
-                </div>
+
+            <div class="divide-y divide-slate-50">
+                @forelse($notifications as $notif)
+                    <div
+                        class="p-6 hover:bg-slate-50/50 transition-colors flex gap-4 {{ $notif->is_seen ? 'opacity-70' : '' }}">
+                        <div
+                            class="w-10 h-10 rounded-full {{ $notif->is_seen ? 'bg-slate-100 text-slate-400' : 'bg-indigo-50 text-indigo-600' }} flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-bell"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-slate-700 text-sm mb-1 leading-relaxed">{{ $notif->notification_text }}</p>
+                            <span
+                                class="text-xs text-slate-400">{{ \Carbon\Carbon::parse($notif->notification_date)->diffForHumans() }}</span>
+                        </div>
+                        @if($notif->related_page)
+                            <a href="{{ url($notif->related_page) }}"
+                                class="flex items-center justify-center w-8 h-8 rounded-full border border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-200 transition-all"
+                                title="Go to Page">
+                                <i class="fa-solid fa-arrow-right text-sm"></i>
+                            </a>
+                        @endif
+                    </div>
+                @empty
+                    <div class="p-12 text-center text-slate-400">
+                        <i class="fa-regular fa-bell-slash text-4xl mb-4 opacity-20"></i>
+                        <p>You have no notifications.</p>
+                    </div>
+                @endforelse
+            </div>
+
+            <div class="p-4 border-t border-slate-100 bg-slate-50">
+                {{ $notifications->links() }}
             </div>
         </div>
-        @empty
-        <div class="glass-panel p-10 text-center text-gray-400">
-            <i class="fa-regular fa-bell-slash text-4xl mb-3"></i>
-            <p>No notifications found.</p>
-        </div>
-        @endforelse
+
     </div>
-    
-    <div class="mt-4">
-        {{ $notifications->links('pagination::bootstrap-5') }}
-    </div>
-</div>
 @endsection

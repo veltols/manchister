@@ -11,12 +11,17 @@ class ExitInterview extends Model
 
     protected $table = 'hr_exit_interviews';
     protected $primaryKey = 'interview_id';
-    public $timestamps = false; // Legacy usually manages added_date manually
+    public $timestamps = false;
 
     protected $guarded = [];
 
     public function employee()
     {
         return $this->belongsTo(Employee::class, 'employee_id', 'employee_id');
+    }
+
+    public function answers()
+    {
+        return $this->hasMany(ExitInterviewAnswer::class, 'interview_id', 'interview_id');
     }
 }

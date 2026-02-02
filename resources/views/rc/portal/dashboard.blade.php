@@ -8,7 +8,7 @@
         <div class="w-20 h-20 bg-secondary text-white rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
             <i class="fa-solid fa-handshake"></i>
         </div>
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">Welcome, {{ $atp->atp_name_en }}</h1>
+        <h1 class="text-3xl font-bold text-premium mb-2">Welcome, {{ $atp->atp_name_en }}</h1>
         <p class="text-gray-600 mb-8">This is your Partner Portal. You can manage your accreditation status and details here.</p>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">

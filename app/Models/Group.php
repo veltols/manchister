@@ -22,16 +22,11 @@ class Group extends Model
 
     public function posts()
     {
-        return $this->hasMany(GroupPost::class, 'group_id', 'group_id')->orderBy('added_date', 'asc');
+        return $this->hasMany(GroupPost::class, 'group_id', 'group_id')->orderBy('post_id', 'desc');
     }
 
     public function files()
     {
-        return $this->hasMany(GroupFile::class, 'group_id', 'group_id');
-    }
-    
-    public function creator()
-    {
-        return $this->belongsTo(Employee::class, 'added_by', 'employee_id');
+        return $this->hasMany(GroupFile::class, 'group_id', 'group_id')->orderBy('file_id', 'desc');
     }
 }

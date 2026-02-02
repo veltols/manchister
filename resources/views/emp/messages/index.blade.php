@@ -9,7 +9,7 @@
     <!-- Sidebar / Chat List -->
     <div class="w-1/3 premium-card flex flex-col overflow-hidden">
         <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-            <h2 class="text-lg font-display font-bold text-slate-800">Inbox</h2>
+            <h2 class="text-lg font-display font-bold text-premium">Inbox</h2>
             <button onclick="openModal('newChatModal')" class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md">
                 <i class="fa-solid fa-pen text-sm"></i>
             </button>
@@ -18,7 +18,7 @@
         <div class="overflow-y-auto flex-1 p-3 space-y-2">
             @forelse($conversations as $chat)
             <a href="{{ route('emp.messages.show', $chat->chat_id) }}" 
-               class="block p-4 rounded-xl hover:bg-slate-50 transition-all border border-transparent {{ request()->route('chat_id') == $chat->chat_id ? 'bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200' : '' }}">
+               class="block p-4 rounded-xl hover:bg-slate-50 transition-all border border-transparent {{ request()->route('chat_id') == $chat->chat_id ? 'premium-button from-indigo-50 to-purple-50 border-indigo-200' : '' }}">
                 <div class="flex items-center gap-3">
                     <div class="relative">
                         <div class="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold shadow-md">
@@ -32,7 +32,7 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex justify-between items-baseline">
-                            <h3 class="text-sm font-bold text-slate-800 truncate">{{ $chat->otherUser->first_name ?? 'Unknown' }} {{ $chat->otherUser->last_name ?? '' }}</h3>
+                            <h3 class="text-sm font-bold text-premium truncate">{{ $chat->otherUser->first_name ?? 'Unknown' }} {{ $chat->otherUser->last_name ?? '' }}</h3>
                             <span class="text-xs text-slate-400 whitespace-nowrap ml-2">
                                 {{ $chat->lastMessage ? $chat->lastMessage->added_date : '' }}
                             </span>
@@ -63,7 +63,7 @@
             <div class="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <i class="fa-regular fa-comments text-4xl text-indigo-600"></i>
             </div>
-            <h3 class="text-xl font-display font-bold text-slate-800 mb-2">Select a conversation</h3>
+            <h3 class="text-xl font-display font-bold text-premium mb-2">Select a conversation</h3>
             <p class="text-sm text-slate-500">Choose a chat from the left to start messaging</p>
         </div>
     </div>
@@ -75,7 +75,7 @@
     <div class="modal-backdrop" onclick="closeModal('newChatModal')"></div>
     <div class="modal-content max-w-md p-6">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-display font-bold text-slate-800">New Message</h2>
+            <h2 class="text-2xl font-display font-bold text-premium">New Message</h2>
             <button onclick="closeModal('newChatModal')" class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
                 <i class="fa-solid fa-times text-xl"></i>
             </button>
@@ -106,7 +106,7 @@
                 <textarea name="message" rows="2" class="premium-input w-full px-4 py-3 text-sm" placeholder="Say hello..."></textarea>
             </div>
 
-            <button type="submit" class="w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
+            <button type="submit" class="w-full px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
                 <i class="fa-solid fa-paper-plane mr-2"></i>Start Chat
             </button>
         </form>

@@ -12,11 +12,10 @@ class GroupPost extends Model
     protected $table = 'z_groups_list_posts';
     protected $primaryKey = 'post_id';
     public $timestamps = false;
-
     protected $guarded = [];
 
     public function sender()
     {
-        return $this->belongsTo(Employee::class, 'added_by', 'employee_id');
+        return $this->belongsTo(EmployeesList::class, 'added_by', 'employee_id');
     }
 }

@@ -9,11 +9,11 @@
         <!-- Header with Action Button -->
         <div class="flex items-center justify-between">
             <div>
-                <h2 class="text-2xl font-display font-bold text-slate-800">Leave Requests</h2>
+                <h2 class="text-2xl font-display font-bold text-premium">Leave Requests</h2>
                 <p class="text-sm text-slate-500 mt-1">{{ $leaves->total() }} total requests</p>
             </div>
             <button onclick="openModal('addLeaveModal')"
-                class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
+                class="inline-flex items-center gap-2 px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
                 <i class="fa-solid fa-plus"></i>
                 <span>Add Leave</span>
             </button>

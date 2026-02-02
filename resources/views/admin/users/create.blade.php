@@ -12,7 +12,7 @@
             <a href="{{ route('admin.users.index') }}" class="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 text-sm font-semibold mb-2">
                 <i class="fa-solid fa-arrow-left"></i>Back to Users
             </a>
-            <h1 class="text-2xl font-display font-bold text-slate-800">Add New User</h1>
+            <h1 class="text-2xl font-display font-bold text-premium">Add New User</h1>
         </div>
     </div>
 
@@ -24,7 +24,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- ID & Basic Info -->
                 <div class="col-span-full">
-                    <h3 class="text-lg font-semibold text-slate-800 mb-4 border-b border-slate-100 pb-2">User Identification</h3>
+                    <h3 class="text-lg font-semibold text-premium mb-4 border-b border-slate-100 pb-2">User Identification</h3>
                 </div>
 
                 <div>
@@ -55,7 +55,7 @@
 
                 <!-- Access Info -->
                 <div class="col-span-full mt-4">
-                    <h3 class="text-lg font-semibold text-slate-800 mb-4 border-b border-slate-100 pb-2">Access & Security</h3>
+                    <h3 class="text-lg font-semibold text-premium mb-4 border-b border-slate-100 pb-2">Access & Security</h3>
                 </div>
 
                 <div>
@@ -93,7 +93,7 @@
 
             <div class="flex justify-end gap-4 mt-8 pt-6 border-t border-slate-100">
                 <a href="{{ route('admin.users.index') }}" class="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">Cancel</a>
-                <button type="submit" class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
+                <button type="submit" class="px-8 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
                     Create User
                 </button>
             </div>
