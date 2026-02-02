@@ -381,8 +381,7 @@
         <header
             class="h-20 bg-white/80 backdrop-blur-lg flex items-center justify-between px-8 border-b border-slate-200/50 z-10 shadow-sm">
             <div>
-                <h1
-                    class="text-2xl font-display font-bold text-premium">
+                <h1 class="text-2xl font-display font-bold text-premium">
                     @yield('title', 'Dashboard')
                 </h1>
                 <p class="text-sm text-slate-500 mt-0.5">@yield('subtitle', 'Welcome back')</p>
@@ -411,11 +410,28 @@
         <!-- Content Area -->
         <main class="flex-1 overflow-y-auto p-8 bg-gradient-to-br from-slate-50 via-cyan-50/10 to-blue-50/10">
             <div class="max-w-7xl mx-auto w-full animate-fade-in-up">
+                @if(session('success'))
+                    <div
+                        class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center gap-3 animate-fade-in">
+                        <i class="fa-solid fa-circle-check text-emerald-500"></i>
+                        <p class="text-sm font-medium text-emerald-800">{{ session('success') }}</p>
+                    </div>
+                @endif
+
+                @if(session('error'))
+                    <div
+                        class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-100 flex items-center gap-3 animate-fade-in">
+                        <i class="fa-solid fa-circle-xmark text-rose-500"></i>
+                        <p class="text-sm font-medium text-rose-800">{{ session('error') }}</p>
+                    </div>
+                @endif
+
                 @yield('content')
             </div>
         </main>
     </div>
 
+    @yield('scripts')
 </body>
 
 </html>

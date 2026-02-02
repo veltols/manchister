@@ -38,6 +38,7 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
+        Log::debug('Store method reached', $request->all());
         $request->validate([
             'employee_no' => 'required|string|unique:employees_list,employee_no',
             'first_name' => 'required|string',
@@ -64,21 +65,36 @@ class UserController extends Controller
             $employee->employee_code = $initials; // Legacy logic seems to use initials?
 
             // Defaults as per legacy or nullable
-            $employee->title_id = 0;
-            $employee->gender_id = 0;
-            $employee->nationality_id = 0;
-            $employee->timezone_id = 0;
+            $employee->title_id = 1;
+            $employee->gender_id = 1;
+            $employee->nationality_id = 224;
+            $employee->timezone_id = 263;
             $employee->is_deleted = 0;
             $employee->is_hidden = 0;
-            $employee->designation_id = 0; // Fix: Strict mode requires value
+
+            // Find a valid designation if none provided (legacy default)
+            $designation = \App\Models\Designation::first();
+            $employee->designation_id = $designation ? $designation->designation_id : 1;
+
+            // Other required fields found in DB check
+            $employee->employee_type = 'local';
+            $employee->employee_picture = 'user.png';
+            $employee->certificate_id = 1;
+            $employee->leaves_open_balance = 0;
+            $employee->allowed_permission_hours = 8;
+            $employee->permission_hours_balance = 0;
+            $employee->is_group = 0;
+            $employee->is_committee = 0;
+            $employee->is_new = 1;
+            $employee->is_pass = 0;
+            $employee->emp_status_id = 1;
 
             $employee->save();
             $employeeId = $employee->employee_id;
 
             // 2. Create Password
-            // Legacy uses Bcrypt cost 12. Laravel default is often Bcrypt.
-            // Explicitly matching legacy config:
-            $hashedPassword = password_hash($request->password, PASSWORD_BCRYPT, ["cost" => 12]);
+            // Laravel Hash::make is standard and compatible with default auth
+            $hashedPassword = Hash::make($request->password);
 
             DB::table('employees_list_pass')->insert([
                 'employee_id' => $employeeId,
@@ -92,8 +108,7 @@ class UserController extends Controller
             ]);
 
             // 4. Create User Entry
-            // Use selected user_type from form
-            $userType = $request->user_type ?? 'emp'; // Default to emp if not set
+            $userType = $request->user_type ?? 'emp';
 
             DB::table('users_list')->insert([
                 'user_id' => $employeeId,
@@ -107,16 +122,16 @@ class UserController extends Controller
             ]);
 
             // 5. System Log
-            \Log::info("User successfully created: " . $request->email . " User ID: " . $employeeId);
+            Log::info("User successfully created: " . $request->email . " User ID: " . $employeeId);
 
             DB::table('sys_logs')->insert([
                 'related_table' => 'employees_list',
                 'related_id' => $employeeId,
-                'log_date' => now(), // Laravel now()
+                'log_date' => now(),
                 'log_action' => 'Employee_Added',
-                'log_remark' => '---',
+                'log_remark' => 'Created via Admin Panel',
                 'logger_type' => 'employees_list',
-                'logged_by' => auth()->id() ?? 0, // Current admin ID
+                'logged_by' => auth()->id() ?? 0,
                 'log_type' => 'int'
             ]);
 
@@ -126,7 +141,8 @@ class UserController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error("User creation failed: " . $e->getMessage());
+            Log::error("User creation failed. Error: " . $e->getMessage());
+            Log::error("Stack trace: " . $e->getTraceAsString());
             return back()->withInput()->with('error', 'Failed to create user: ' . $e->getMessage());
         }
     }

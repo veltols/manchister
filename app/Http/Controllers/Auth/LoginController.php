@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class LoginController extends Controller
 {
@@ -15,20 +16,22 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
+        Log::info('Login attempt for: ' . $request->username);
+
         $credentials = $request->validate([
-            'idder' => 'required', // Assuming 'idder' is the input name from the original form
-            'passer' => 'required',
+            'username' => 'required',
+            'password' => 'required',
         ]);
 
         // Map inputs to database columns
         // 'user_email' is the column in users_list
         $authCredentials = [
-            'user_email' => $credentials['idder'],
-            'password' => $credentials['passer']
+            'user_email' => $credentials['username'],
+            'password' => $credentials['password']
         ];
 
         if (Auth::attempt($authCredentials)) {
-            $request->session()->regenerate();
+            Log::info('Login successful for: ' . $credentials['username']);
             $request->session()->regenerate();
 
             $user = Auth::user();

@@ -74,6 +74,18 @@
                     </button>
                 </div>
                 <div class="p-8">
+                    @if($errors->any())
+                        <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3">
+                            <i class="fa-solid fa-circle-exclamation text-red-500 mt-0.5"></i>
+                            <div class="flex-1">
+                                <ul class="text-sm font-medium text-red-800 list-disc list-inside">
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    @endif
                     <form action="{{ route('admin.users.store') }}" method="POST"
                         class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         @csrf
@@ -141,4 +153,11 @@
             </div>
         </div>
     </div>
+    @section('scripts')
+        <script>
+            @if($errors->any())
+                openModal('newUserModal');
+            @endif
+        </script>
+    @endsection
 @endsection
