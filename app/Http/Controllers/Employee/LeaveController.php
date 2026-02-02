@@ -18,7 +18,7 @@ class LeaveController extends Controller
             ->where('employee_id', Auth::id()) // Assuming LegacyUser ID matches employee_id
             ->orderBy('leave_id', 'desc')
             ->paginate(15);
-            
+
         $leaveTypes = LeaveType::all();
 
         return view('emp.leaves.index', compact('leaves', 'leaveTypes'));
@@ -41,8 +41,7 @@ class LeaveController extends Controller
         $leave->leave_remarks = $request->leave_remarks;
         $leave->submission_date = now();
         $leave->leave_status_id = 0; // Pending
-        $leave->leave_status = 'Pending';
-        
+
         $start = Carbon::parse($request->start_date);
         $end = Carbon::parse($request->end_date);
         $leave->total_days = $start->diffInDays($end) + 1;

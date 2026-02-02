@@ -17,32 +17,37 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
+
+    protected $table = 'users_list';
+    protected $primaryKey = 'record_id';
+    public $timestamps = false;
+
     protected $fillable = [
-        'name',
-        'email',
-        'password',
+        'user_email',
+        'user_type',
+        'int_ext',
+        'user_id',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected $hidden = [];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    // Map 'email' attribute for Laravel Auth
+    public function getEmailAttribute()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->user_email;
+    }
+
+    // Relationship to Employee details
+    public function employee()
+    {
+        return $this->hasOne(EmployeesList::class, 'employee_id', 'user_id');
+    }
+
+    public function getAuthPassword()
+    {
+        if ($this->employee && $this->employee->passwordData) {
+            return $this->employee->passwordData->pass_value;
+        }
+        return null;
     }
 }
