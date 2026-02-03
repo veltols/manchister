@@ -6,161 +6,115 @@
 @section('content')
     <div class="space-y-6 animate-fade-in-up">
 
+        <!-- Structure Navigation -->
+        @include('hr.partials.structure_nav')
+
         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-2 text-sm text-slate-500 mb-1">
-                <a href="{{ route('hr.departments.index') }}"
-                    class="hover:text-indigo-600 transition-colors flex items-center gap-2">
-                    <i class="fa-solid fa-arrow-left"></i> Back to Department List
-                </a>
-            </div>
+             <!-- Header Content was here, removed redundant back link -->
         </div>
 
-        <div class="premium-card p-10 overflow-x-auto">
-            <div class="text-center mb-10">
-                <h2 class="text-2xl font-bold font-display text-premium">Organization Structure</h2>
-                <p class="text-slate-500">Visual representation of departments</p>
-            </div>
-
-            <div class="tf-tree tf-gap-sm">
-                <ul>
-                    <li>
-                        <span class="tf-nc premium-node">
-                            <div class="font-bold text-slate-800 text-lg">General Directorate</div>
-                        </span>
-                        <ul>
-                            @foreach($departments as $dept)
-                                <li>
-                                    <span class="tf-nc premium-node {{ $dept->children->count() > 0 ? 'has-children' : '' }}">
-                                        <div class="font-bold text-slate-700">{{ $dept->department_name }}</div>
-                                        @if($dept->department_code)
-                                            <div class="text-[10px] text-slate-400 uppercase tracking-wider mt-1">
-                                                {{ $dept->department_code }}</div>
-                                        @endif
-                                    </span>
-                                    {{-- Recursive children would go here if we had a parent_id relationship properly set up for
-                                    deeply nested departments --}}
-                                </li>
-                            @endforeach
-                        </ul>
-                    </li>
-                </ul>
-            </div>
+        <div class="premium-card p-10 overflow-x-auto min-h-[600px] flex justify-center bg-white">
+            <div id="chart_div"></div>
         </div>
     </div>
 
+    @push('scripts')
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+        <script type="text/javascript">
+            google.charts.load('current', {packages:["orgchart"]});
+            google.charts.setOnLoadCallback(drawChart);
+
+            function drawChart() {
+                var data = new google.visualization.DataTable();
+                data.addColumn('string', 'Name');
+                data.addColumn('string', 'Manager');
+                data.addColumn('string', 'ToolTip');
+
+                var validIds = @json($departments->pluck('department_id')->map(fn($id) => (string)$id)->toArray());
+                
+                var rows = [
+                    @foreach($departments as $dept)
+                        @php
+                            $deptId = (string)$dept->department_id;
+                            $parentId = (string)$dept->main_department_id;
+                            
+                            // Check if parent exists in our dataset, otherwise make it a root node to prevent crashes
+                            // Also handle 0 or null as root
+                            if ($parentId == '0' || $parentId == '' || !$departments->contains('department_id', $dept->main_department_id)) {
+                                $parentId = '';
+                            }
+
+                            // Build HTML Content safe for JS
+                            $name = e($dept->department_name);
+                            $code = $dept->department_code ? '<div class="text-[10px] text-slate-500 uppercase tracking-wider mt-1">' . e($dept->department_code) . '</div>' : '';
+                            
+                            $managerHtml = '';
+                            if($dept->lineManager) {
+                                $initial = substr($dept->lineManager->first_name, 0, 1);
+                                $mName = e($dept->lineManager->first_name);
+                                $managerHtml = '<div class="mt-2 pt-2 border-t border-slate-100 flex items-center justify-center gap-2"><div class="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 text-xs font-bold">'.$initial.'</div><div class="text-xs text-slate-600">'.$mName.'</div></div>';
+                            }
+
+                            $html = '<div class="p-2 min-w-[150px]"><div class="font-bold text-slate-800 text-lg">' . $name . '</div>' . $code . $managerHtml . '</div>';
+                        @endphp
+                        [{v: @json($deptId), f: @json($html)}, @json($parentId), @json($dept->department_name)],
+                    @endforeach
+                ];
+
+                data.addRows(rows);
+
+                // Create the chart.
+                var chart = new google.visualization.OrgChart(document.getElementById('chart_div'));
+                
+                // Draw the chart, setting the allowHtml option to true for the tooltips.
+                chart.draw(data, {
+                    'allowHtml': true, 
+                    'size': 'medium',
+                    'nodeClass': 'premium-org-node',
+                    'selectedNodeClass': 'premium-org-node-selected'
+                });
+            }
+        </script>
+    @endpush
+
     @push('styles')
         <style>
-            /* Tree CSS (Simple Implementation) */
-            .tf-tree {
-                font-size: 12px;
-                overflow: auto;
-                text-align: center;
+            /* Override Google Charts default styling for a premium look */
+            .google-visualization-orgchart-node {
+                border: none !important;
+                background: transparent !important;
+                box-shadow: none !important;
             }
-
-            .tf-tree ul {
-                display: inline-flex;
-                margin: 0;
-                padding: 0;
+            .premium-org-node {
+                background: white !important;
+                border: 1px solid #e2e8f0 !important;
+                border-radius: 12px !important;
+                box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+                transition: all 0.3s ease !important;
+                padding: 0 !important;
             }
-
-            .tf-tree li {
-                align-items: center;
-                display: flex;
-                flex-direction: column;
-                flex-wrap: wrap;
-                padding: 0 1em;
-                position: relative;
+            .premium-org-node:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1) !important;
+                border-color: #6366f1 !important;
             }
-
-            .tf-tree li ul {
-                margin: 2em 0;
+            .premium-org-node-selected {
+                background: #f8fafc !important;
+                border: 2px solid #6366f1 !important;
+                box-shadow: 0 0 0 4px rgb(99 102 241 / 0.1) !important;
             }
-
-            .tf-tree li li:before {
-                border-top: 1px solid #cbd5e1;
-                content: "";
-                display: block;
-                height: 0.0625em;
-                left: -0.03125em;
-                position: absolute;
-                top: -1.03125em;
-                width: 100%;
+            /* Connector lines */
+            .google-visualization-orgchart-lineleft {
+                border-left: 1px solid #cbd5e1 !important;
             }
-
-            .tf-tree li li:first-child:before {
-                left: 50%;
-                max-width: 50%;
+            .google-visualization-orgchart-lineright {
+                border-right: 1px solid #cbd5e1 !important;
             }
-
-            .tf-tree li li:last-child:before {
-                left: auto;
-                max-width: 50%;
-                right: 50%;
+            .google-visualization-orgchart-linebottom {
+                border-bottom: 1px solid #cbd5e1 !important;
             }
-
-            .tf-tree li li:only-child:before {
-                display: none;
-            }
-
-            .tf-tree li li:only-child>.tf-nc:before,
-            .tf-tree li li:only-child>.tf-nc:before {
-                height: 1.0625em;
-                top: -1.0625em;
-            }
-
-            .tf-tree li li:before {
-                top: -1.03125em;
-            }
-
-            .tf-tree .tf-nc {
-                display: inline-block;
-                padding: 1em;
-                border: 1px solid #e2e8f0;
-                text-align: center;
-                background-color: white;
-                border-radius: 0.75rem;
-                position: relative;
-                box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-                min-width: 150px;
-            }
-
-            .tf-tree .tf-nc:before,
-            .tf-tree .tf-nc:after {
-                border-left: 1px solid #cbd5e1;
-                content: "";
-                display: block;
-                height: 1em;
-                left: 50%;
-                position: absolute;
-                width: 0;
-            }
-
-            .tf-tree .tf-nc:before {
-                top: -1.03125em;
-            }
-
-            .tf-tree .tf-nc:after {
-                top: calc(100% + 0.03125em);
-            }
-
-            .tf-tree li:last-child>.tf-nc:after,
-            .tf-tree li:last-child>.tf-nc:after {
-                display: none;
-            }
-
-            .tf-tree li>.tf-nc:only-child:after {
-                display: none;
-            }
-
-            /* Premium Styling */
-            .premium-node {
-                transition: all 0.3s ease;
-            }
-
-            .premium-node:hover {
-                transform: translateY(-3px);
-                box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-                border-color: #6366f1;
+            .google-visualization-orgchart-connrow-medium {
+                height: 20px !important;
             }
         </style>
     @endpush

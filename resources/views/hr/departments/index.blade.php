@@ -5,6 +5,9 @@
 
 @section('content')
 <div class="space-y-6">
+
+    <!-- Structure Navigation -->
+    @include('hr.partials.structure_nav')
     
     <!-- Header with Action Button -->
     <div class="flex items-center justify-between">
@@ -106,7 +109,7 @@
             </button>
         </div>
         
-        <form action="{{ route('hr.departments.store') }}" method="POST">
+        <form action="{{ route(request()->is('admin*') ? 'admin.departments.store' : 'hr.departments.store') }}" method="POST">
             @csrf
             <div class="space-y-4">
                 <div>
@@ -201,7 +204,9 @@
         document.getElementById('edit_name').value = name;
         document.getElementById('edit_main').value = mainId;
         document.getElementById('edit_manager').value = managerId || "";
-        document.getElementById('editForm').action = "/hr/departments/" + id + "/update";
+        
+        let prefix = window.location.pathname.startsWith('/admin') ? '/admin' : '/hr';
+        document.getElementById('editForm').action = prefix + "/departments/" + id + "/update";
         openModal('editDeptModal');
     }
 </script>

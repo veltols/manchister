@@ -11,7 +11,8 @@ class DesignationController extends Controller
 {
     public function index()
     {
-        $designations = Designation::with('department')->orderBy('department_id')->orderBy('designation_name')->paginate(15);
+        // Removed department_id ordering and eager loading as column is missing in DB
+        $designations = Designation::orderBy('designation_name')->paginate(15);
         return view('hr.designations.index', compact('designations'));
     }
 
@@ -26,19 +27,19 @@ class DesignationController extends Controller
         $request->validate([
             'designation_code' => 'required|string|max:50|unique:employees_list_designations,designation_code',
             'designation_name' => 'required|string|max:255',
-            'department_id' => 'required|exists:employees_list_departments,department_id',
         ]);
 
         Designation::create($request->all());
 
-        return redirect()->route('hr.designations.index')->with('success', 'Designation created successfully.');
+        $prefix = request()->is('admin*') ? 'admin' : 'hr';
+        return redirect()->route($prefix . '.designations.index')->with('success', 'Designation created successfully.');
     }
 
     public function edit($id)
     {
         $designation = Designation::findOrFail($id);
-        $departments = Department::orderBy('department_name')->get();
-        return view('hr.designations.edit', compact('designation', 'departments'));
+        // Removed departments fetch
+        return view('hr.designations.edit', compact('designation'));
     }
 
     public function update(Request $request, $id)
@@ -46,13 +47,13 @@ class DesignationController extends Controller
         $request->validate([
             'designation_code' => 'required|string|max:50|unique:employees_list_designations,designation_code,' . $id . ',designation_id',
             'designation_name' => 'required|string|max:255',
-            'department_id' => 'required|exists:employees_list_departments,department_id',
         ]);
 
         $designation = Designation::findOrFail($id);
         $designation->update($request->all());
 
-        return redirect()->route('hr.designations.index')->with('success', 'Designation updated successfully.');
+        $prefix = request()->is('admin*') ? 'admin' : 'hr';
+        return redirect()->route($prefix . '.designations.index')->with('success', 'Designation updated successfully.');
     }
 
     public function destroy($id)
@@ -60,6 +61,7 @@ class DesignationController extends Controller
         $designation = Designation::findOrFail($id);
         $designation->delete();
 
-        return redirect()->route('hr.designations.index')->with('success', 'Designation deleted successfully.');
+        $prefix = request()->is('admin*') ? 'admin' : 'hr';
+        return redirect()->route($prefix . '.designations.index')->with('success', 'Designation deleted successfully.');
     }
 }

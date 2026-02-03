@@ -6,6 +6,9 @@
 @section('content')
     <div class="space-y-6 animate-fade-in-up">
         
+        <!-- Structure Navigation -->
+        @include('hr.partials.structure_nav')
+
         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
             <h1 class="text-2xl font-bold font-display text-premium">Job Designations</h1>
             <a href="{{ route('hr.designations.create') }}" class="premium-button px-6 py-2">

@@ -260,6 +260,7 @@ Route::middleware('auth')->group(function () {
 
     // Admin Settings
     Route::prefix('admin')->name('admin.')->group(function () {
+        Route::redirect('/', '/admin/dashboard');
         Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
 
         Route::get('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');
@@ -285,6 +286,18 @@ Route::middleware('auth')->group(function () {
         // Assets Management (Root/Admin Logic)
         Route::get('/assets', [App\Http\Controllers\Admin\AssetController::class, 'index'])->name('assets.index');
         Route::post('/assets', [App\Http\Controllers\Admin\AssetController::class, 'store'])->name('assets.store');
+
+        // Organization Chart (Moved from HR to Admin as shared/root logic)
+        Route::get('/departments', [App\Http\Controllers\HR\DepartmentController::class, 'index'])->name('departments.index');
+        Route::get('/departments/chart', [App\Http\Controllers\HR\DepartmentController::class, 'orgChart'])->name('departments.chart');
+        Route::post('/departments', [App\Http\Controllers\HR\DepartmentController::class, 'store'])->name('departments.store');
+        Route::post('/departments/{id}/update', [App\Http\Controllers\HR\DepartmentController::class, 'update'])->name('departments.update');
+
+        Route::get('/designations', [App\Http\Controllers\HR\DesignationController::class, 'index'])->name('designations.index');
+        Route::get('/designations/create', [App\Http\Controllers\HR\DesignationController::class, 'create'])->name('designations.create');
+        Route::post('/designations', [App\Http\Controllers\HR\DesignationController::class, 'store'])->name('designations.store');
+        Route::get('/designations/{id}/edit', [App\Http\Controllers\HR\DesignationController::class, 'edit'])->name('designations.edit');
+        Route::post('/designations/{id}', [App\Http\Controllers\HR\DesignationController::class, 'update'])->name('designations.update');
 
         // Feedback
         Route::get('/feedback', [App\Http\Controllers\Admin\FeedbackController::class, 'index'])->name('feedback.index');

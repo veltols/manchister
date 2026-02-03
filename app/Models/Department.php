@@ -29,4 +29,9 @@ class Department extends Model
     {
         return $this->belongsTo(Employee::class, 'line_manager_id', 'employee_id');
     }
+
+    public function children()
+    {
+        return $this->hasMany(Department::class, 'main_department_id', 'department_id');
+    }
 }

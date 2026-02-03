@@ -119,68 +119,63 @@
 @endif
 
 
-<!-- Admin / Root Specifics keep as is -->
-@if($isAdmin || in_array($user->user_type, ['eqa']))
-    @if(in_array($user->user_type, ['hr', 'admin_hr', 'root', 'sys_admin', 'eqa']))
-        <!-- Training & Quality -->
-        <div class="px-4 pb-2 pt-4">
-            <p class="text-xs font-semibold text-white/40 uppercase tracking-wider">Training & Quality</p>
-        </div>
-        <a href="{{ route('emp.ext.atps.index') }}"
-            class="nav-item {{ request()->routeIs('emp.ext.atps.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
-            <i class="fa-solid fa-certificate text-lg w-5"></i>
-            <span class="font-medium">Training Partners</span>
-        </a>
-        <a href="{{ route('eqa.atps.index') }}"
-            class="nav-item {{ request()->routeIs('eqa.atps.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
-            <i class="fa-solid fa-list-check text-lg w-5"></i>
-            <span class="font-medium">EQA & Audits</span>
-        </a>
-    @endif
-@endif
-
-@if(!$isHR && $isAdmin)
-    <!-- If Admin but not HR (root/sys_admin usually see everything, but lets keep the blocks) -->
-    <!-- Re-including organization/resources for Admins if they are NOT HR (HR sees above) -->
-
-    <!-- Organization -->
-    <div class="px-4 pb-2 pt-4">
-        <p class="text-xs font-semibold text-white/40 uppercase tracking-wider">Organization</p>
-    </div>
-    <a href="{{ route('hr.departments.index') }}"
-        class="nav-item {{ request()->routeIs('hr.departments.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
-        <i class="fa-solid fa-building text-lg w-5"></i>
-        <span class="font-medium">Departments</span>
+@if($isAdmin)
+    <!-- Organization Chart (Departments) -->
+    <a href="{{ route('admin.departments.index') }}"
+        class="nav-item {{ request()->routeIs('admin.departments.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
+        <i class="fa-solid fa-sitemap text-lg w-5"></i>
+        <span class="font-medium">Organization Chart</span>
     </a>
-    <a href="{{ route('hr.groups.index') }}"
-        class="nav-item {{ request()->routeIs('hr.groups.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white/80 hover:text-white">
-        <i class="fa-solid fa-user-group text-lg w-5"></i>
-        <span class="font-medium">Groups</span>
+
+    <!-- Tickets -->
+    <a href="{{ route('emp.tickets.index') }}"
+        class="nav-item {{ request()->routeIs('emp.tickets.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
+        <i class="fa-solid fa-ticket text-lg w-5"></i>
+        <span class="font-medium">Tickets</span>
     </a>
-    <!-- Resources -->
-    <div class="px-4 pb-2 pt-4">
-        <p class="text-xs font-semibold text-white/40 uppercase tracking-wider">Resources</p>
-    </div>
-    <a href="{{ route('hr.assets.index') }}"
-        class="nav-item {{ request()->routeIs('hr.assets.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
+
+    <!-- Assets -->
+    <a href="{{ route('admin.assets.index') }}"
+        class="nav-item {{ request()->routeIs('admin.assets.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-laptop text-lg w-5"></i>
         <span class="font-medium">Assets</span>
     </a>
-@endif
 
-@if($isAdmin)
-    <!-- System -->
-    <div class="px-4 pb-2 pt-4">
-        <p class="text-xs font-semibold text-white/40 uppercase tracking-wider">System</p>
-    </div>
+    <!-- Users -->
     <a href="{{ route('admin.users.index') }}"
-        class="nav-item {{ request()->routeIs('admin.users.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white/80 hover:text-white">
+        class="nav-item {{ request()->routeIs('admin.users.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-users-gear text-lg w-5"></i>
         <span class="font-medium">Users</span>
     </a>
+
+    <!-- Settings -->
     <a href="{{ route('admin.settings.index') }}"
-        class="nav-item {{ request()->routeIs('admin.settings.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white/80 hover:text-white">
+        class="nav-item {{ request()->routeIs('admin.settings.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-cog text-lg w-5"></i>
         <span class="font-medium">Settings</span>
+    </a>
+
+    <!-- Feedback -->
+    <a href="{{ route('admin.feedback.index') }}"
+        class="nav-item {{ request()->routeIs('admin.feedback.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
+        <i class="fa-solid fa-comment-dots text-lg w-5"></i>
+        <span class="font-medium">Feedback</span>
+    </a>
+@endif
+
+<!-- EQA Specifics (kept separate if EQA exists and is NOT admin/root, or if we want to preserve it for EQA role specifically) -->
+@if(in_array($user->user_type, ['eqa']) && !$isAdmin)
+    <div class="px-4 pb-2 pt-4">
+        <p class="text-xs font-semibold text-white/40 uppercase tracking-wider">Training & Quality</p>
+    </div>
+    <a href="{{ route('emp.ext.atps.index') }}"
+        class="nav-item {{ request()->routeIs('emp.ext.atps.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
+        <i class="fa-solid fa-certificate text-lg w-5"></i>
+        <span class="font-medium">Training Partners</span>
+    </a>
+    <a href="{{ route('eqa.atps.index') }}"
+        class="nav-item {{ request()->routeIs('eqa.atps.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
+        <i class="fa-solid fa-list-check text-lg w-5"></i>
+        <span class="font-medium">EQA & Audits</span>
     </a>
 @endif
