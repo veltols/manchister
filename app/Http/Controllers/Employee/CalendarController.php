@@ -19,14 +19,30 @@ class CalendarController extends Controller
         $date = $request->input('date', now()->format('Y-m-d'));
         $carbonDate = Carbon::parse($date);
 
-        // Fetch tasks for the current month/week
+        $startDate = $carbonDate->copy();
+        $endDate = $carbonDate->copy();
+
+        if ($view === 'day') {
+            $startDate = $carbonDate->copy()->startOfDay();
+            $endDate = $carbonDate->copy()->endOfDay();
+        } elseif ($view === 'week') {
+            $startDate = $carbonDate->copy()->startOfWeek(Carbon::SUNDAY);
+            $endDate = $carbonDate->copy()->endOfWeek(Carbon::SATURDAY);
+        } else {
+            // Month View
+            $startDate = $carbonDate->copy()->startOfMonth()->startOfWeek(Carbon::SUNDAY);
+            $endDate = $carbonDate->copy()->endOfMonth()->endOfWeek(Carbon::SATURDAY);
+        }
+
+        // Fetch tasks for the calculated range
         $tasks = Task::where('assigned_to', $employeeId)
-            ->whereBetween('task_assigned_date', [
-                $carbonDate->copy()->startOfMonth()->subDays(7),
-                $carbonDate->copy()->endOfMonth()->addDays(7)
-            ])
+            ->whereBetween('task_assigned_date', [$startDate, $endDate])
             ->get();
 
-        return view('emp.calendar.index', compact('tasks', 'view', 'date', 'carbonDate'));
+        // Data for New Task Modal
+        $employees = \App\Models\Employee::where('is_deleted', 0)->where('is_hidden', 0)->get();
+        $priorities = \App\Models\Priority::all();
+
+        return view('emp.calendar.index', compact('tasks', 'view', 'date', 'carbonDate', 'startDate', 'endDate', 'employees', 'priorities'));
     }
 }

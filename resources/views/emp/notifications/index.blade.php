@@ -4,39 +4,90 @@
 @section('subtitle', 'Stay updated with your latest activities')
 
 @section('content')
-    <div class="max-w-4xl mx-auto space-y-6 animate-fade-in-up">
+    <div class="max-w-4xl mx-auto space-y-6 animate-fade-in-up" x-data="{ 
+        selected: [],
+        notifications: {{ json_encode($notifications->pluck('notification_id')) }},
+        toggleAll() {
+            if (this.selected.length === {{ $notifications->count() }}) {
+                this.selected = [];
+            } else {
+                this.selected = {{ json_encode($notifications->pluck('notification_id')) }};
+            }
+        },
+        markRead(ids) {
+            if (!ids) return;
+            let form = document.getElementById('markReadForm');
+            let input = document.getElementById('markReadIds');
+            input.value = Array.isArray(ids) ? ids.join(',') : ids;
+            form.submit();
+        }
+    }">
 
-        <div class="flex items-center justify-between">
-            <h2 class="text-2xl font-display font-bold text-premium">Recent Alerts</h2>
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ $notifications->total() }}
-                recorded</span>
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div>
+                <h2 class="text-2xl font-display font-bold text-premium">Notification Center</h2>
+                <p class="text-sm text-slate-500 mt-1">{{ $notifications->total() }} alerts recorded</p>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <template x-if="selected.length > 0">
+                    <button @click="markRead(selected)" class="px-5 py-2.5 rounded-xl bg-brand text-white text-xs font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-check-double"></i>
+                        <span>Mark <span x-text="selected.length"></span> Selected as Read</span>
+                    </button>
+                </template>
+                <button @click="markRead(null)" class="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold hover:bg-slate-50 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-bell-slash"></i>
+                    <span>Mark All as Read</span>
+                </button>
+            </div>
         </div>
+
+        <form id="markReadForm" action="{{ route('emp.notifications.mark_read') }}" method="POST" style="display: none;">
+            @csrf
+            <input type="hidden" name="ids" id="markReadIds">
+        </form>
 
         <div class="space-y-4">
             @forelse($notifications as $notif)
                 <div
-                    class="premium-card p-6 flex items-start gap-6 hover:shadow-lg transition-all border-slate-50 {{ $notif->is_seen == 0 ? 'bg-indigo-50/20 border-l-4 border-l-brand-dark' : 'bg-white' }}">
-                    <div
-                        class="w-12 h-12 rounded-2xl {{ $notif->is_seen == 0 ? 'bg-brand-dark text-white' : 'bg-slate-100 text-slate-400' }} flex items-center justify-center shrink-0 shadow-sm transition-colors">
-                        <i class="fa-solid {{ $notif->is_seen == 0 ? 'fa-bell-on animate-pulse' : 'fa-bell' }} text-lg"></i>
+                    class="premium-card p-4 flex items-center gap-6 hover:shadow-lg transition-all border-slate-50 {{ $notif->is_seen == 0 ? 'bg-indigo-50/10 border-l-4 border-l-brand' : 'bg-white' }}">
+                    
+                    <div class="flex items-center gap-4 shrink-0">
+                        <input type="checkbox" :value="{{ $notif->notification_id }}" x-model="selected" 
+                               class="w-5 h-5 rounded border-slate-200 text-brand focus:ring-brand cursor-pointer">
+                        
+                        <div class="w-12 h-12 rounded-2xl {{ $notif->is_seen == 0 ? 'bg-brand text-white' : 'bg-slate-100 text-slate-400' }} flex items-center justify-center shrink-0 shadow-sm transition-colors">
+                            <i class="fa-solid {{ $notif->is_seen == 0 ? 'fa-bell-on animate-pulse' : 'fa-bell' }} text-lg"></i>
+                        </div>
                     </div>
 
-                    <div class="flex-1 space-y-2">
-                        <div class="flex items-center justify-between">
-                            <span
-                                class="text-[10px] font-black text-slate-300 uppercase tracking-widest">{{ $notif->notification_date }}</span>
+                    <div class="flex-1 min-w-0 py-2">
+                        <div class="flex items-center justify-between gap-4 mb-1">
+                            <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">{{ $notif->notification_date }}</span>
+                            @if($notif->is_seen == 0)
+                                <span class="px-2 py-0.5 rounded-full bg-brand/10 text-brand text-[9px] font-black uppercase tracking-wider">New</span>
+                            @endif
                         </div>
-                        <p class="text-slate-700 leading-relaxed font-medium">
+                        <p class="text-slate-700 font-medium line-clamp-2 md:line-clamp-none">
                             {{ $notif->notification_text }}
                         </p>
+                    </div>
+
+                    <div class="flex items-center gap-2 shrink-0 ml-auto">
                         @if($notif->related_page)
-                            <div class="pt-2">
-                                <a href="{{ url($notif->related_page) }}"
-                                    class="inline-flex items-center gap-2 text-brand-dark font-bold text-xs hover:gap-3 transition-all">
-                                    <span>View Details</span>
-                                    <i class="fa-solid fa-arrow-right-long"></i>
-                                </a>
-                            </div>
+                            <a href="{{ url($notif->related_page) }}"
+                                class="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-brand hover:text-white transition-all shadow-sm group"
+                                title="Go to Page">
+                                <i class="fa-solid fa-arrow-up-right-from-square text-xs group-hover:scale-110 transition-transform"></i>
+                            </a>
+                        @endif
+                        @if($notif->is_seen == 0)
+                            <button @click="markRead([{{ $notif->notification_id }}])"
+                                class="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center hover:bg-teal-600 hover:text-white transition-all shadow-sm"
+                                title="Mark as Read">
+                                <i class="fa-solid fa-check text-sm"></i>
+                            </button>
                         @endif
                     </div>
                 </div>

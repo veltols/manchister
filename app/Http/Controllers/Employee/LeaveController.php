@@ -11,20 +11,26 @@ use Carbon\Carbon;
 
 class LeaveController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
         $employeeId = $user->employee ? $user->employee->employee_id : 0;
+        $statusId = $request->input('status');
 
         // Get leaves for the logged-in employee only
-        $leaves = HrLeave::with('type')
-            ->where('employee_id', $employeeId)
-            ->orderBy('leave_id', 'desc')
+        $query = HrLeave::with('type')
+            ->where('employee_id', $employeeId);
+
+        if ($statusId) {
+            $query->where('leave_status_id', $statusId);
+        }
+
+        $leaves = $query->orderBy('leave_id', 'desc')
             ->paginate(15);
 
         $leaveTypes = LeaveType::all();
 
-        return view('emp.leaves.index', compact('leaves', 'leaveTypes'));
+        return view('emp.leaves.index', compact('leaves', 'leaveTypes', 'statusId'));
     }
 
     public function store(Request $request)

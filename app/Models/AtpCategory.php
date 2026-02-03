@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class AtpStatus extends Model
+class AtpCategory extends Model
 {
     use HasFactory;
 
-    protected $table = 'atps_list_status';
-    protected $primaryKey = 'atp_status_id';
+    protected $table = 'atps_list_categories';
+    protected $primaryKey = 'atp_category_id';
     public $timestamps = false;
 
     protected $guarded = [];

@@ -88,8 +88,26 @@ class DashboardController extends Controller
             'leave_balance' => 0, // Need logic for balance
             'remaining_leaves' => 0,
             'requests' => \Illuminate\Support\Facades\DB::table('hr_employees_leaves')->where('employee_id', $employeeId)->count(),
-            'pending_approval' => \Illuminate\Support\Facades\DB::table('hr_employees_leaves')->where('employee_id', $employeeId)->where('leave_status_id', 100)->count(),
+            'pending_approval' => \Illuminate\Support\Facades\DB::table('hr_employees_leaves')->where('employee_id', $employeeId)->where('leave_status_id', 2)->count(),
         ];
+
+        // --- 5. Task Stats ---
+        $myTasksQuery = \App\Models\Task::where('assigned_to', $employeeId);
+        
+        $taskStats = [
+            'total' => (clone $myTasksQuery)->count(),
+            'todo' => (clone $myTasksQuery)->where('status_id', 1)->count(),
+            'progress' => (clone $myTasksQuery)->where('status_id', 2)->count(),
+            'done' => (clone $myTasksQuery)->where('status_id', 3)->count(),
+            'overdue' => (clone $myTasksQuery)->where('status_id', '!=', 3)
+                ->where('task_due_date', '<', now())
+                ->count(),
+        ];
+
+        $recentTasks = (clone $myTasksQuery)->with(['status', 'priority'])
+            ->orderBy('task_id', 'desc')
+            ->take(5)
+            ->get();
 
         $employeeName = $user->employee ? ($user->employee->first_name . ' ' . $user->employee->last_name) : $user->user_email;
 
@@ -100,6 +118,8 @@ class DashboardController extends Controller
             'ticketStats',
             'assets',
             'hrStats',
+            'taskStats',
+            'recentTasks',
             'mode',
             'startDate',
             'endDate'

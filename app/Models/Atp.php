@@ -5,37 +5,43 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ATP extends Model
+class Atp extends Model
 {
     use HasFactory;
 
     protected $table = 'atps_list';
     protected $primaryKey = 'atp_id';
-    public $timestamps = false;
+    public $timestamps = false; // Using added_date instead of created_at/updated_at
 
     protected $guarded = [];
 
-    // Relationships
     public function status()
     {
-        return $this->belongsTo(ATPStatus::class, 'status_id', 'status_id');
+        return $this->belongsTo(AtpStatus::class, 'atp_status_id', 'atp_status_id');
     }
 
-    public function addedBy()
+    public function category()
     {
-        return $this->belongsTo(Employee::class, 'added_by', 'employee_id')->withDefault([
-            'last_name' => 'Admin',
-            'first_name' => 'System'
-        ]);
+        return $this->belongsTo(AtpCategory::class, 'atp_category_id', 'atp_category_id');
     }
 
-    public function adder()
+    public function type()
     {
-        return $this->addedBy();
+        return $this->belongsTo(AtpType::class, 'atp_type_id', 'atp_type_id');
     }
 
-    public function logs()
+    public function creator()
     {
-        return $this->hasMany(ATPLog::class, 'atp_id', 'atp_id')->orderBy('log_date', 'desc');
+        return $this->belongsTo(Employee::class, 'added_by', 'employee_id');
+    }
+
+    public function emirate()
+    {
+        return $this->belongsTo(City::class, 'emirate_id', 'city_id');
+    }
+
+    public function contacts()
+    {
+        return $this->hasMany(AtpContact::class, 'atp_id', 'atp_id');
     }
 }

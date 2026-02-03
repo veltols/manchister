@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class AtpLog extends Model
+class AtpContact extends Model
 {
     use HasFactory;
 
-    protected $table = 'atps_list_logs';
-    protected $primaryKey = 'log_id';
+    protected $table = 'atps_list_contacts';
+    protected $primaryKey = 'contact_id';
     public $timestamps = false;
 
     protected $guarded = [];
@@ -18,10 +18,5 @@ class AtpLog extends Model
     public function atp()
     {
         return $this->belongsTo(Atp::class, 'atp_id', 'atp_id');
-    }
-
-    public function logger()
-    {
-        return $this->belongsTo(Employee::class, 'logged_by', 'employee_id');
     }
 }

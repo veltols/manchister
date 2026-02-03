@@ -46,4 +46,51 @@ class Task extends Model
             ->where('related_table', 'tasks_list')
             ->orderBy('log_id', 'desc');
     }
+
+    public function getTimeProgress()
+    {
+        if (!$this->task_assigned_date || !$this->task_due_date) {
+            return 0;
+        }
+
+        $start = $this->task_assigned_date->timestamp;
+        $end = $this->task_due_date->timestamp;
+        $now = now()->timestamp;
+
+        if ($now <= $start) {
+            return 0;
+        }
+        if ($now >= $end) {
+            return 100;
+        }
+
+        $total = $end - $start;
+        $elapsed = $now - $start;
+
+        return ($total > 0) ? round(($elapsed / $total) * 100) : 0;
+    }
+
+    public function getCountedTime()
+    {
+        if (!$this->task_due_date) {
+            return 'N/A';
+        }
+
+        $now = now();
+        $due = $this->task_due_date;
+
+        if ($now > $due) {
+            return 'Overdue';
+        }
+
+        $diff = $now->diff($due);
+        
+        if ($diff->days > 0) {
+            return $diff->days . 'd remaining';
+        }
+        if ($diff->h > 0) {
+            return $diff->h . 'h remaining';
+        }
+        return $diff->i . 'm remaining';
+    }
 }

@@ -16,30 +16,21 @@ class SupportTicketController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $stt = $request->input('stt', 0); // 0=All, 1=Open, 2=In Progress, 3=Resolved
+        $stt = $request->input('stt', 0); // 0=All, 1=Open, 2=In Progress, 3=Resolved, 4=Unassigned
 
-        $query = SupportTicket::query();
-
-        // Join for readable names (optional, or use Eloquent relationships)
-        $query->leftJoin('support_tickets_list_cats as c', 'support_tickets_list.category_id', '=', 'c.category_id')
-            ->leftJoin('sys_list_priorities as p', 'support_tickets_list.priority_id', '=', 'p.priority_id')
-            ->leftJoin('sys_list_status as s', 'support_tickets_list.status_id', '=', 's.status_id')
-            ->select(
-                'support_tickets_list.*',
-                'c.category_name',
-                'p.priority_name',
-                'p.priority_color',
-                's.status_name as status_name',
-                's.status_color'
-            );
+        $query = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'latestLog.logger']);
 
         // Filter by Status
         if ($stt == 1) {
-            $query->where('support_tickets_list.status_id', 1);
+            $query->where('status_id', 1);
         } elseif ($stt == 2) {
-            $query->where('support_tickets_list.status_id', 2);
+            $query->where('status_id', 2);
         } elseif ($stt == 3) {
-            $query->where('support_tickets_list.status_id', 3);
+            $query->where('status_id', 3);
+        } elseif ($stt == 4) {
+            // Unassigned (Open and assigned_to = 0)
+            $query->where('status_id', 1)
+                  ->where('assigned_to', 0);
         }
 
         // Order by latest
@@ -49,12 +40,8 @@ class SupportTicketController extends Controller
         $categories = SupportTicketCategory::all();
         $priorities = Priority::all();
 
-        // Employees in same department (for 'assigned_by' or similar fields if needed)
-        // In legacy: SELECT ... FROM employees_list WHERE department_id = $myDeptId
-        $myDeptId = 1; // Default fallback
-        if ($user->employee) {
-            $myDeptId = $user->employee->department_id;
-        }
+        // Employees in same department
+        $myDeptId = $user->employee ? $user->employee->department_id : 0;
         $deptEmployees = Employee::where('department_id', $myDeptId)
             ->where('is_deleted', 0)
             ->where('is_hidden', 0)
@@ -66,6 +53,7 @@ class SupportTicketController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'added_by' => 'required|integer',
             'ticket_subject' => 'required|string|max:255',
             'ticket_description' => 'required|string',
             'category_id' => 'required|integer',
@@ -75,18 +63,24 @@ class SupportTicketController extends Controller
 
         $user = Auth::user();
         $employeeId = $user->employee ? $user->employee->employee_id : 0;
-        $departmentId = $user->employee ? $user->employee->department_id : 1;
+        $departmentId = $user->employee ? $user->employee->department_id : 0;
+
+        // Fetch the "Added By" employee's department if necessary
+        $addedByEmp = Employee::find($request->added_by);
+        if ($addedByEmp) {
+            $departmentId = $addedByEmp->department_id;
+        }
 
         // Upload attachment if exists
-        $attachmentPath = '';
+        $attachmentName = 'no-img.png';
         if ($request->hasFile('ticket_attachment')) {
             $file = $request->file('ticket_attachment');
             $filename = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('uploads/tickets'), $filename);
-            $attachmentPath = 'uploads/tickets/' . $filename;
+            $file->move(public_path('uploads'), $filename);
+            $attachmentName = $filename;
         }
 
-        // Generate Ticket REF (Legacy style or simple random)
+        // Generate Ticket REF (Legacy style: T-timestamp)
         $ref = 'T-' . time();
 
         $ticket = new SupportTicket();
@@ -95,14 +89,15 @@ class SupportTicketController extends Controller
         $ticket->ticket_description = $request->ticket_description;
         $ticket->category_id = $request->category_id;
         $ticket->priority_id = $request->priority_id;
-        $ticket->ticket_attachment = $attachmentPath;
+        $ticket->ticket_attachment = $attachmentName;
 
-        $ticket->added_by = $employeeId; // Logged in user
+        $ticket->added_by = $request->added_by;
         $ticket->department_id = $departmentId;
         $ticket->ticket_added_date = now();
+        $ticket->last_updated_date = now();
 
-        $ticket->status_id = 1; // Open
-        $ticket->assigned_to = 0; // Unassigned
+        $ticket->status_id = 1; // Project default typically 1 for Open
+        $ticket->assigned_to = 0; 
         $ticket->save();
 
         // Create Initial Log
@@ -119,9 +114,10 @@ class SupportTicketController extends Controller
 
         return redirect()->route('emp.tickets.index')->with('success', 'Ticket created successfully');
     }
+
     public function show($id)
     {
-        $ticket = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'logs.logger'])
+        $ticket = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'logs.logger', 'latestLog.logger'])
             ->findOrFail($id);
 
         $statuses = \App\Models\SupportTicketStatus::all();
@@ -136,18 +132,19 @@ class SupportTicketController extends Controller
             'log_remark' => 'required|string',
         ]);
 
-        $ticket = SupportTicket::findOrFail($id);
-        $ticket->status_id = $request->status_id;
-        $ticket->save();
-
-        // Create Log
         $user = Auth::user();
         $employeeId = $user->employee ? $user->employee->employee_id : 0;
 
+        $ticket = SupportTicket::findOrFail($id);
+        $ticket->status_id = $request->status_id;
+        $ticket->last_updated_date = now();
+        $ticket->save();
+
+        // Create Log
         $log = new \App\Models\SystemLog();
         $log->related_table = 'support_tickets_list';
         $log->related_id = $id;
-        $log->log_action = 'Status Update'; // Or fetch dynamic action name
+        $log->log_action = 'Status Update'; 
         $log->log_remark = $request->log_remark;
         $log->log_date = now();
         $log->logged_by = $employeeId;

@@ -84,169 +84,269 @@
             </div>
         @endif
 
-        <!-- Support Center Stats -->
-        <div>
-            <div class="flex items-center justify-between mb-4 px-1">
-                <h3 class="text-xl font-display font-bold text-premium">Support Center</h3>
-                <a href="{{ route('emp.tickets.index') }}" class="text-sm font-bold text-brand-dark hover:underline">View
-                    All Tickets <i class="fa-solid fa-arrow-right-long ml-1"></i></a>
+        <!-- Support & Tasks Stats -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- IT Tickets -->
+            <div>
+                <div class="flex items-center justify-between mb-4 px-1">
+                    <h3 class="text-xl font-display font-bold text-premium">Support Center</h3>
+                    <a href="{{ route('emp.tickets.index') }}" class="text-sm font-bold text-brand-dark hover:underline">View All <i class="fa-solid fa-arrow-right-long ml-1"></i></a>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <a href="{{ route('emp.tickets.index') }}" class="stat-card group hover:border-brand-dark transition-all duration-300">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total</p>
+                                <h3 class="text-2xl font-bold text-premium count" data-target="{{ $ticketStats->total }}">0</h3>
+                            </div>
+                            <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-brand-dark group-hover:text-white transition-all shadow-sm">
+                                <i class="fa-solid fa-ticket text-sm"></i>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="{{ route('emp.tickets.index', ['stt' => 4]) }}" class="stat-card group hover:border-amber-500 transition-all duration-300">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Unassigned</p>
+                                <h3 class="text-2xl font-bold text-amber-600 count" data-target="{{ $ticketStats->unassigned }}">0</h3>
+                            </div>
+                            <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-all shadow-sm">
+                                <i class="fa-solid fa-user-slash text-sm"></i>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="{{ route('emp.tickets.index', ['stt' => 2]) }}" class="stat-card group hover:border-brand-dark transition-all duration-300">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">In Progress</p>
+                                <h3 class="text-2xl font-bold text-brand-dark count" data-target="{{ $ticketStats->progress }}">0</h3>
+                            </div>
+                            <div class="w-10 h-10 rounded-xl bg-brand-dark/5 flex items-center justify-center text-brand-dark group-hover:bg-brand-dark group-hover:text-white transition-all shadow-sm">
+                                <i class="fa-solid fa-spinner fa-spin-pulse text-sm"></i>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="{{ route('emp.tickets.index', ['stt' => 3]) }}" class="stat-card group hover:border-green-600 transition-all duration-300">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Resolved</p>
+                                <h3 class="text-2xl font-bold text-green-600 count" data-target="{{ $ticketStats->resolved }}">0</h3>
+                            </div>
+                            <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center text-green-600 group-hover:bg-green-600 group-hover:text-white transition-all shadow-sm">
+                                <i class="fa-solid fa-check-double text-sm"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
 
-                <div class="stat-card group">
-                    <div class="flex items-center justify-between relative z-10">
-                        <div>
-                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Total</p>
-                            <h3 class="text-3xl font-bold text-premium count" data-target="{{ $ticketStats->total }}">0
-                            </h3>
-                        </div>
-                        <div
-                            class="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-brand-dark group-hover:text-white transition-all duration-300 shadow-sm group-hover:shadow-lg">
-                            <i class="fa-solid fa-ticket text-xl"></i>
-                        </div>
-                    </div>
+            <!-- Task Summary -->
+            <div>
+                <div class="flex items-center justify-between mb-4 px-1">
+                    <h3 class="text-xl font-display font-bold text-premium">My Tasks</h3>
+                    <a href="{{ route('emp.tasks.index') }}" class="text-sm font-bold text-indigo-600 hover:underline">View All Tasks <i class="fa-solid fa-arrow-right-long ml-1"></i></a>
                 </div>
-
-                <div class="stat-card group">
-                    <div class="flex items-center justify-between relative z-10">
-                        <div>
-                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Unassigned</p>
-                            <h3 class="text-3xl font-bold text-amber-600 count"
-                                data-target="{{ $ticketStats->unassigned }}">0</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <a href="{{ route('emp.tasks.index') }}" class="stat-card group hover:border-indigo-600 transition-all duration-300">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Tasks</p>
+                                <h3 class="text-2xl font-bold text-premium count" data-target="{{ $taskStats['total'] }}">0</h3>
+                            </div>
+                            <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
+                                <i class="fa-solid fa-tasks text-sm"></i>
+                            </div>
                         </div>
-                        <div
-                            class="w-14 h-14 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-all shadow-sm">
-                            <i class="fa-solid fa-user-slash text-xl"></i>
+                    </a>
+                    <a href="{{ route('emp.tasks.index', ['status_id' => 1]) }}" class="stat-card group hover:border-amber-500 transition-all duration-300">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">To Do</p>
+                                <h3 class="text-2xl font-bold text-amber-600 count" data-target="{{ $taskStats['todo'] }}">0</h3>
+                            </div>
+                            <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-all shadow-sm">
+                                <i class="fa-solid fa-list-ul text-sm"></i>
+                            </div>
                         </div>
-                    </div>
+                    </a>
+                    @if($taskStats['overdue'] > 0)
+                        <a href="{{ route('emp.tasks.index') }}" class="stat-card group border-rose-100 hover:border-rose-500 transition-all duration-300 bg-rose-50/30">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[10px] font-bold text-rose-500 uppercase tracking-widest mb-1">Overdue</p>
+                                    <h3 class="text-2xl font-bold text-rose-600 count" data-target="{{ $taskStats['overdue'] }}">0</h3>
+                                </div>
+                                <div class="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600 group-hover:bg-rose-600 group-hover:text-white transition-all shadow-sm">
+                                    <i class="fa-solid fa-clock text-sm"></i>
+                                </div>
+                            </div>
+                        </a>
+                    @else
+                        <a href="{{ route('emp.tasks.index', ['status_id' => 2]) }}" class="stat-card group hover:border-brand-dark transition-all duration-300">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">In Progress</p>
+                                    <h3 class="text-2xl font-bold text-brand-dark count" data-target="{{ $taskStats['progress'] }}">0</h3>
+                                </div>
+                                <div class="w-10 h-10 rounded-xl bg-brand-dark/5 flex items-center justify-center text-brand-dark group-hover:bg-brand-dark group-hover:text-white transition-all shadow-sm">
+                                    <i class="fa-solid fa-spinner fa-spin-pulse text-sm"></i>
+                                </div>
+                            </div>
+                        </a>
+                    @endif
+                    <a href="{{ route('emp.tasks.index', ['status_id' => 3]) }}" class="stat-card group hover:border-green-600 transition-all duration-300">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Done</p>
+                                <h3 class="text-2xl font-bold text-green-600 count" data-target="{{ $taskStats['done'] }}">0</h3>
+                            </div>
+                            <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center text-green-600 group-hover:bg-green-600 group-hover:text-white transition-all shadow-sm">
+                                <i class="fa-solid fa-check-circle text-sm"></i>
+                            </div>
+                        </div>
+                    </a>
                 </div>
-
-                <div class="stat-card group">
-                    <div class="flex items-center justify-between relative z-10">
-                        <div>
-                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">In Progress</p>
-                            <h3 class="text-3xl font-bold text-brand-dark count" data-target="{{ $ticketStats->progress }}">
-                                0</h3>
-                        </div>
-                        <div
-                            class="w-14 h-14 rounded-2xl bg-brand-dark/5 flex items-center justify-center text-brand-dark group-hover:bg-brand-dark group-hover:text-white transition-all shadow-sm">
-                            <i class="fa-solid fa-spinner fa-spin-pulse text-xl"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="stat-card group">
-                    <div class="flex items-center justify-between relative z-10">
-                        <div>
-                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Resolved</p>
-                            <h3 class="text-3xl font-bold text-green-600 count" data-target="{{ $ticketStats->resolved }}">0
-                            </h3>
-                        </div>
-                        <div
-                            class="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center text-green-600 group-hover:bg-green-600 group-hover:text-white transition-all shadow-sm">
-                            <i class="fa-solid fa-check-double text-xl"></i>
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-            <!-- My Assets -->
-            <div class="lg:col-span-2 premium-card overflow-hidden">
-                <div class="p-6 border-b border-slate-100 flex items-center justify-between">
-                    <h3 class="text-lg font-display font-bold text-premium flex items-center gap-2">
-                        <i class="fa-solid fa-laptop-code text-brand-dark"></i>
-                        Assigned Assets
-                    </h3>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="premium-table w-full">
-                        <thead>
-                            <tr>
-                                <th class="text-left font-bold text-slate-400">REF</th>
-                                <th class="text-left font-bold text-slate-400">Name</th>
-                                <th class="text-left font-bold text-slate-400">Assigned By</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-50">
-                            @forelse($assets as $asset)
-                                <tr class="hover:bg-slate-50 transition-colors">
-                                    <td><span
-                                            class="font-mono text-xs font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded">{{ $asset->asset_ref }}</span>
-                                    </td>
-                                    <td>
-                                        <div class="font-bold text-slate-700">{{ $asset->asset_name }}</div>
-                                        <div class="text-[10px] text-slate-400 uppercase tracking-tighter">
-                                            {{ $asset->asset_sku }}</div>
-                                    </td>
-                                    <td>
-                                        <span
-                                            class="text-sm font-medium text-slate-600">{{ $asset->assignedBy ? $asset->assignedBy->first_name : 'System' }}</span>
-                                    </td>
-                                </tr>
-                            @empty
+            <!-- Recent Tasks & Assets -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Recent Tasks -->
+                <div class="premium-card overflow-hidden">
+                    <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                        <h3 class="text-lg font-display font-bold text-premium flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-indigo-600"></i>
+                            Recent Tasks
+                        </h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="premium-table w-full">
+                            <thead>
                                 <tr>
-                                    <td colspan="3" class="text-center py-10">
-                                        <i class="fa-solid fa-box-open text-3xl text-slate-200 mb-2"></i>
-                                        <p class="text-slate-400 font-medium">No assets assigned yet</p>
-                                    </td>
+                                    <th class="text-left font-bold text-slate-400">Task</th>
+                                    <th class="text-center font-bold text-slate-400">Status</th>
+                                    <th class="text-left font-bold text-slate-400">Due</th>
                                 </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                @forelse($recentTasks as $task)
+                                    <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="window.location='{{ route('emp.tasks.show', $task->task_id) }}'">
+                                        <td>
+                                            <div class="font-bold text-slate-700 truncate max-w-[200px]">{{ $task->task_title }}</div>
+                                            <div class="text-[10px] text-slate-400 uppercase">{{ $task->priority->priority_name ?? 'Normal' }} Priority</div>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-black text-white uppercase tracking-wider" style="background: #{{ $task->status->status_color ?? '999' }}">
+                                                {{ $task->status->status_name ?? 'Unknown' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="text-xs font-medium text-slate-600">{{ $task->task_due_date ? $task->task_due_date->format('M d') : '-' }}</span>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="3" class="text-center py-10 text-slate-400 font-medium">No tasks found</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Assigned Assets -->
+                <div class="premium-card overflow-hidden">
+                    <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                        <h3 class="text-lg font-display font-bold text-premium flex items-center gap-2">
+                            <i class="fa-solid fa-laptop-code text-brand-dark"></i>
+                            Assigned Assets
+                        </h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="premium-table w-full">
+                            <thead>
+                                <tr>
+                                    <th class="text-left font-bold text-slate-400">REF</th>
+                                    <th class="text-left font-bold text-slate-400">Name</th>
+                                    <th class="text-left font-bold text-slate-400">Assigned By</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                @forelse($assets as $asset)
+                                    <tr class="hover:bg-slate-50 transition-colors">
+                                        <td><span class="font-mono text-xs font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded">{{ $asset->asset_ref }}</span></td>
+                                        <td>
+                                            <div class="font-bold text-slate-700">{{ $asset->asset_name }}</div>
+                                            <div class="text-[10px] text-slate-400 uppercase tracking-tighter">{{ $asset->asset_sku }}</div>
+                                        </td>
+                                        <td>
+                                            <span class="text-sm font-medium text-slate-600">{{ $asset->assignedBy ? $asset->assignedBy->first_name : 'System' }}</span>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="3" class="text-center py-10">
+                                            <i class="fa-solid fa-box-open text-3xl text-slate-200 mb-2"></i>
+                                            <p class="text-slate-400 font-medium">No assets assigned yet</p>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             <!-- HR / Leaves Mini -->
-            <div class="premium-card flex flex-col">
+            <div class="premium-card flex flex-col h-fit">
                 <div class="p-6 border-b border-slate-100 bg-slate-50/50">
                     <h3 class="text-lg font-display font-bold text-premium flex items-center gap-2">
                         <i class="fa-solid fa-umbrella-beach text-brand-dark"></i>
                         HR Summary
                     </h3>
                 </div>
-                <div class="p-6 space-y-4 flex-1">
+                <div class="p-6 space-y-4">
 
-                    <div
-                        class="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                    <a href="{{ route('emp.leaves.index') }}"
+                        class="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-md hover:border-brand-dark transition-all group">
                         <div class="flex items-center gap-3">
                             <div
-                                class="w-10 h-10 rounded-full bg-brand-dark/10 flex items-center justify-center text-brand-dark">
+                                class="w-10 h-10 rounded-full bg-brand-dark/10 flex items-center justify-center text-brand-dark group-hover:bg-brand-dark group-hover:text-white transition-colors">
                                 <i class="fa-solid fa-paper-plane text-sm"></i>
                             </div>
                             <span class="font-bold text-slate-700">Total Requests</span>
                         </div>
                         <span class="text-2xl font-black text-brand-dark count"
                             data-target="{{ $hrStats['requests'] }}">0</span>
-                    </div>
+                    </a>
 
-                    <div
-                        class="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                    <a href="{{ route('emp.leaves.index', ['status' => 2]) }}"
+                        class="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-md hover:border-amber-50 transition-all group">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-600">
+                            <div class="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-colors">
                                 <i class="fa-solid fa-clock-rotate-left text-sm"></i>
                             </div>
                             <span class="font-bold text-slate-700">Pending Approval</span>
                         </div>
                         <span class="text-2xl font-black text-amber-600 count"
                             data-target="{{ $hrStats['pending_approval'] }}">0</span>
-                    </div>
+                    </a>
 
-                    <div class="pt-4 mt-auto">
+                    <div class="pt-4">
                         <a href="{{ route('emp.leaves.index') }}"
                             class="w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-brand-dark text-white rounded-2xl font-bold shadow-lg shadow-brand-dark/20 hover:shadow-xl hover:-translate-y-1 transition-all">
                             Request a Leave
                             <i class="fa-solid fa-plus-circle"></i>
                         </a>
                     </div>
-
                 </div>
             </div>
 
         </div>
+
+    </div>
 
     </div>
 

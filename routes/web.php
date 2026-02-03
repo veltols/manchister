@@ -136,6 +136,7 @@ Route::middleware('auth')->group(function () {
 
         // My Notifications
         Route::get('/notifications', [App\Http\Controllers\Employee\NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('/notifications/mark-read', [App\Http\Controllers\Employee\NotificationController::class, 'markRead'])->name('notifications.mark_read');
 
         // My Tasks
         Route::get('/tasks', [App\Http\Controllers\Employee\TaskController::class, 'index'])->name('tasks.index');
@@ -148,6 +149,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/messages', [App\Http\Controllers\Employee\MessageController::class, 'store'])->name('messages.store');
         Route::get('/messages/{chat_id}', [App\Http\Controllers\Employee\MessageController::class, 'show'])->name('messages.show');
         Route::post('/messages/{chat_id}/reply', [App\Http\Controllers\Employee\MessageController::class, 'reply'])->name('messages.reply');
+
+        // Training Providers (ATPs)
+        Route::post('/atps/{id}/send-email', [App\Http\Controllers\Employee\AtpController::class, 'sendEmail'])->name('atps.send-email');
+        Route::post('/atps/{id}/accredit', [App\Http\Controllers\Employee\AtpController::class, 'accredit'])->name('atps.accredit');
+        Route::resource('atps', App\Http\Controllers\Employee\AtpController::class)->names('atps');
     });
 
     // HR Portal

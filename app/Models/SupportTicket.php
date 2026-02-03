@@ -48,4 +48,11 @@ class SupportTicket extends Model
     {
         return $this->belongsTo(Employee::class, 'assigned_to', 'employee_id');
     }
+
+    public function latestLog()
+    {
+        return $this->hasOne(SystemLog::class, 'related_id', 'ticket_id')
+            ->where('related_table', 'support_tickets_list')
+            ->latest('log_id');
+    }
 }

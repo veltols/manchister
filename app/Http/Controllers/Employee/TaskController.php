@@ -15,25 +15,23 @@ class TaskController extends Controller
     public function index(Request $request)
     {
         $viewMode = $request->input('view_mode', 'my_tasks');
+        $statusId = $request->input('status_id');
         $user = Auth::user();
         $employeeId = $user->employee ? $user->employee->employee_id : 0;
 
         $query = Task::with(['status', 'priority', 'assignedBy', 'assignedTo']);
 
         if ($viewMode == 'others_tasks') {
-            // Tasks I (logged in user) assigned to others
             $query->where('assigned_by', $employeeId);
         } else {
-            // my_tasks: Tasks assigned TO me
             $query->where('assigned_to', $employeeId);
         }
 
-        $query->orderBy('task_id', 'desc');
-
-        // Simple Filter
-        if ($request->has('status_id') && $request->status_id != '') {
-            $query->where('status_id', $request->status_id);
+        if ($statusId) {
+            $query->where('status_id', $statusId);
         }
+
+        $query->orderBy('task_id', 'desc');
 
         $tasks = $query->paginate(15);
 
@@ -41,7 +39,7 @@ class TaskController extends Controller
         $priorities = TaskPriority::all();
         $employees = Employee::where('is_deleted', 0)->orderBy('first_name')->get();
 
-        return view('emp.tasks.index', compact('tasks', 'statuses', 'priorities', 'employees', 'viewMode'));
+        return view('emp.tasks.index', compact('tasks', 'statuses', 'priorities', 'employees', 'viewMode', 'statusId'));
     }
 
     public function show($id)
@@ -58,7 +56,8 @@ class TaskController extends Controller
     {
         $request->validate([
             'task_title' => 'required|string|max:255',
-            'task_due_date' => 'required|date',
+            'task_assigned_date' => 'required|date',
+            'task_due_date' => 'required|date|after_or_equal:task_assigned_date',
             'priority_id' => 'required|exists:sys_list_priorities,priority_id',
         ]);
 
@@ -68,23 +67,28 @@ class TaskController extends Controller
         $task = new Task();
         $task->task_title = $request->task_title;
         $task->task_description = $request->task_description ?? '';
-        $task->task_assigned_date = now();
-        $task->task_due_date = $request->task_due_date;
+        
+        $assignedDate = $request->task_assigned_date;
+        if ($request->filled('start_time')) {
+            $assignedDate .= ' ' . $request->start_time;
+        }
+        $task->task_assigned_date = $assignedDate;
+
+        $dueDate = $request->task_due_date;
+        if ($request->filled('end_time')) {
+            $dueDate .= ' ' . $request->end_time;
+        }
+        $task->task_due_date = $dueDate;
+
         $task->assigned_by = $employeeId;
-        // If assigned_to is not provided, assign to self
         $task->assigned_to = $request->assigned_to ?? $employeeId;
         $task->priority_id = $request->priority_id;
-        $task->status_id = 1; // Default 'Pending' or similar? We need to know the IDs. 
-        // Let's assume 1 is New/Open. Legacy typically uses 0 or 1.
-        // We will default to the first status found or specific ID if known.
-        // Inspecting legacy `serv_new.php` would clarify, but let's assume 0 or check DB. 
-        // Let's query first status.
+        
+        // Default Status (New/Open)
         $firstStatus = TaskStatus::orderBy('status_id')->first();
-        $task->status_id = $firstStatus ? $firstStatus->status_id : 0;
+        $task->status_id = $firstStatus ? $firstStatus->status_id : 1;
 
         $task->save();
-
-        $employeeId = Auth::user()->employee ? Auth::user()->employee->employee_id : Auth::id();
 
         // Create Initial Log
         $log = new \App\Models\SystemLog();
