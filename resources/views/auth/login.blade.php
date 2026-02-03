@@ -241,7 +241,7 @@
 
             <h1 class="font-display text-5xl font-bold mb-4 text-center">
                 Welcome to<br />
-                <span class="text-premium">IQC Systemssss</span>
+                <span class="text-premium">IQC System</span>
             </h1>
 
             <p class="text-xl text-white/80 text-center max-w-md leading-relaxed">
@@ -290,7 +290,7 @@
                         class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-dark mb-4 shadow-lg">
                         <i class="fa-solid fa-user text-2xl text-white"></i>
                     </div>
-                    <h2 class="font-display text-3xl font-bold text-premium mb-2">Welcome Back</h2>
+                    <h2 class="font-display text-3xl font-bold text-premium mb-2">Welcome Backkkkkkk</h2>
                     <p class="text-slate-500">Please enter your credentials to continue</p>
                 </div>
 
