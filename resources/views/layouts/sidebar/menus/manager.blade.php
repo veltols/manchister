@@ -128,8 +128,9 @@
     </a>
 
     <!-- Tickets -->
-    <a href="{{ route('emp.tickets.index') }}"
-        class="nav-item {{ request()->routeIs('emp.tickets.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
+    <!-- Tickets -->
+    <a href="{{ route('admin.tickets.index') }}"
+        class="nav-item {{ request()->routeIs('admin.tickets.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-ticket text-lg w-5"></i>
         <span class="font-medium">Tickets</span>
     </a>
@@ -160,6 +161,20 @@
         class="nav-item {{ request()->routeIs('admin.feedback.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-comment-dots text-lg w-5"></i>
         <span class="font-medium">Feedback</span>
+    </a>
+
+    <!-- Notifications -->
+    <a href="{{ route('admin.notifications') }}"
+        class="nav-item {{ request()->routeIs('admin.notifications') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
+        <i class="fa-solid fa-bell text-lg w-5"></i>
+        <span class="font-medium">Notifications</span>
+    </a>
+
+    <!-- Messages -->
+    <a href="{{ route('admin.messages.index') }}"
+        class="nav-item {{ request()->routeIs('admin.messages.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
+        <i class="fa-solid fa-envelope text-lg w-5"></i>
+        <span class="font-medium">Messages</span>
     </a>
 @endif
 

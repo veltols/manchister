@@ -43,4 +43,9 @@ class SupportTicket extends Model
             ->where('related_table', 'support_tickets_list')
             ->orderBy('log_id', 'desc');
     }
+
+    public function assignedTo()
+    {
+        return $this->belongsTo(Employee::class, 'assigned_to', 'employee_id');
+    }
 }

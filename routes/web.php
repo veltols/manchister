@@ -262,6 +262,12 @@ Route::middleware('auth')->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::redirect('/', '/admin/dashboard');
         Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/notifications', [App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('notifications');
+        
+        // Messages
+        Route::get('/messages', [App\Http\Controllers\Admin\MessageController::class, 'index'])->name('messages.index');
+        Route::post('/messages/create', [App\Http\Controllers\Admin\MessageController::class, 'create'])->name('messages.create');
+        Route::post('/messages', [App\Http\Controllers\Admin\MessageController::class, 'store'])->name('messages.store');
 
         Route::get('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');
         Route::get('/settings/leave_types', [App\Http\Controllers\Admin\SettingsController::class, 'leaveTypes'])->name('settings.leave_types');
@@ -302,6 +308,29 @@ Route::middleware('auth')->group(function () {
         // Feedback
         Route::get('/feedback', [App\Http\Controllers\Admin\FeedbackController::class, 'index'])->name('feedback.index');
         Route::get('/feedback/export', [App\Http\Controllers\Admin\FeedbackController::class, 'export'])->name('feedback.export');
+
+        // Support Tickets
+        Route::get('/tickets', [App\Http\Controllers\Admin\SupportTicketController::class, 'index'])->name('tickets.index');
+        Route::post('/tickets', [App\Http\Controllers\Admin\SupportTicketController::class, 'store'])->name('tickets.store');
+        Route::post('/tickets/{id}/assign', [App\Http\Controllers\Admin\SupportTicketController::class, 'assign'])->name('tickets.assign');
+        Route::post('/tickets/{id}/status', [App\Http\Controllers\Admin\SupportTicketController::class, 'updateStatus'])->name('tickets.update_status');
+        Route::get('/tickets/{id}', [App\Http\Controllers\Admin\SupportTicketController::class, 'show'])->name('tickets.show');
+
+        // Assets
+        Route::get('/assets', [App\Http\Controllers\Admin\AssetController::class, 'index'])->name('assets.index');
+        Route::post('/assets', [App\Http\Controllers\Admin\AssetController::class, 'store'])->name('assets.store');
+        Route::get('/assets/{id}', [App\Http\Controllers\Admin\AssetController::class, 'show'])->name('assets.show');
+        Route::post('/assets/{id}/assign', [App\Http\Controllers\Admin\AssetController::class, 'assign'])->name('assets.assign');
+
+        // Users
+        Route::get('/users', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
+        Route::post('/users', [App\Http\Controllers\Admin\UserController::class, 'store'])->name('users.store');
+        Route::get('/users/{id}', [App\Http\Controllers\Admin\UserController::class, 'show'])->name('users.show');
+
+        // Settings (Dynamics Lists)
+        Route::get('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');
+        Route::post('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'store'])->name('settings.store');
+        Route::post('/settings/{id}', [App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('settings.update');
     });
 
     // EQA / Training Providers Routes
