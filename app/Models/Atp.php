@@ -24,8 +24,14 @@ class ATP extends Model
     public function addedBy()
     {
         return $this->belongsTo(Employee::class, 'added_by', 'employee_id')->withDefault([
-            'last_name' => 'Admin'
+            'last_name' => 'Admin',
+            'first_name' => 'System'
         ]);
+    }
+
+    public function adder()
+    {
+        return $this->addedBy();
     }
 
     public function logs()
