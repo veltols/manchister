@@ -241,7 +241,7 @@
 
             <h1 class="font-display text-5xl font-bold mb-4 text-center">
                 Welcome to<br />
-                <span class="text-premium">IQC System</span>
+                <span class="text-premium">IQC Systemssss</span>
             </h1>
 
             <p class="text-xl text-white/80 text-center max-w-md leading-relaxed">
