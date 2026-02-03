@@ -290,7 +290,7 @@
                         class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-dark mb-4 shadow-lg">
                         <i class="fa-solid fa-user text-2xl text-white"></i>
                     </div>
-                    <h2 class="font-display text-3xl font-bold text-premium mb-2">Welcome Backkkkkkk</h2>
+                    <h2 class="font-display text-3xl font-bold text-premium mb-2">Welcome Back</h2>
                     <p class="text-slate-500">Please enter your credentials to continue</p>
                 </div>
 
