@@ -147,7 +147,13 @@
                                             </span>
                                         </td>
                                         <td class="px-8 py-6 text-right">
-                                            <button class="text-brand hover:underline font-bold text-xs">VIEW</button>
+                                            @if($app['type'] == 'Program')
+                                                <a href="{{ route('emp.atps.forms.registration-request', $atp->atp_id) }}" class="text-brand hover:underline font-bold text-xs">VIEW</a>
+                                            @elseif($app['type'] == 'Compliance')
+                                                <a href="{{ route('emp.atps.forms.sed', $atp->atp_id) }}" class="text-brand hover:underline font-bold text-xs">VIEW</a>
+                                            @else
+                                                <button class="text-slate-300 cursor-not-allowed font-bold text-xs" disabled>VIEW</button>
+                                            @endif
                                         </td>
                                     </tr>
                                 @empty

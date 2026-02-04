@@ -154,6 +154,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/atps/{id}/send-email', [App\Http\Controllers\Employee\AtpController::class, 'sendEmail'])->name('atps.send-email');
         Route::post('/atps/{id}/accredit', [App\Http\Controllers\Employee\AtpController::class, 'accredit'])->name('atps.accredit');
         Route::resource('atps', App\Http\Controllers\Employee\AtpController::class)->names('atps');
+
+        // ATP Detailed Form Views
+        Route::get('/atps/{id}/registration-request', [App\Http\Controllers\Employee\AtpFormController::class, 'showRegistrationRequest'])->name('atps.forms.registration-request');
+        Route::get('/atps/{id}/sed', [App\Http\Controllers\Employee\AtpFormController::class, 'showSed'])->name('atps.forms.sed');
+        Route::get('/atps/{id}/compliance/{main_id}', [App\Http\Controllers\Employee\AtpFormController::class, 'showCompliance'])->name('atps.forms.compliance');
+        Route::get('/atps/{id}/faculty', [App\Http\Controllers\Employee\AtpFormController::class, 'showFaculty'])->name('atps.forms.faculty');
     });
 
     // HR Portal
