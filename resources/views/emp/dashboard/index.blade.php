@@ -6,7 +6,36 @@
 @section('content')
     <div class="space-y-6">
 
-        <!-- Welcome Header -->
+        <!-- Redesigned Welcome Header -->
+        <div class="relative mb-12">
+            <div class="welcome-banner isolate">
+                <div class="flex flex-col justify-center h-full px-8 md:px-16 py-12 md:py-20 max-w-2xl">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-600 text-[10px] font-bold uppercase tracking-widest mb-4">
+                        <span class="relative flex h-2 w-2">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                        </span>
+                        Enterprise Portal
+                    </div>
+                    <h1 class="text-4xl md:text-6xl font-display font-extrabold text-slate-800 tracking-tight mb-4">
+                        Hello, <span class="text-premium">{{ $employeeName }}</span>
+                    </h1>
+                    <p class="text-slate-500 text-lg md:text-xl font-medium max-w-md leading-relaxed">
+                        Ready to start your day with some new tasks? Your dashboard is all set.
+                    </p>
+                  
+                </div>
+            </div>
+            
+            <!-- Floating Character Image -->
+            <div class="absolute -right-4 md:right-12 bottom-0 w-40 md:w-72 lg:w-[22rem] pointer-events-none drop-shadow-[0_20px_50px_rgba(0,0,0,0.15)] animate-float overflow-visible">
+                <img src="{{ asset('images/char.png') }}" alt="Staff character" class="w-full h-auto object-contain transform translate-y-4">
+            </div>
+            
+            <!-- Abstract Decorations -->
+            <div class="absolute -top-6 -left-6 w-32 h-32 bg-indigo-200/20 rounded-full blur-3xl -z-10"></div>
+            <div class="absolute bottom-0 right-1/3 w-64 h-64 bg-purple-100/30 rounded-full blur-3xl -z-10"></div>
+        </div>
         <div class="premium-card p-6 bg-white overflow-hidden relative">
             <div class="absolute top-0 right-0 w-32 h-32 bg-brand-dark/5 rounded-full -mr-16 -mt-16"></div>
             <div class="flex flex-col md:flex-row items-center justify-between gap-4 relative z-10">
@@ -410,4 +439,49 @@
             showAnn(curAnn);
         }
     </script>
+@push('styles')
+    <style>
+        .welcome-banner {
+            background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%236366f1' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(2deg); }
+        }
+
+        .animate-float {
+            animation: float 8s ease-in-out infinite;
+        }
+
+        @media (max-width: 768px) {
+            .welcome-banner {
+                border-radius: 30px;
+            }
+            .welcome-banner h1 {
+                font-size: 2.25rem;
+            }
+            .welcome-banner p {
+                font-size: 1rem;
+            }
+        }
+    </style>
+@endpush
 @endsection

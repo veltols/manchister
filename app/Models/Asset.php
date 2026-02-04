@@ -18,6 +18,8 @@ class Asset extends Model
     protected $casts = [
         'assigned_date' => 'date',
         'expiry_date' => 'date',
+        'purchase_date' => 'date',
+        'added_date' => 'date',
     ];
 
     public function category()

@@ -5,7 +5,7 @@
     <div class="h-20 flex items-center justify-center border-b border-white/10 px-6">
         <div class="flex items-center gap-3">
             <img src="{{ asset('images/logo.png') }}" alt="IQC Logo" class="w-12 h-12 object-contain">
-            <span class="font-display text-xl font-bold text-white">IQC System</span>
+            <span class="font-display text-xl font-bold text-white">IQC Sense</span>
         </div>
     </div>
 

@@ -58,11 +58,14 @@ class AssetController extends Controller
         $asset->asset_description = $request->description;
         $asset->asset_serial = $request->asset_serial;
         $asset->purchase_date = $request->purchase_date;
-        $asset->expiry_date = $request->expiry_date;
+        $asset->expiry_date = $request->expiry_date ?? now();
         $asset->status_id = $request->status_id;
         
-        $asset->created_date = now();
-        $asset->created_by = 1; // Default admin
+        $asset->added_date = now();
+        $asset->added_by = 1; // Default admin
+        $asset->department_id = 0; // Default
+        $asset->assigned_by = 0; // Default
+        $asset->assigned_date = now(); // Required field
         // assigned_to is 0 by default in DB usually, or null. Legacy uses 0.
         $asset->assigned_to = 0; 
         
@@ -84,8 +87,8 @@ class AssetController extends Controller
         // Using SystemLog with some identifier. Legacy uses 'logs.php' which selects from `sys_logs` probably.
         // Assuming we log with a specific type.
         
-        $logs = SystemLog::where('log_ref', $id)
-            // ->where('log_type', 'asset') // If we had a type
+        $logs = SystemLog::where('related_id', $id)
+            ->where('related_table', 'z_assets_list')
             ->orderBy('log_date', 'desc')
             ->get();
 
@@ -123,12 +126,13 @@ class AssetController extends Controller
          Legacy SystemLog likely has: log_id, log_ref, log_date, log_action, log_remark, log_user_id...
         */
         $log = new SystemLog();
-        $log->log_ref = $refId;
+        $log->related_id = $refId;
+        $log->related_table = 'z_assets_list';
         $log->log_date = now();
         $log->log_action = $action;
         $log->log_remark = $remark;
-        $log->log_user_id = 1; // Auth user
-        // $log->log_type = 'asset'; // If column exists
+        $log->logger_type = 'admin';
+        $log->logged_by = 1; // Auth user
         $log->save();
     }
 }

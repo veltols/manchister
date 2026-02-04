@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Dashboard') - IQC System</title>
+    <title>@yield('title', 'Dashboard') - IQC Sense</title>
     <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -400,7 +400,8 @@
         <header
             class="h-20 bg-white/80 backdrop-blur-lg flex items-center justify-between px-8 border-b border-slate-200/50 z-10 shadow-sm">
             <div>
-                <h1 class="text-2xl font-display font-bold text-premium">
+                <h1 class="text-2xl font-display font-bold text-premium flex items-center gap-3">
+                    <img src="{{ asset('images/connect_icon.png') }}" class="h-8 w-auto" alt="Icon">
                     @yield('title', 'Dashboard')
                 </h1>
                 <p class="text-sm text-slate-500 mt-0.5">@yield('subtitle', 'Welcome back')</p>

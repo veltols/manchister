@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - IQC System</title>
+    <title>Login - IQC Sense</title>
     <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <link
@@ -34,7 +34,7 @@
 
     <style>
         body {
-            background: linear-gradient(135deg, #004F68 0%, #002836 100%);
+            background: #004F68;
             position: relative;
             overflow-x: hidden;
             overflow-y: auto;
@@ -222,10 +222,6 @@
 
 <body class="min-h-screen flex items-start pt-12 lg:pt-0 lg:items-center justify-center p-4 font-sans">
 
-    <!-- Animated Background Blobs -->
-    <div class="blob blob-1"></div>
-    <div class="blob blob-2"></div>
-    <div class="blob blob-3"></div>
 
     <!-- Login Container -->
     <div class="relative z-10 w-full max-w-6xl flex items-center gap-12">
@@ -241,12 +237,8 @@
 
             <h1 class="font-display text-5xl font-bold mb-4 text-center">
                 Welcome to<br />
-                <span class="text-premium">IQC System</span>
+                <span class="text-white">IQC Sense</span>
             </h1>
-
-            <p class="text-xl text-white/80 text-center max-w-md leading-relaxed">
-                Empowering excellence through intelligent workforce management and seamless operations.
-            </p>
 
             <div class="mt-12 flex gap-6">
                 <div class="flex flex-col items-center gap-2">
@@ -344,7 +336,7 @@
 
             <!-- Mobile Logo -->
             <div class="lg:hidden text-center mt-8">
-                <p class="text-white/80 text-sm">© 2024 IQC System. All rights reserved.</p>
+                <p class="text-white/80 text-sm">© {{date('Y')}} IQC Sense. All rights reserved.</p>
             </div>
         </div>
     </div>

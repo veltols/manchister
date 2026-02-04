@@ -111,8 +111,8 @@
                         <p class="text-slate-700 mt-2">{{ $asset->assigned_date ? $asset->assigned_date->format('M d, Y') : 'N/A' }}</p>
                     </div>
                      <div>
-                        <h3 class="text-sm font-bold text-slate-400 uppercase mb-1">Created Date</h3>
-                        <p class="text-slate-700 mt-2">{{ \Carbon\Carbon::parse($asset->created_date)->format('M d, Y') }}</p>
+                        <h3 class="text-sm font-bold text-slate-400 uppercase mb-1">Added Date</h3>
+                        <p class="text-slate-700 mt-2">{{ $asset->added_date ? $asset->added_date->format('M d, Y') : 'N/A' }}</p>
                     </div>
                 </div>
 
