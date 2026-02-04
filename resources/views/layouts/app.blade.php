@@ -94,8 +94,12 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-            opacity: 0.5;
+            background: url("/images/pattern.png");
+            background-size: 300px;
+            background-repeat: repeat;
+            opacity: 0.12;
+            pointer-events: none;
+            mix-blend-mode: overlay;
         }
 
         /* Nav Items */
@@ -406,11 +410,11 @@
     @include('layouts.sidebar.index')
 
     <!-- Main Content -->
-    <div class="flex-1 flex flex-col h-full relative">
+    <div class="flex-1 flex flex-col h-full relative min-w-0 overflow-hidden">
 
         <!-- Header -->
         <header
-            class="h-20 bg-white/80 backdrop-blur-lg flex items-center justify-between px-8 border-b border-slate-200/50 z-10 shadow-sm">
+            class="h-20 bg-white/80 backdrop-blur-lg flex items-center justify-between px-8 border-b border-slate-200/50 z-10 shadow-sm shrink-0">
             <div>
                 <h1 class="text-2xl font-display font-bold text-premium flex items-center gap-3">
                     <img src="{{ asset('images/connect_icon.png') }}" class="h-8 w-auto" alt="Icon">
@@ -467,7 +471,7 @@
         </header>
 
         <!-- Content Area -->
-        <main class="flex-1 overflow-y-auto p-8 bg-gradient-to-br from-slate-50 via-cyan-50/10 to-blue-50/10">
+        <main class="flex-1 overflow-y-auto overflow-x-hidden p-8 bg-gradient-to-br from-slate-50 via-cyan-50/10 to-blue-50/10">
             <div class="max-w-7xl mx-auto w-full animate-fade-in-up">
                 @if(session('success'))
                     <div

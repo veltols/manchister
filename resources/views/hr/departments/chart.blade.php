@@ -4,14 +4,14 @@
 @section('subtitle', 'Departmental Structure')
 
 @section('content')
-    <div class="w-full max-w-full space-y-6 animate-fade-in-up">
+    <div class="w-full max-w-full space-y-6 animate-fade-in-up overflow-x-hidden">
 
         <!-- Structure Navigation -->
         <div class="px-1">
             @include('hr.partials.structure_nav')
         </div>
 
-        <div class="w-full max-w-full flex flex-wrap md:flex-nowrap justify-between items-end gap-6 px-4 md:px-6 pt-4 pb-2">
+        <div class="w-full flex justify-between items-end gap-6 px-4 md:px-6 pt-4 pb-2">
             <div class="space-y-1">
                 <h2 class="text-3xl font-display font-extrabold text-premium tracking-tight">Company Hierarchy</h2>
                 <div class="flex items-center gap-2 text-slate-500">
@@ -19,14 +19,17 @@
                     <p class="text-sm font-medium">Visualizing department reporting lines</p>
                 </div>
             </div>
+        </div>
 
-            <!-- Enhanced Header-integrated Chart Controls -->
-            <div class="flex items-center gap-2 p-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl z-30 mb-1 ml-auto shrink-0 min-w-max mr-1">
+        <div id="chartContainer" class="premium-card relative bg-slate-50/30 overflow-hidden min-h-[500px] border border-slate-100 h-[calc(100vh-280px)]">
+            
+            <!-- Floating Chart Controls (Absolute to prevent shifting) -->
+            <div class="absolute top-6 right-6 flex items-center gap-2 p-1.5 bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl shadow-2xl z-40">
                 <div class="flex items-center border-r border-slate-100 pr-1.5 mr-1.5">
                     <button id="zoomOut" class="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-50 transition-colors" title="Zoom Out">
                         <i class="fa-solid fa-minus text-xs md:text-sm"></i>
                     </button>
-                    <span id="zoomLevel" class="text-[9px] md:text-xs font-bold text-slate-400 w-8 md:w-12 text-center select-none font-mono">100%</span>
+                    <span id="zoomLevel" class="text-[10px] md:text-xs font-bold text-slate-400 w-8 md:w-12 text-center select-none font-mono">100%</span>
                     <button id="zoomIn" class="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-50 transition-colors" title="Zoom In">
                         <i class="fa-solid fa-plus text-xs md:text-sm"></i>
                     </button>
@@ -38,9 +41,6 @@
                     <i class="fa-solid fa-expand text-xs md:text-sm"></i>
                 </button>
             </div>
-        </div>
-
-        <div id="chartContainer" class="premium-card relative bg-slate-50/30 overflow-hidden min-h-[500px] border border-slate-100 h-[calc(100vh-280px)]">
             
             {{-- Floating controls removed as per user request --}}
 
