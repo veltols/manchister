@@ -9,6 +9,7 @@ use App\Models\TicketCategory;
 use App\Models\TaskPriority;
 use App\Models\TaskStatus;
 use App\Models\Employee;
+use App\Models\SystemLog;
 use Illuminate\Support\Facades\Auth;
 
 class TicketController extends Controller
@@ -51,6 +52,9 @@ class TicketController extends Controller
             'added_by' => 'required|exists:employees_list,employee_id',
         ]);
 
+        $employee = Employee::find($request->added_by);
+        $departmentId = $employee ? $employee->department_id : 0;
+
         $ticket = new \App\Models\SupportTicket();
         $ticket->ticket_ref = 'T-' . time();
         $ticket->ticket_subject = $request->ticket_subject;
@@ -58,9 +62,8 @@ class TicketController extends Controller
         $ticket->category_id = $request->category_id;
         $ticket->priority_id = $request->priority_id;
         $ticket->added_by = $request->added_by;
-        $ticket->added_date = now();
-        // Assuming theme_id maps to priority_id in form? legacy uses theme_id input name for priority
-
+        $ticket->department_id = $departmentId;
+        $ticket->ticket_added_date = now();
         $ticket->status_id = 1; // Default Pending/Open
 
         if ($request->hasFile('ticket_attachment')) {
@@ -72,6 +75,67 @@ class TicketController extends Controller
 
         $ticket->save();
 
+        $this->logAction($ticket->ticket_id, 'Ticket_Added', 'Initial ticket creation');
+
         return response()->json(['success' => true, 'message' => 'Ticket created successfully']);
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status_id' => 'required|integer',
+            'ticket_remarks' => 'required|string',
+            'assigned_to' => 'nullable|integer'
+        ]);
+
+        $ticket = \App\Models\SupportTicket::findOrFail($id);
+        $statusId = (int) $request->status_id;
+        $logAction = "Ticket_Status_changed";
+
+        if ($statusId == 100) { // Reopen
+            $ticket->status_id = 1;
+            $logAction = "Ticket_Reopened";
+        } else if ($statusId == 2) { // In Progress
+            $ticket->status_id = 2;
+            $logAction = "Ticket_in_Progress";
+            if ($request->assigned_to) {
+                $ticket->assigned_to = $request->assigned_to;
+                $ticket->assigned_date = now();
+                $logAction = "Ticket_Assigned";
+            }
+        } else if ($statusId == 3) { // Resolved
+            $ticket->status_id = 3;
+            $ticket->ticket_end_date = now();
+            $logAction = "Ticket_Resolved";
+        } else {
+            $ticket->status_id = $statusId;
+        }
+
+        if ($request->ticket_remarks) {
+            $ticket->ticket_remarks = $request->ticket_remarks;
+        }
+
+        $ticket->save();
+
+        $this->logAction($ticket->ticket_id, $logAction, $request->ticket_remarks);
+
+        return redirect()->back()->with('success', 'Ticket updated successfully.');
+    }
+
+    private function logAction($ticketId, $action, $remark)
+    {
+        $user = Auth::user();
+        $employeeId = $user->employee ? $user->employee->employee_id : 0;
+
+        $log = new SystemLog();
+        $log->related_table = 'support_tickets_list';
+        $log->related_id = $ticketId;
+        $log->log_action = $action;
+        $log->log_remark = $remark;
+        $log->log_date = now();
+        $log->logged_by = $employeeId;
+        $log->logger_type = 'employees_list';
+        $log->log_type = 'int';
+        $log->save();
     }
 }

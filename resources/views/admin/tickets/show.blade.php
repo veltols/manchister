@@ -220,22 +220,24 @@
                 @csrf
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">Assign To (IT Dept)</label>
-                        <!-- Note: We need to pass employees to the view globally or via controller for this to work in show view.
-                             If not passed, we might need to fetch or use a different UI. 
-                             Usually show method should pass this data if assignment is allowed. 
-                             Re-checking controller... -> Controller 'show' method needs to pass 'itEmployees'. -->
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Assign To</label>
                         <select name="assigned_to" required class="premium-input w-full px-4 py-3 text-sm">
                             <option value="">Select Employee...</option>
-                             @if(isset($itEmployees))
-                                @foreach($itEmployees as $emp)
-                                    <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
-                                @endforeach
-                             @endif
+                            @isset($itEmployees)
+                                <optgroup label="IT Department Staff">
+                                    @foreach($itEmployees as $emp)
+                                        <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                                    @endforeach
+                                </optgroup>
+                            @endisset
+                            @isset($allEmployees)
+                                <optgroup label="All Employees">
+                                    @foreach($allEmployees as $emp)
+                                        <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                                    @endforeach
+                                </optgroup>
+                            @endisset
                         </select>
-                        @if(!isset($itEmployees))
-                           <p class="text-xs text-red-500 mt-1">Unable to load employees list. Please return to index to assign.</p>
-                        @endif
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">Remarks</label>

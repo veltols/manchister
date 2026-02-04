@@ -121,6 +121,12 @@
         <span class="font-medium">Tickets</span>
     </a>
 
+    <a href="{{ route('hr.notifications.index') }}"
+        class="nav-item {{ request()->routeIs('hr.notifications.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
+        <i class="fa-solid fa-bell text-lg w-5"></i>
+        <span class="font-medium">Notifications</span>
+    </a>
+
 
 @endif
 

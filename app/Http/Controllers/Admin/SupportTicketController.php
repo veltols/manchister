@@ -55,7 +55,19 @@ class SupportTicketController extends Controller
         $ticket = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'assignedTo', 'logs.logger'])
             ->findOrFail($id);
 
-        return view('admin.tickets.show', compact('ticket'));
+        // IT Employees for Assignment (Legacy Dept ID 4)
+        $itEmployees = Employee::where('department_id', 4)
+            ->where('is_deleted', 0)
+            ->where('is_hidden', 0)
+            ->orderBy('first_name')
+            ->get();
+
+        $allEmployees = Employee::where('is_deleted', 0)
+            ->where('is_hidden', 0)
+            ->orderBy('first_name')
+            ->get();
+
+        return view('admin.tickets.show', compact('ticket', 'itEmployees', 'allEmployees'));
     }
 
     public function store(Request $request)
@@ -82,6 +94,9 @@ class SupportTicketController extends Controller
         // Generate Ticket REF: TR-{RAND}-{YEAR} (Simple unique format)
         $ref = 'TR-' . strtoupper(Str::random(5)) . '-' . date('Y');
 
+        $employee = Employee::find($request->added_by);
+        $departmentId = $employee ? $employee->department_id : 0;
+
         $ticket = new SupportTicket();
         $ticket->ticket_ref = $ref;
         $ticket->category_id = $request->category_id;
@@ -90,6 +105,7 @@ class SupportTicketController extends Controller
         $ticket->ticket_description = $request->ticket_description;
         $ticket->ticket_attachment = $attachmentPath;
         $ticket->added_by = $request->added_by;
+        $ticket->department_id = $departmentId;
         $ticket->ticket_added_date = now();
         $ticket->status_id = 1; // Open
         $ticket->assigned_to = 0; // Unassigned initially

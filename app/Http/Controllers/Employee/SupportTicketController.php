@@ -94,7 +94,6 @@ class SupportTicketController extends Controller
         $ticket->added_by = $request->added_by;
         $ticket->department_id = $departmentId;
         $ticket->ticket_added_date = now();
-        $ticket->last_updated_date = now();
 
         $ticket->status_id = 1; // Project default typically 1 for Open
         $ticket->assigned_to = 0; 
@@ -137,7 +136,6 @@ class SupportTicketController extends Controller
 
         $ticket = SupportTicket::findOrFail($id);
         $ticket->status_id = $request->status_id;
-        $ticket->last_updated_date = now();
         $ticket->save();
 
         // Create Log

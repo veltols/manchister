@@ -281,12 +281,19 @@
                 @csrf
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">Assign To (IT Dept)</label>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Assign To</label>
                         <select name="assigned_to" required class="premium-input w-full px-4 py-3 text-sm">
                             <option value="">Select Employee...</option>
-                            @foreach($itEmployees as $emp)
-                                <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
-                            @endforeach
+                            <optgroup label="IT Department Staff">
+                                @foreach($itEmployees as $emp)
+                                    <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                                @endforeach
+                            </optgroup>
+                            <optgroup label="All Employees">
+                                @foreach($allEmployees as $emp)
+                                    <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                                @endforeach
+                            </optgroup>
                         </select>
                     </div>
                     <div>

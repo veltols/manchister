@@ -161,6 +161,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\HR\DashboardController::class, 'index'])->name('dashboard');
         Route::get('/requests', [App\Http\Controllers\HR\RequestsController::class, 'index'])->name('requests.index');
 
+        // Notifications
+        Route::get('/notifications', [App\Http\Controllers\HR\NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('/notifications/mark-read', [App\Http\Controllers\HR\NotificationController::class, 'markAsRead'])->name('notifications.mark_as_read');
+
         // Employees
         Route::get('/employees', [App\Http\Controllers\HR\EmployeeController::class, 'index'])->name('employees.index');
         Route::get('/employees/create', [App\Http\Controllers\HR\EmployeeController::class, 'create'])->name('employees.create');
@@ -232,6 +236,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/tickets', [App\Http\Controllers\HR\TicketController::class, 'index'])->name('tickets.index');
         Route::get('/tickets/{id}', [App\Http\Controllers\HR\TicketController::class, 'show'])->name('tickets.show');
         Route::post('/tickets', [App\Http\Controllers\HR\TicketController::class, 'store'])->name('tickets.store');
+        Route::post('/tickets/{id}/status', [App\Http\Controllers\HR\TicketController::class, 'updateStatus'])->name('tickets.status.update');
 
         // Exit Interviews
         Route::get('/exit-interviews', [App\Http\Controllers\HR\ExitInterviewController::class, 'index'])->name('exit_interviews.index');

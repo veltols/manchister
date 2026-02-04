@@ -365,6 +365,18 @@
             -webkit-text-fill-color: transparent;
             display: inline-block;
         }
+
+        @keyframes bellShake {
+            0%, 100% { transform: rotate(0); }
+            20% { transform: rotate(15deg); }
+            40% { transform: rotate(-15deg); }
+            60% { transform: rotate(10deg); }
+            80% { transform: rotate(-10deg); }
+        }
+
+        .group-hover\:shake {
+            animation: bellShake 0.5s ease-in-out;
+        }
     </style>
 
     <script>
@@ -415,14 +427,41 @@
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <button
-                        class="w-10 h-10 rounded-xl glass hover:bg-white/90 flex items-center justify-center text-slate-600 hover:text-indigo-600 transition-all">
-                        <i class="fa-solid fa-bell"></i>
-                    </button>
-                    <button
-                        class="w-10 h-10 rounded-xl glass hover:bg-white/90 flex items-center justify-center text-slate-600 hover:text-indigo-600 transition-all">
-                        <i class="fa-solid fa-gear"></i>
-                    </button>
+                    @php
+                        $user = Auth::user();
+                        $notifRoute = 'notifications.index';
+                        $chatRoute = 'messages.index';
+
+                        if ($user) {
+                            if (in_array($user->user_type, ['hr', 'admin_hr'])) {
+                                $notifRoute = 'hr.notifications.index';
+                                $chatRoute = 'hr.messages.index';
+                            } elseif (in_array($user->user_type, ['root', 'sys_admin'])) {
+                                $notifRoute = 'admin.notifications';
+                                $chatRoute = 'admin.messages.index';
+                            } elseif ($user->user_type == 'emp') {
+                                $notifRoute = 'emp.notifications.index';
+                                $chatRoute = 'emp.messages.index';
+                            }
+                        }
+                    @endphp
+
+                    <div class="flex items-center bg-slate-100/50 p-1 rounded-2xl border border-slate-200/50">
+                        <a href="{{ route($chatRoute) }}"
+                            class="w-11 h-11 rounded-xl bg-white flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:shadow-lg hover:shadow-indigo-100 transition-all duration-300 group"
+                            title="Messages">
+                            <i class="fa-solid fa-comment-dots group-hover:scale-110"></i>
+                        </a>
+
+                        <div class="w-px h-6 bg-slate-200 mx-1"></div>
+
+                        <a href="{{ route($notifRoute) }}"
+                            class="w-11 h-11 rounded-xl bg-white flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:shadow-lg hover:shadow-indigo-100 transition-all duration-300 group relative"
+                            title="Notifications">
+                            <i class="fa-solid fa-bell group-hover:shake"></i>
+                            <span class="absolute top-2.5 right-2.5 w-2 h-2 bg-indigo-500 rounded-full border-2 border-white shadow-sm"></span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </header>
