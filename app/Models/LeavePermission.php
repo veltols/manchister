@@ -15,11 +15,16 @@ class LeavePermission extends Model
 
     protected $guarded = [];
 
+    protected $casts = [
+        'start_date' => 'date',
+        'submission_date' => 'date',
+    ];
+
     public function employee()
     {
         return $this->belongsTo(Employee::class, 'employee_id', 'employee_id');
     }
-    
+
     // Status is likely hardcoded in legacy or small table, assume table
     public function status()
     {

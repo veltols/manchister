@@ -14,34 +14,64 @@
 @if($isHR)
     <!-- Legacy HR Structure Alignment -->
 
-    <!-- Organization Chart (Departments) -->
+    <!-- Organization Structure -->
+    <div class="px-4 pb-2 pt-4">
+        <p class="text-xs font-semibold text-white/40 uppercase tracking-wider">Organization</p>
+    </div>
     <a href="{{ route('hr.departments.index') }}"
         class="nav-item {{ request()->routeIs('hr.departments.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
-        <i class="fa-solid fa-cubes text-lg w-5"></i>
-        <span class="font-medium">Organization Chart</span>
+        <i class="fa-solid fa-sitemap text-lg w-5"></i>
+        <span class="font-medium">Departments</span>
     </a>
-
-    <!-- Employees -->
+    <a href="{{ route('hr.designations.index') }}"
+        class="nav-item {{ request()->routeIs('hr.designations.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
+        <i class="fa-solid fa-id-badge text-lg w-5"></i>
+        <span class="font-medium">Designations</span>
+    </a>
     <a href="{{ route('hr.employees.index') }}"
         class="nav-item {{ request()->routeIs('hr.employees.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-users text-lg w-5"></i>
         <span class="font-medium">Employees</span>
     </a>
 
-    <!-- Requests (Consolidated) -->
-    <!-- In Legacy, Requests likely covered Leaves/Permissions. We'll group them visually or keep as list but labeled clearly -->
+    <!-- Requests & Operations -->
     <div class="px-4 pb-2 pt-4">
         <p class="text-xs font-semibold text-white/40 uppercase tracking-wider">Requests & Operations</p>
     </div>
+    <a href="{{ route('hr.requests.index') }}"
+        class="nav-item {{ request()->routeIs('hr.requests.index') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
+        <i class="fa-solid fa-hubspot text-lg w-5"></i>
+        <span class="font-medium">Operations Hub</span>
+    </a>
     <a href="{{ route('hr.leaves.index') }}"
         class="nav-item {{ request()->routeIs('hr.leaves.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
-        <i class="fa-solid fa-folder-open text-lg w-5"></i>
-        <span class="font-medium">Requests (Leaves)</span>
+        <i class="fa-solid fa-calendar-check text-lg w-5"></i>
+        <span class="font-medium">Leaves</span>
     </a>
     <a href="{{ route('hr.permissions.index') }}"
         class="nav-item {{ request()->routeIs('hr.permissions.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
-        <i class="fa-solid fa-clock text-lg w-5"></i>
+        <i class="fa-solid fa-person-walking-arrow-loop-left text-lg w-5"></i>
         <span class="font-medium">Permissions</span>
+    </a>
+    <a href="{{ route('hr.attendance.index') }}"
+        class="nav-item {{ request()->routeIs('hr.attendance.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
+        <i class="fa-solid fa-clipboard-user text-lg w-5"></i>
+        <span class="font-medium">Attendance</span>
+    </a>
+    <a href="{{ route('hr.disciplinary.index') }}"
+        class="nav-item {{ request()->routeIs('hr.disciplinary.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
+        <i class="fa-solid fa-gavel text-lg w-5"></i>
+        <span class="font-medium">Disciplinary</span>
+    </a>
+    <a href="{{ route('hr.performance.index') }}"
+        class="nav-item {{ request()->routeIs('hr.performance.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
+        <i class="fa-solid fa-star text-lg w-5"></i>
+        <span class="font-medium">Performance</span>
+    </a>
+    <a href="{{ route('hr.exit_interviews.index') }}"
+        class="nav-item {{ request()->routeIs('hr.exit_interviews.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
+        <i class="fa-solid fa-door-open text-lg w-5"></i>
+        <span class="font-medium">Exit Interviews</span>
     </a>
 
     <!-- HR Documents -->
@@ -67,20 +97,20 @@
     <!-- We link to existing routes we know of -->
 
     <!-- Using employee routes often shared for self-organization -->
-    <a href="{{ route('emp.tasks.index') }}"
-        class="nav-item {{ request()->routeIs('emp.tasks.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
+    <a href="{{ route('hr.tasks.index') }}"
+        class="nav-item {{ request()->routeIs('hr.tasks.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-list-check text-lg w-5"></i>
         <span class="font-medium">Tasks</span>
     </a>
 
-    <a href="{{ route('emp.calendar.index') }}"
-        class="nav-item {{ request()->routeIs('emp.calendar.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
+    <a href="{{ route('hr.calendar.index') }}"
+        class="nav-item {{ request()->routeIs('hr.calendar.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-calendar-days text-lg w-5"></i>
         <span class="font-medium">Calendar</span>
     </a>
 
-    <a href="{{ route('emp.messages.index') }}"
-        class="nav-item {{ request()->routeIs('emp.messages.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
+    <a href="{{ route('hr.messages.index') }}"
+        class="nav-item {{ request()->routeIs('hr.messages.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-envelope text-lg w-5"></i>
         <span class="font-medium">Chats</span>
     </a>
@@ -91,30 +121,6 @@
         <span class="font-medium">Tickets</span>
     </a>
 
-    <!-- Additional HR Specifics not in top level legacy but important -->
-    <div class="px-4 pb-2 pt-4">
-        <p class="text-xs font-semibold text-white/40 uppercase tracking-wider">Management</p>
-    </div>
-    <a href="{{ route('hr.attendance.index') }}"
-        class="nav-item {{ request()->routeIs('hr.attendance.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white/80 hover:text-white">
-        <i class="fa-solid fa-clipboard-check text-lg w-5"></i>
-        <span class="font-medium">Attendance</span>
-    </a>
-    <a href="{{ route('hr.disciplinary.index') }}"
-        class="nav-item {{ request()->routeIs('hr.disciplinary.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white/80 hover:text-white">
-        <i class="fa-solid fa-gavel text-lg w-5"></i>
-        <span class="font-medium">Disciplinary</span>
-    </a>
-    <a href="{{ route('hr.performance.index') }}"
-        class="nav-item {{ request()->routeIs('hr.performance.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white/80 hover:text-white">
-        <i class="fa-solid fa-star text-lg w-5"></i>
-        <span class="font-medium">Performance</span>
-    </a>
-    <a href="{{ route('hr.exit_interviews.index') }}"
-        class="nav-item {{ request()->routeIs('hr.exit_interviews.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white/80 hover:text-white">
-        <i class="fa-solid fa-door-open text-lg w-5"></i>
-        <span class="font-medium">Exit Interviews</span>
-    </a>
 
 @endif
 

@@ -159,12 +159,15 @@ Route::middleware('auth')->group(function () {
     // HR Portal
     Route::prefix('hr')->name('hr.')->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\HR\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/requests', [App\Http\Controllers\HR\RequestsController::class, 'index'])->name('requests.index');
 
         // Employees
         Route::get('/employees', [App\Http\Controllers\HR\EmployeeController::class, 'index'])->name('employees.index');
         Route::get('/employees/create', [App\Http\Controllers\HR\EmployeeController::class, 'create'])->name('employees.create');
         Route::post('/employees', [App\Http\Controllers\HR\EmployeeController::class, 'store'])->name('employees.store');
         Route::get('/employees/{id}', [App\Http\Controllers\HR\EmployeeController::class, 'show'])->name('employees.show');
+        Route::post('/employees/{id}/update', [App\Http\Controllers\HR\EmployeeController::class, 'update'])->name('employees.update');
+        Route::post('/employees/{id}/update-credentials', [App\Http\Controllers\HR\EmployeeController::class, 'updateCredentials'])->name('employees.update-credentials');
 
         // Leaves
         Route::get('/leaves', [App\Http\Controllers\HR\LeaveController::class, 'index'])->name('leaves.index');
@@ -196,10 +199,34 @@ Route::middleware('auth')->group(function () {
         Route::post('/documents', [App\Http\Controllers\HR\DocumentController::class, 'store'])->name('documents.store');
         Route::delete('/documents/{id}', [App\Http\Controllers\HR\DocumentController::class, 'destroy'])->name('documents.destroy');
 
+        // Groups & Committees
+        Route::get('/groups', [App\Http\Controllers\HR\GroupController::class, 'index'])->name('groups.index');
+        Route::get('/groups/{id}', [App\Http\Controllers\HR\GroupController::class, 'show'])->name('groups.show');
+        Route::post('/groups', [App\Http\Controllers\HR\GroupController::class, 'store'])->name('groups.store');
+        Route::post('/groups/member', [App\Http\Controllers\HR\GroupController::class, 'addMember'])->name('groups.member.store');
+        Route::post('/groups/post', [App\Http\Controllers\HR\GroupController::class, 'addPost'])->name('groups.post.store');
+        Route::post('/groups/file', [App\Http\Controllers\HR\GroupController::class, 'uploadFile'])->name('groups.file.store');
+
+        // Tasks
+        Route::get('/tasks', [App\Http\Controllers\HR\TaskController::class, 'index'])->name('tasks.index');
+        Route::get('/tasks/{id}', [App\Http\Controllers\HR\TaskController::class, 'show'])->name('tasks.show');
+        Route::post('/tasks', [App\Http\Controllers\HR\TaskController::class, 'store'])->name('tasks.store');
+        Route::post('/tasks/status', [App\Http\Controllers\HR\TaskController::class, 'updateStatus'])->name('tasks.status.update');
+
+        // Calendar
+        Route::get('/calendar', [App\Http\Controllers\HR\CalendarController::class, 'index'])->name('calendar.index');
+        Route::get('/calendar/events', [App\Http\Controllers\HR\CalendarController::class, 'getEvents'])->name('calendar.events');
+
         // Disciplinary (DA)
         Route::get('/disciplinary', [App\Http\Controllers\HR\DisciplinaryController::class, 'index'])->name('disciplinary.index');
         Route::post('/disciplinary', [App\Http\Controllers\HR\DisciplinaryController::class, 'store'])->name('disciplinary.store');
         Route::post('/disciplinary/{id}/update', [App\Http\Controllers\HR\DisciplinaryController::class, 'update'])->name('disciplinary.update');
+
+        // Messages
+        Route::get('/messages', [App\Http\Controllers\HR\MessageController::class, 'index'])->name('messages.index');
+        Route::get('/messages/{id}', [App\Http\Controllers\HR\MessageController::class, 'show'])->name('messages.show');
+        Route::post('/messages', [App\Http\Controllers\HR\MessageController::class, 'store'])->name('messages.store');
+        Route::post('/messages/{id}/reply', [App\Http\Controllers\HR\MessageController::class, 'reply'])->name('messages.reply');
 
         // Exit Interviews
         Route::get('/exit-interviews', [App\Http\Controllers\HR\ExitInterviewController::class, 'index'])->name('exit_interviews.index');
@@ -269,7 +296,7 @@ Route::middleware('auth')->group(function () {
         Route::redirect('/', '/admin/dashboard');
         Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
         Route::get('/notifications', [App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('notifications');
-        
+
         // Messages
         Route::get('/messages', [App\Http\Controllers\Admin\MessageController::class, 'index'])->name('messages.index');
         Route::post('/messages/create', [App\Http\Controllers\Admin\MessageController::class, 'create'])->name('messages.create');

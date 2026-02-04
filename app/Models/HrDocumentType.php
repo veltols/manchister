@@ -14,4 +14,9 @@ class HrDocumentType extends Model
     public $timestamps = false;
 
     protected $guarded = [];
+
+    public function documents()
+    {
+        return $this->hasMany(HrDocument::class, 'document_type_id', 'document_type_id');
+    }
 }

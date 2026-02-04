@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Department;
 use App\Models\Employee;
+use Illuminate\Support\Facades\Auth;
 
 class DepartmentController extends Controller
 {
@@ -35,6 +36,7 @@ class DepartmentController extends Controller
             'department_name' => 'required|string|max:255',
             'main_department_id' => 'nullable|integer',
             'line_manager_id' => 'nullable|exists:employees_list,employee_id',
+            'log_remark' => 'nullable|string',
         ]);
 
         $dept = new Department();
@@ -44,6 +46,8 @@ class DepartmentController extends Controller
         $dept->line_manager_id = $request->line_manager_id;
         $dept->user_type = 'emp'; // Default from legacy logic
         $dept->save();
+
+        $this->logAction($dept->department_id, 'Department_Added', $request->log_remark ?? '---');
 
         return redirect()->back()->with('success', 'Department created successfully.');
     }
@@ -57,6 +61,7 @@ class DepartmentController extends Controller
             'department_name' => 'required|string|max:255',
             'main_department_id' => 'nullable|integer',
             'line_manager_id' => 'nullable|exists:employees_list,employee_id',
+            'log_remark' => 'required|string',
         ]);
 
         $dept->department_code = $request->department_code;
@@ -65,6 +70,22 @@ class DepartmentController extends Controller
         $dept->line_manager_id = $request->line_manager_id;
         $dept->save();
 
+        $this->logAction($dept->department_id, 'Department_Updated', $request->log_remark);
+
         return redirect()->back()->with('success', 'Department updated successfully.');
+    }
+
+    private function logAction($id, $action, $remark)
+    {
+        \App\Models\SystemLog::create([
+            'related_table' => 'employees_list_departments',
+            'related_id' => $id,
+            'log_date' => now(),
+            'log_action' => $action,
+            'log_remark' => $remark,
+            'logger_type' => 'employees_list',
+            'logged_by' => Auth::id() ?? 1,
+            'log_type' => 'int'
+        ]);
     }
 }

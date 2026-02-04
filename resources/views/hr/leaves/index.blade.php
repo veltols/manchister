@@ -5,6 +5,7 @@
 
 @section('content')
     <div class="space-y-6">
+        @include('hr.partials.requests_nav')
 
         <!-- Header with Action Button -->
         <div class="flex items-center justify-between">

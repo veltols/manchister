@@ -11,9 +11,12 @@ class DesignationController extends Controller
 {
     public function index()
     {
-        // Removed department_id ordering and eager loading as column is missing in DB
-        $designations = Designation::orderBy('designation_name')->paginate(15);
-        return view('hr.designations.index', compact('designations'));
+        $designations = Designation::with('department')
+            ->orderBy('designation_id', 'desc')
+            ->paginate(15);
+        $departments = Department::orderBy('department_name')->get();
+
+        return view('hr.designations.index', compact('designations', 'departments'));
     }
 
     public function create()
@@ -27,9 +30,17 @@ class DesignationController extends Controller
         $request->validate([
             'designation_code' => 'required|string|max:50|unique:employees_list_designations,designation_code',
             'designation_name' => 'required|string|max:255',
+            'department_id' => 'required|exists:employees_list_departments,department_id',
+            'log_remark' => 'nullable|string',
         ]);
 
-        Designation::create($request->all());
+        $designation = new Designation();
+        $designation->designation_code = $request->designation_code;
+        $designation->designation_name = $request->designation_name;
+        $designation->department_id = $request->department_id;
+        $designation->save();
+
+        $this->logAction($designation->designation_id, 'Designation_Added', $request->log_remark ?? '---');
 
         $prefix = request()->is('admin*') ? 'admin' : 'hr';
         return redirect()->route($prefix . '.designations.index')->with('success', 'Designation created successfully.');
@@ -38,8 +49,8 @@ class DesignationController extends Controller
     public function edit($id)
     {
         $designation = Designation::findOrFail($id);
-        // Removed departments fetch
-        return view('hr.designations.edit', compact('designation'));
+        $departments = Department::orderBy('department_name')->get();
+        return view('hr.designations.edit', compact('designation', 'departments'));
     }
 
     public function update(Request $request, $id)
@@ -47,10 +58,17 @@ class DesignationController extends Controller
         $request->validate([
             'designation_code' => 'required|string|max:50|unique:employees_list_designations,designation_code,' . $id . ',designation_id',
             'designation_name' => 'required|string|max:255',
+            'department_id' => 'required|exists:employees_list_departments,department_id',
+            'log_remark' => 'required|string',
         ]);
 
         $designation = Designation::findOrFail($id);
-        $designation->update($request->all());
+        $designation->designation_code = $request->designation_code;
+        $designation->designation_name = $request->designation_name;
+        $designation->department_id = $request->department_id;
+        $designation->save();
+
+        $this->logAction($designation->designation_id, 'Designation_Updated', $request->log_remark);
 
         $prefix = request()->is('admin*') ? 'admin' : 'hr';
         return redirect()->route($prefix . '.designations.index')->with('success', 'Designation updated successfully.');
@@ -63,5 +81,19 @@ class DesignationController extends Controller
 
         $prefix = request()->is('admin*') ? 'admin' : 'hr';
         return redirect()->route($prefix . '.designations.index')->with('success', 'Designation deleted successfully.');
+    }
+
+    private function logAction($id, $action, $remark)
+    {
+        \App\Models\SystemLog::create([
+            'related_table' => 'employees_list_designations',
+            'related_id' => $id,
+            'log_date' => now(),
+            'log_action' => $action,
+            'log_remark' => $remark,
+            'logger_type' => 'employees_list',
+            'logged_by' => \Illuminate\Support\Facades\Auth::id() ?? 1,
+            'log_type' => 'int'
+        ]);
     }
 }

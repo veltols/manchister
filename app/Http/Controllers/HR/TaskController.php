@@ -5,60 +5,108 @@ namespace App\Http\Controllers\HR;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Task;
-use App\Models\TaskPriority;
 use App\Models\TaskStatus;
+use App\Models\TaskPriority;
 use App\Models\Employee;
+use App\Models\SystemLog;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class TaskController extends Controller
 {
     public function index()
     {
-        $tasks = Task::with(['priority', 'status', 'assignedTo', 'assignedBy'])
+        $tasks = Task::with(['status', 'priority', 'assignedBy'])
             ->orderBy('task_id', 'desc')
-            ->paginate(10);
+            ->get();
 
-        return view('hr.tasks.index', compact('tasks'));
+        $statuses = TaskStatus::all();
+        $priorities = TaskPriority::all();
+        $employees = Employee::orderBy('first_name')->get();
+
+        return view('hr.tasks.index', compact('tasks', 'statuses', 'priorities', 'employees'));
     }
 
-    public function create()
+    public function show($id)
     {
-        $priorities = TaskPriority::all();
-        $employees = Employee::orderBy('first_name')->get(); // Assuming Employee model has first_name
-        return view('hr.tasks.create', compact('priorities', 'employees'));
+        $task = Task::with(['status', 'priority', 'assignedBy', 'logs.logger'])
+            ->findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => $task
+        ]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'task_title' => 'required|string|max:255',
-            'task_description' => 'required|string',
+            'task_description' => 'nullable|string',
             'assigned_to' => 'required|exists:employees_list,employee_id',
-            'priority_id' => 'required|exists:sys_lists_priority,priority_id', // Assuming sys_lists_priority table logic or similar from model
-            'task_start_date' => 'required|date',
-            'task_due_date' => 'required|date|after_or_equal:task_start_date',
+            'priority_id' => 'required|exists:sys_list_priorities,priority_id',
+            'task_due_date' => 'required|date',
         ]);
 
         $task = new Task();
         $task->task_title = $request->task_title;
         $task->task_description = $request->task_description;
         $task->assigned_to = $request->assigned_to;
-        $task->priority_id = $request->priority_id;
-        $task->task_assigned_date = $request->task_start_date; // Using start_date as assigned_date or similar
+        $task->assigned_by = 1; // Default to 1 (admin) or Auth::id()
+        $task->task_assigned_date = now();
         $task->task_due_date = $request->task_due_date;
-
-        $task->status_id = 1; // Default to 'Pending' or similar ID. Assuming 1 is initial status.
-        $task->assigned_by = Auth::id() ?? 0; // Or link to Employee ID if Auth user is linked
-        $task->created_at = now(); // If timestamps false, manually set if needed, but model says false.
-
+        $task->priority_id = $request->priority_id;
+        $task->status_id = 1; // Default 'Pending'
         $task->save();
 
-        return redirect()->route('hr.tasks.index')->with('success', 'Task created successfully.');
+        // Log creation
+        SystemLog::create([
+            'log_action' => 'Task Created',
+            'log_remark' => 'Task created in system',
+            'related_table' => 'tasks_list',
+            'related_id' => $task->task_id,
+            'log_date' => now(),
+            'logged_by' => 1 // Auth::id()
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Task created successfully'
+        ]);
     }
 
-    public function show($id)
+    public function updateStatus(Request $request)
     {
-        $task = Task::with(['priority', 'status', 'assignedTo', 'assignedBy', 'logs'])->findOrFail($id);
-        return view('hr.tasks.show', compact('task'));
+        $request->validate([
+            'task_id' => 'required|exists:tasks_list,task_id',
+            'status_id' => 'required|exists:sys_list_status,status_id',
+            'log_remark' => 'required|string',
+        ]);
+
+        $task = Task::findOrFail($request->task_id);
+        $oldStatus = $task->status ? $task->status->status_name : 'Unknown';
+
+        $task->status_id = $request->status_id;
+        if ($request->status_id == 4) { // Assuming 4 is Completed based on legacy logic
+            $task->task_end_date = now();
+        }
+        $task->save();
+
+        $newStatus = TaskStatus::find($request->status_id)->status_name;
+
+        // Log update
+        SystemLog::create([
+            'log_action' => 'Status Update',
+            'log_remark' => "Status changed from $oldStatus to $newStatus. Remark: " . $request->log_remark,
+            'related_table' => 'tasks_list',
+            'related_id' => $task->task_id,
+            'log_date' => now(),
+            'logged_by' => 1 // Auth::id()
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Task status updated'
+        ]);
     }
 }

@@ -317,9 +317,26 @@
             background: white;
             border-radius: 24px;
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
-            max-width: 90vw;
+            width: 100%;
+            max-width: 800px;
+            /* Equal to modal-lg */
+            margin: 1.5rem;
             max-height: 90vh;
-            overflow: auto;
+            overflow-y: auto;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            animation: modalScaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes modalScaleUp {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
         /* Scrollbar */
@@ -333,12 +350,12 @@
         }
 
         ::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #6366f1, #8b5cf6);
+            background: linear-gradient(180deg, #004F68, #006a8a);
             border-radius: 4px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, #4f46e5, #7c3aed);
+            background: linear-gradient(180deg, #004F68, #006a8a);
         }
 
         /* Premium Text Color */
@@ -368,6 +385,7 @@
         }
     </script>
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    @stack('styles')
 </head>
 
 <body class="bg-slate-50 font-sans h-screen flex overflow-hidden">
@@ -432,7 +450,7 @@
         </main>
     </div>
 
-    @yield('scripts')
+    @stack('scripts')
 </body>
 
 </html>
