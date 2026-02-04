@@ -115,8 +115,8 @@
         <span class="font-medium">Chats</span>
     </a>
 
-    <a href="{{ route('emp.tickets.index') }}"
-        class="nav-item {{ request()->routeIs('emp.tickets.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
+    <a href="{{ route('hr.tickets.index') }}"
+        class="nav-item {{ request()->routeIs('hr.tickets.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-bookmark text-lg w-5"></i>
         <span class="font-medium">Tickets</span>
     </a>

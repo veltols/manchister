@@ -35,6 +35,11 @@ class SupportTicket extends Model
         return $this->belongsTo(Employee::class, 'added_by', 'employee_id');
     }
 
+    public function employee()
+    {
+        return $this->addedBy();
+    }
+
     public function logs()
     {
         // Assuming a generic SystemLog model or a specific one. 

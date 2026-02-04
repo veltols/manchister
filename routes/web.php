@@ -228,6 +228,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/messages', [App\Http\Controllers\HR\MessageController::class, 'store'])->name('messages.store');
         Route::post('/messages/{id}/reply', [App\Http\Controllers\HR\MessageController::class, 'reply'])->name('messages.reply');
 
+        // Tickets
+        Route::get('/tickets', [App\Http\Controllers\HR\TicketController::class, 'index'])->name('tickets.index');
+        Route::get('/tickets/{id}', [App\Http\Controllers\HR\TicketController::class, 'show'])->name('tickets.show');
+        Route::post('/tickets', [App\Http\Controllers\HR\TicketController::class, 'store'])->name('tickets.store');
+
         // Exit Interviews
         Route::get('/exit-interviews', [App\Http\Controllers\HR\ExitInterviewController::class, 'index'])->name('exit_interviews.index');
         Route::post('/exit-interviews', [App\Http\Controllers\HR\ExitInterviewController::class, 'store'])->name('exit_interviews.store');
