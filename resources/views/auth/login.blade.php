@@ -286,15 +286,6 @@
                     <p class="text-slate-500">Please enter your credentials to continue</p>
                 </div>
 
-                @if($errors->any())
-                    <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3">
-                        <i class="fa-solid fa-circle-exclamation text-red-500 mt-0.5"></i>
-                        <div class="flex-1">
-                            <p class="text-sm font-medium text-red-800">{{ $errors->first() }}</p>
-                        </div>
-                    </div>
-                @endif
-
                 <form action="{{ route('login.post') }}" method="POST" class="space-y-5">
                     @csrf
 
@@ -340,6 +331,44 @@
             </div>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            @if($errors->any())
+                Toast.fire({
+                    icon: 'error',
+                    title: '{{ $errors->first() }}'
+                });
+            @endif
+
+            @if(session('error'))
+                Toast.fire({
+                    icon: 'error',
+                    title: '{{ session('error') }}'
+                });
+            @endif
+
+            @if(session('success'))
+                Toast.fire({
+                    icon: 'success',
+                    title: '{{ session('success') }}'
+                });
+            @endif
+        });
+    </script>
 
 </body>
 

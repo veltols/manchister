@@ -53,9 +53,16 @@
                                 </td>
                                 <td class="text-slate-600">{{ $user->employee_email }}</td>
                                 <td>
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-slate-50 border border-slate-100 text-slate-600 text-xs font-medium">
-                                        {{ $user->department->department_name ?? 'Unassigned' }}
-                                    </span>
+                                    @if($user->department)
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-purple-50 text-purple-700 text-xs font-medium border border-purple-100/50">
+                                            <i class="fa-solid fa-building text-[10px] opacity-70"></i>
+                                            {{ $user->department->department_name }}
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-slate-50 border border-slate-100 text-slate-400 text-xs font-medium italic">
+                                            Unassigned
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="text-center">
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full {{ $user->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500' }} text-xs font-bold">
@@ -66,13 +73,13 @@
                                 <td class="text-center">
                                     <div class="flex items-center justify-center gap-2">
                                         <a href="{{ route('admin.users.show', $user->employee_id) }}" 
-                                           class="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 hover:bg-indigo-600 hover:text-white flex items-center justify-center transition-all"
+                                           class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
                                            title="View Details">
-                                            <i class="fa-solid fa-eye"></i>
+                                            <i class="fa-solid fa-eye text-sm"></i>
                                         </a>
-                                        <!-- Edit button placeholder -->
-                                        <button class="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 hover:bg-amber-500 hover:text-white flex items-center justify-center transition-all">
-                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        <button class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
+                                                title="Edit User">
+                                            <i class="fa-solid fa-pen-to-square text-sm"></i>
                                         </button>
                                     </div>
                                 </td>

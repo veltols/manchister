@@ -402,6 +402,37 @@
         }
     </script>
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Global SweetAlert Toast Configuration
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        // Handle Laravel Session Flashes with SweetAlert
+        window.addEventListener('DOMContentLoaded', () => {
+            @if(session('success'))
+                Toast.fire({ icon: 'success', title: '{{ session('success') }}' });
+            @endif
+            @if(session('error'))
+                Toast.fire({ icon: 'error', title: '{{ session('error') }}' });
+            @endif
+            @if(session('warning'))
+                Toast.fire({ icon: 'warning', title: '{{ session('warning') }}' });
+            @endif
+            @if($errors->any())
+                Toast.fire({ icon: 'error', title: '{{ $errors->first() }}' });
+            @endif
+        });
+    </script>
     @stack('styles')
 </head>
 
@@ -445,7 +476,7 @@
                                 $notifRoute = 'hr.notifications.index';
                                 $chatRoute = 'hr.messages.index';
                             } elseif (in_array($user->user_type, ['root', 'sys_admin'])) {
-                                $notifRoute = 'admin.notifications';
+                                $notifRoute = 'admin.notifications.index';
                                 $chatRoute = 'admin.messages.index';
                             } elseif ($user->user_type == 'emp') {
                                 $notifRoute = 'emp.notifications.index';
@@ -579,37 +610,6 @@
         <!-- Content Area -->
         <main class="flex-1 overflow-y-auto overflow-x-hidden p-8 bg-gradient-to-br from-slate-50 via-cyan-50/10 to-blue-50/10">
             <div class="max-w-7xl mx-auto w-full animate-fade-in-up">
-                @if(session('success'))
-                    <div
-                        class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center gap-3 animate-fade-in">
-                        <i class="fa-solid fa-circle-check text-emerald-500"></i>
-                        <p class="text-sm font-medium text-emerald-800">{{ session('success') }}</p>
-                    </div>
-                @endif
-
-                @if(session('error'))
-                    <div
-                        class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-100 flex items-center gap-3 animate-fade-in">
-                        <i class="fa-solid fa-circle-xmark text-rose-500"></i>
-                        <p class="text-sm font-medium text-rose-800">{{ session('error') }}</p>
-                    </div>
-                @endif
-
-                @if($errors->any())
-                    <div
-                        class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-100 animate-fade-in">
-                        <div class="flex items-center gap-3 mb-2">
-                            <i class="fa-solid fa-circle-xmark text-rose-500"></i>
-                            <p class="text-sm font-bold text-rose-800">Please correct the following errors:</p>
-                        </div>
-                        <ul class="list-disc list-inside text-sm text-rose-700 space-y-1 ml-6">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-
                 @yield('content')
             </div>
         </main>

@@ -4,71 +4,121 @@
 @section('subtitle', 'System Alerts & Messages')
 
 @section('content')
-    <div class="bg-white rounded-[2rem] shadow-lg shadow-slate-200/50 border border-slate-100 overflow-hidden">
-        <div class="p-8 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-white to-slate-50">
+    <div class="max-w-4xl mx-auto space-y-6 animate-fade-in-up" x-data="{ 
+        selected: [],
+        markRead(id) {
+            let form = document.getElementById('markReadForm');
+            let input = document.getElementById('markReadId');
+            let idsInput = document.getElementById('markReadIds');
+            
+            if (Array.isArray(id)) {
+                idsInput.value = id.join(',');
+                input.value = '';
+            } else {
+                input.value = id;
+                idsInput.value = '';
+            }
+            form.submit();
+        }
+    }">
+
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4 px-1">
             <div class="flex items-center gap-3">
-                 <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shadow-sm">
-                    <i class="fa-regular fa-bell"></i>
+                <div class="w-12 h-12 rounded-2xl bg-gradient-brand text-white flex items-center justify-center shadow-lg shadow-brand/20">
+                    <i class="fa-solid fa-bell text-xl"></i>
                 </div>
                 <div>
-                    <h3 class="font-display font-bold text-lg text-slate-800">Your Notifications</h3>
-                    <p class="text-xs text-slate-500 font-medium">Manage your system alerts and updates</p>
+                    <h2 class="text-2xl font-display font-bold text-premium">Notification Center</h2>
+                    <p class="text-sm text-slate-500 font-medium">{{ $notifications->total() }} alerts recorded</p>
                 </div>
             </div>
+            
+            <div class="flex items-center gap-3">
+                <template x-if="selected.length > 0">
+                    <button @click="markRead(selected)" class="px-5 py-2.5 rounded-xl bg-brand text-white text-xs font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-check-double"></i>
+                        <span>Mark <span x-text="selected.length"></span> Selected as Read</span>
+                    </button>
+                </template>
+                <button @click="markRead(0)" class="px-6 py-2.5 bg-white border border-slate-200 rounded-xl font-bold text-slate-600 hover:text-brand hover:border-brand hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2">
+                    <i class="fa-solid fa-check-double"></i>
+                    <span>Mark All as Read</span>
+                </button>
+            </div>
         </div>
-        
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-50/50 border-b border-slate-100">
-                        <th class="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider w-48">Date</th>
-                        <th class="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider">Remark</th>
-                        <th class="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    @forelse($notifications as $notification)
-                        <tr class="group hover:bg-slate-50 transition-colors cursor-default">
-                             <td class="px-8 py-5 text-sm font-medium text-slate-500 whitespace-nowrap">
-                                <div class="flex items-center gap-2">
-                                     <i class="fa-regular fa-calendar text-slate-300"></i>
-                                     {{ $notification->notification_date ? $notification->notification_date->format('M d, Y h:i A') : 'N/A' }}
-                                </div>
-                            </td>
-                            <td class="px-8 py-5">
-                                <span class="font-medium text-slate-700 group-hover:text-indigo-600 transition-colors line-clamp-2">{{ $notification->notification_text }}</span>
-                            </td>
-                            <td class="px-8 py-5 text-right">
-                                @if($notification->related_page)
-                                    <a href="{{ url($notification->related_page) }}" class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-600 transition-all shadow-sm group-hover:scale-105" title="Go to Page">
-                                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                                    </a>
-                                @else
-                                    <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 text-slate-300" title="No Link">
-                                        <i class="fa-solid fa-ban"></i>
-                                    </span>
-                                @endif
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="3" class="px-8 py-24 text-center">
-                                <div class="flex flex-col items-center justify-center">
-                                    <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-                                        <i class="fa-regular fa-bell-slash text-3xl text-slate-300"></i>
-                                    </div>
-                                    <p class="text-slate-500 font-medium text-lg">You have no new notifications.</p>
-                                    <p class="text-sm text-slate-400 mt-1">We'll let you know when something important happens.</p>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+
+        <form id="markReadForm" action="{{ route('admin.notifications.mark_as_read') }}" method="POST" style="display: none;">
+            @csrf
+            <input type="hidden" name="notification_id" id="markReadId">
+            <input type="hidden" name="ids" id="markReadIds">
+        </form>
+
+        <div class="space-y-4">
+            @forelse($notifications as $notif)
+                <div
+                    class="premium-card p-4 flex items-center gap-6 hover:shadow-lg transition-all border-slate-50 {{ !$notif->is_seen ? 'bg-brand/5 border-l-4 border-l-brand' : 'bg-white' }}">
+                    
+                    <div class="flex items-center gap-4 shrink-0">
+                        <input type="checkbox" :value="{{ $notif->notification_id }}" x-model="selected" 
+                               class="w-5 h-5 rounded border-slate-200 text-brand focus:ring-brand cursor-pointer">
+                        
+                        <div class="notif-icon-wrapper w-12 h-12 rounded-2xl {{ !$notif->is_seen ? 'bg-gradient-brand text-white shadow-lg shadow-brand/30' : 'bg-slate-50 text-slate-200' }} flex items-center justify-center shrink-0 transition-all duration-300">
+                             @if(!$notif->is_seen)
+                                <i class="fa-solid fa-bell animate-bounce text-lg"></i>
+                             @else
+                                <i class="fa-solid fa-circle-check text-lg"></i>
+                             @endif
+                        </div>
+                    </div>
+
+                    <div class="flex-1 min-w-0 py-2">
+                        <div class="flex items-center justify-between gap-4 mb-1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">
+                                    {{ $notif->notification_date ? $notif->notification_date->format('M d, Y h:i A') : 'N/A' }}
+                                </span>
+                                <span class="px-2 py-0.5 rounded-md bg-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">System Alert</span>
+                            </div>
+                            @if(!$notif->is_seen)
+                                <span class="badge-new px-2 py-0.5 rounded-full bg-brand/10 text-brand text-[9px] font-black uppercase tracking-wider">New</span>
+                            @endif
+                        </div>
+                        <p class="notif-text text-slate-700 font-medium line-clamp-2 md:line-clamp-none">
+                            {{ $notif->notification_text }}
+                        </p>
+                    </div>
+
+                    <div class="flex items-center gap-2 shrink-0 ml-auto">
+                        @if($notif->related_page)
+                            <a href="{{ url($notif->related_page) }}" @click="markRead({{ $notif->notification_id }})"
+                                class="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-brand hover:text-white transition-all shadow-sm group"
+                                title="Go to Page">
+                                <i class="fa-solid fa-arrow-up-right-from-square text-xs group-hover:scale-110 transition-transform"></i>
+                            </a>
+                        @endif
+                        @if(!$notif->is_seen)
+                            <button @click="markRead({{ $notif->notification_id }})"
+                                class="btn-mark-seen w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center hover:bg-teal-600 hover:text-white transition-all shadow-sm"
+                                title="Mark as Read">
+                                <i class="fa-solid fa-check text-sm"></i>
+                            </button>
+                        @endif
+                    </div>
+                </div>
+            @empty
+                <div class="py-20 text-center bg-white rounded-3xl border border-slate-100 shadow-sm">
+                    <div
+                        class="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center text-slate-200 mx-auto mb-6">
+                        <i class="fa-solid fa-bell-slash text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-premium">No active notifications</h3>
+                    <p class="text-slate-400 mt-2">We'll notify you when something important happens.</p>
+                </div>
+            @endforelse
         </div>
-        
+
         @if($notifications->hasPages())
-            <div class="p-8 border-t border-slate-100 bg-slate-50/50">
+            <div class="pt-6">
                 {{ $notifications->links() }}
             </div>
         @endif

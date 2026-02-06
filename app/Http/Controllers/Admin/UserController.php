@@ -9,16 +9,17 @@ use App\Models\EmployeePass;
 use App\Models\Department;
 use App\Models\SystemLog;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
+use App\Models\Asset;
+use App\Models\AssetCategory;
 
 class UserController extends Controller
 {
     public function index(Request $request)
     {
         // Filter by user/email search if needed
-        $query = Employee::with(['department'])
+        $query = Employee::with(['department', 'systemUser'])
             ->where('is_deleted', 0)
-            ->where('is_hidden', 0) // Assuming this hides non-active system users
+            ->where('is_hidden', 0)
             ->orderBy('employee_id', 'desc');
 
         $users = $query->paginate(15);
@@ -79,22 +80,124 @@ class UserController extends Controller
 
     public function show($id)
     {
-        $user = Employee::with(['department', 'designation', 'passwordData'])->findOrFail($id);
+        $user = Employee::with(['department', 'designation', 'passwordData', 'systemUser'])->findOrFail($id);
         
-        // Fetch related data for tabs (Assets, Services, etc) if needed
-        // For now, basic details
+        // Fetch assigned assets
+        $assets = Asset::with(['category'])
+            ->where('assigned_to', $id)
+            ->get();
+
+        // Fetch activity logs
+        $logs = SystemLog::where('related_table', 'employees_list')
+            ->where('related_id', $id)
+            ->orderBy('log_date', 'desc')
+            ->get();
+
+        // Fetch available assets for assignment
+        $availableAssets = Asset::where('status_id', 1) // Assuming 1 is "Available"
+            ->where('assigned_to', 0)
+            ->get();
         
-        return view('admin.users.show', compact('user'));
+        return view('admin.users.show', compact('user', 'assets', 'logs', 'availableAssets'));
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $user = Employee::findOrFail($id);
+        
+        // Status is stored in users_list table, linked via systemUser relation
+        $systemUser = \App\Models\User::where('user_id', $id)->first();
+        if ($systemUser) {
+            $newStatus = $request->status;
+            $systemUser->is_active = $newStatus;
+            $systemUser->save();
+
+            $action = $newStatus ? 'User Activated' : 'User Deactivated';
+            $this->logAction($id, $action, "Status changed to " . ($newStatus ? 'Active' : 'Inactive'));
+
+            return redirect()->back()->with('success', "User status updated successfully.");
+        }
+
+        return redirect()->back()->with('error', "System user record not found.");
+    }
+
+    public function resetPassword(Request $request, $id)
+    {
+        $request->validate([
+            'password' => 'required|string|min:6',
+            'log_remark' => 'required|string'
+        ]);
+
+        $user = Employee::findOrFail($id);
+        $pass = EmployeePass::where('employee_id', $id)->first() ?? new EmployeePass();
+        $pass->employee_id = $id;
+        $pass->pass_value = Hash::make($request->password);
+        $pass->entry_time = now();
+        $pass->entry_who = auth()->id() ?? 1;
+        $pass->save();
+
+        $this->logAction($id, 'Password Reset', $request->log_remark);
+
+        return redirect()->back()->with('success', "Password reset successfully.");
+    }
+
+    public function updatePermissions(Request $request, $id)
+    {
+        $user = Employee::findOrFail($id);
+        $user->is_group = $request->has('is_group') ? 1 : 0;
+        $user->is_committee = $request->has('is_committee') ? 1 : 0;
+        $user->save();
+
+        $this->logAction($id, 'Permissions Updated', "Groups: {$user->is_group}, Committees: {$user->is_committee}. " . $request->log_remark);
+
+        return redirect()->back()->with('success', "Permissions updated successfully.");
+    }
+
+    public function assignAsset(Request $request, $id)
+    {
+        $request->validate([
+            'asset_id' => 'required|exists:z_assets_list,asset_id',
+            'log_remark' => 'required|string'
+        ]);
+
+        $asset = Asset::findOrFail($request->asset_id);
+        $asset->assigned_to = $id;
+        $asset->assigned_date = now();
+        $asset->status_id = 2; // Assuming 2 is "Assigned"
+        $asset->save();
+
+        $this->logAction($id, 'Asset Assigned', "Asset #{$asset->asset_ref} assigned. " . $request->log_remark);
+
+        return redirect()->back()->with('success', "Asset assigned successfully.");
+    }
+
+    public function revokeAsset(Request $request, $id)
+    {
+        $request->validate([
+            'asset_id' => 'required|exists:z_assets_list,asset_id',
+            'log_remark' => 'required|string'
+        ]);
+
+        $asset = Asset::findOrFail($request->asset_id);
+        $asset->assigned_to = 0;
+        $asset->status_id = 1; // Available
+        $asset->save();
+
+        $this->logAction($id, 'Asset Revoked', "Asset #{$asset->asset_ref} revoked. " . $request->log_remark);
+
+        return redirect()->back()->with('success', "Asset revoked successfully.");
     }
 
     private function logAction($refId, $action, $remark)
     {
-         $log = new SystemLog();
-        $log->log_ref = $refId;
-        $log->log_date = now();
-        $log->log_action = $action;
-        $log->log_remark = $remark;
-        $log->log_user_id = 1; 
-        $log->save();
+        SystemLog::create([
+            'related_table' => 'employees_list',
+            'related_id' => $refId,
+            'log_date' => now(),
+            'log_action' => $action,
+            'log_remark' => $remark,
+            'logger_type' => 'admin',
+            'logged_by' => auth()->id() ?? 1,
+        ]);
     }
 }

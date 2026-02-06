@@ -17,8 +17,18 @@ class Employee extends Model
 
     public function passwordData()
     {
-        return $this->hasOne(EmployeePass::class, 'employee_id', 'employee_id')
+        return $this->hasOne(EmployeesListPass::class, 'employee_id', 'employee_id')
             ->where('is_active', 1);
+    }
+
+    public function systemUser()
+    {
+        return $this->hasOne(User::class, 'user_id', 'employee_id');
+    }
+
+    public function getIsActiveAttribute()
+    {
+        return $this->systemUser ? $this->systemUser->is_active : 0;
     }
 
     public function department()

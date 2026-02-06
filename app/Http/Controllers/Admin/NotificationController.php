@@ -11,20 +11,38 @@ class NotificationController extends Controller
 {
     public function index()
     {
-        $adminId = 550; // Hardcoded for now as per previous context, or use Auth::id() if auth is fully migrated
-        // In a real scenario, use Auth::guard('admin')->id() or similar.
-        // Assuming we are using the session 'user_id' or Auth user.
-        
-        // For now, let's try to use the logged in user's ID if available, otherwise fallback or error.
-        // Based on previous chats, it seems we might need to rely on session or specific logic.
-        // Let's assume standard Laravel Auth for now as per "admin login" discussions.
-        
-        $employeeId = Auth::id() ?? 550; // Defaulting to 550 (Admin) for dev testing if not logged in
+        $employeeId = Auth::id() ?? 550;
 
         $notifications = EmployeeNotification::where('employee_id', $employeeId)
             ->orderBy('notification_id', 'desc')
             ->paginate(50);
 
         return view('admin.notifications.index', compact('notifications'));
+    }
+
+    public function markAsRead(Request $request)
+    {
+        $employeeId = Auth::id() ?? 550;
+        $id = $request->notification_id;
+        $ids = $request->ids;
+
+        if ($ids) {
+            $idArray = explode(',', $ids);
+            EmployeeNotification::where('employee_id', $employeeId)
+                ->whereIn('notification_id', $idArray)
+                ->update(['is_seen' => 1]);
+        } elseif ($id == 0) {
+            // Mark all as read
+            EmployeeNotification::where('employee_id', $employeeId)
+                ->where('is_seen', 0)
+                ->update(['is_seen' => 1]);
+        } else {
+            // Mark specific as read
+            EmployeeNotification::where('employee_id', $employeeId)
+                ->where('notification_id', $id)
+                ->update(['is_seen' => 1]);
+        }
+
+        return redirect()->back()->with('success', 'Notifications updated.');
     }
 }

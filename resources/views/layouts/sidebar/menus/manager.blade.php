@@ -164,8 +164,8 @@
     </a>
 
     <!-- Notifications -->
-    <a href="{{ route('admin.notifications') }}"
-        class="nav-item {{ request()->routeIs('admin.notifications') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
+    <a href="{{ route('admin.notifications.index') }}"
+        class="nav-item {{ request()->routeIs('admin.notifications.index') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-bell text-2xl"></i>
         <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Notifications</span>
     </a>

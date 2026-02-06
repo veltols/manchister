@@ -25,9 +25,15 @@ class NotificationController extends Controller
     {
         $user = Auth::user();
         $employeeId = $user->user_id;
-        $notificationId = (int) $request->notification_id;
 
-        if ($notificationId === 0) {
+        $id = $request->notification_id; // For single or 0
+        $ids = $request->ids; // For multiple selection
+
+        if ($ids) {
+            EmployeeNotification::where('employee_id', $employeeId)
+                ->whereIn('notification_id', (array)$ids)
+                ->update(['is_seen' => 1]);
+        } elseif ($id === 0) {
             // Mark all as read
             EmployeeNotification::where('employee_id', $employeeId)
                 ->where('is_seen', 0)
@@ -35,7 +41,7 @@ class NotificationController extends Controller
         } else {
             // Mark specific as read
             EmployeeNotification::where('employee_id', $employeeId)
-                ->where('notification_id', $notificationId)
+                ->where('notification_id', $id)
                 ->update(['is_seen' => 1]);
         }
 

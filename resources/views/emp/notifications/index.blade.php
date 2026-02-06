@@ -24,9 +24,14 @@
     }">
 
         <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div>
-                <h2 class="text-2xl font-display font-bold text-premium">Notification Center</h2>
-                <p class="text-sm text-slate-500 mt-1">{{ $notifications->total() }} alerts recorded</p>
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-brand text-white flex items-center justify-center shadow-lg shadow-brand/20">
+                    <i class="fa-solid fa-bell text-xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-display font-bold text-premium">Notification Center</h2>
+                    <p class="text-sm text-slate-500 mt-1">{{ $notifications->total() }} alerts recorded</p>
+                </div>
             </div>
             
             <div class="flex items-center gap-3">
@@ -36,8 +41,8 @@
                         <span>Mark <span x-text="selected.length"></span> Selected as Read</span>
                     </button>
                 </template>
-                <button @click="markRead(null)" class="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold hover:bg-slate-50 transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-bell-slash"></i>
+                <button @click="markRead(null)" class="px-6 py-2.5 bg-white border border-slate-200 rounded-xl font-bold text-slate-600 hover:text-brand hover:border-brand hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2">
+                    <i class="fa-solid fa-check-double"></i>
                     <span>Mark All as Read</span>
                 </button>
             </div>
@@ -51,25 +56,32 @@
         <div class="space-y-4">
             @forelse($notifications as $notif)
                 <div
-                    class="premium-card p-4 flex items-center gap-6 hover:shadow-lg transition-all border-slate-50 {{ $notif->is_seen == 0 ? 'bg-indigo-50/10 border-l-4 border-l-brand' : 'bg-white' }}">
+                    class="premium-card p-4 flex items-center gap-6 hover:shadow-lg transition-all border-slate-50 {{ $notif->is_seen == 0 ? 'bg-brand/5 border-l-4 border-l-brand' : 'bg-white' }}">
                     
                     <div class="flex items-center gap-4 shrink-0">
                         <input type="checkbox" :value="{{ $notif->notification_id }}" x-model="selected" 
                                class="w-5 h-5 rounded border-slate-200 text-brand focus:ring-brand cursor-pointer">
                         
-                        <div class="w-12 h-12 rounded-2xl {{ $notif->is_seen == 0 ? 'bg-gradient-to-br from-yellow-400 to-amber-600 text-white shadow-lg shadow-amber-200/50' : 'bg-slate-50 text-slate-400' }} flex items-center justify-center shrink-0 transition-all duration-300">
-                            <i class="fa-solid fa-bell {{ $notif->is_seen == 0 ? 'animate-bounce' : '' }} text-lg"></i>
+                        <div class="notif-icon-wrapper w-12 h-12 rounded-2xl {{ $notif->is_seen == 0 ? 'bg-gradient-brand text-white shadow-lg shadow-brand/30' : 'bg-slate-50 text-slate-400' }} flex items-center justify-center shrink-0 transition-all duration-300">
+                             @if($notif->is_seen == 0)
+                                <i class="fa-solid fa-bell animate-bounce text-lg"></i>
+                             @else
+                                <i class="fa-solid fa-circle-check text-lg"></i>
+                             @endif
                         </div>
                     </div>
 
                     <div class="flex-1 min-w-0 py-2">
                         <div class="flex items-center justify-between gap-4 mb-1">
-                            <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">{{ $notif->notification_date }}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">{{ $notif->notification_date }}</span>
+                                <span class="px-2 py-0.5 rounded-md bg-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">System Alert</span>
+                            </div>
                             @if($notif->is_seen == 0)
                                 <span class="px-2 py-0.5 rounded-full bg-brand/10 text-brand text-[9px] font-black uppercase tracking-wider">New</span>
                             @endif
                         </div>
-                        <p class="text-slate-700 font-medium line-clamp-2 md:line-clamp-none">
+                        <p class="notif-text text-slate-700 font-medium line-clamp-2 md:line-clamp-none">
                             {{ $notif->notification_text }}
                         </p>
                     </div>
@@ -84,7 +96,7 @@
                         @endif
                         @if($notif->is_seen == 0)
                             <button @click="markRead([{{ $notif->notification_id }}])"
-                                class="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center hover:bg-teal-600 hover:text-white transition-all shadow-sm"
+                                class="btn-mark-seen w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center hover:bg-teal-600 hover:text-white transition-all shadow-sm"
                                 title="Mark as Read">
                                 <i class="fa-solid fa-check text-sm"></i>
                             </button>
@@ -94,11 +106,11 @@
             @empty
                 <div class="py-20 text-center bg-white rounded-3xl border border-slate-100 shadow-sm">
                     <div
-                        class="w-20 h-20 rounded-full bg-amber-50 flex items-center justify-center text-amber-200 mx-auto mb-6">
-                        <i class="fa-solid fa-bell-slash text-3xl text-amber-300"></i>
+                        class="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center text-slate-200 mx-auto mb-6">
+                        <i class="fa-solid fa-bell-slash text-3xl"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-premium">Clear skies!</h3>
-                    <p class="text-slate-400 mt-2">You don't have any notifications at the moment.</p>
+                    <h3 class="text-xl font-bold text-premium">No active notifications</h3>
+                    <p class="text-slate-400 mt-2">We'll notify you when something important happens.</p>
                 </div>
             @endforelse
         </div>
