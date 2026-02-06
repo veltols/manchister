@@ -11,7 +11,8 @@ class NotificationController extends Controller
 {
     public function index()
     {
-        $employeeId = Auth::id() ?? 550; // Fallback to 550 for testing if not authenticated
+        $user = Auth::user();
+        $employeeId = $user->user_id;
 
         $notifications = EmployeeNotification::where('employee_id', $employeeId)
             ->orderBy('notification_id', 'desc')
@@ -22,7 +23,8 @@ class NotificationController extends Controller
 
     public function markAsRead(Request $request)
     {
-        $employeeId = Auth::id() ?? 550;
+        $user = Auth::user();
+        $employeeId = $user->user_id;
         $notificationId = (int) $request->notification_id;
 
         if ($notificationId === 0) {

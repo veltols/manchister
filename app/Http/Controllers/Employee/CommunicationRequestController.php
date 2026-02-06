@@ -65,6 +65,16 @@ class CommunicationRequestController extends Controller
         $log->log_type = 'int';
         $log->save();
 
+        // Notify First Approver
+        $type = \App\Models\CommunicationType::find($comm->communication_type_id);
+        if ($type && $type->approval_id_1 != 0) {
+            \App\Services\NotificationService::send(
+                "A new Communication Request has been added, REF: " . $comm->communication_code,
+                "communications/list/", 
+                $type->approval_id_1
+            );
+        }
+
         return redirect()->back()->with('success', 'Communication request submitted successfully');
     }
 

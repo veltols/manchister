@@ -30,4 +30,17 @@ class HrLeave extends Model
     {
         return $this->belongsTo(LeaveType::class, 'leave_type_id', 'leave_type_id');
     }
+
+    public function approvals()
+    {
+        return $this->hasMany(HrApproval::class, 'related_id', 'leave_id')
+            ->where('related_table', 'hr_leaves');
+    }
+
+    public function latestLog()
+    {
+        return $this->hasOne(SystemLog::class, 'related_id', 'leave_id')
+            ->where('related_table', 'hr_employees_leaves')
+            ->orderBy('log_date', 'desc');
+    }
 }

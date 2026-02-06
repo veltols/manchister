@@ -77,6 +77,20 @@ class TicketController extends Controller
 
         $this->logAction($ticket->ticket_id, 'Ticket_Added', 'Initial ticket creation');
 
+        // Send Notifications
+        \App\Services\NotificationService::send(
+            "A new ticket has been added, REF: " . $ticket->ticket_ref,
+            "tickets/list", 
+            $ticket->added_by
+        );
+
+        // Notify IT Admin
+        \App\Services\NotificationService::send(
+            "A new ticket has been added, REF: " . $ticket->ticket_ref,
+            "tickets/list", 
+            1
+        );
+
         return response()->json(['success' => true, 'message' => 'Ticket created successfully']);
     }
 
@@ -118,6 +132,23 @@ class TicketController extends Controller
         $ticket->save();
 
         $this->logAction($ticket->ticket_id, $logAction, $request->ticket_remarks);
+
+        // Notifications
+        if ($logAction == "Ticket_Assigned" && $ticket->assigned_to != 0) {
+            // Notify Assignee
+            \App\Services\NotificationService::send(
+                "A new ticket assigned to you", 
+                "tickets/list/", 
+                $ticket->assigned_to
+            );
+
+            // Notify Requester
+            \App\Services\NotificationService::send(
+                "Your ticket has been assigned to IT Agent", 
+                "tickets/list/", 
+                $ticket->added_by
+            );
+        }
 
         return redirect()->back()->with('success', 'Ticket updated successfully.');
     }

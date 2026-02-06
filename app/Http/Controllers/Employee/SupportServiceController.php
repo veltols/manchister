@@ -63,16 +63,20 @@ class SupportServiceController extends Controller
         $ss->save();
 
         // Log
-        $log = new SystemLog();
-        $log->related_table = 'ss_list';
-        $log->related_id = $ss->ss_id;
-        $log->log_action = 'SS_Requested';
-        $log->log_remark = 'Initial request';
-        $log->log_date = now();
-        $log->logged_by = $employeeId;
-        $log->logger_type = 'employees_list';
-        $log->log_type = 'int';
         $log->save();
+
+        // Send Notifications
+        \App\Services\NotificationService::send(
+            "A new Support Request has been added, REF: " . $ss->ss_ref,
+            "ss/list/", 
+            $ss->added_by
+        );
+
+        \App\Services\NotificationService::send(
+            "A new Support Request has been sent to you, REF: " . $ss->ss_ref,
+            "ss/list/", 
+            $ss->sent_to_id
+        );
 
         return redirect()->back()->with('success', 'Service request sent successfully');
     }

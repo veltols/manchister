@@ -100,16 +100,21 @@ class SupportTicketController extends Controller
         $ticket->save();
 
         // Create Initial Log
-        $log = new \App\Models\SystemLog();
-        $log->related_table = 'support_tickets_list';
-        $log->related_id = $ticket->ticket_id;
-        $log->log_action = 'Ticket_Added';
-        $log->log_remark = 'Initial ticket creation';
-        $log->log_date = now();
-        $log->logged_by = $employeeId;
-        $log->logger_type = 'employees_list';
-        $log->log_type = 'int';
         $log->save();
+
+        // Send Notifications
+        \App\Services\NotificationService::send(
+            "A new ticket has been added, REF: " . $ticket->ticket_ref,
+            "tickets/list", 
+            $ticket->added_by
+        );
+
+        // Notify IT Admin (Always ID 1 in legacy logic)
+        \App\Services\NotificationService::send(
+            "A new ticket has been added, REF: " . $ticket->ticket_ref,
+            "tickets/list", 
+            1
+        );
 
         return redirect()->route('emp.tickets.index')->with('success', 'Ticket created successfully');
     }

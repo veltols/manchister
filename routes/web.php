@@ -18,6 +18,7 @@ Route::get('/', function () {
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::post('/profile/change-password', [AuthController::class, 'changePassword'])->name('profile.change-password');
 
 Route::middleware('auth')->group(function () {
     // Redirect /dashboard to specific portal
@@ -103,6 +104,7 @@ Route::middleware('auth')->group(function () {
         // My Leaves
         Route::get('/leaves', [App\Http\Controllers\Employee\LeaveController::class, 'index'])->name('leaves.index');
         Route::post('/leaves', [App\Http\Controllers\Employee\LeaveController::class, 'store'])->name('leaves.store');
+        Route::post('/leaves/{id}/resubmit', [App\Http\Controllers\Employee\LeaveController::class, 'resubmit'])->name('leaves.resubmit');
 
         // My Permissions
         Route::get('/permissions', [App\Http\Controllers\Employee\PermissionController::class, 'index'])->name('permissions.index');

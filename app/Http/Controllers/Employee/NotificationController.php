@@ -5,16 +5,16 @@ namespace App\Http\Controllers\Employee;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Notification;
+use App\Models\EmployeeNotification;
 
 class NotificationController extends Controller
 {
     public function index()
     {
         $user = Auth::user();
-        $employeeId = $user->employee ? $user->employee->employee_id : 0;
+        $employeeId = $user->user_id;
 
-        $notifications = Notification::where('employee_id', $employeeId)
+        $notifications = EmployeeNotification::where('employee_id', $employeeId)
             ->orderBy('notification_id', 'desc')
             ->paginate(20);
 
@@ -24,17 +24,17 @@ class NotificationController extends Controller
     public function markRead(Request $request)
     {
         $user = Auth::user();
-        $employeeId = $user->employee ? $user->employee->employee_id : 0;
+        $employeeId = $user->user_id;
 
         $ids = $request->input('ids');
 
         if ($ids) {
-            Notification::where('employee_id', $employeeId)
+            EmployeeNotification::where('employee_id', $employeeId)
                 ->whereIn('notification_id', (array)$ids)
                 ->update(['is_seen' => 1]);
         } else {
             // Mark all as read if no IDs provided (optional based on UI requirement)
-            Notification::where('employee_id', $employeeId)
+            EmployeeNotification::where('employee_id', $employeeId)
                 ->where('is_seen', 0)
                 ->update(['is_seen' => 1]);
         }

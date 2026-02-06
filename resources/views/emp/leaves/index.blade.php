@@ -30,6 +30,7 @@
                         <th class="text-center">Days</th>
                         <th class="text-center">Status</th>
                         <th class="text-left">Submitted On</th>
+                        <th class="text-center">Options</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -50,24 +51,58 @@
                             </div>
                         </td>
                         <td class="text-center">
-                            <span class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 text-white font-bold shadow-md">
+                            <span class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 text-white font-bold shadow-md" title="Working Days (Excl. Weekends)">
                                 {{ $leave->total_days }}
                             </span>
                         </td>
                         <td class="text-center">
                             @php
                                 $statusConfig = match($leave->leave_status_id) {
-                                    100 => ['bg' => 'from-green-500 to-emerald-600', 'text' => 'Approved', 'icon' => 'check'],
-                                    200 => ['bg' => 'from-red-500 to-rose-600', 'text' => 'Rejected', 'icon' => 'times'],
-                                    default => ['bg' => 'from-yellow-500 to-amber-600', 'text' => 'Pending', 'icon' => 'clock']
+                                    1 => ['bg' => 'from-yellow-400 to-amber-500', 'text' => 'Pending HR', 'icon' => 'clock'],
+                                    2 => ['bg' => 'from-blue-500 to-cyan-600', 'text' => 'Pending Manager', 'icon' => 'user-check'],
+                                    3 => ['bg' => 'from-green-500 to-emerald-600', 'text' => 'Approved', 'icon' => 'check-double'],
+                                    4 => ['bg' => 'from-red-500 to-rose-600', 'text' => 'Rejected', 'icon' => 'times-circle'],
+                                    6 => ['bg' => 'from-purple-500 to-indigo-600', 'text' => 'Action Required', 'icon' => 'user-edit'],
+                                    default => ['bg' => 'from-slate-400 to-slate-500', 'text' => 'Unknown', 'icon' => 'question']
                                 };
                             @endphp
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r {{ $statusConfig['bg'] }} text-white text-xs font-bold shadow-md">
-                                <i class="fa-solid fa-{{ $statusConfig['icon'] }}"></i>
-                                {{ $statusConfig['text'] }}
-                            </span>
+                            <div class="flex flex-col items-center gap-1.5">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r {{ $statusConfig['bg'] }} text-white text-xs font-bold shadow-md whitespace-nowrap">
+                                    <i class="fa-solid fa-{{ $statusConfig['icon'] }}"></i>
+                                    {{ $statusConfig['text'] }}
+                                </span>
+                                @if($leave->latestLog && $leave->latestLog->log_remark && $leave->latestLog->log_remark != '---')
+                                    <span class="text-[10px] text-slate-500 italic max-w-[150px] truncate" title="{{ $leave->latestLog->log_remark }}">
+                                        HR: {{ $leave->latestLog->log_remark }}
+                                    </span>
+                                @endif
+                            </div>
                         </td>
                         <td><span class="text-sm text-slate-600">{{ \Carbon\Carbon::parse($leave->submission_date)->format('M d, Y') }}</span></td>
+                        <td class="text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                @if($leave->leave_status_id == 6)
+                                    <button onclick="openResubmitModal({{ json_encode($leave) }})" 
+                                        class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
+                                        title="Edit & Resubmit">
+                                        <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                    </button>
+                                @endif
+
+                                @if($leave->leave_attachment && $leave->leave_attachment != 'no-img.png')
+                                    <a href="{{ asset('uploads/' . $leave->leave_attachment) }}" target="_blank"
+                                        class="w-8 h-8 rounded-lg bg-gradient-to-br from-slate-500 to-slate-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
+                                        title="View Attachment">
+                                        <i class="fa-solid fa-paperclip text-xs"></i>
+                                    </a>
+                                @endif
+                                
+                                <button class="w-8 h-8 rounded-lg bg-gradient-to-br from-slate-400 to-slate-500 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
+                                    title="View Details">
+                                    <i class="fa-solid fa-eye text-xs"></i>
+                                </button>
+                            </div>
+                        </td>
                     </tr>
                     @empty
                     <tr>
@@ -105,34 +140,50 @@
             </button>
         </div>
         
-        <form action="{{ route('emp.leaves.store') }}" method="POST">
+        <form action="{{ route('emp.leaves.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">
-                        <i class="fa-solid fa-tag text-indigo-600 mr-2"></i>Leave Type
-                    </label>
-                    <select name="leave_type_id" class="premium-input w-full px-4 py-3 text-sm" required>
-                        <option value="">Select Type</option>
-                        @foreach($leaveTypes as $type)
-                            <option value="{{ $type->leave_type_id }}">{{ $type->leave_type_name }}</option>
-                        @endforeach
-                    </select>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-tag text-indigo-600 mr-2"></i>Leave Type
+                        </label>
+                        <select name="leave_type_id" class="premium-input w-full px-4 py-3 text-sm" required>
+                            <option value="">Select Type</option>
+                            @foreach($leaveTypes as $type)
+                                <option value="{{ $type->leave_type_id }}">{{ $type->leave_type_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-paperclip text-indigo-600 mr-2"></i>Attachment
+                        </label>
+                        <input type="file" name="leave_attachment" class="premium-input w-full px-4 py-2 text-sm">
+                    </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">
                             <i class="fa-solid fa-calendar text-indigo-600 mr-2"></i>Start Date
                         </label>
-                        <input type="date" name="start_date" class="premium-input w-full px-4 py-3 text-sm" required>
+                        <input type="date" name="start_date" class="premium-input w-full px-4 py-3 text-sm leave-start" required>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">
                             <i class="fa-solid fa-calendar-check text-indigo-600 mr-2"></i>End Date
                         </label>
-                        <input type="date" name="end_date" class="premium-input w-full px-4 py-3 text-sm" required>
+                        <input type="date" name="end_date" class="premium-input w-full px-4 py-3 text-sm leave-end" required>
                     </div>
                 </div>
+
+                <!-- Duration Summary -->
+                <div class="bg-blue-50 border border-blue-100 p-4 rounded-xl text-center duration-summary" style="display:none;">
+                    <p class="text-sm text-blue-800">
+                        Total working days (excluding weekends): <span class="font-bold text-lg ml-1 total-days-count">0</span> days
+                    </p>
+                </div>
+
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-2">
                         <i class="fa-solid fa-comment text-indigo-600 mr-2"></i>Reason/Remarks
@@ -149,4 +200,148 @@
     </div>
 </div>
 
+<!-- Resubmit Modal -->
+<div class="modal" id="resubmitModal">
+    <div class="modal-backdrop" onclick="closeModal('resubmitModal')"></div>
+    <div class="modal-content max-w-lg p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-display font-bold text-premium">Edit & Resubmit</h2>
+            <button onclick="closeModal('resubmitModal')" class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+                <i class="fa-solid fa-times text-xl"></i>
+            </button>
+        </div>
+        
+        <form id="resubmitForm" action="" method="POST" enctype="multipart/form-data">
+            @csrf
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-tag text-indigo-600 mr-2"></i>Leave Type
+                        </label>
+                        <select name="leave_type_id" id="edit_leave_type_id" class="premium-input w-full px-4 py-3 text-sm" required>
+                            <option value="">Select Type</option>
+                            @foreach($leaveTypes as $type)
+                                <option value="{{ $type->leave_type_id }}">{{ $type->leave_type_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-paperclip text-indigo-600 mr-2"></i>New Attachment
+                        </label>
+                        <input type="file" name="leave_attachment" class="premium-input w-full px-4 py-2 text-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-calendar text-indigo-600 mr-2"></i>Start Date
+                        </label>
+                        <input type="date" name="start_date" id="edit_start_date" class="premium-input w-full px-4 py-3 text-sm leave-start" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-calendar-check text-indigo-600 mr-2"></i>End Date
+                        </label>
+                        <input type="date" name="end_date" id="edit_end_date" class="premium-input w-full px-4 py-3 text-sm leave-end" required>
+                    </div>
+                </div>
+
+                <!-- Duration Summary -->
+                <div class="bg-blue-50 border border-blue-100 p-4 rounded-xl text-center duration-summary" style="display:none;">
+                    <p class="text-sm text-blue-800">
+                        Total working days (excluding weekends): <span class="font-bold text-lg ml-1 total-days-count">0</span> days
+                    </p>
+                </div>
+
+                <div id="hr_remark_container" class="bg-purple-50 border border-purple-100 p-4 rounded-xl" style="display:none;">
+                    <p class="text-xs font-semibold text-purple-800 mb-1"><i class="fa-solid fa-comment-dots mr-1"></i> HR/Manager Remark:</p>
+                    <p id="hr_remark_text" class="text-sm text-slate-600 italic"></p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        <i class="fa-solid fa-comment text-indigo-600 mr-2"></i>Reason/Remarks
+                    </label>
+                    <textarea name="leave_remarks" id="edit_leave_remarks" rows="3" class="premium-input w-full px-4 py-3 text-sm" placeholder="Explain your reason..." required></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
+                <button type="button" onclick="closeModal('resubmitModal')" class="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">Cancel</button>
+                <button type="submit" class="px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">Resubmit Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openResubmitModal(leave) {
+        document.getElementById('resubmitForm').action = "/emp/leaves/" + leave.leave_id + "/resubmit";
+        document.getElementById('edit_leave_type_id').value = leave.leave_type_id;
+        document.getElementById('edit_start_date').value = leave.start_date;
+        document.getElementById('edit_end_date').value = leave.end_date;
+        document.getElementById('edit_leave_remarks').value = leave.leave_remarks;
+        
+        // Handle HR Remarks
+        const remarkCont = document.getElementById('hr_remark_container');
+        const remarkText = document.getElementById('hr_remark_text');
+        
+        if (leave.latest_log && leave.latest_log.log_remark && leave.latest_log.log_remark !== '---') {
+            remarkText.innerText = leave.latest_log.log_remark;
+            remarkCont.style.display = 'block';
+        } else {
+            remarkCont.style.display = 'none';
+        }
+
+        calcDaysForContainer(document.getElementById('resubmitModal'));
+        openModal('resubmitModal');
+    }
+
+    function calcDaysForContainer(container) {
+        const startInp = container.querySelector('.leave-start');
+        const endInp = container.querySelector('.leave-end');
+        const summary = container.querySelector('.duration-summary');
+        const countSpan = container.querySelector('.total-days-count');
+
+        if(startInp.value && endInp.value) {
+            let start = new Date(startInp.value);
+            let end = new Date(endInp.value);
+            
+            if (start > end) {
+                summary.style.display = 'none';
+                return;
+            }
+
+            let days = 0;
+            let current = new Date(start);
+            
+            while (current <= end) {
+                let day = current.getDay();
+                if (day !== 0 && day !== 6) { // Exclude Sat/Sun
+                    days++;
+                }
+                current.setDate(current.getDate() + 1);
+            }
+            
+            if(days >= 0) {
+                countSpan.innerText = days;
+                summary.style.display = 'block';
+            } else {
+                 summary.style.display = 'none';
+            }
+        } else {
+            summary.style.display = 'none';
+        }
+    }
+
+    // Attach listeners to all leave date inputs
+    document.querySelectorAll('.leave-start, .leave-end').forEach(input => {
+        input.addEventListener('change', (e) => {
+            const container = e.target.closest('.modal');
+            calcDaysForContainer(container);
+        });
+    });
+</script>
 @endsection

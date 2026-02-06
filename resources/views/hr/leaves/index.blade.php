@@ -138,43 +138,58 @@
                                 <td class="text-center">
                                     @php
                                         $statusConfig = match ($leave->leave_status_id) {
-                                            100 => ['bg' => 'from-green-500 to-emerald-600', 'text' => 'Approved', 'icon' => 'check'],
-                                            200 => ['bg' => 'from-red-500 to-rose-600', 'text' => 'Rejected', 'icon' => 'times'],
-                                            default => ['bg' => 'from-yellow-500 to-amber-600', 'text' => 'Pending', 'icon' => 'clock']
+                                            1 => ['bg' => 'from-yellow-400 to-amber-500', 'text' => 'Pending HR', 'icon' => 'clock'],
+                                            2 => ['bg' => 'from-blue-500 to-cyan-600', 'text' => 'Pending Manager', 'icon' => 'user-check'],
+                                            3 => ['bg' => 'from-green-500 to-emerald-600', 'text' => 'Approved', 'icon' => 'check-double'],
+                                            4 => ['bg' => 'from-red-500 to-rose-600', 'text' => 'Rejected', 'icon' => 'times-circle'],
+                                            6 => ['bg' => 'from-purple-500 to-indigo-600', 'text' => 'Pending Employee', 'icon' => 'user-edit'],
+                                            default => ['bg' => 'from-slate-400 to-slate-500', 'text' => 'Unknown', 'icon' => 'question']
                                         };
                                     @endphp
                                     <span
-                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r {{ $statusConfig['bg'] }} text-white text-xs font-bold shadow-md">
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r {{ $statusConfig['bg'] }} text-white text-xs font-bold shadow-md whitespace-nowrap">
                                         <i class="fa-solid fa-{{ $statusConfig['icon'] }}"></i>
                                         {{ $statusConfig['text'] }}
                                     </span>
                                 </td>
                                 <td>
                                     <div class="flex items-center justify-center gap-2">
-                                        @if($leave->leave_status_id == 0)
-                                            <form action="{{ route('hr.leaves.status', $leave->leave_id) }}" method="POST"
+                                        @if($leave->leave_status_id == 1)
+                                            <button onclick="openStatusModal({{ $leave->leave_id }}, 100, 'Send for Approval')"
+                                                class="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
+                                                title="Send for Approval">
+                                                <i class="fa-solid fa-share text-sm"></i>
+                                            </button>
+                                            <button onclick="openStatusModal({{ $leave->leave_id }}, 200, 'Send Back to User')"
+                                                class="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
+                                                title="Send Back to User">
+                                                <i class="fa-solid fa-user-pen text-sm"></i>
+                                            </button>
+                                        @endif
+                                        
+                                        @if($leave->leave_status_id == 2)
+                                             <form action="{{ route('hr.leaves.status', $leave->leave_id) }}" method="POST"
                                                 class="inline">
                                                 @csrf
-                                                <input type="hidden" name="status_id" value="100">
+                                                <input type="hidden" name="status_id" value="3">
                                                 <button type="submit"
                                                     class="w-9 h-9 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
-                                                    title="Approve">
+                                                    title="Quick Approve">
                                                     <i class="fa-solid fa-check text-sm"></i>
                                                 </button>
                                             </form>
-                                            <form action="{{ route('hr.leaves.status', $leave->leave_id) }}" method="POST"
-                                                class="inline">
-                                                @csrf
-                                                <input type="hidden" name="status_id" value="200">
-                                                <button type="submit"
-                                                    class="w-9 h-9 rounded-lg bg-gradient-to-br from-red-500 to-rose-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
-                                                    title="Reject">
-                                                    <i class="fa-solid fa-times text-sm"></i>
-                                                </button>
-                                            </form>
                                         @endif
+
+                                        @if($leave->leave_attachment && $leave->leave_attachment != 'no-img.png')
+                                            <a href="{{ asset('uploads/' . $leave->leave_attachment) }}" target="_blank"
+                                                class="w-9 h-9 rounded-lg bg-gradient-to-br from-slate-500 to-slate-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
+                                                title="View Attachment">
+                                                <i class="fa-solid fa-paperclip text-sm"></i>
+                                            </a>
+                                        @endif
+
                                         <button
-                                            class="w-9 h-9 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
+                                            class="w-9 h-9 rounded-lg bg-gradient-to-br from-slate-400 to-slate-500 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
                                             title="View Details">
                                             <i class="fa-solid fa-eye text-sm"></i>
                                         </button>
@@ -209,4 +224,47 @@
 
     <!-- Create Modal -->
     @include('hr.leaves.create')
+
+    <!-- Status Change Modal -->
+    <div class="modal" id="statusModal">
+        <div class="modal-backdrop" onclick="closeModal('statusModal')"></div>
+        <div class="modal-content max-w-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-display font-bold text-premium" id="statusModalTitle">Update Leave Status</h2>
+                <button onclick="closeModal('statusModal')" class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="statusForm" action="" method="POST">
+                @csrf
+                <input type="hidden" name="status_id" id="modal_status_id">
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-comment-dots text-indigo-600 mr-2"></i>Status Remarks
+                        </label>
+                        <textarea name="log_remark" rows="3" class="premium-input w-full px-4 py-3 text-sm" placeholder="Reason for this status change..." required></textarea>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
+                    <button type="button" onclick="closeModal('statusModal')" class="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">Cancel</button>
+                    <button type="submit" class="px-8 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
+                        Confirm Update
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openStatusModal(id, statusId, title) {
+            document.getElementById('statusModalTitle').innerText = title;
+            document.getElementById('modal_status_id').value = statusId;
+            document.getElementById('statusForm').action = "/hr/leaves/" + id + "/status";
+            openModal('statusModal');
+        }
+    </script>
 @endsection

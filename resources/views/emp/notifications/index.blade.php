@@ -57,8 +57,8 @@
                         <input type="checkbox" :value="{{ $notif->notification_id }}" x-model="selected" 
                                class="w-5 h-5 rounded border-slate-200 text-brand focus:ring-brand cursor-pointer">
                         
-                        <div class="w-12 h-12 rounded-2xl {{ $notif->is_seen == 0 ? 'bg-brand text-white' : 'bg-slate-100 text-slate-400' }} flex items-center justify-center shrink-0 shadow-sm transition-colors">
-                            <i class="fa-solid {{ $notif->is_seen == 0 ? 'fa-bell-on animate-pulse' : 'fa-bell' }} text-lg"></i>
+                        <div class="w-12 h-12 rounded-2xl {{ $notif->is_seen == 0 ? 'bg-gradient-to-br from-yellow-400 to-amber-600 text-white shadow-lg shadow-amber-200/50' : 'bg-slate-50 text-slate-400' }} flex items-center justify-center shrink-0 transition-all duration-300">
+                            <i class="fa-solid fa-bell {{ $notif->is_seen == 0 ? 'animate-bounce' : '' }} text-lg"></i>
                         </div>
                     </div>
 
@@ -94,8 +94,8 @@
             @empty
                 <div class="py-20 text-center bg-white rounded-3xl border border-slate-100 shadow-sm">
                     <div
-                        class="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center text-slate-200 mx-auto mb-6">
-                        <i class="fa-solid fa-bell-slash text-3xl"></i>
+                        class="w-20 h-20 rounded-full bg-amber-50 flex items-center justify-center text-amber-200 mx-auto mb-6">
+                        <i class="fa-solid fa-bell-slash text-3xl text-amber-300"></i>
                     </div>
                     <h3 class="text-xl font-bold text-premium">Clear skies!</h3>
                     <p class="text-slate-400 mt-2">You don't have any notifications at the moment.</p>

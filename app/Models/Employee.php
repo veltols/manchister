@@ -77,4 +77,9 @@ class Employee extends Model
             ->where('related_table', 'employees_list')
             ->orderBy('log_date', 'desc');
     }
+
+    public function internal_notifications()
+    {
+        return $this->hasMany(EmployeeNotification::class, 'employee_id', 'employee_id');
+    }
 }

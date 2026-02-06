@@ -106,6 +106,7 @@
         .nav-item {
             position: relative;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 0 solid transparent;
         }
 
         .nav-item::before {
@@ -114,7 +115,7 @@
             left: 0;
             top: 50%;
             transform: translateY(-50%);
-            width: 4px;
+            width: 3px;
             height: 0;
             background: linear-gradient(180deg, #06b6d4, #3b82f6);
             border-radius: 0 4px 4px 0;
@@ -123,17 +124,17 @@
 
         .nav-item:hover::before,
         .nav-item.active::before {
-            height: 70%;
+            height: 60%;
         }
 
         .nav-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            transform: translateX(4px);
+            background: rgba(255, 255, 255, 0.08);
+            scale: 1.02;
         }
 
         .nav-item.active {
-            background: rgba(0, 79, 104, 0.25);
-            border-left: 4px solid transparent;
+            background: rgba(255, 255, 255, 0.12);
+            border-left: 3px solid #06b6d4;
         }
 
         /* Cards with Hover Effect */
@@ -435,8 +436,11 @@
                         $user = Auth::user();
                         $notifRoute = 'notifications.index';
                         $chatRoute = 'messages.index';
+                        $unreadNotifs = 0;
+                        $unreadMessages = 0;
 
                         if ($user) {
+                            // Determine routes
                             if (in_array($user->user_type, ['hr', 'admin_hr'])) {
                                 $notifRoute = 'hr.notifications.index';
                                 $chatRoute = 'hr.messages.index';
@@ -450,21 +454,123 @@
                         }
                     @endphp
 
-                    <div class="flex items-center bg-slate-100/50 p-1 rounded-2xl border border-slate-200/50">
+                    <div class="flex items-center bg-white p-1 rounded-2xl border border-slate-200/50 shadow-sm">
                         <a href="{{ route($chatRoute) }}"
-                            class="w-11 h-11 rounded-xl bg-white flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:shadow-lg hover:shadow-indigo-100 transition-all duration-300 group"
+                            class="w-11 h-11 rounded-xl flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all duration-300 group relative"
                             title="Messages">
                             <i class="fa-solid fa-comment-dots group-hover:scale-110"></i>
                         </a>
 
-                        <div class="w-px h-6 bg-slate-200 mx-1"></div>
+                        <div class="w-[1px] h-6 bg-slate-100 mx-1"></div>
 
                         <a href="{{ route($notifRoute) }}"
-                            class="w-11 h-11 rounded-xl bg-white flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:shadow-lg hover:shadow-indigo-100 transition-all duration-300 group relative"
+                            class="w-11 h-11 rounded-xl flex items-center justify-center text-slate-500 hover:text-rose-500 hover:bg-slate-50 transition-all duration-300 group relative"
                             title="Notifications">
-                            <i class="fa-solid fa-bell group-hover:shake"></i>
-                            <span class="absolute top-2.5 right-2.5 w-2 h-2 bg-indigo-500 rounded-full border-2 border-white shadow-sm"></span>
+                            <i class="fa-solid fa-bell group-hover:scale-110"></i>
                         </a>
+                    </div>
+                    <div class="w-px h-6 bg-slate-200 mx-1"></div>
+
+                        <!-- User Profile Dropdown -->
+                        <div class="relative" x-data="{ open: false, showPasswordModal: false }" @click.away="open = false">
+                            <button @click="open = !open" 
+                                class="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-slate-50 transition-all group">
+                                <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-[#004F68] to-[#00384a] flex items-center justify-center shadow-lg group-hover:scale-105 transition-all">
+                                    <i class="fa-solid fa-user text-white text-xs"></i>
+                                </div>
+                                <div class="hidden lg:block text-left mr-1">
+                                    <p class="text-[10px] font-bold text-slate-900 leading-none">Account</p>
+                                    <p class="text-[9px] text-slate-500 leading-none mt-1">{{ ucfirst($user->user_type ?? 'User') }}</p>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-[10px] text-slate-300 group-hover:text-indigo-500 transition-all" :class="{ 'rotate-180': open }"></i>
+                            </button>
+
+                            <!-- Dropdown Menu -->
+                            <div x-show="open"
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 scale-95 translate-y-2"
+                                x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                                class="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-50 overflow-hidden"
+                                style="display: none;">
+                                
+                                <div class="px-4 py-3 border-b border-slate-50 mb-1">
+                                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Logged in as</p>
+                                    <p class="text-sm font-bold text-slate-900 truncate">{{ $user->user_email }}</p>
+                                </div>
+
+                                <div class="px-2">
+                                    <button @click="showPasswordModal = true; open = false" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-all group text-left">
+                                        <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center group-hover:bg-indigo-50 transition-colors">
+                                            <i class="fa-solid fa-key text-sm"></i>
+                                        </div>
+                                        <span class="text-sm font-medium">Change Password</span>
+                                    </button>
+
+                                    <div class="h-px bg-slate-50 my-1"></div>
+
+                                    <a href="{{ route('logout') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-rose-600 hover:bg-rose-50 transition-all group">
+                                        <div class="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center group-hover:bg-rose-100 transition-colors">
+                                            <i class="fa-solid fa-right-from-bracket text-sm"></i>
+                                        </div>
+                                        <span class="text-sm font-medium">Logout</span>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Change Password Modal -->
+                            <template x-teleport="body">
+                                <div x-show="showPasswordModal" 
+                                    class="fixed inset-0 z-[100] flex items-center justify-center px-4" 
+                                    style="display: none;"
+                                    x-transition:enter="transition ease-out duration-300"
+                                    x-transition:enter-start="opacity-0"
+                                    x-transition:enter-end="opacity-100">
+                                    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showPasswordModal = false"></div>
+                                    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md relative z-10 overflow-hidden transform"
+                                        x-transition:enter="transition ease-out duration-300"
+                                        x-transition:enter-start="opacity-0 scale-95"
+                                        x-transition:enter-end="opacity-100 scale-100">
+                                        <div class="px-8 pt-8 pb-6">
+                                            <div class="flex items-center justify-between mb-6">
+                                                <h3 class="text-xl font-bold text-slate-900">Change Password</h3>
+                                                <button @click="showPasswordModal = false" class="text-slate-400 hover:text-slate-600">
+                                                    <i class="fa-solid fa-xmark text-xl"></i>
+                                                </button>
+                                            </div>
+                                            <form action="{{ route('profile.change-password') }}" method="POST">
+                                                @csrf
+                                                <div class="space-y-4">
+                                                    <div>
+                                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Current Password</label>
+                                                        <input type="password" name="current_password" required
+                                                            class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all">
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">New Password</label>
+                                                        <input type="password" name="new_password" required
+                                                            class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all">
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Confirm New Password</label>
+                                                        <input type="password" name="new_password_confirmation" required
+                                                            class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all">
+                                                    </div>
+                                                </div>
+                                                <div class="mt-8 flex gap-3">
+                                                    <button type="button" @click="showPasswordModal = false"
+                                                        class="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 transition-all">
+                                                        Cancel
+                                                    </button>
+                                                    <button type="submit"
+                                                        class="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-white bg-[#004F68] hover:bg-[#00384a] shadow-lg transition-all">
+                                                        Update Password
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
                     </div>
                 </div>
             </div>
@@ -486,6 +592,21 @@
                         class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-100 flex items-center gap-3 animate-fade-in">
                         <i class="fa-solid fa-circle-xmark text-rose-500"></i>
                         <p class="text-sm font-medium text-rose-800">{{ session('error') }}</p>
+                    </div>
+                @endif
+
+                @if($errors->any())
+                    <div
+                        class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-100 animate-fade-in">
+                        <div class="flex items-center gap-3 mb-2">
+                            <i class="fa-solid fa-circle-xmark text-rose-500"></i>
+                            <p class="text-sm font-bold text-rose-800">Please correct the following errors:</p>
+                        </div>
+                        <ul class="list-disc list-inside text-sm text-rose-700 space-y-1 ml-6">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
                     </div>
                 @endif
 

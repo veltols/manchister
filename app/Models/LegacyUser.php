@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
+use App\Models\EmployeeNotification;
+use App\Models\Message;
 
 class LegacyUser extends Authenticatable
 {
@@ -15,6 +17,24 @@ class LegacyUser extends Authenticatable
     public $timestamps = false;
 
     protected $guarded = [];
+
+    // Relationship to legacy notifications
+    public function internal_notifications()
+    {
+        return $this->hasMany(EmployeeNotification::class, 'employee_id', 'user_id');
+    }
+
+    // Attribute for unread messages count
+    public function getUnreadMessagesCountAttribute()
+    {
+        $userId = $this->user_id;
+        return Message::whereHas('conversation', function($q) use ($userId) {
+            $q->where('a_id', $userId)->orWhere('b_id', $userId);
+        })
+        ->where('added_by', '!=', $userId)
+        ->where('is_read', 0)
+        ->count();
+    }
 
     // Map 'user_id' to the actual entity (Employee or ATP)
     public function employee()

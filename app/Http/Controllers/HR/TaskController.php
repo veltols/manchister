@@ -59,6 +59,13 @@ class TaskController extends Controller
         $task->status_id = 1; // Default 'Pending'
         $task->save();
 
+        // Send Notification to assigned employee
+        \App\Services\NotificationService::send(
+            "You have been assigned a new task: " . $task->task_title,
+            "tasks/list", // Laravel-friendly route
+            $task->assigned_to
+        );
+
         // Log creation
         SystemLog::create([
             'log_action' => 'Task Created',
@@ -93,6 +100,16 @@ class TaskController extends Controller
         $task->save();
 
         $newStatus = TaskStatus::find($request->status_id)->status_name;
+
+        // Send Notification to its assigned_by (manager) or assignee (user) depending on context
+        // Usually, the manager wants to know when a task is completed.
+        if ($request->status_id == 4) { // Completed
+             \App\Services\NotificationService::send(
+                "Task Completed: " . $task->task_title,
+                "hr/tasks", 
+                $task->assigned_by
+            );
+        }
 
         // Log update
         SystemLog::create([

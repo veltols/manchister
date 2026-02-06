@@ -8,7 +8,7 @@
             </button>
         </div>
         
-        <form action="{{ route('hr.leaves.store') }}" method="POST">
+        <form action="{{ route('hr.leaves.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             
             <div class="space-y-4">
@@ -26,16 +26,24 @@
                 </div>
 
                 <!-- Leave Type -->
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">
-                        <i class="fa-solid fa-tag text-indigo-600 mr-2"></i>Leave Type
-                    </label>
-                    <select name="leave_type_id" class="premium-input w-full px-4 py-3 text-sm" required>
-                        <option value="">Select Type</option>
-                        @foreach($types as $type)
-                            <option value="{{ $type->leave_type_id }}">{{ $type->leave_type_name }}</option>
-                        @endforeach
-                    </select>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-tag text-indigo-600 mr-2"></i>Leave Type
+                        </label>
+                        <select name="leave_type_id" class="premium-input w-full px-4 py-3 text-sm" required>
+                            <option value="">Select Type</option>
+                            @foreach($types as $type)
+                                <option value="{{ $type->leave_type_id }}">{{ $type->leave_type_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-paperclip text-indigo-600 mr-2"></i>Attachment
+                        </label>
+                        <input type="file" name="leave_attachment" class="premium-input w-full px-4 py-2 text-sm">
+                    </div>
                 </div>
 
                 <!-- Dates -->
@@ -57,7 +65,7 @@
                 <!-- Summary -->
                 <div class="bg-blue-50 border border-blue-100 p-4 rounded-xl text-center" id="days-summary" style="display:none;">
                     <p class="text-sm text-blue-800">
-                        Total leave duration: <span id="total-days-count" class="font-bold text-lg ml-1">0</span> days
+                        Total working days (excluding weekends): <span id="total-days-count" class="font-bold text-lg ml-1">0</span> days
                     </p>
                 </div>
 
@@ -81,11 +89,7 @@
 </div>
 
 <script>
-   
-    // Use the existing global script functions if available, or define locally if needed
-    // Assuming openModal/closeModal are global from app schema
-
-    // Simple date diff calc
+    // Simple date diff calc excluding weekends
     const startInp = document.getElementById('start_date');
     const endInp = document.getElementById('end_date');
     const summary = document.getElementById('days-summary');
@@ -93,13 +97,28 @@
 
     function calcDays() {
         if(startInp.value && endInp.value) {
-            const start = new Date(startInp.value);
-            const end = new Date(endInp.value);
-            const diffTime = Math.abs(end - start);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
+            let start = new Date(startInp.value);
+            let end = new Date(endInp.value);
             
-            if(!isNaN(diffDays) && diffDays > 0) {
-                countSpan.innerText = diffDays;
+            if (start > end) {
+                summary.style.display = 'none';
+                return;
+            }
+
+            let days = 0;
+            let current = new Date(start);
+            
+            while (current <= end) {
+                let day = current.getDay();
+                // Exclude Sat (6) and Sun (0)
+                if (day !== 0 && day !== 6) {
+                    days++;
+                }
+                current.setDate(current.getDate() + 1);
+            }
+            
+            if(days >= 0) {
+                countSpan.innerText = days;
                 summary.style.display = 'block';
             } else {
                  summary.style.display = 'none';

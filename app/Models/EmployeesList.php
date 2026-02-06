@@ -15,6 +15,8 @@ class EmployeesList extends Model
 
     public function passwordData()
     {
-        return $this->hasOne(EmployeesListPass::class, 'employee_id', 'employee_id');
+        return $this->hasOne(EmployeesListPass::class, 'employee_id', 'employee_id')
+            ->where('is_active', '1')
+            ->latest('pass_id');
     }
 }

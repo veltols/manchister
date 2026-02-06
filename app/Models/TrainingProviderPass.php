@@ -10,6 +10,7 @@ class TrainingProviderPass extends Model
     use HasFactory;
 
     protected $table = 'atps_list_pass';
+    protected $primaryKey = 'pass_id';
     public $timestamps = false;
     protected $guarded = [];
 
