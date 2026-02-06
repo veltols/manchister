@@ -16,7 +16,7 @@
                 <p class="text-sm text-slate-500 mt-1">{{ $departments->total() }} total departments</p>
             </div>
             <button onclick="openModal('addDeptModal')"
-                class="inline-flex items-center gap-2 px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
+                class="inline-flex items-center gap-2 px-6 py-3 premium-button bg-gradient-brand text-white font-semibold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
                 <i class="fa-solid fa-plus"></i>
                 <span>Add Department</span>
             </button>
@@ -75,9 +75,9 @@
                                     <div class="flex items-center justify-center">
                                         <button
                                             onclick="editDepartment({{ $dept->department_id }}, '{{ addslashes($dept->department_code) }}', '{{ addslashes($dept->department_name) }}', {{ $dept->main_department_id }}, {{ $dept->line_manager_id ?? 0 }})"
-                                            class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
+                                            class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
                                             title="Edit">
-                                            <i class="fa-solid fa-pen text-sm"></i>
+                                            <i class="fa-solid fa-pen-to-square text-sm"></i>
                                         </button>
                                     </div>
                                 </td>
@@ -160,7 +160,7 @@
                     <button type="button" onclick="closeModal('addDeptModal')"
                         class="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">Cancel</button>
                     <button type="submit"
-                        class="px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">Create</button>
+                        class="px-6 py-3 premium-button bg-gradient-brand text-white font-semibold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">Create</button>
                 </div>
             </form>
         </div>
@@ -221,7 +221,7 @@
                     <button type="button" onclick="closeModal('editDeptModal')"
                         class="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">Cancel</button>
                     <button type="submit"
-                        class="px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">Update</button>
+                        class="px-6 py-3 premium-button bg-gradient-brand text-white font-semibold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">Update</button>
                 </div>
             </form>
         </div>

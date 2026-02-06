@@ -12,37 +12,37 @@
                 <p class="px-4 py-2 text-xs font-bold text-slate-400 uppercase tracking-widest">General Lists</p>
                 
                 <a href="{{ route('admin.settings.index', ['type' => 'tc']) }}" 
-                   class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'tc' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50' }}">
+                   class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'tc' ? 'bg-brand/10 text-brand' : 'text-slate-600 hover:bg-slate-50' }}">
                     <i class="fa-solid fa-tags w-5"></i> Ticket Categories
                 </a>
                 <a href="{{ route('admin.settings.index', ['type' => 'ts']) }}" 
-                   class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'ts' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50' }}">
+                   class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'ts' ? 'bg-brand/10 text-brand' : 'text-slate-600 hover:bg-slate-50' }}">
                     <i class="fa-solid fa-list-check w-5"></i> Ticket Status
                 </a>
                 <a href="{{ route('admin.settings.index', ['type' => 'lt']) }}" 
-                   class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'lt' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50' }}">
+                   class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'lt' ? 'bg-brand/10 text-brand' : 'text-slate-600 hover:bg-slate-50' }}">
                     <i class="fa-solid fa-calendar-minus w-5"></i> Leave Types
                 </a>
                  <a href="{{ route('admin.settings.index', ['type' => 'pp']) }}" 
-                   class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'pp' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50' }}">
+                   class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'pp' ? 'bg-brand/10 text-brand' : 'text-slate-600 hover:bg-slate-50' }}">
                     <i class="fa-solid fa-flag w-5"></i> Priorities
                 </a>
 
                 <div class="border-t border-slate-100 my-2 pt-2"></div>
                 <p class="px-4 py-2 text-xs font-bold text-slate-400 uppercase tracking-widest">Asset Config</p>
                  <a href="{{ route('admin.settings.index', ['type' => 'ac']) }}" 
-                   class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'ac' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50' }}">
+                   class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'ac' ? 'bg-brand/10 text-brand' : 'text-slate-600 hover:bg-slate-50' }}">
                     <i class="fa-solid fa-boxes-stacked w-5"></i> Asset Categories
                 </a>
 
                  <div class="border-t border-slate-100 my-2 pt-2"></div>
                 <p class="px-4 py-2 text-xs font-bold text-slate-400 uppercase tracking-widest">Workflows</p>
                  <a href="{{ route('admin.settings.index', ['type' => 'ss']) }}" 
-                   class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'ss' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50' }}">
+                   class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'ss' ? 'bg-brand/10 text-brand' : 'text-slate-600 hover:bg-slate-50' }}">
                     <i class="fa-solid fa-share-nodes w-5"></i> Service Categories
                 </a>
                  <a href="{{ route('admin.settings.index', ['type' => 'ct']) }}" 
-                   class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'ct' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50' }}">
+                   class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'ct' ? 'bg-brand/10 text-brand' : 'text-slate-600 hover:bg-slate-50' }}">
                     <i class="fa-solid fa-envelope-open-text w-5"></i> Comm. Types
                 </a>
             </div>
@@ -57,7 +57,7 @@
                     <p class="text-sm text-slate-500">Manage list items</p>
                 </div>
                 <button onclick="openModal('addModal')" 
-                    class="premium-button from-indigo-600 to-purple-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition-all">
+                    class="premium-button bg-gradient-brand text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all">
                     <i class="fa-solid fa-plus mr-2"></i> Add New
                 </button>
             </div>
@@ -112,8 +112,9 @@
 
                                     <td class="text-center">
                                         <button onclick="openEditModal({{ json_encode($record) }}, {{ json_encode($conf['pk']) }})" 
-                                            class="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center">
-                                            <i class="fa-solid fa-pen"></i>
+                                            class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
+                                            title="Edit Record">
+                                            <i class="fa-solid fa-pen text-sm"></i>
                                         </button>
                                     </td>
                                 </tr>
@@ -176,7 +177,7 @@
 
                 <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
                     <button type="button" onclick="closeModal('addModal')" class="px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-100 font-medium">Cancel</button>
-                    <button type="submit" class="premium-button from-indigo-600 to-purple-600 text-white px-6 py-2 rounded-lg shadow-md font-semibold">Save</button>
+                    <button type="submit" class="premium-button bg-gradient-brand text-white px-6 py-2 rounded-lg shadow-md shadow-brand/20 font-semibold hover:scale-105 transition-all">Save</button>
                 </div>
             </form>
         </div>
@@ -202,7 +203,7 @@
                 </div>
                  <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
                     <button type="button" onclick="closeModal('editModal')" class="px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-100 font-medium">Cancel</button>
-                    <button type="submit" class="premium-button from-indigo-600 to-purple-600 text-white px-6 py-2 rounded-lg shadow-md font-semibold">Update</button>
+                    <button type="submit" class="premium-button bg-gradient-brand text-white px-6 py-2 rounded-lg shadow-md shadow-brand/20 font-semibold hover:scale-105 transition-all">Update</button>
                 </div>
             </form>
         </div>

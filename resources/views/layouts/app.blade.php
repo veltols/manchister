@@ -356,7 +356,7 @@
 
         ::-webkit-scrollbar-thumb {
             background: linear-gradient(180deg, #004F68, #006a8a);
-            border-radius: 4px;
+            border-radius: 0px;
         }
 
         ::-webkit-scrollbar-thumb:hover {

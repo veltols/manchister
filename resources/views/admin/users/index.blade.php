@@ -14,7 +14,7 @@
             </div>
             <!-- Create Button -->
             <button onclick="openModal('newUserModal')" 
-                class="inline-flex items-center gap-2 px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
+                class="inline-flex items-center gap-2 px-6 py-3 premium-button bg-gradient-brand text-white font-semibold rounded-xl shadow-lg hover:shadow-brand/20 hover:scale-105 transition-all duration-200">
                 <i class="fa-solid fa-plus"></i>
                 <span>Add New User</span>
             </button>
@@ -77,10 +77,7 @@
                                            title="View Details">
                                             <i class="fa-solid fa-eye text-sm"></i>
                                         </a>
-                                        <button class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
-                                                title="Edit User">
-                                            <i class="fa-solid fa-pen-to-square text-sm"></i>
-                                        </button>
+                                       
                                     </div>
                                 </td>
                             </tr>

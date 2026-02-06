@@ -9,7 +9,7 @@
         <!-- Left Column: Profile Card -->
         <div class="md:col-span-1 space-y-6">
             <div class="premium-card p-6 text-center relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-r from-indigo-500 to-purple-600"></div>
+                <div class="absolute top-0 left-0 w-full h-24 bg-gradient-brand"></div>
                 
                 <div class="relative z-10 mt-12 mb-4">
                     <div class="w-24 h-24 rounded-full bg-white p-1 mx-auto shadow-xl">
@@ -78,7 +78,7 @@
                     <button onclick="openModal('permissionsModal')" class="w-full py-2.5 px-4 rounded-xl bg-slate-50 text-slate-600 font-semibold hover:bg-slate-100 hover:text-slate-800 transition-colors text-sm flex items-center justify-center gap-2">
                         <i class="fa-solid fa-shield-halved"></i> Permissions
                     </button>
-                    <button onclick="openModal('resetPasswordModal')" class="w-full py-2.5 px-4 rounded-xl bg-amber-50 text-amber-600 font-semibold hover:bg-amber-100 transition-colors text-sm flex items-center justify-center gap-2">
+                    <button onclick="openModal('resetPasswordModal')" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white font-semibold shadow-md hover:shadow-amber-200/50 hover:scale-[1.02] transition-all text-sm flex items-center justify-center gap-2 border border-white/10">
                         <i class="fa-solid fa-key"></i> Reset Password
                     </button>
                     <!-- Toggle Status -->
@@ -119,7 +119,7 @@
                     <div class="p-6">
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-lg font-bold text-slate-800">Assigned Assets</h3>
-                            <button onclick="openModal('assignAssetModal')" class="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-bold hover:bg-indigo-100 transition-colors flex items-center gap-2">
+                             <button onclick="openModal('assignAssetModal')" class="px-5 py-2.5 bg-gradient-brand text-white rounded-xl text-sm font-bold shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all flex items-center gap-2 border border-white/10">
                                 <i class="fa-solid fa-plus"></i> Assign New Asset
                             </button>
                         </div>
@@ -241,7 +241,7 @@
 
                 <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-100">
                     <button type="button" onclick="closeModal('resetPasswordModal')" class="px-6 py-2.5 rounded-xl font-bold text-slate-400 hover:text-slate-600 transition-colors">Cancel</button>
-                    <button type="submit" class="px-6 py-2.5 premium-button from-amber-500 to-orange-600 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all">
+                    <button type="submit" class="px-6 py-2.5 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:scale-105 transition-all border border-white/10">
                         Update Password
                     </button>
                 </div>
@@ -290,7 +290,7 @@
 
                 <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-100">
                     <button type="button" onclick="closeModal('permissionsModal')" class="px-6 py-2.5 rounded-xl font-bold text-slate-400 hover:text-slate-600 transition-colors">Cancel</button>
-                    <button type="submit" class="px-6 py-2.5 premium-button from-indigo-600 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all">
+                    <button type="submit" class="px-6 py-2.5 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:scale-105 transition-all border border-white/10">
                         Update Permissions
                     </button>
                 </div>
@@ -332,7 +332,7 @@
 
                 <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-100">
                     <button type="button" onclick="closeModal('assignAssetModal')" class="px-6 py-2.5 rounded-xl font-bold text-slate-400 hover:text-slate-600 transition-colors">Cancel</button>
-                    <button type="submit" class="px-6 py-2.5 premium-button from-indigo-600 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all">
+                    <button type="submit" class="px-6 py-2.5 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:scale-105 transition-all border border-white/10">
                         Assign Asset
                     </button>
                 </div>

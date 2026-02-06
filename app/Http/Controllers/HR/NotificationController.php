@@ -33,7 +33,7 @@ class NotificationController extends Controller
             EmployeeNotification::where('employee_id', $employeeId)
                 ->whereIn('notification_id', (array)$ids)
                 ->update(['is_seen' => 1]);
-        } elseif ($id === 0) {
+        } elseif ($id == 0) {
             // Mark all as read
             EmployeeNotification::where('employee_id', $employeeId)
                 ->where('is_seen', 0)

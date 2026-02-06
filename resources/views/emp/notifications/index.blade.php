@@ -36,12 +36,14 @@
             
             <div class="flex items-center gap-3">
                 <template x-if="selected.length > 0">
-                    <button @click="markRead(selected)" class="px-5 py-2.5 rounded-xl bg-brand text-white text-xs font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center gap-2">
+                    <button @click="markRead(selected)" 
+                            class="px-5 py-2.5 rounded-xl bg-gradient-brand text-white text-xs font-bold shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-300 flex items-center gap-2 border border-white/10">
                         <i class="fa-solid fa-check-double"></i>
                         <span>Mark <span x-text="selected.length"></span> Selected as Read</span>
                     </button>
                 </template>
-                <button @click="markRead(null)" class="px-6 py-2.5 bg-white border border-slate-200 rounded-xl font-bold text-slate-600 hover:text-brand hover:border-brand hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2">
+                <button @click="markRead(null)" 
+                        class="px-6 py-2.5 bg-gradient-brand text-white rounded-xl font-bold shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2 border border-white/10">
                     <i class="fa-solid fa-check-double"></i>
                     <span>Mark All as Read</span>
                 </button>

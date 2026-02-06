@@ -308,7 +308,7 @@
                     <p class="text-xs text-slate-500 font-medium">Latest support tickets raised</p>
                 </div>
             </div>
-            <a href="{{ route('admin.tickets.index') }}" class="group flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-sm font-bold shadow-sm hover:border-indigo-600 hover:text-indigo-600 transition-all">
+            <a href="{{ route('admin.tickets.index') }}" class="group flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-brand text-white text-sm font-bold shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:-translate-y-0.5 transition-all duration-300 border border-white/10">
                 <span>View All</span>
                 <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
             </a>
