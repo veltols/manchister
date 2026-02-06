@@ -15,10 +15,13 @@
             }
         },
         markRead(ids) {
-            if (!ids) return;
             let form = document.getElementById('markReadForm');
             let input = document.getElementById('markReadIds');
-            input.value = Array.isArray(ids) ? ids.join(',') : ids;
+            if (ids) {
+                input.value = Array.isArray(ids) ? ids.join(',') : ids;
+            } else {
+                input.value = '';
+            }
             form.submit();
         }
     }">
