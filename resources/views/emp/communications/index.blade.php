@@ -12,7 +12,7 @@
                 <h2 class="text-2xl font-display font-bold text-premium">External Communications</h2>
                 <p class="text-sm text-slate-500 mt-1">Track formal information shared with external parties</p>
             </div>
-            <button onclick="openModal('newCommModal')" class="premium-button">
+            <button onclick="openModal('newCommModal')" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
                 <i class="fa-solid fa-plus"></i>
                 <span>New Request</span>
             </button>
@@ -67,8 +67,8 @@
                                 </td>
                                 <td class="text-center">
                                     <a href="{{ route('emp.communications.show', $req->communication_id) }}"
-                                        class="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-brand-dark hover:text-white transition-all shadow-sm mx-auto">
-                                        <i class="fa-solid fa-eye text-xs"></i>
+                                        class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md mx-auto">
+                                        <i class="fa-solid fa-eye text-sm"></i>
                                     </a>
                                 </td>
                             </tr>
@@ -153,7 +153,7 @@
                 <div class="pt-6 border-t border-slate-100 flex justify-end gap-3">
                     <button type="button" onclick="closeModal('newCommModal')"
                         class="px-6 py-3 font-bold text-slate-500 hover:bg-slate-50 rounded-xl transition-all">Cancel</button>
-                    <button type="submit" class="premium-button">
+                    <button type="submit" class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
                         Submit Request
                     </button>
                 </div>

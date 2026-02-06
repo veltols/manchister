@@ -119,7 +119,10 @@
             <div>
                 <div class="flex items-center justify-between mb-4 px-1">
                     <h3 class="text-xl font-display font-bold text-premium">Support Center</h3>
-                    <a href="{{ route('emp.tickets.index') }}" class="text-sm font-bold text-brand-dark hover:underline">View All <i class="fa-solid fa-arrow-right-long ml-1"></i></a>
+                    <a href="{{ route('emp.tickets.index') }}" class="group flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-brand text-white text-xs font-bold shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:-translate-y-0.5 transition-all duration-300 border border-white/10">
+                        <span>View All</span>
+                        <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                    </a>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <a href="{{ route('emp.tickets.index') }}" class="stat-card group hover:border-brand-dark transition-all duration-300">
@@ -173,7 +176,10 @@
             <div>
                 <div class="flex items-center justify-between mb-4 px-1">
                     <h3 class="text-xl font-display font-bold text-premium">My Tasks</h3>
-                    <a href="{{ route('emp.tasks.index') }}" class="text-sm font-bold text-indigo-600 hover:underline">View All Tasks <i class="fa-solid fa-arrow-right-long ml-1"></i></a>
+                    <a href="{{ route('emp.tasks.index') }}" class="group flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-brand text-white text-xs font-bold shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:-translate-y-0.5 transition-all duration-300 border border-white/10">
+                        <span>View All Tasks</span>
+                        <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                    </a>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <a href="{{ route('emp.tasks.index') }}" class="stat-card group hover:border-indigo-600 transition-all duration-300">
@@ -365,7 +371,7 @@
 
                     <div class="pt-4">
                         <a href="{{ route('emp.leaves.index') }}"
-                            class="w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-brand-dark text-white rounded-2xl font-bold shadow-lg shadow-brand-dark/20 hover:shadow-xl hover:-translate-y-1 transition-all">
+                            class="w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-gradient-brand text-white rounded-2xl font-bold shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:-translate-y-1 transition-all">
                             Request a Leave
                             <i class="fa-solid fa-plus-circle"></i>
                         </a>

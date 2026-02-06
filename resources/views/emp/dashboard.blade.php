@@ -46,7 +46,10 @@
     <div class="lg:col-span-2 glass-panel p-0 overflow-hidden">
         <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
             <h3 class="font-bold text-premium">Recent Tasks</h3>
-            <a href="{{ route('emp.tasks.index') }}" class="text-xs font-bold text-sky-500 hover:text-sky-600 uppercase tracking-wide">View All</a>
+            <a href="{{ route('emp.tasks.index') }}" class="group flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-brand text-white text-[10px] font-bold shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:-translate-y-0.5 transition-all duration-300 border border-white/10 uppercase tracking-wider">
+                <span>View All</span>
+                <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+            </a>
         </div>
         <div>
             <table class="w-full">

@@ -14,7 +14,7 @@
             </div>
             <form action="{{ route('emp.attendance.index') }}" method="GET" class="flex gap-2">
                 <input type="month" name="month" value="{{ $month }}" class="premium-input text-sm">
-                <button type="submit" class="premium-button py-2">
+                <button type="submit" class="px-6 py-2 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200 flex items-center gap-2">
                     <i class="fa-solid fa-filter"></i>
                     <span>Filter</span>
                 </button>

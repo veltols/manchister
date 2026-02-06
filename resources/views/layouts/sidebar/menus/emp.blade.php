@@ -11,14 +11,9 @@
     <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">My Tasks</span>
 </a>
 
+
 <a href="{{ route('emp.tickets.index') }}"
     class="nav-item {{ request()->routeIs('emp.tickets.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
-    <i class="fa-solid fa-ticket text-2xl"></i>
-    <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Tickets</span>
-</a>
-
-<a href="{{ route('emp.ss.index') }}"
-    class="nav-item {{ request()->routeIs('emp.ss.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
     <i class="fa-solid fa-headset text-2xl"></i>
     <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Support</span>
 </a>
@@ -36,14 +31,4 @@
 </a>
 
 
-<a href="{{ route('emp.notifications.index') }}"
-    class="nav-item {{ request()->routeIs('emp.notifications.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
-    <i class="fa-solid fa-bell text-2xl"></i>
-    <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Alerts</span>
-</a>
 
-<a href="{{ route('emp.messages.index') }}"
-    class="nav-item {{ request()->routeIs('emp.messages.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
-    <i class="fa-solid fa-message text-2xl"></i>
-    <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Chats</span>
-</a>

@@ -20,7 +20,7 @@
                     <i class="fa-solid fa-headset mr-1"></i> Support Services
                 </a>
                 <button onclick="openModal('newTicketModal')"
-                    class="ml-2 inline-flex items-center gap-2 px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
+                    class="ml-2 inline-flex items-center gap-2 px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
                     <i class="fa-solid fa-plus"></i>
                     <span>New Ticket</span>
                 </button>
@@ -31,23 +31,23 @@
         <div class="premium-card p-2">
             <div class="flex gap-2">
                 <a href="{{ route('emp.tickets.index') }}"
-                    class="px-4 py-2 rounded-lg font-medium text-sm transition-all {{ $stt == 0 ? 'premium-button from-indigo-600 to-purple-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100' }}">
+                    class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 0 ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
                     All Tickets
                 </a>
                 <a href="{{ route('emp.tickets.index', ['stt' => 1]) }}"
-                    class="px-4 py-2 rounded-lg font-medium text-sm transition-all {{ $stt == 1 ? 'premium-button from-indigo-600 to-purple-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100' }}">
+                    class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 1 ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
                     Open
                 </a>
                 <a href="{{ route('emp.tickets.index', ['stt' => 2]) }}"
-                    class="px-4 py-2 rounded-lg font-medium text-sm transition-all {{ $stt == 2 ? 'premium-button from-indigo-600 to-purple-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100' }}">
+                    class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 2 ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
                     In Progress
                 </a>
                 <a href="{{ route('emp.tickets.index', ['stt' => 3]) }}"
-                    class="px-4 py-2 rounded-lg font-medium text-sm transition-all {{ $stt == 3 ? 'premium-button from-indigo-600 to-purple-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100' }}">
+                    class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 3 ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
                     Resolved
                 </a>
                 <a href="{{ route('emp.tickets.index', ['stt' => 4]) }}"
-                    class="px-4 py-2 rounded-lg font-medium text-sm transition-all {{ $stt == 4 ? 'premium-button from-indigo-600 to-purple-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100' }}">
+                    class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 4 ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
                     Unassigned
                 </a>
             </div>
@@ -137,7 +137,7 @@
                                         </div>
                                         <p class="text-slate-500 font-medium">No tickets found</p>
                                         <button onclick="openModal('newTicketModal')"
-                                            class="text-indigo-600 hover:text-indigo-800 font-semibold text-sm">
+                                            class="text-brand-dark hover:text-brand-light font-bold text-sm">
                                             Create your first ticket
                                         </button>
                                     </div>
@@ -240,7 +240,7 @@
                         Cancel
                     </button>
                     <button type="submit"
-                        class="px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
+                        class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
                         <i class="fa-solid fa-paper-plane mr-2"></i>Create Ticket
                     </button>
                 </div>

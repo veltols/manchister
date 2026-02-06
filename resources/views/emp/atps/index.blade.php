@@ -38,7 +38,7 @@
             </div>
         </div>
 
-        <a href="{{ route('emp.atps.create') }}" class="premium-button flex items-center gap-2">
+        <a href="{{ route('emp.atps.create') }}" class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200 flex items-center gap-2">
             <i class="fa-solid fa-plus"></i>
             Add New Provider
         </a>
@@ -48,27 +48,27 @@
     <div class="flex items-center gap-2 p-1 bg-white/50 backdrop-blur-sm rounded-2xl border border-slate-100 w-fit">
         <a href="{{ route('emp.atps.index', ['stt' => '00']) }}" 
            class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 
-           {{ request('stt') == '00' || !request('stt') ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white' }}">
+           {{ request('stt') == '00' || !request('stt') ? 'bg-gradient-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white' }}">
             All
         </a>
         <a href="{{ route('emp.atps.index', ['stt' => '1']) }}" 
            class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 
-           {{ request('stt') == '1' ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white' }}">
+           {{ request('stt') == '1' ? 'bg-gradient-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white' }}">
             Pending
         </a>
         <a href="{{ route('emp.atps.index', ['stt' => '3']) }}" 
            class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 
-           {{ request('stt') == '3' ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white' }}">
+           {{ request('stt') == '3' ? 'bg-gradient-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white' }}">
             Accredited
         </a>
         <a href="{{ route('emp.atps.index', ['stt' => '4']) }}" 
            class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 
-           {{ request('stt') == '4' ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white' }}">
+           {{ request('stt') == '4' ? 'bg-gradient-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white' }}">
             Renewal
         </a>
         <a href="{{ route('emp.atps.index', ['stt' => '5']) }}" 
            class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 
-           {{ request('stt') == '5' ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white' }}">
+           {{ request('stt') == '5' ? 'bg-gradient-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white' }}">
             Expired
         </a>
     </div>
@@ -119,24 +119,24 @@
                             @if($atp->atp_status_id == 1)
                                 <form action="{{ route('emp.atps.send-email', $atp->atp_id) }}" method="POST" class="inline">
                                     @csrf
-                                    <button type="submit" class="w-8 h-8 rounded-lg bg-amber-50 text-amber-500 flex items-center justify-center hover:bg-amber-500 hover:text-white transition-all shadow-sm" title="Send Registration Email">
-                                        <i class="fa-solid fa-envelope text-[10px]"></i>
+                                    <button type="submit" class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md" title="Send Registration Email">
+                                        <i class="fa-solid fa-envelope text-sm"></i>
                                     </button>
                                 </form>
                             @endif
                             @if($atp->atp_status_id != 4)
                                 <form action="{{ route('emp.atps.accredit', $atp->atp_id) }}" method="POST" class="inline">
                                     @csrf
-                                    <button type="submit" class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-500 flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all shadow-sm" title="Accredit Provider">
-                                        <i class="fa-solid fa-check text-[10px]"></i>
+                                    <button type="submit" class="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md" title="Accredit Provider">
+                                        <i class="fa-solid fa-check text-sm"></i>
                                     </button>
                                 </form>
                             @endif
                         </div>
                         
                         <a href="{{ route('emp.atps.show', $atp->atp_id) }}" 
-                           class="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-brand hover:text-white transition-all shadow-sm">
-                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                           class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md">
+                            <i class="fa-solid fa-arrow-right text-sm"></i>
                         </a>
                     </div>
                 </div>

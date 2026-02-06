@@ -12,7 +12,7 @@
             <h2 class="text-2xl font-display font-bold text-premium">My Leaves</h2>
             <p class="text-sm text-slate-500 mt-1">{{ $leaves->total() }} total requests</p>
         </div>
-        <button onclick="openModal('requestLeaveModal')" class="inline-flex items-center gap-2 px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
+        <button onclick="openModal('requestLeaveModal')" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
             <i class="fa-solid fa-plus"></i>
             <span>Request Leave</span>
         </button>
@@ -194,7 +194,7 @@
 
             <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
                 <button type="button" onclick="closeModal('requestLeaveModal')" class="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">Cancel</button>
-                <button type="submit" class="px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">Submit Request</button>
+                <button type="submit" class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">Submit Request</button>
             </div>
         </form>
     </div>
@@ -270,7 +270,7 @@
 
             <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
                 <button type="button" onclick="closeModal('resubmitModal')" class="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">Cancel</button>
-                <button type="submit" class="px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">Resubmit Request</button>
+                <button type="submit" class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">Resubmit Request</button>
             </div>
         </form>
     </div>

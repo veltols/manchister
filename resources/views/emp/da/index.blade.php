@@ -62,8 +62,8 @@
                                 </td>
                                 <td class="text-center">
                                     <a href="{{ route('emp.da.show', $ac->da_id) }}"
-                                        class="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-brand-dark hover:text-white transition-all shadow-sm mx-auto">
-                                        <i class="fa-solid fa-eye text-xs"></i>
+                                        class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md mx-auto">
+                                        <i class="fa-solid fa-eye text-sm"></i>
                                     </a>
                                 </td>
                             </tr>

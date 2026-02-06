@@ -11,12 +11,12 @@
             <div
                 class="flex bg-slate-100 p-1.5 rounded-2xl shadow-inner border border-slate-200/50 overflow-x-auto max-w-full scrollbar-hide">
                 <a href="{{ route('emp.documents.index') }}"
-                    class="px-6 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all {{ !$typeId ? 'bg-brand-dark text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
+                    class="px-6 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all {{ !$typeId ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
                     All Documents
                 </a>
                 @foreach($types as $type)
                     <a href="{{ route('emp.documents.index', ['type_id' => $type->document_type_id]) }}"
-                        class="px-6 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all {{ $typeId == $type->document_type_id ? 'bg-brand-dark text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark whitespace-nowrap' }}">
+                        class="px-6 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all {{ $typeId == $type->document_type_id ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark whitespace-nowrap' }}">
                         {{ $type->document_type_name }}
                     </a>
                 @endforeach

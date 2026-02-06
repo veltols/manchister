@@ -144,11 +144,11 @@
             <div class="border-t border-slate-100 pt-6">
                 <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Quick Actions</h3>
                 <div class="flex flex-wrap gap-4">
-                    <button onclick="openModal('updateStatusModal')" class="premium-button">
+                    <button onclick="openModal('updateStatusModal')" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
                         <i class="fa-solid fa-arrows-rotate"></i>
                         <span>Update Status</span>
                     </button>
-                    <button onclick="openModal('updateProgressModal')" class="premium-button" style="background: linear-gradient(135deg, #0088b3, #006a8a);">
+                    <button onclick="openModal('updateProgressModal')" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
                         <i class="fa-solid fa-chart-line"></i>
                         <span>Update Progress</span>
                     </button>
@@ -236,7 +236,7 @@
                         Cancel
                     </button>
                     <button type="submit"
-                        class="px-5 py-2.5 rounded-xl bg-brand-dark text-white font-semibold hover:bg-brand-light shadow-lg hover:shadow-xl transition-all">
+                        class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
                         Update Status
                     </button>
                 </div>
@@ -281,7 +281,7 @@
                         Cancel
                     </button>
                     <button type="submit"
-                        class="px-5 py-2.5 rounded-xl bg-brand-light text-white font-semibold hover:bg-brand-dark shadow-lg hover:shadow-xl transition-all">
+                        class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
                         Update Progress
                     </button>
                 </div>

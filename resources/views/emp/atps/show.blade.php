@@ -79,37 +79,37 @@
             <!-- Tabs Navigation -->
             <div class="flex flex-wrap items-center gap-2 p-1 bg-slate-100/50 rounded-2xl w-full">
                 <button @click="activeTab = 'apps'" 
-                        :class="activeTab === 'apps' ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white'"
+                        :class="activeTab === 'apps' ? 'bg-gradient-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white'"
                         class="px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
                     <i class="fa-solid fa-list-check"></i>
                     Applications
                 </button>
                 <button @click="activeTab = 'renewals'" 
-                        :class="activeTab === 'renewals' ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white'"
+                        :class="activeTab === 'renewals' ? 'bg-gradient-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white'"
                         class="px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
                     <i class="fa-solid fa-rotate"></i>
                     Renewals
                 </button>
                 <button @click="activeTab = 'cancellations'" 
-                        :class="activeTab === 'cancellations' ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white'"
+                        :class="activeTab === 'cancellations' ? 'bg-gradient-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white'"
                         class="px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
                     <i class="fa-solid fa-ban"></i>
                     Cancellations
                 </button>
                 <button @click="activeTab = 'le'" 
-                        :class="activeTab === 'le' ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white'"
+                        :class="activeTab === 'le' ? 'bg-gradient-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white'"
                         class="px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
                     <i class="fa-solid fa-graduation-cap"></i>
                     Learner Enrollment
                 </button>
                 <button @click="activeTab = 'contacts'" 
-                        :class="activeTab === 'contacts' ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white'"
+                        :class="activeTab === 'contacts' ? 'bg-gradient-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white'"
                         class="px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
                     <i class="fa-solid fa-address-book"></i>
                     Contacts
                 </button>
                 <button @click="activeTab = 'logs'" 
-                        :class="activeTab === 'logs' ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white'"
+                        :class="activeTab === 'logs' ? 'bg-gradient-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white'"
                         class="px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
                     <i class="fa-solid fa-history"></i>
                     Logs
@@ -148,11 +148,17 @@
                                         </td>
                                         <td class="px-8 py-6 text-right">
                                             @if($app['type'] == 'Program')
-                                                <a href="{{ route('emp.atps.forms.registration-request', $atp->atp_id) }}" class="text-brand hover:underline font-bold text-xs">VIEW</a>
+                                                <a href="{{ route('emp.atps.forms.registration-request', $atp->atp_id) }}" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                                                    <i class="fa-solid fa-eye text-xs"></i>
+                                                </a>
                                             @elseif($app['type'] == 'Compliance')
-                                                <a href="{{ route('emp.atps.forms.sed', $atp->atp_id) }}" class="text-brand hover:underline font-bold text-xs">VIEW</a>
+                                                <a href="{{ route('emp.atps.forms.sed', $atp->atp_id) }}" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                                                    <i class="fa-solid fa-eye text-xs"></i>
+                                                </a>
                                             @else
-                                                <button class="text-slate-300 cursor-not-allowed font-bold text-xs" disabled>VIEW</button>
+                                                <button class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 text-slate-300 cursor-not-allowed text-xs" disabled>
+                                                    <i class="fa-solid fa-eye-slash"></i>
+                                                </button>
                                             @endif
                                         </td>
                                     </tr>

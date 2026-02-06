@@ -12,7 +12,7 @@
                 <h2 class="text-2xl font-display font-bold text-premium">Permission Requests</h2>
                 <p class="text-sm text-slate-500 mt-1">Submit and track your short-term leave requests</p>
             </div>
-            <button onclick="openModal('requestPermissionModal')" class="premium-button">
+            <button onclick="openModal('requestPermissionModal')" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
                 <i class="fa-solid fa-plus"></i>
                 <span>New Request</span>
             </button>
@@ -129,7 +129,7 @@
                 <div class="pt-6 border-t border-slate-100 flex justify-end gap-3">
                     <button type="button" onclick="closeModal('requestPermissionModal')"
                         class="px-6 py-3 font-bold text-slate-500 hover:bg-slate-50 rounded-xl transition-all">Cancel</button>
-                    <button type="submit" class="premium-button">
+                    <button type="submit" class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
                         Submit Request
                     </button>
                 </div>

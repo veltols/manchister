@@ -63,7 +63,8 @@ class SupportServiceController extends Controller
         $ss->save();
 
         // Log
-        $log->save();
+        // Log creation to be implemented
+        // $log = new SystemLog(); ...
 
         // Send Notifications
         \App\Services\NotificationService::send(
