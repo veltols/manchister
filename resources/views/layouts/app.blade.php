@@ -93,13 +93,18 @@
         .sidebar-gradient::before {
             content: '';
             position: absolute;
-            inset: 0;
-            background: url("/images/pattern.png");
-            background-size: 300px;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40%;
+            background-image: url("/images/pattern.png");
+            background-size: 250px;
             background-repeat: repeat;
             opacity: 0.12;
             pointer-events: none;
-            mix-blend-mode: overlay;
+            mask-image: linear-gradient(to top, rgba(0,0,0,1), rgba(0,0,0,0));
+            -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1), rgba(0,0,0,0));
+            z-index: 0;
         }
 
         /* Nav Items */

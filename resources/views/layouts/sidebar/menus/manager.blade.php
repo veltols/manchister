@@ -97,25 +97,6 @@
         <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Calendar</span>
     </a>
 
-    <a href="{{ route('hr.messages.index') }}"
-        class="nav-item {{ request()->routeIs('hr.messages.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
-        <i class="fa-solid fa-envelope text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Chats</span>
-    </a>
-
-    <a href="{{ route('hr.tickets.index') }}"
-        class="nav-item {{ request()->routeIs('hr.tickets.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
-        <i class="fa-solid fa-bookmark text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Tickets</span>
-    </a>
-
-    <a href="{{ route('hr.notifications.index') }}"
-        class="nav-item {{ request()->routeIs('hr.notifications.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
-        <i class="fa-solid fa-bell text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Notifications</span>
-    </a>
-
-
 @endif
 
 
@@ -163,19 +144,6 @@
         <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Feedback</span>
     </a>
 
-    <!-- Notifications -->
-    <a href="{{ route('admin.notifications.index') }}"
-        class="nav-item {{ request()->routeIs('admin.notifications.index') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
-        <i class="fa-solid fa-bell text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Notifications</span>
-    </a>
-
-    <!-- Messages -->
-    <a href="{{ route('admin.messages.index') }}"
-        class="nav-item {{ request()->routeIs('admin.messages.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
-        <i class="fa-solid fa-envelope text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Messages</span>
-    </a>
 @endif
 
 @if(in_array($user->user_type, ['eqa']) && !$isAdmin)
