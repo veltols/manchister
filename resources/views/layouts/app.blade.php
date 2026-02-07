@@ -447,17 +447,65 @@
     @include('layouts.sidebar.index')
 
     <!-- Main Content -->
-    <div class="flex-1 flex flex-col h-full relative min-w-0 overflow-hidden">
+    <div x-data="{ mobileSidebarOpen: false }" class="flex-1 flex flex-col h-full relative min-w-0 overflow-hidden">
+
+        <!-- Mobile Sidebar Overlay -->
+        <div x-show="mobileSidebarOpen" 
+            x-transition:enter="transition-opacity ease-linear duration-300"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition-opacity ease-linear duration-300"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="fixed inset-0 bg-slate-900/80 z-40 md:hidden"
+            @click="mobileSidebarOpen = false"
+            style="display: none;"></div>
+
+        <!-- Mobile Sidebar -->
+        <div x-show="mobileSidebarOpen"
+            x-transition:enter="transition ease-in-out duration-300 transform"
+            x-transition:enter-start="-translate-x-full"
+            x-transition:enter-end="translate-x-0"
+            x-transition:leave="transition ease-in-out duration-300 transform"
+            x-transition:leave-start="translate-x-0"
+            x-transition:leave-end="-translate-x-full"
+            class="fixed inset-y-0 left-0 w-64 bg-slate-900 sidebar-gradient z-50 md:hidden flex flex-col"
+            style="display: none;">
+            
+            <div class="h-20 flex items-center justify-between px-4 border-b border-white/10">
+                <img src="{{ asset('images/logo.png') }}" alt="IQC Logo" class="h-10 w-auto">
+                <button @click="mobileSidebarOpen = false" class="text-white hover:text-slate-300">
+                    <i class="fa-solid fa-xmark text-2xl"></i>
+                </button>
+            </div>
+
+            <nav class="flex-1 overflow-y-auto py-6 px-3 space-y-1">
+                @php $user = Auth::user(); @endphp
+                @if($user && $user->user_type == 'emp')
+                    @include('layouts.sidebar.menus.emp')
+                @elseif($user && in_array($user->user_type, ['hr', 'admin_hr', 'sys_admin', 'root', 'eqa']))
+                    @include('layouts.sidebar.menus.manager')
+                @endif
+            </nav>
+        </div>
 
         <!-- Header -->
         <header
-            class="h-20 bg-white/80 backdrop-blur-lg flex items-center justify-between px-8 border-b border-slate-200/50 z-10 shadow-sm shrink-0">
-            <div>
-                <h1 class="text-2xl font-display font-bold text-premium flex items-center gap-3">
-                    <img src="{{ asset('images/connect_icon.png') }}" class="h-8 w-auto" alt="Icon">
-                    @yield('title', 'Dashboard')
-                </h1>
-                <p class="text-sm text-slate-500 mt-0.5">@yield('subtitle', 'Welcome back')</p>
+            class="h-20 bg-white/80 backdrop-blur-lg flex items-center justify-between px-4 md:px-8 border-b border-slate-200/50 z-10 shadow-sm shrink-0">
+            <div class="flex items-center gap-3">
+                <!-- Mobile Menu Toggle -->
+                <button @click="mobileSidebarOpen = true"
+                    class="md:hidden w-10 h-10 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors text-slate-600">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                
+                <div>
+                    <h1 class="text-xl md:text-2xl font-display font-bold text-premium flex items-center gap-2 md:gap-3">
+                        <img src="{{ asset('images/connect_icon.png') }}" class="h-6 md:h-8 w-auto" alt="Icon">
+                        @yield('title', 'Dashboard')
+                    </h1>
+                    <p class="text-xs md:text-sm text-slate-500 mt-0.5">@yield('subtitle', 'Welcome back')</p>
+                </div>
             </div>
 
             <div class="flex items-center gap-4">
