@@ -530,6 +530,9 @@
                                 $notifRoute = 'emp.notifications.index';
                                 $chatRoute = 'emp.messages.index';
                             }
+
+                            $unreadNotifs = $user->unread_notifications_count;
+                            $unreadMessages = $user->unread_messages_count;
                         }
                     @endphp
 
@@ -538,6 +541,14 @@
                             class="w-11 h-11 rounded-xl flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all duration-300 group relative"
                             title="Messages">
                             <i class="fa-solid fa-comment-dots group-hover:scale-110"></i>
+                            @if($unreadMessages > 0)
+                                <span class="absolute top-2 right-2 flex h-4 w-4">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-4 w-4 bg-indigo-600 text-[9px] text-white font-bold items-center justify-center">
+                                        {{ $unreadMessages > 9 ? '9+' : $unreadMessages }}
+                                    </span>
+                                </span>
+                            @endif
                         </a>
 
                         <div class="w-[1px] h-6 bg-slate-100 mx-1"></div>
@@ -546,6 +557,14 @@
                             class="w-11 h-11 rounded-xl flex items-center justify-center text-slate-500 hover:text-rose-500 hover:bg-slate-50 transition-all duration-300 group relative"
                             title="Notifications">
                             <i class="fa-solid fa-bell group-hover:scale-110"></i>
+                            @if($unreadNotifs > 0)
+                                <span class="absolute top-2 right-2 flex h-4 w-4">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-4 w-4 bg-rose-500 text-[9px] text-white font-bold items-center justify-center">
+                                        {{ $unreadNotifs > 9 ? '9+' : $unreadNotifs }}
+                                    </span>
+                                </span>
+                            @endif
                         </a>
                     </div>
                     <div class="w-px h-6 bg-slate-200 mx-1"></div>

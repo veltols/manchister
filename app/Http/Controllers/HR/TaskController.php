@@ -11,6 +11,7 @@ use App\Models\Employee;
 use App\Models\SystemLog;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TaskController extends Controller
 {
@@ -73,57 +74,81 @@ class TaskController extends Controller
             'related_table' => 'tasks_list',
             'related_id' => $task->task_id,
             'log_date' => now(),
-            'logged_by' => 1 // Auth::id()
+            'logged_by' => Auth::id(),
+            'logger_type' => 'employees_list',
+            'log_type' => 'int'
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Task created successfully'
-        ]);
+        return redirect()->route('hr.tasks.index')->with('success', 'Task created successfully!');
     }
 
     public function updateStatus(Request $request)
     {
-        $request->validate([
-            'task_id' => 'required|exists:tasks_list,task_id',
-            'status_id' => 'required|exists:sys_list_status,status_id',
-            'log_remark' => 'required|string',
-        ]);
+        Log::info('Task status update request received', ['request' => $request->all()]);
 
-        $task = Task::findOrFail($request->task_id);
-        $oldStatus = $task->status ? $task->status->status_name : 'Unknown';
+        try {
+            $request->validate([
+                'task_id' => 'required|exists:tasks_list,task_id',
+                'status_id' => 'required|exists:sys_list_status,status_id',
+                'log_remark' => 'required|string',
+            ]);
 
-        $task->status_id = $request->status_id;
-        if ($request->status_id == 4) { // Assuming 4 is Completed based on legacy logic
-            $task->task_end_date = now();
+            $task = Task::findOrFail($request->task_id);
+            $oldStatus = $task->status ? $task->status->status_name : 'Unknown';
+
+            $task->status_id = $request->status_id;
+            if ($request->status_id == 4) { // Assuming 4 is Completed based on legacy logic
+                $task->task_end_date = now();
+            }
+            $task->save();
+
+            Log::info('Task status updated in database', [
+                'task_id' => $task->task_id,
+                'new_status_id' => $task->status_id,
+                'old_status' => $oldStatus
+            ]);
+
+            $newStatus = TaskStatus::find($request->status_id)->status_name;
+
+            // Send Notification to its assigned_by (manager) or assignee (user) depending on context
+            if ($request->status_id == 4) { // Completed
+                \App\Services\NotificationService::send(
+                    "Task Completed: " . $task->task_title,
+                    "hr/tasks", 
+                    $task->assigned_by
+                );
+            }
+
+            // Log update
+            SystemLog::create([
+                'log_action' => 'Status Update',
+                'log_remark' => "Status changed from $oldStatus to $newStatus. Remark: " . $request->log_remark,
+                'related_table' => 'tasks_list',
+                'related_id' => $task->task_id,
+                'log_date' => now(),
+                'logged_by' => Auth::id(),
+                'logger_type' => 'employees_list',
+                'log_type' => 'int'
+            ]);
+
+            Log::info('System log created for task update', ['task_id' => $task->task_id]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Task status updated successfully!'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error updating task status', [
+                'task_id' => $request->task_id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update task status: ' . $e->getMessage()
+            ], 500);
         }
-        $task->save();
-
-        $newStatus = TaskStatus::find($request->status_id)->status_name;
-
-        // Send Notification to its assigned_by (manager) or assignee (user) depending on context
-        // Usually, the manager wants to know when a task is completed.
-        if ($request->status_id == 4) { // Completed
-             \App\Services\NotificationService::send(
-                "Task Completed: " . $task->task_title,
-                "hr/tasks", 
-                $task->assigned_by
-            );
-        }
-
-        // Log update
-        SystemLog::create([
-            'log_action' => 'Status Update',
-            'log_remark' => "Status changed from $oldStatus to $newStatus. Remark: " . $request->log_remark,
-            'related_table' => 'tasks_list',
-            'related_id' => $task->task_id,
-            'log_date' => now(),
-            'logged_by' => 1 // Auth::id()
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Task status updated'
-        ]);
     }
 }

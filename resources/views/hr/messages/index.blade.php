@@ -4,10 +4,10 @@
 @section('subtitle', 'Connect and collaborate with your team.')
 
 @section('content')
-<div class="messages-layout">
+<div class="h-[calc(100vh-12rem)] flex gap-6">
     <!-- Sidebar: Conversations List -->
-    <div class="messages-sidebar">
-        <div class="sidebar-header">
+    <div class="w-80 bg-white rounded-[2rem] shadow-lg shadow-slate-200/50 border border-slate-100 flex flex-col overflow-hidden">
+        <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
             <h2 class="text-xl font-bold text-premium">Chats</h2>
             <button onclick="openModal('newChatModal')"
                 class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
@@ -22,7 +22,7 @@
             </div>
         </div>
 
-        <div class="conversations-list space-y-1 p-2">
+        <div class="flex-1 overflow-y-auto space-y-1 p-2">
             @forelse($conversations as $conv)
             @php
                 $myId = optional(Auth::user()->employee)->employee_id ?? 0;
@@ -80,7 +80,7 @@
     </div>
 
     <!-- Main Content: Chat Area -->
-    <div class="messages-main">
+    <div class="flex-1 bg-white rounded-[2rem] shadow-lg shadow-slate-200/50 border border-slate-100 flex flex-col overflow-hidden relative">
         @if(isset($conversation) && $conversation)
             @php
                 $currentUser = optional(Auth::user()->employee)->employee_id ?? 0;
@@ -127,33 +127,35 @@
             </div>
 
             <!-- Messages Area -->
-            <div id="messages-container" class="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50 scroll-smooth">
-                @foreach($messages as $msg)
-                    @php 
-                        $isMe = $msg->sender->employee_id == $currentUser;
-                    @endphp
-                    <div class="flex {{ $isMe ? 'justify-end' : 'justify-start' }}">
-                        <div class="max-w-[70%] {{ $isMe ? 'order-1' : 'order-2' }}">
-                            <div class="px-5 py-3 rounded-2xl shadow-sm text-sm leading-relaxed {{ $isMe ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-white text-slate-700 rounded-bl-none border border-slate-100' }}">
-                                @if($msg->post_type == 'image')
-                                    <img src="{{ asset('uploads/'.$msg->post_file_path) }}" class="rounded-lg mb-2 max-w-full">
-                                    @if($msg->post_text != $msg->post_file_path)<p>{{ $msg->post_text }}</p>@endif
-                                @elseif($msg->post_type == 'document')
-                                    <a href="{{ asset('uploads/'.$msg->post_file_path) }}" target="_blank" class="flex items-center gap-2 p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors">
-                                        <i class="fa-solid fa-file-arrow-down"></i>
-                                        <span class="truncate">{{ $msg->post_file_name ?? 'Download File' }}</span>
-                                    </a>
-                                    @if($msg->post_text)<p class="mt-2">{{ $msg->post_text }}</p>@endif
-                                @else
-                                    <p>{{ $msg->post_text }}</p>
-                                @endif
+            <div class="flex-1 overflow-hidden bg-slate-50">
+                <div id="messages-container" style="overflow-y: auto !important; height: 100% !important; padding: 1.5rem; scroll-behavior: smooth;" class="space-y-4">
+                    @foreach($messages as $msg)
+                        @php 
+                            $isMe = $msg->sender->employee_id == $currentUser;
+                        @endphp
+                        <div class="flex {{ $isMe ? 'justify-end' : 'justify-start' }}">
+                            <div class="max-w-[70%] {{ $isMe ? 'order-1' : 'order-2' }}">
+                                <div class="px-5 py-3 rounded-2xl shadow-sm text-sm leading-relaxed {{ $isMe ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-white text-slate-700 rounded-bl-none border border-slate-100' }}">
+                                    @if($msg->post_type == 'image')
+                                        <img src="{{ asset('uploads/'.$msg->post_file_path) }}" class="rounded-lg mb-2 max-w-full">
+                                        @if($msg->post_text != $msg->post_file_path)<p>{{ $msg->post_text }}</p>@endif
+                                    @elseif($msg->post_type == 'document')
+                                        <a href="{{ asset('uploads/'.$msg->post_file_path) }}" target="_blank" class="flex items-center gap-2 p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors">
+                                            <i class="fa-solid fa-file-arrow-down"></i>
+                                            <span class="truncate">{{ $msg->post_file_name ?? 'Download File' }}</span>
+                                        </a>
+                                        @if($msg->post_text)<p class="mt-2">{{ $msg->post_text }}</p>@endif
+                                    @else
+                                        <p>{{ $msg->post_text }}</p>
+                                    @endif
+                                </div>
+                                <span class="text-[10px] text-slate-400 mt-1 block {{ $isMe ? 'text-right' : 'text-left' }}">
+                                    {{ \Carbon\Carbon::parse($msg->added_date)->format('h:i A') }}
+                                </span>
                             </div>
-                            <span class="text-[10px] text-slate-400 mt-1 block {{ $isMe ? 'text-right' : 'text-left' }}">
-                                {{ \Carbon\Carbon::parse($msg->added_date)->format('h:i A') }}
-                            </span>
                         </div>
-                    </div>
-                @endforeach
+                    @endforeach
+                </div>
             </div>
 
             <!-- Input Area -->
@@ -235,49 +237,6 @@
             </button>
         </form>
     </div>
-</div>
-
-<style>
-    .messages-layout {
-        display: grid;
-        grid-template-columns: 320px 1fr;
-        height: calc(100vh - 145px);
-        background: white;
-        border-radius: 20px;
-        overflow: hidden;
-        border: 1px solid rgba(226, 232, 240, 0.8);
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-    }
-
-    .messages-sidebar {
-        border-right: 1px solid #f1f5f9;
-        background: #fbfcfd;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .sidebar-header {
-        padding: 20px;
-        background: white;
-        border-bottom: 1px solid #f1f5f9;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .conversations-list {
-        overflow-y: auto;
-        flex: 1;
-    }
-
-    .messages-main {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        background: url('{{ asset("assets/img/chat-bg-pattern.png") }}'); /* Optional pattern */
-        background-color: #ffffff;
-    }
-</style>
 
 <script>
     async function startChat(e) {

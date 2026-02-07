@@ -103,7 +103,7 @@ class TaskController extends Controller
         $log->log_type = 'int';
         $log->save();
 
-        return response()->json(['success' => true, 'message' => 'Task created successfully.']);
+        return response()->json(['success' => true, 'message' => 'Task created successfully!']);
     }
 
     public function updateStatus(Request $request, $id)

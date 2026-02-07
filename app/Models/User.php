@@ -65,6 +65,11 @@ class User extends Authenticatable
         ->count();
     }
 
+    public function getUnreadNotificationsCountAttribute()
+    {
+        return $this->internal_notifications()->where('is_seen', 0)->count();
+    }
+
     public function getAuthPassword()
     {
         if ($this->employee && $this->employee->passwordData) {

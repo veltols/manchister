@@ -36,6 +36,11 @@ class LegacyUser extends Authenticatable
         ->count();
     }
 
+    public function getUnreadNotificationsCountAttribute()
+    {
+        return $this->internal_notifications()->where('is_seen', 0)->count();
+    }
+
     // Map 'user_id' to the actual entity (Employee or ATP)
     public function employee()
     {

@@ -109,22 +109,51 @@
 
     <!-- Event Preview Popover (Hidden by default) -->
     <div id="event-popover"
-        class="fixed z-50 hidden bg-white rounded-xl shadow-2xl border border-slate-100 w-72 p-4 animate-scale-in">
-        <div class="flex justify-between items-start mb-3">
-            <h4 id="popover-title" class="font-bold text-slate-800 leading-tight">Event Title</h4>
-            <button onclick="closePopover()" class="text-slate-400 hover:text-slate-600"><i
-                    class="fa-solid fa-times"></i></button>
+        class="fixed z-50 hidden bg-white rounded-2xl shadow-2xl border border-slate-200 w-96 overflow-hidden animate-scale-in">
+        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 text-white">
+            <div class="flex justify-between items-start">
+                <h4 id="popover-title" class="font-bold text-lg leading-tight">Event Title</h4>
+                <button onclick="closePopover()" class="text-white/80 hover:text-white">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
         </div>
-        <div class="space-y-3">
-            <div class="flex items-center gap-2 text-xs text-slate-500">
-                <i class="fa-regular fa-clock"></i>
+        <div class="p-4 space-y-3">
+            <div class="flex items-center gap-2 text-sm text-slate-600">
+                <i class="fa-regular fa-clock text-indigo-500"></i>
                 <span id="popover-time">All Day</span>
             </div>
-            <p id="popover-desc" class="text-sm text-slate-600 leading-relaxed hidden">No description.</p>
-            <div class="pt-2 border-t border-slate-50 flex justify-end">
+            <div id="popover-desc-container" class="hidden">
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Description</p>
+                <p id="popover-desc" class="text-sm text-slate-700 leading-relaxed bg-slate-50 p-3 rounded-lg">No description.</p>
+            </div>
+            <div id="popover-assignee-container" class="hidden">
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Assigned To</p>
+                <div id="popover-assignee" class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-xs">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <span class="text-sm font-semibold text-slate-700">Loading...</span>
+                </div>
+            </div>
+            <div id="popover-meta" class="grid grid-cols-2 gap-2">
+                <div id="popover-priority-container" class="hidden">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Priority</p>
+                    <span id="popover-priority" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold">
+                        Normal
+                    </span>
+                </div>
+                <div id="popover-status-container" class="hidden">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Status</p>
+                    <span id="popover-status" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold">
+                        Pending
+                    </span>
+                </div>
+            </div>
+            <div class="pt-3 border-t border-slate-100 flex justify-end">
                 <a id="popover-link" href="#"
-                    class="text-xs font-bold text-indigo-600 hover:text-indigo-800 uppercase tracking-wider flex items-center">
-                    View Details <i class="fa-solid fa-arrow-right ml-1"></i>
+                    class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-bold rounded-lg hover:shadow-lg transition-all flex items-center gap-2">
+                    View Full Details <i class="fa-solid fa-arrow-right"></i>
                 </a>
             </div>
         </div>
@@ -161,11 +190,21 @@
 
         function showPopover(e, event) {
             e.stopPropagation();
+            
+            // If it's a task, redirect directly to the task page
+            if (event.id && event.id.startsWith('task-')) {
+                window.location.href = event.url || '{{ route("hr.tasks.index") }}';
+                return;
+            }
+
+            // For other events, show the popover
             const popover = document.getElementById('event-popover');
             const title = document.getElementById('popover-title');
             const link = document.getElementById('popover-link');
+            const time = document.getElementById('popover-time');
 
             title.innerText = event.title;
+            time.innerText = event.start;
             link.href = event.url || '#';
 
             // Position
@@ -174,8 +213,8 @@
             popover.style.top = `${rect.top}px`;
 
             // Adjust if off screen
-            if (rect.right + 300 > window.innerWidth) {
-                popover.style.left = `${rect.left - 300}px`;
+            if (rect.right + 400 > window.innerWidth) {
+                popover.style.left = `${rect.left - 410}px`;
             }
 
             popover.classList.remove('hidden');

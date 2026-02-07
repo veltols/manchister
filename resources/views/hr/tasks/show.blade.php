@@ -33,13 +33,24 @@
                 @if($task->logs->count() > 0)
                     <div class="premium-card p-6">
                         <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Activity Log</h3>
-                        <div class="space-y-4">
-                            @foreach($task->logs as $log)
-                                <div class="flex gap-3 text-sm">
-                                    <div class="text-slate-400 text-xs w-24 shrink-0">{{ $log->log_date }}</div>
-                                    <div class="text-slate-600">{{ $log->log_description }}</div>
-                                </div>
-                            @endforeach
+                        <div style="overflow-y: auto !important; height: 300px !important; padding-right: 10px; position: relative;">
+                            <div class="space-y-4">
+                                @foreach($task->logs as $log)
+                                    <div class="flex gap-4 p-4 rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                                        <div class="shrink-0 text-center">
+                                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ $log->log_date ? \Carbon\Carbon::parse($log->log_date)->format('M d') : 'N/A' }}</div>
+                                            <div class="text-xs font-mono text-indigo-500 mt-1">{{ $log->log_date ? \Carbon\Carbon::parse($log->log_date)->format('H:i') : '' }}</div>
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="flex justify-between items-start mb-1">
+                                                <span class="text-sm font-bold text-slate-700">{{ $log->log_action }}</span>
+                                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">By: {{ $log->logger ? $log->logger->first_name : 'System' }}</span>
+                                            </div>
+                                            <p class="text-sm text-slate-600 leading-relaxed">{{ $log->log_remark }}</p>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
                 @endif

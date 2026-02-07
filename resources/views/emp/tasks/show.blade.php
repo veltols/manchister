@@ -157,40 +157,41 @@
 
             </div>
 
-            <!-- Logs Tab -->
             <div x-show="activeTab === 'logs'" class="p-0 animate-fade-in-up" style="display: none;">
-                <div class="overflow-x-auto">
-                    <table class="premium-table w-full">
-                        <thead>
-                            <tr>
-                                <th class="text-left pl-6">Action</th>
-                                <th class="text-left">Remark</th>
-                                <th class="text-left">Date</th>
-                                <th class="text-left pr-6">By</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($task->logs as $log)
+                <div style="overflow-y: auto !important; height: 350px !important; padding-right: 10px; position: relative;">
+                    <div class="overflow-x-auto">
+                        <table class="premium-table w-full">
+                            <thead>
                                 <tr>
-                                    <td class="pl-6 font-medium text-slate-800">{{ $log->log_action }}</td>
-                                    <td class="text-slate-600">{{ $log->log_remark }}</td>
-                                    <td class="text-slate-500 text-sm whitespace-nowrap">{{ $log->log_date }}</td>
-                                    <td class="pr-6">
-                                        <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-semibold">
-                                            {{ $log->logger->first_name ?? 'System' }}
-                                        </span>
-                                    </td>
+                                    <th class="text-left pl-6">Action</th>
+                                    <th class="text-left">Remark</th>
+                                    <th class="text-left">Date</th>
+                                    <th class="text-left pr-6">By</th>
                                 </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="text-center py-8 text-slate-400">
-                                        <i class="fa-regular fa-folder-open text-3xl mb-2"></i>
-                                        <p>No logs found for this task.</p>
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @forelse($task->logs as $log)
+                                    <tr>
+                                        <td class="pl-6 font-medium text-slate-800">{{ $log->log_action }}</td>
+                                        <td class="text-slate-600">{{ $log->log_remark }}</td>
+                                        <td class="text-slate-500 text-sm whitespace-nowrap">{{ $log->log_date }}</td>
+                                        <td class="pr-6">
+                                            <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-semibold">
+                                                {{ $log->logger->first_name ?? 'System' }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center py-8 text-slate-400">
+                                            <i class="fa-regular fa-folder-open text-3xl mb-2"></i>
+                                            <p>No logs found for this task.</p>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 

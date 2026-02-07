@@ -49,57 +49,59 @@
                 </form>
             </div>
 
-            <div class="tasks-list space-y-3 p-4">
-                @forelse($tasks as $task)
-                    <div onclick="loadTask({{ $task->task_id }})" id="task-item-{{ $task->task_id }}"
-                        class="task-card p-4 rounded-2xl bg-white border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden">
-
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider"
-                                style="background: #{{ $task->priority->priority_color ?? 'ccc' }}20; color: #{{ $task->priority->priority_color ?? 'ccc' }}">
-                                {{ $task->priority->priority_name ?? 'Normal' }}
-                            </span>
-                            <span class="text-[10px] text-slate-400 font-mono">#{{ $task->task_id }}</span>
-                        </div>
-
-                        <h3 class="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors mb-1 line-clamp-2">
-                            {{ $task->task_title }}
-                        </h3>
-
-                        <div class="flex items-center justify-between mt-3">
-                            <div class="flex items-center gap-2">
-                                @php 
-                                    $person = ($viewMode == 'my_tasks') ? $task->assignedBy : $task->assignedTo;
-                                @endphp
-                                <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
-                                    {{ substr($person->first_name ?? 'U', 0, 1) }}
+            <div class="flex-1" style="overflow-y: auto !important; height: 100% !important; padding: 1rem; padding-right: 10px !important;">
+                <div class="space-y-3">
+                    @forelse($tasks as $task)
+                        <div onclick="loadTask({{ $task->task_id }})" id="task-item-{{ $task->task_id }}"
+                            class="task-card p-4 rounded-2xl bg-white border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden">
+    
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider"
+                                    style="background: #{{ $task->priority->priority_color ?? 'ccc' }}20; color: #{{ $task->priority->priority_color ?? 'ccc' }}">
+                                    {{ $task->priority->priority_name ?? 'Normal' }}
+                                </span>
+                                <span class="text-[10px] text-slate-400 font-mono">#{{ $task->task_id }}</span>
+                            </div>
+    
+                            <h3 class="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors mb-1 line-clamp-2">
+                                {{ $task->task_title }}
+                            </h3>
+    
+                            <div class="flex items-center justify-between mt-3">
+                                <div class="flex items-center gap-2">
+                                    @php 
+                                        $person = ($viewMode == 'my_tasks') ? $task->assignedBy : $task->assignedTo;
+                                    @endphp
+                                    <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
+                                        {{ substr($person->first_name ?? 'U', 0, 1) }}
+                                    </div>
+                                    <span class="text-xs text-slate-500 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[80px]">
+                                        {{ $person->first_name ?? 'Unknown' }}
+                                    </span>
                                 </div>
-                                <span class="text-xs text-slate-500 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[80px]">
-                                    {{ $person->first_name ?? 'Unknown' }}
+                                <span class="px-2 py-1 rounded-md text-[10px] font-bold"
+                                    style="background: #{{ $task->status->status_color ?? 'ccc' }}20; color: #{{ $task->status->status_color ?? 'ccc' }}">
+                                    {{ $task->status->status_name ?? 'Unknown' }}
                                 </span>
                             </div>
-                            <span class="px-2 py-1 rounded-md text-[10px] font-bold"
-                                style="background: #{{ $task->status->status_color ?? 'ccc' }}20; color: #{{ $task->status->status_color ?? 'ccc' }}">
-                                {{ $task->status->status_name ?? 'Unknown' }}
-                            </span>
+    
+                            <div class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 opacity-0 transition-opacity"></div>
                         </div>
-
-                        <div class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 opacity-0 transition-opacity"></div>
-                    </div>
-                @empty
-                    <div class="text-center py-10">
-                        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
-                            <i class="fa-solid fa-clipboard-check text-2xl"></i>
+                    @empty
+                        <div class="text-center py-10">
+                            <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                                <i class="fa-solid fa-clipboard-check text-2xl"></i>
+                            </div>
+                            <p class="text-slate-400 text-sm">No tasks found</p>
                         </div>
-                        <p class="text-slate-400 text-sm">No tasks found</p>
-                    </div>
-                @endforelse
-                
-                @if($tasks->hasPages())
-                    <div class="pt-4 flex justify-center">
-                        {{ $tasks->appends(['view_mode' => $viewMode, 'status_id' => $statusId])->links('pagination::simple-tailwind') }}
-                    </div>
-                @endif
+                    @endforelse
+                    
+                    @if($tasks->hasPages())
+                        <div class="pt-4 flex justify-center">
+                            {{ $tasks->appends(['view_mode' => $viewMode, 'status_id' => $statusId])->links('pagination::simple-tailwind') }}
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
 
@@ -168,16 +170,20 @@
                 <!-- Content Split -->
                 <div class="flex-1 overflow-hidden flex flex-col md:flex-row">
                     <!-- Description -->
-                    <div class="flex-1 overflow-y-auto p-8 border-b md:border-b-0 md:border-r border-slate-100 bg-white">
-                        <h3 class="text-lg font-bold text-premium mb-4">Task Description</h3>
-                        <div id="detail-desc" class="prose prose-slate max-w-none text-slate-600 leading-relaxed"></div>
+                    <div class="flex-1 border-b md:border-b-0 md:border-r border-slate-100 bg-white" style="overflow: hidden;">
+                        <div style="overflow-y: auto !important; height: 100% !important; padding: 2rem; padding-right: 10px !important;">
+                            <h3 class="text-lg font-bold text-premium mb-4">Task Description</h3>
+                            <div id="detail-desc" class="prose prose-slate max-w-none text-slate-600 leading-relaxed"></div>
+                        </div>
                     </div>
 
                     <!-- Logs -->
-                    <div class="w-full md:w-96 overflow-y-auto bg-slate-50/50 p-6">
+                    <div class="w-full md:w-96 bg-slate-50/50 p-6 flex flex-col" style="overflow: hidden;">
                         <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Activity Log</h3>
-                        <div id="logs-timeline" class="space-y-6 border-l-2 border-slate-200 ml-3 pl-6 relative">
-                            <!-- Dynamic Logs -->
+                        <div style="overflow-y: auto !important; height: 100% !important; padding-right: 10px !important;">
+                            <div id="logs-timeline" class="space-y-6 border-l-2 border-slate-200 ml-3 pl-6 relative">
+                                <!-- Dynamic Logs -->
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -289,9 +295,9 @@
                     </select>
                 </div>
                 
-                <div x-data="{ localProgress: 0 }" x-init="$watch('$parent.activeTaskProgress', value => localProgress = value)">
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Progress: <span class="text-brand-primary font-bold text-lg" id="detail-progress-val">0%</span></label>
-                    <input type="range" name="task_progress" id="update-task-progress" min="0" max="100" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                <div x-data="{ localProgress: 0 }" x-init="localProgress = parseInt(document.getElementById('update-task-progress')?.value || 0)">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Progress: <span class="text-brand-primary font-bold text-lg" x-text="localProgress + '%'"></span></label>
+                    <input type="range" name="task_progress" id="update-task-progress" min="0" max="100" x-model="localProgress" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
                     <div class="flex justify-between text-xs text-slate-400 mt-2"><span>0%</span><span>100%</span></div>
                 </div>
 
@@ -463,9 +469,11 @@
 
                     // Update Form Inputs
                     document.getElementById('update-status-id').value = task.status_id;
+                    const progressInput = document.getElementById('update-task-progress');
                     if(progressInput) {
                         progressInput.value = prog;
-                        progressVal.innerText = `${prog}%`;
+                        // Trigger Alpine.js update by dispatching input event
+                        progressInput.dispatchEvent(new Event('input'));
                     }
 
                     // Logs

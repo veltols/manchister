@@ -25,8 +25,9 @@
                 </div>
             </div>
 
-            <div class="tasks-list space-y-3 p-4">
-                @forelse($tasks as $task)
+            <div class="flex-1" style="overflow-y: auto !important; height: 100% !important; padding: 1rem; padding-right: 10px !important;">
+                <div class="space-y-3">
+                    @forelse($tasks as $task)
                     <div onclick="loadTask({{ $task->task_id }})" id="task-item-{{ $task->task_id }}"
                         class="task-card p-4 rounded-2xl bg-white border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden">
 
@@ -72,6 +73,7 @@
                 @endforelse
             </div>
         </div>
+    </div>
 
         <!-- Main Content: Task Details -->
         <div class="tasks-main">
@@ -139,17 +141,20 @@
 
                 <!-- Content Split -->
                 <div class="flex-1 overflow-hidden flex">
-                    <!-- Description -->
-                    <div class="flex-1 overflow-y-auto p-8 border-r border-slate-100 bg-white">
-                        <h3 class="text-lg font-bold text-premium mb-4">Task Description</h3>
-                        <div id="detail-desc" class="prose prose-slate max-w-none text-slate-600 leading-relaxed"></div>
+                    <div class="flex-1 border-r border-slate-100 bg-white" style="overflow: hidden;">
+                        <div style="overflow-y: auto !important; height: 100% !important; padding: 2rem; padding-right: 10px !important;">
+                            <h3 class="text-lg font-bold text-premium mb-4">Task Description</h3>
+                            <div id="detail-desc" class="prose prose-slate max-w-none text-slate-600 leading-relaxed"></div>
+                        </div>
                     </div>
 
                     <!-- Logs -->
-                    <div class="w-96 overflow-y-auto bg-slate-50/50 p-6">
+                    <div class="w-96 bg-slate-50/50 p-6 flex flex-col" style="overflow: hidden;">
                         <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Activity Log</h3>
-                        <div id="logs-timeline" class="space-y-6 border-l-2 border-slate-200 ml-3 pl-6 relative">
-                            <!-- Dynamic Logs -->
+                        <div style="overflow-y: auto !important; height: 100% !important; padding-right: 10px !important;">
+                            <div id="logs-timeline" class="space-y-6 border-l-2 border-slate-200 ml-3 pl-6 relative">
+                                <!-- Dynamic Logs -->
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -417,7 +422,8 @@
                 const result = await response.json();
                 if (result.success) {
                     closeModal('updateStatusModal');
-                    loadTask(activeTaskId);
+                    // Refresh the entire page to update sidebar status and logs
+                    window.location.reload();
                 }
             } catch (err) { console.error(err); }
         }

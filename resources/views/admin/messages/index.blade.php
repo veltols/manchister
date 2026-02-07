@@ -99,34 +99,36 @@
             </div>
 
             <!-- Messages Stream -->
-            <div class="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/30" id="messagesContainer">
-                @foreach($messages as $msg)
-                    @php
-                        $isMine = $msg->added_by == $adminId;
-                    @endphp
-                    <div class="flex w-full {{ $isMine ? 'justify-end' : 'justify-start' }}">
-                        <div class="flex max-w-[70%] {{ $isMine ? 'flex-row-reverse' : 'flex-row' }} gap-3">
-                             @if(!$isMine)
-                                <div class="w-8 h-8 rounded-full bg-indigo-100 flex-shrink-0 flex items-center justify-center overflow-hidden self-end">
-                                    @if($msg->sender->employee_picture)
-                                         <img src="{{ asset('uploads/' . $msg->sender->employee_picture) }}" class="w-full h-full object-cover">
-                                    @else
-                                        <span class="text-[10px] font-bold text-indigo-600">{{ substr($msg->sender->first_name, 0, 1) }}</span>
-                                    @endif
+            <div class="flex-1 overflow-hidden bg-slate-50/30">
+                <div id="messagesContainer" style="overflow-y: auto !important; height: 100% !important; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem;">
+                    @foreach($messages as $msg)
+                        @php
+                            $isMine = $msg->added_by == $adminId;
+                        @endphp
+                        <div class="flex w-full {{ $isMine ? 'justify-end' : 'justify-start' }}">
+                            <div class="flex max-w-[70%] {{ $isMine ? 'flex-row-reverse' : 'flex-row' }} gap-3">
+                                @if(!$isMine)
+                                    <div class="w-8 h-8 rounded-full bg-indigo-100 flex-shrink-0 flex items-center justify-center overflow-hidden self-end">
+                                        @if($msg->sender->employee_picture)
+                                            <img src="{{ asset('uploads/' . $msg->sender->employee_picture) }}" class="w-full h-full object-cover">
+                                        @else
+                                            <span class="text-[10px] font-bold text-indigo-600">{{ substr($msg->sender->first_name, 0, 1) }}</span>
+                                        @endif
+                                    </div>
+                                @endif
+                                
+                                <div class="flex flex-col {{ $isMine ? 'items-end' : 'items-start' }}">
+                                    <div class="px-5 py-3 rounded-2xl {{ $isMine ? 'bg-indigo-600 text-white rounded-br-none shadow-indigo-100' : 'bg-white border border-slate-100 text-slate-700 rounded-bl-none shadow-sm' }} shadow-md">
+                                        <p class="text-sm leading-relaxed">{{ $msg->post_text }}</p>
+                                    </div>
+                                    <span class="text-[10px] text-slate-400 mt-1 font-medium px-1">
+                                        {{ \Carbon\Carbon::parse($msg->added_date)->format('h:i A') }}
+                                    </span>
                                 </div>
-                            @endif
-                            
-                            <div class="flex flex-col {{ $isMine ? 'items-end' : 'items-start' }}">
-                                <div class="px-5 py-3 rounded-2xl {{ $isMine ? 'bg-indigo-600 text-white rounded-br-none shadow-indigo-100' : 'bg-white border border-slate-100 text-slate-700 rounded-bl-none shadow-sm' }} shadow-md">
-                                    <p class="text-sm leading-relaxed">{{ $msg->post_text }}</p>
-                                </div>
-                                <span class="text-[10px] text-slate-400 mt-1 font-medium px-1">
-                                    {{ \Carbon\Carbon::parse($msg->added_date)->format('h:i A') }}
-                                </span>
                             </div>
                         </div>
-                    </div>
-                @endforeach
+                    @endforeach
+                </div>
             </div>
 
             <!-- Input Area -->
