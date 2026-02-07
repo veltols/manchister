@@ -241,10 +241,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/messages/{id}/reply', [App\Http\Controllers\HR\MessageController::class, 'reply'])->name('messages.reply');
 
         // Tickets
-        Route::get('/tickets', [App\Http\Controllers\HR\TicketController::class, 'index'])->name('tickets.index');
-        Route::get('/tickets/{id}', [App\Http\Controllers\HR\TicketController::class, 'show'])->name('tickets.show');
-        Route::post('/tickets', [App\Http\Controllers\HR\TicketController::class, 'store'])->name('tickets.store');
-        Route::post('/tickets/{id}/status', [App\Http\Controllers\HR\TicketController::class, 'updateStatus'])->name('tickets.status.update');
+        // Tickets (Legacy / Duplicate - Commented out)
+        // Route::get('/tickets', [App\Http\Controllers\HR\TicketController::class, 'index'])->name('tickets.index');
+        // Route::get('/tickets/{id}', [App\Http\Controllers\HR\TicketController::class, 'show'])->name('tickets.show');
+        // Route::post('/tickets', [App\Http\Controllers\HR\TicketController::class, 'store'])->name('tickets.store');
+        // Route::post('/tickets/{id}/status', [App\Http\Controllers\HR\TicketController::class, 'updateStatus'])->name('tickets.status.update');
 
         // Exit Interviews
         Route::get('/exit-interviews', [App\Http\Controllers\HR\ExitInterviewController::class, 'index'])->name('exit_interviews.index');
@@ -284,6 +285,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/tickets/create', [App\Http\Controllers\HR\SupportTicketController::class, 'create'])->name('tickets.create');
         Route::post('/tickets', [App\Http\Controllers\HR\SupportTicketController::class, 'store'])->name('tickets.store');
         Route::get('/tickets/{id}', [App\Http\Controllers\HR\SupportTicketController::class, 'show'])->name('tickets.show');
+        Route::post('/tickets/{id}/status', [App\Http\Controllers\HR\SupportTicketController::class, 'updateStatus'])->name('tickets.status.update');
 
         // Calendar
         Route::get('/calendar', [App\Http\Controllers\HR\CalendarController::class, 'index'])->name('calendar.index');

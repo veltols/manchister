@@ -16,7 +16,7 @@
             
             <button onclick="openModal('updateStatusModal')"
                 class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200 flex items-center gap-2">
-                <i class="fa-solid fa-pen-to-square"></i>
+                <i class="fa-solid fa-pen text-sm"></i>
                 <span>Update Status</span>
             </button>
         </div>

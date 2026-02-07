@@ -62,7 +62,7 @@
                                             onclick="editDesignation({{ $designation->designation_id }}, '{{ addslashes($designation->designation_code) }}', '{{ addslashes($designation->designation_name) }}', {{ $designation->department_id ?? 0 }})"
                                             class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
                                             title="Edit">
-                                            <i class="fa-solid fa-pen-to-square text-sm"></i>
+                                            <i class="fa-solid fa-pen text-sm"></i>
                                         </button>
                                     </div>
                                 </td>

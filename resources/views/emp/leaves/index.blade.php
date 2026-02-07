@@ -85,7 +85,7 @@
                                     <button onclick="openResubmitModal({{ json_encode($leave) }})" 
                                         class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
                                         title="Edit & Resubmit">
-                                        <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                        <i class="fa-solid fa-pen text-sm"></i>
                                     </button>
                                 @endif
 

@@ -102,7 +102,7 @@
                         </div>
                         <button onclick="openModal('updateStatusModal')" id="btn-update-status"
                             class="premium-button from-indigo-600 to-purple-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md flex items-center gap-2">
-                            <i class="fa-solid fa-pen-to-square"></i> Update Status
+                            <i class="fa-solid fa-pen text-sm"></i> Update Status
                         </button>
                     </div>
 
@@ -157,66 +157,62 @@
         </div>
     </div>
 
-    <!-- New Task Modal -->
+    <!-- Create Task Modal -->
     <div class="modal" id="newTaskModal">
         <div class="modal-backdrop" onclick="closeModal('newTaskModal')"></div>
-        <div class="modal-content max-w-lg p-0 border-none shadow-2xl">
-            <div
-                class="p-6 bg-gradient-to-r from-indigo-900 to-purple-900 text-white flex justify-between items-center rounded-t-[24px]">
+        <div class="modal-content max-w-xl p-6">
+            <div class="flex justify-between items-center mb-6">
                 <div>
-                    <h2 class="text-2xl font-display font-bold leading-none">Create Task</h2>
-                    <p class="text-indigo-100/60 text-xs mt-1">Assign a new task to an employee</p>
+                    <h2 class="text-2xl font-display font-bold text-premium">Create New Task</h2>
+                    <p class="text-slate-500 text-sm mt-1">Assign a new task to an employee</p>
                 </div>
-                <button onclick="closeModal('newTaskModal')"
-                    class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors">
-                    <i class="fa-solid fa-times"></i>
+                <button onclick="closeModal('newTaskModal')" class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fa-solid fa-times text-xl"></i>
                 </button>
             </div>
-
-            <form onsubmit="saveTask(event)" class="p-8 space-y-6">
+            
+            <form onsubmit="saveTask(event)" class="space-y-4">
                 @csrf
-
-                <div class="space-y-1">
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Task Title</label>
-                    <input type="text" name="task_title" required class="premium-input w-full"
-                        placeholder="e.g., Prepare Monthly Report">
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Task Title</label>
+                    <input type="text" name="task_title" class="premium-input w-full px-4 py-3 text-sm" required placeholder="What needs to be done?">
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-1">
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Assign
-                            To</label>
-                        <select name="assigned_to" required class="premium-input w-full h-11 text-sm bg-white">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Assign To</label>
+                        <select name="assigned_to" class="premium-input w-full px-4 py-3 text-sm">
                             <option value="">Select Employee...</option>
                             @foreach($employees as $emp)
                                 <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="space-y-1">
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Priority</label>
-                        <select name="priority_id" required class="premium-input w-full h-11 text-sm bg-white">
-                            @foreach($priorities as $prio)
-                                <option value="{{ $prio->priority_id }}">{{ $prio->priority_name }}</option>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Priority</label>
+                        <select name="priority_id" class="premium-input w-full px-4 py-3 text-sm" required>
+                            @foreach($priorities as $p)
+                                <option value="{{ $p->priority_id }}">{{ $p->priority_name }}</option>
                             @endforeach
                         </select>
                     </div>
                 </div>
 
-                <div class="space-y-1">
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Due Date</label>
-                    <input type="datetime-local" name="task_due_date" required class="premium-input w-full">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Due Date</label>
+                    <input type="datetime-local" name="task_due_date" required class="premium-input w-full px-4 py-3 text-sm">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description</label>
+                    <textarea name="task_description" rows="3" class="premium-input w-full px-4 py-3 text-sm" placeholder="Additional details..."></textarea>
                 </div>
 
-                <div class="space-y-1">
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Description</label>
-                    <textarea name="task_description" rows="4" class="premium-input w-full"
-                        placeholder="Detailed instructions..."></textarea>
+                <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
+                    <button type="button" onclick="closeModal('newTaskModal')" class="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">Cancel</button>
+                    <button type="submit" class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">Create Task</button>
                 </div>
-
-                <button type="submit"
-                    class="w-full premium-button from-indigo-600 to-purple-600 text-white font-bold py-3 rounded-2xl shadow-lg shadow-indigo-100 justify-center">Create
-                    Task</button>
             </form>
         </div>
     </div>
@@ -224,35 +220,33 @@
     <!-- Update Status Modal -->
     <div class="modal" id="updateStatusModal">
         <div class="modal-backdrop" onclick="closeModal('updateStatusModal')"></div>
-        <div class="modal-content max-w-md p-0 border-none shadow-2xl">
-            <div class="p-6 bg-slate-900 text-white flex justify-between items-center rounded-t-[24px]">
-                <h2 class="text-xl font-bold">Update Status</h2>
-                <button onclick="closeModal('updateStatusModal')" class="text-white/60 hover:text-white"><i
-                        class="fa-solid fa-times"></i></button>
+        <div class="modal-content max-w-lg p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-display font-bold text-premium">Update Task Status</h2>
+                <button onclick="closeModal('updateStatusModal')" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors">
+                    <i class="fa-solid fa-times"></i>
+                </button>
             </div>
-            <form onsubmit="updateTaskStatus(event)" class="p-8 space-y-6">
-                @csrf
-                <input type="hidden" name="task_id" id="update-task-id">
 
-                <div class="space-y-1">
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">New Status</label>
-                    <select name="status_id" id="update-status-id" required
-                        class="premium-input w-full h-11 text-sm bg-white">
+            <form onsubmit="updateTaskStatus(event)" class="space-y-4">
+                @csrf
+                <input type="hidden" id="update-task-id" name="task_id">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">New Status</label>
+                    <select name="status_id" id="update-status-id" class="premium-input w-full px-4 py-3" required>
                         @foreach($statuses as $status)
                             <option value="{{ $status->status_id }}">{{ $status->status_name }}</option>
                         @endforeach
                     </select>
                 </div>
-
-                <div class="space-y-1">
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Remark / Log</label>
-                    <textarea name="log_remark" required rows="4" class="premium-input w-full"
-                        placeholder="Reason for update..."></textarea>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Remark / Note</label>
+                    <textarea name="log_remark" rows="3" class="premium-input w-full px-4 py-3" placeholder="Enter reason for update..." required></textarea>
                 </div>
-
-                <button type="submit"
-                    class="w-full premium-button from-cyan-500 to-blue-600 text-white font-bold py-3 rounded-2xl shadow-lg shadow-cyan-100 justify-center">Update
-                    & Save</button>
+                <div class="pt-4 flex justify-end gap-3 border-t border-slate-100 mt-4">
+                    <button type="button" onclick="closeModal('updateStatusModal')" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
+                    <button type="submit" class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">Update Status</button>
+                </div>
             </form>
         </div>
     </div>

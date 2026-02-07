@@ -29,11 +29,15 @@
             </div>
             
             <div class="flex flex-wrap gap-2">
-                <button onclick="openModal('editEmployeeModal')" class="px-4 py-2 rounded-lg font-medium text-sm transition-all bg-gradient-to-r premium-button from-amber-500 to-orange-600 text-white shadow-md hover:scale-105">
-                    <i class="fa-solid fa-pen-to-square"></i> Update Profile
+                <button onclick="openModal('editEmployeeModal')"
+                    class="inline-flex items-center gap-2 px-6 py-2.5 premium-button bg-gradient-brand text-white font-semibold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
+                    <i class="fa-solid fa-pen text-sm"></i>
+                    <span>Update Profile</span>
                 </button>
-                <button onclick="openModal('editCredsModal')" class="px-4 py-2 rounded-lg font-medium text-sm transition-all bg-gradient-to-r premium-button from-indigo-600 to-purple-600 text-white shadow-md hover:scale-105">
-                    <i class="fa-solid fa-shield-halved"></i> Security & Creds
+                <button onclick="openModal('editCredsModal')"
+                    class="inline-flex items-center gap-2 px-6 py-2.5 premium-button bg-gradient-brand text-white font-semibold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Security & Creds</span>
                 </button>
             </div>
         </div>
@@ -196,9 +200,6 @@
             <div x-show="tab === 'leaves'" class="animate-fade-in">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-lg font-bold text-slate-700">Leave Records</h3>
-                    <button class="px-4 py-2 rounded-lg font-medium text-sm transition-all bg-gradient-to-r premium-button from-indigo-600 to-purple-600 text-white shadow-md hover:scale-105">
-                        <i class="fa-solid fa-plus"></i> Add Leave Request
-                    </button>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="premium-table w-full">
@@ -238,9 +239,6 @@
             <div x-show="tab === 'permissions'" class="animate-fade-in">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-lg font-bold text-slate-700">Permission History</h3>
-                    <button class="px-4 py-2 rounded-lg font-medium text-sm transition-all bg-gradient-to-r premium-button from-indigo-600 to-purple-600 text-white shadow-md hover:scale-105">
-                        <i class="fa-solid fa-plus"></i> New Permission
-                    </button>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="premium-table w-full">
@@ -370,21 +368,23 @@
 <!-- EDIT PROFILE MODAL -->
 <div class="modal" id="editEmployeeModal">
     <div class="modal-backdrop" onclick="closeModal('editEmployeeModal')"></div>
-    <div class="modal-content overflow-hidden">
-        <div class="bg-gradient-primary p-8 text-white relative">
-            <h2 class="text-2xl font-display font-bold">Update Employee Profile</h2>
-            <p class="text-white/60 text-sm mt-1">Modify basic biographical and professional details.</p>
-            <button onclick="closeModal('editEmployeeModal')" class="absolute top-8 right-8 text-white/40 hover:text-white transition-colors">
+    <div class="modal-content max-w-2xl p-6">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-2xl font-display font-bold text-premium">Update Employee Profile</h2>
+                <p class="text-slate-500 text-sm mt-1">Modify basic biographical and professional details.</p>
+            </div>
+            <button onclick="closeModal('editEmployeeModal')" class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
                 <i class="fa-solid fa-times text-xl"></i>
             </button>
         </div>
 
-        <form action="{{ route('hr.employees.update', $employee->employee_id) }}" method="POST" class="p-8">
+        <form action="{{ route('hr.employees.update', $employee->employee_id) }}" method="POST">
             @csrf
             <div class="grid grid-cols-2 gap-6">
                 <div class="col-span-1">
                     <label class="premium-label">Title</label>
-                    <select name="title_id" class="premium-input w-full">
+                    <select name="title_id" class="premium-input w-full px-4 py-2.5 text-sm">
                         @foreach($titles as $id => $name)
                             <option value="{{ $id }}" {{ $employee->title_id == $id ? 'selected' : '' }}>{{ $name }}</option>
                         @endforeach
@@ -392,7 +392,7 @@
                 </div>
                 <div class="col-span-1">
                     <label class="premium-label">Gender</label>
-                    <select name="gender_id" class="premium-input w-full">
+                    <select name="gender_id" class="premium-input w-full px-4 py-2.5 text-sm">
                         @foreach($genders as $id => $name)
                             <option value="{{ $id }}" {{ $employee->gender_id == $id ? 'selected' : '' }}>{{ $name }}</option>
                         @endforeach
@@ -400,23 +400,23 @@
                 </div>
                 <div>
                     <label class="premium-label">First Name</label>
-                    <input type="text" name="first_name" value="{{ $employee->first_name }}" class="premium-input w-full" required>
+                    <input type="text" name="first_name" value="{{ $employee->first_name }}" class="premium-input w-full px-4 py-2.5 text-sm" required>
                 </div>
                 <div>
                     <label class="premium-label">Last Name</label>
-                    <input type="text" name="last_name" value="{{ $employee->last_name }}" class="premium-input w-full" required>
+                    <input type="text" name="last_name" value="{{ $employee->last_name }}" class="premium-input w-full px-4 py-2.5 text-sm" required>
                 </div>
                 <div>
                     <label class="premium-label">Date of Birth</label>
-                    <input type="date" name="employee_dob" value="{{ $employee->employee_dob }}" class="premium-input w-full" required>
+                    <input type="date" name="employee_dob" value="{{ $employee->employee_dob }}" class="premium-input w-full px-4 py-2.5 text-sm" required>
                 </div>
                 <div>
                     <label class="premium-label">Join Date</label>
-                    <input type="date" name="employee_join_date" value="{{ $employee->employee_join_date }}" class="premium-input w-full" required>
+                    <input type="date" name="employee_join_date" value="{{ $employee->employee_join_date }}" class="premium-input w-full px-4 py-2.5 text-sm" required>
                 </div>
                 <div class="col-span-2">
                     <label class="premium-label">Department</label>
-                    <select name="department_id" class="premium-input w-full">
+                    <select name="department_id" class="premium-input w-full px-4 py-2.5 text-sm">
                         @foreach($departments as $dept)
                             <option value="{{ $dept->department_id }}" {{ $employee->department_id == $dept->department_id ? 'selected' : '' }}>{{ $dept->department_name }}</option>
                         @endforeach
@@ -424,7 +424,7 @@
                 </div>
                 <div class="col-span-2">
                     <label class="premium-label">Designation</label>
-                    <select name="designation_id" class="premium-input w-full">
+                    <select name="designation_id" class="premium-input w-full px-4 py-2.5 text-sm">
                         @foreach($designations as $desig)
                             <option value="{{ $desig->designation_id }}" {{ $employee->designation_id == $desig->designation_id ? 'selected' : '' }}>{{ $desig->designation_name }}</option>
                         @endforeach
@@ -432,13 +432,15 @@
                 </div>
                 <div class="col-span-2">
                     <label class="premium-label">Review Remarks <span class="text-rose-500">*</span></label>
-                    <textarea name="log_remark" rows="3" class="premium-input w-full" placeholder="Provide a brief reason for these changes (for audit logs)" required></textarea>
+                    <textarea name="log_remark" rows="3" class="premium-input w-full px-4 py-2.5 text-sm" placeholder="Provide a brief reason for these changes (for audit logs)" required></textarea>
                 </div>
             </div>
 
-            <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-100">
-                <button type="button" onclick="closeModal('editEmployeeModal')" class="px-6 py-2 text-slate-400 font-bold hover:text-slate-600 transition-colors">Dismiss</button>
-                <button type="submit" class="premium-button from-indigo-600 to-purple-600 shadow-xl scale-105">Commit Changes</button>
+            <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-200">
+                <button type="button" onclick="closeModal('editEmployeeModal')" class="px-6 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">Cancel</button>
+                <button type="submit" class="premium-button bg-gradient-brand text-white px-6 py-2.5 rounded-xl shadow-lg shadow-brand/20 font-semibold hover:scale-105 transition-all duration-200">
+                    <i class="fa-solid fa-check mr-2"></i>Update Profile
+                </button>
             </div>
         </form>
     </div>
@@ -447,16 +449,18 @@
 <!-- CREDENTIALS MODAL -->
 <div class="modal" id="editCredsModal">
     <div class="modal-backdrop" onclick="closeModal('editCredsModal')"></div>
-    <div class="modal-content overflow-hidden">
-        <div class="bg-indigo-900 p-8 text-white relative">
-            <h2 class="text-2xl font-display font-bold">Manage Security Credentials</h2>
-            <p class="text-white/60 text-sm mt-1">Official identification and residency documents.</p>
-            <button onclick="closeModal('editCredsModal')" class="absolute top-8 right-8 text-white/40 hover:text-white transition-colors">
+    <div class="modal-content max-w-3xl p-6">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-2xl font-display font-bold text-premium">Manage Security Credentials</h2>
+                <p class="text-slate-500 text-sm mt-1">Official identification and residency documents.</p>
+            </div>
+            <button onclick="closeModal('editCredsModal')" class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
                 <i class="fa-solid fa-times text-xl"></i>
             </button>
         </div>
 
-        <form action="{{ route('hr.employees.update-credentials', $employee->employee_id) }}" method="POST" class="p-8">
+        <form action="{{ route('hr.employees.update-credentials', $employee->employee_id) }}" method="POST">
             @csrf
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <!-- Passport Group -->
@@ -465,15 +469,15 @@
                         <i class="fa-solid fa-passport"></i> PASSPORT DETAILS
                     </h3>
                     <div class="space-y-3">
-                        <input type="text" name="passport_no" placeholder="Passport Number" value="{{ $employee->credentials->passport_no ?? '' }}" class="premium-input w-full text-sm">
+                        <input type="text" name="passport_no" placeholder="Passport Number" value="{{ $employee->credentials->passport_no ?? '' }}" class="premium-input w-full px-4 py-2.5 text-sm">
                         <div class="grid grid-cols-2 gap-3">
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Issue Date</label>
-                                <input type="date" name="passport_issue_date" value="{{ $employee->credentials->passport_issue_date ?? '' }}" class="premium-input w-full text-xs">
+                                <input type="date" name="passport_issue_date" value="{{ $employee->credentials->passport_issue_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs">
                             </div>
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Expiry Date</label>
-                                <input type="date" name="passport_expiry_date" value="{{ $employee->credentials->passport_expiry_date ?? '' }}" class="premium-input w-full text-xs">
+                                <input type="date" name="passport_expiry_date" value="{{ $employee->credentials->passport_expiry_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs">
                             </div>
                         </div>
                     </div>
@@ -485,15 +489,15 @@
                         <i class="fa-solid fa-plane"></i> VISA DETAILS
                     </h3>
                     <div class="space-y-3">
-                        <input type="text" name="visa_no" placeholder="Visa Number" value="{{ $employee->credentials->visa_no ?? '' }}" class="premium-input w-full text-sm">
+                        <input type="text" name="visa_no" placeholder="Visa Number" value="{{ $employee->credentials->visa_no ?? '' }}" class="premium-input w-full px-4 py-2.5 text-sm">
                         <div class="grid grid-cols-2 gap-3">
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Issue Date</label>
-                                <input type="date" name="visa_issue_date" value="{{ $employee->credentials->visa_issue_date ?? '' }}" class="premium-input w-full text-xs">
+                                <input type="date" name="visa_issue_date" value="{{ $employee->credentials->visa_issue_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs">
                             </div>
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Expiry Date</label>
-                                <input type="date" name="visa_expiry_date" value="{{ $employee->credentials->visa_expiry_date ?? '' }}" class="premium-input w-full text-xs">
+                                <input type="date" name="visa_expiry_date" value="{{ $employee->credentials->visa_expiry_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs">
                             </div>
                         </div>
                     </div>
@@ -505,15 +509,15 @@
                         <i class="fa-solid fa-id-card-clip"></i> EMIRATES ID DETAILS
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <input type="text" name="eid_no" placeholder="Emirates ID (784-XXXX-XXXXXXX-X)" value="{{ $employee->credentials->eid_no ?? '' }}" class="premium-input w-full text-sm self-center">
+                        <input type="text" name="eid_no" placeholder="Emirates ID (784-XXXX-XXXXXXX-X)" value="{{ $employee->credentials->eid_no ?? '' }}" class="premium-input w-full px-4 py-2.5 text-sm self-center">
                         <div class="grid grid-cols-2 gap-3">
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Issue Date</label>
-                                <input type="date" name="eid_issue_date" value="{{ $employee->credentials->eid_issue_date ?? '' }}" class="premium-input w-full text-xs">
+                                <input type="date" name="eid_issue_date" value="{{ $employee->credentials->eid_issue_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs">
                             </div>
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Expiry Date</label>
-                                <input type="date" name="eid_expiry_date" value="{{ $employee->credentials->eid_expiry_date ?? '' }}" class="premium-input w-full text-xs">
+                                <input type="date" name="eid_expiry_date" value="{{ $employee->credentials->eid_expiry_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs">
                             </div>
                         </div>
                     </div>
@@ -521,13 +525,15 @@
 
                 <div class="col-span-1 md:col-span-2 space-y-1 mt-2">
                     <label class="premium-label">Security Audit Remark <span class="text-rose-500">*</span></label>
-                    <textarea name="log_remark" rows="2" class="premium-input w-full" placeholder="Reason for updating identity documents?" required></textarea>
+                    <textarea name="log_remark" rows="2" class="premium-input w-full px-4 py-2.5 text-sm" placeholder="Reason for updating identity documents?" required></textarea>
                 </div>
             </div>
 
-            <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-100">
-                <button type="button" onclick="closeModal('editCredsModal')" class="px-6 py-2 text-slate-400 font-bold hover:text-slate-600 transition-colors">Discard</button>
-                <button type="submit" class="premium-button from-blue-700 to-indigo-800 shadow-xl">Secure Documents</button>
+            <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-200">
+                <button type="button" onclick="closeModal('editCredsModal')" class="px-6 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">Discard</button>
+                <button type="submit" class="premium-button bg-gradient-brand text-white px-6 py-2.5 rounded-xl shadow-lg shadow-brand/20 font-semibold hover:scale-105 transition-all duration-200">
+                    <i class="fa-solid fa-shield-halved mr-2"></i>Secure Documents
+                </button>
             </div>
         </form>
     </div>

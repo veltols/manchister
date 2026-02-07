@@ -1,49 +1,53 @@
 @extends('layouts.app')
 
-@section('title', 'Manage Tickets')
-@section('subtitle', 'Oversee, assign, and create support tickets')
+@section('title', 'Admin Support Tickets')
+@section('subtitle', 'Manage all support requests and assignments')
 
 @section('content')
-    <div class="space-y-6 animate-fade-in-up">
-        
-        <!-- Header -->
+    <div class="space-y-6">
+
+        <!-- Header with Action Button -->
         <div class="flex items-center justify-between">
             <div>
                 <h2 class="text-2xl font-display font-bold text-premium">Support Tickets</h2>
                 <p class="text-sm text-slate-500 mt-1">{{ $tickets->total() }} total tickets</p>
             </div>
-            <!-- Admin Create Ticket Button -->
-            <button onclick="openModal('newTicketModal')" 
-                class="inline-flex items-center gap-2 px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
-                <i class="fa-solid fa-plus"></i>
-                <span>New Ticket</span>
-            </button>
+            <div class="flex items-center gap-3">
+                <button onclick="openModal('newTicketModal')"
+                    class="ml-2 inline-flex items-center gap-2 px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>New Ticket</span>
+                </button>
+            </div>
         </div>
 
         <!-- Filter Tabs -->
         <div class="premium-card p-2">
             <div class="flex gap-2">
-                @php $stt = request('stt', 0); @endphp
-                <a href="{{ route('admin.tickets.index', ['stt' => 0]) }}" 
-                   class="px-4 py-2 rounded-lg font-medium text-sm transition-all {{ $stt == 0 ? 'premium-button from-indigo-600 to-purple-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100' }}">
+                <a href="{{ route('admin.tickets.index') }}"
+                    class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 0 ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
                     All Tickets
                 </a>
-                <a href="{{ route('admin.tickets.index', ['stt' => 1]) }}" 
-                   class="px-4 py-2 rounded-lg font-medium text-sm transition-all {{ $stt == 1 ? 'premium-button from-indigo-600 to-purple-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100' }}">
+                <a href="{{ route('admin.tickets.index', ['stt' => 1]) }}"
+                    class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 1 ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
                     Open
                 </a>
-                <a href="{{ route('admin.tickets.index', ['stt' => 2]) }}" 
-                   class="px-4 py-2 rounded-lg font-medium text-sm transition-all {{ $stt == 2 ? 'premium-button from-indigo-600 to-purple-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100' }}">
+                <a href="{{ route('admin.tickets.index', ['stt' => 2]) }}"
+                    class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 2 ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
                     In Progress
                 </a>
-                <a href="{{ route('admin.tickets.index', ['stt' => 3]) }}" 
-                   class="px-4 py-2 rounded-lg font-medium text-sm transition-all {{ $stt == 3 ? 'premium-button from-indigo-600 to-purple-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100' }}">
+                <a href="{{ route('admin.tickets.index', ['stt' => 3]) }}"
+                    class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 3 ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
                     Resolved
+                </a>
+                <a href="{{ route('admin.tickets.index', ['stt' => 4]) }}"
+                    class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 4 ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
+                    Unassigned
                 </a>
             </div>
         </div>
 
-        <!-- Tickets List -->
+        <!-- Tickets Table Area -->
         <div class="space-y-4">
             <div class="overflow-x-auto px-1 pb-4">
                 <table class="premium-table w-full">
@@ -51,7 +55,6 @@
                         <tr>
                             <th class="text-left">REF</th>
                             <th class="text-left">Subject</th>
-                            <th class="text-left">Category</th>
                             <th class="text-left">Added By</th>
                             <th class="text-left">Assigned To</th>
                             <th class="text-center">Priority</th>
@@ -66,86 +69,54 @@
                                     <span class="font-mono text-sm font-semibold text-slate-600">{{ $ticket->ticket_ref }}</span>
                                 </td>
                                 <td class="max-w-xs">
-                                    <span class="font-semibold text-slate-800 block truncate" title="{{ $ticket->ticket_subject }}">{{ $ticket->ticket_subject }}</span>
-                                </td>
-                                <td>
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 text-indigo-800 text-sm font-medium">
-                                        <i class="fa-solid fa-tag text-xs"></i>
-                                        {{ $ticket->category->category_name ?? 'General' }}
-                                    </span>
+                                    <div class="flex flex-col">
+                                        <span class="font-semibold text-slate-800 block truncate" title="{{ $ticket->ticket_subject }}">
+                                            {{ $ticket->ticket_subject }}
+                                        </span>
+                                        <span class="text-xs text-slate-500">
+                                            {{ $ticket->category->category_name ?? 'General' }}
+                                        </span>
+                                    </div>
                                 </td>
                                 <td>
                                     <div class="flex items-center gap-2">
-                                        <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600">
-                                            {{ substr($ticket->addedBy->first_name ?? 'U', 0, 1) }}
+                                        <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border border-slate-200">
+                                            {{ $ticket->addedBy ? substr($ticket->addedBy->first_name, 0, 1) : 'S' }}
                                         </div>
-                                        <span class="text-sm font-medium text-slate-600">{{ $ticket->addedBy->first_name ?? 'Unknown' }}</span>
+                                        <span class="text-sm text-slate-600 font-medium">
+                                            {{ $ticket->addedBy ? $ticket->addedBy->first_name . ' ' . $ticket->addedBy->last_name : 'System' }}
+                                        </span>
                                     </div>
                                 </td>
                                 <td>
                                     @if($ticket->assignedTo)
                                         <div class="flex items-center gap-2">
-                                            <div class="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600">
+                                            <div class="w-7 h-7 rounded-full bg-indigo-50 flex items-center justify-center text-[10px] font-bold text-indigo-600 border border-indigo-100">
                                                 {{ substr($ticket->assignedTo->first_name, 0, 1) }}
                                             </div>
-                                            <span class="text-sm font-medium text-indigo-700">{{ $ticket->assignedTo->first_name }}</span>
+                                            <span class="text-sm text-indigo-700 font-medium">
+                                                {{ $ticket->assignedTo->first_name }} {{ $ticket->assignedTo->last_name }}
+                                            </span>
                                         </div>
                                     @else
-                                        <span class="text-xs text-slate-400 italic">Unassigned</span>
+                                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-100 px-2 py-1 rounded">Unassigned</span>
                                     @endif
                                 </td>
                                 <td class="text-center">
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r {{ str_contains($ticket->priority->priority_color ?? '', 'f00') ? 'from-red-500 to-rose-600' : 'from-slate-500 to-slate-600' }} text-white text-xs font-bold shadow-md"
-                                          style="@if(!empty($ticket->priority->priority_color) && !str_contains($ticket->priority->priority_color, 'f00')) background: #{{ $ticket->priority->priority_color }}; @endif">
-                                        <i class="fa-solid fa-circle"></i>
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #{{ $ticket->priority->priority_color ?? 'ccc' }}">
                                         {{ $ticket->priority->priority_name ?? 'Normal' }}
                                     </span>
                                 </td>
                                 <td class="text-center">
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r {{ $ticket->status_id == 3 ? 'from-green-500 to-emerald-600' : ($ticket->status_id == 2 ? 'from-blue-500 to-cyan-600' : 'from-yellow-500 to-amber-600') }} text-white text-xs font-bold shadow-md">
-                                        <i class="fa-solid fa-{{ $ticket->status_id == 3 ? 'check' : ($ticket->status_id == 2 ? 'spinner' : 'clock') }}"></i>
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #{{ $ticket->status->status_color ?? 'ccc' }}">
                                         {{ $ticket->status->status_name ?? 'Open' }}
                                     </span>
                                 </td>
                                 <td class="text-center">
                                     <div class="flex items-center justify-center gap-2">
-                                        
-                                        <!-- Assign -->
-                                        <button onclick="openAssignModal('{{ $ticket->ticket_id }}')" 
-                                                class="w-9 h-9 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center hover:bg-amber-600 hover:text-white transition-all shadow-sm"
-                                                title="Assign to IT">
-                                            <i class="fa-solid fa-user-plus text-sm"></i>
-                                        </button>
-
-                                        <!-- Status Actions -->
-                                        @if($ticket->status_id == 1 && $ticket->assigned_to != 0)
-                                            <button onclick="openStatusModal('{{ $ticket->ticket_id }}', 2, 'Start Progress')" 
-                                                    class="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all shadow-sm"
-                                                    title="Mark In Progress">
-                                                <i class="fa-solid fa-play text-sm"></i>
-                                            </button>
-                                        @endif
-
-                                        @if(($ticket->status_id == 1 || $ticket->status_id == 2) && $ticket->assigned_to != 0)
-                                            <button onclick="openStatusModal('{{ $ticket->ticket_id }}', 3, 'Resolve Ticket')" 
-                                                    class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
-                                                    title="Resolve">
-                                                <i class="fa-solid fa-check text-sm"></i>
-                                            </button>
-                                        @endif
-                                        
-                                        @if($ticket->status_id == 3 || $ticket->status_id == 4)
-                                             <button onclick="openStatusModal('{{ $ticket->ticket_id }}', 100, 'Reopen Ticket')" 
-                                                class="w-9 h-9 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all shadow-sm"
-                                                title="Reopen">
-                                            <i class="fa-solid fa-arrow-rotate-left text-sm"></i>
-                                        </button>
-                                        @endif
-
-                                        <!-- View -->
-                                        <a href="{{ route('admin.tickets.show', $ticket->ticket_id) }}" 
-                                           class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
-                                           title="View Details">
+                                        <a href="{{ route('admin.tickets.show', $ticket->ticket_id) }}"
+                                            class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
+                                            title="View Details & Manage">
                                             <i class="fa-solid fa-eye text-sm"></i>
                                         </a>
                                     </div>

@@ -1,235 +1,245 @@
 @extends('layouts.app')
 
 @section('title', 'Help Desk Tickets')
-@section('subtitle', 'Manage support requests and technical issues.')
+@section('subtitle', 'Manage support requests and technical issues')
 
 @section('content')
-    <div class="flex flex-col h-full">
-        <!-- Options Bar -->
-        <div class="flex justify-between items-center mb-6">
-            <div class="flex gap-2">
-                <button
-                    class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium transition-all shadow-sm">
-                    <i class="fa-solid fa-filter mr-2 text-slate-400"></i> Filter
-                </button>
-                <div class="relative">
-                    <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                    <input type="text" placeholder="Search tickets..."
-                        class="pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all outline-none text-sm w-64">
-                </div>
+    <div class="space-y-6">
+
+        <!-- Header with Action Button -->
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-2xl font-display font-bold text-premium">Support Tickets</h2>
+                <p class="text-sm text-slate-500 mt-1">{{ $tickets->total() }} total tickets</p>
             </div>
-            <button onclick="openModal('newTicketModal')"
-                class="premium-button from-indigo-600 to-purple-600 text-white px-6 py-2 rounded-xl shadow-lg hover:shadow-indigo-200 transition-all transform hover:-translate-y-0.5">
-                <i class="fa-solid fa-plus mr-2"></i> New Ticket
-            </button>
+            <div class="flex items-center gap-3">
+                <button onclick="openModal('newTicketModal')"
+                    class="ml-2 inline-flex items-center gap-2 px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>New Ticket</span>
+                </button>
+            </div>
         </div>
 
-        <!-- Tickets Table -->
-        <div class="bg-white rounded-[20px] shadow-sm border border-slate-200 overflow-hidden flex-1">
-            <div class="overflow-x-auto h-full">
-                <table class="w-full text-left border-collapse">
+        <!-- Filter Tabs -->
+        <div class="premium-card p-2">
+            <div class="flex gap-2">
+                <a href="{{ route('hr.tickets.index') }}"
+                    class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 0 ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
+                    All Tickets
+                </a>
+                <a href="{{ route('hr.tickets.index', ['stt' => 1]) }}"
+                    class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 1 ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
+                    Open
+                </a>
+                <a href="{{ route('hr.tickets.index', ['stt' => 2]) }}"
+                    class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 2 ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
+                    In Progress
+                </a>
+                <a href="{{ route('hr.tickets.index', ['stt' => 3]) }}"
+                    class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 3 ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
+                    Resolved
+                </a>
+                <a href="{{ route('hr.tickets.index', ['stt' => 4]) }}"
+                    class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 4 ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
+                    Unassigned
+                </a>
+            </div>
+        </div>
+
+        <!-- Tickets Table Area -->
+        <div class="space-y-4">
+            <div class="overflow-x-auto px-1 pb-4">
+                <table class="premium-table w-full">
                     <thead>
-                        <tr
-                            class="bg-slate-50/50 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500 font-bold">
-                            <th class="p-4">Ref</th>
-                            <th class="p-4">Subject</th>
-                            <th class="p-4">Category</th>
-                            <th class="p-4">Requested By</th>
-                            <th class="p-4">Date</th>
-                            <th class="p-4">Priority</th>
-                            <th class="p-4">Status</th>
-                            <th class="p-4 text-right">Action</th>
+                        <tr>
+                            <th class="text-left">REF</th>
+                            <th class="text-left">Subject</th>
+                            <th class="text-left">Category</th>
+                            <th class="text-left">Last Updated</th>
+                            <th class="text-left">Updated By</th>
+                            <th class="text-center">Priority</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-50">
+                    <tbody>
                         @forelse($tickets as $ticket)
-                            <tr class="hover:bg-slate-50/50 transition-colors group">
-                                <td class="p-4 font-mono text-xs text-slate-500">{{ $ticket->ticket_ref }}</td>
-                                <td class="p-4">
-                                    <span
-                                        class="font-bold text-slate-700 block">{{ Str::limit($ticket->ticket_subject, 40) }}</span>
-                                    <span
-                                        class="text-xs text-slate-400">{{ Str::limit($ticket->ticket_description, 60) }}</span>
+                            <tr>
+                                <td>
+                                    <span class="font-mono text-sm font-semibold text-slate-600">{{ $ticket->ticket_ref }}</span>
                                 </td>
-                                <td class="p-4 text-sm text-slate-600">{{ $ticket->category->category_name ?? '-' }}</td>
-                                <td class="p-4">
+                                <td class="max-w-xs">
+                                    <span class="font-semibold text-slate-800 block truncate"
+                                        title="{{ $ticket->ticket_subject }}">{{ $ticket->ticket_subject }}</span>
+                                </td>
+                                <td>
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 text-indigo-800 text-sm font-medium">
+                                        <i class="fa-solid fa-tag text-xs"></i>
+                                        {{ $ticket->category->category_name ?? 'N/A' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="text-sm text-slate-600">
+                                        {{ $ticket->last_updated_date ? \Carbon\Carbon::parse($ticket->last_updated_date)->diffForHumans() : '-' }}
+                                    </span>
+                                </td>
+                                <td>
                                     <div class="flex items-center gap-2">
-                                        <div
-                                            class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">
-                                            {{ substr($ticket->addedBy->first_name ?? 'U', 0, 1) }}
+                                        <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border border-slate-200">
+                                            {{ $ticket->latestLog && $ticket->latestLog->logger ? strtoupper(substr($ticket->latestLog->logger->first_name, 0, 1) . substr($ticket->latestLog->logger->last_name, 0, 1)) : '-' }}
                                         </div>
-                                        <span
-                                            class="text-sm font-medium text-slate-700">{{ $ticket->addedBy->first_name ?? 'Unknown' }}
-                                            {{ $ticket->addedBy->last_name ?? '' }}</span>
+                                        <span class="text-sm text-slate-600 font-medium">
+                                            {{ $ticket->latestLog && $ticket->latestLog->logger ? $ticket->latestLog->logger->first_name . ' ' . $ticket->latestLog->logger->last_name : '-' }}
+                                        </span>
                                     </div>
                                 </td>
-                                <td class="p-4 text-sm text-slate-500">
-                                    {{ \Carbon\Carbon::parse($ticket->added_date)->format('M d, Y') }}
-                                </td>
-                                <td class="p-4">
-                                    <span class="px-2.5 py-1 rounded-lg text-xs font-bold"
-                                        style="background-color: #{{ $ticket->priority->priority_color ?? 'e2e8f0' }}20; color: #{{ $ticket->priority->priority_color ?? '64748b' }}">
-                                        {{ $ticket->priority->priority_name ?? 'Normal' }}
+                                <td class="text-center">
+                                    @php
+                                        $priorityColor = $ticket->priority->priority_color ?? 'slate-500';
+                                        $priorityName = $ticket->priority->priority_name ?? 'Normal';
+                                    @endphp
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #{{ $priorityColor }}">
+                                        {{ $priorityName }}
                                     </span>
                                 </td>
-                                <td class="p-4">
-                                    <span class="px-2.5 py-1 rounded-lg text-xs font-bold"
-                                        style="background-color: #{{ $ticket->status->status_color ?? 'e2e8f0' }}20; color: #{{ $ticket->status->status_color ?? '64748b' }}">
-                                        {{ $ticket->status->status_name ?? 'Pending' }}
+                                <td class="text-center">
+                                    @php
+                                        $statusColor = $ticket->status->status_color ?? 'slate-500';
+                                        $statusName = $ticket->status->status_name ?? 'Open';
+                                    @endphp
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #{{ $statusColor }}">
+                                        {{ $statusName }}
                                     </span>
                                 </td>
-                                <td class="p-4 text-right">
-                                    <a href="{{ route('hr.tickets.show', $ticket->ticket_id) }}"
-                                        class="w-9 h-9 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
-                                        title="View Details">
-                                        <i class="fa-solid fa-eye text-sm"></i>
-                                    </a>
+                                <td class="text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <a href="{{ route('hr.tickets.show', $ticket->ticket_id) }}"
+                                            class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
+                                            title="View Details">
+                                            <i class="fa-solid fa-eye text-sm"></i>
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="p-12 text-center text-slate-400">
-                                    <i class="fa-solid fa-ticket-simple text-4xl mb-3 opacity-50"></i>
-                                    <p>No tickets found.</p>
+                                <td colspan="8" class="text-center py-12">
+                                    <div class="flex flex-col items-center gap-3">
+                                        <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+                                            <i class="fa-solid fa-ticket text-2xl text-slate-400"></i>
+                                        </div>
+                                        <p class="text-slate-500 font-medium">No tickets found</p>
+                                        <button onclick="openModal('newTicketModal')"
+                                            class="text-brand-dark hover:text-brand-light font-bold text-sm">
+                                            Create your first ticket
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
+
+            <!-- Pagination -->
+            @if($tickets->hasPages())
+                <div class="mt-6 flex justify-center">
+                    {{ $tickets->appends(['stt' => $stt])->links() }}
+                </div>
+            @endif
         </div>
+
     </div>
 
     <!-- New Ticket Modal -->
-    <div class="modal" id="newTicketModal">
+    <div id="newTicketModal" class="modal">
         <div class="modal-backdrop" onclick="closeModal('newTicketModal')"></div>
-        <div class="modal-content max-w-2xl p-0 border-none shadow-2xl">
-            <div class="p-6 bg-slate-900 text-white flex justify-between items-center rounded-t-[24px]">
-                <div>
-                    <h2 class="text-xl font-bold">Create New Ticket</h2>
-                    <p class="text-white/60 text-sm mt-1">Submit a support request for assistance.</p>
-                </div>
-                <button onclick="closeModal('newTicketModal')" class="text-white/60 hover:text-white"><i
-                        class="fa-solid fa-times"></i></button>
+        <div class="modal-content max-w-2xl p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-display font-bold text-premium">Create New Ticket</h2>
+                <button onclick="closeModal('newTicketModal')"
+                    class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
             </div>
 
-            <form onsubmit="saveTicket(event)" class="p-8 space-y-6">
+            <form action="{{ route('hr.tickets.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
-
-                <div class="grid grid-cols-2 gap-6">
-                    <!-- Requested By -->
-                    <div class="space-y-1">
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Requested
-                            By</label>
-                        <select name="added_by" class="premium-input w-full h-11 text-sm bg-slate-50">
-                            @if(isset($employees) && count($employees) > 0)
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                <i class="fa-solid fa-user text-indigo-600 mr-2"></i>Added By (Employee)
+                            </label>
+                            <select name="added_by" class="premium-input w-full px-4 py-3 text-sm" required>
+                                <option value="">Select Employee</option>
                                 @foreach($employees as $emp)
-                                    <option value="{{ $emp->employee_id }}" {{ (auth()->user()->employee->employee_id ?? 0) == $emp->employee_id ? 'selected' : '' }}>
+                                    <option value="{{ $emp->employee_id }}" {{ Auth::user()->employee && Auth::user()->employee->employee_id == $emp->employee_id ? 'selected' : '' }}>
                                         {{ $emp->first_name }} {{ $emp->last_name }}
                                     </option>
                                 @endforeach
-                            @endif
-                        </select>
-                    </div>
-
-                    <!-- Category -->
-                    <div class="space-y-1">
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Category</label>
-                        <select name="category_id" required class="premium-input w-full h-11 text-sm bg-slate-50">
-                            <option value="">Select Category</option>
-                            @if(isset($categories) && count($categories) > 0)
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                <i class="fa-solid fa-tag text-indigo-600 mr-2"></i>Category
+                            </label>
+                            <select name="category_id" class="premium-input w-full px-4 py-3 text-sm" required>
                                 @foreach($categories as $cat)
                                     <option value="{{ $cat->category_id }}">{{ $cat->category_name }}</option>
                                 @endforeach
-                            @endif
-                        </select>
+                            </select>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Subject -->
-                <div class="space-y-1">
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Subject</label>
-                    <input type="text" name="ticket_subject" required class="premium-input w-full h-11 text-sm bg-slate-50"
-                        placeholder="Brief summary of the issue">
-                </div>
-
-                <div class="grid grid-cols-2 gap-6">
-                    <!-- Priority -->
-                    <div class="space-y-1">
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Priority</label>
-                        <select name="priority_id" required class="premium-input w-full h-11 text-sm bg-slate-50">
-                            @if(isset($priorities) && count($priorities) > 0)
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                <i class="fa-solid fa-flag text-indigo-600 mr-2"></i>Priority
+                            </label>
+                            <select name="priority_id" class="premium-input w-full px-4 py-3 text-sm" required>
                                 @foreach($priorities as $pri)
-                                    <option value="{{ $pri->priority_id ?? $pri->theme_id }}">{{ $pri->priority_name }}</option>
+                                    <option value="{{ $pri->priority_id }}">{{ $pri->priority_name }}</option>
                                 @endforeach
-                            @endif
-                        </select>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                <i class="fa-solid fa-heading text-indigo-600 mr-2"></i>Subject
+                            </label>
+                            <input type="text" name="ticket_subject" class="premium-input w-full px-4 py-3 text-sm"
+                                placeholder="Brief description" required>
+                        </div>
                     </div>
 
-                    <!-- Attachment -->
-                    <div class="space-y-1">
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Attachment
-                            (Optional)</label>
-                        <input type="file" name="ticket_attachment"
-                            class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-align-left text-indigo-600 mr-2"></i>Description
+                        </label>
+                        <textarea name="ticket_description" class="premium-input w-full px-4 py-3 text-sm" rows="4"
+                            placeholder="Provide details about your issue..." required></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-paperclip text-indigo-600 mr-2"></i>Attachment (Optional)
+                        </label>
+                        <input type="file" name="ticket_attachment" class="premium-input w-full px-4 py-3 text-sm">
                     </div>
                 </div>
 
-                <!-- Description -->
-                <div class="space-y-1">
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Description</label>
-                    <textarea name="ticket_description" required rows="4"
-                        class="premium-input w-full p-4 text-sm bg-slate-50 resize-none"
-                        placeholder="Detailed explanation of the problem..."></textarea>
-                </div>
-
-                <div class="pt-4 flex justify-end">
+                <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
+                    <button type="button" onclick="closeModal('newTicketModal')"
+                        class="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">
+                        Cancel
+                    </button>
                     <button type="submit"
-                        class="premium-button from-indigo-600 to-purple-600 text-white px-8 py-3 rounded-xl shadow-lg shadow-indigo-100 font-bold tracking-wide transform active:scale-95 transition-all">
-                        Submit Ticket
+                        class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
+                        <i class="fa-solid fa-paper-plane mr-2"></i>Create Ticket
                     </button>
                 </div>
             </form>
         </div>
     </div>
-
-    <script>
-        async function saveTicket(e) {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-
-            // Show loading state?
-
-            try {
-                const response = await fetch("{{ route('hr.tickets.store') }}", {
-                    method: 'POST',
-                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }, // No Content-Type for FormData
-                    body: formData
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    // Success feedback
-                    const btn = e.target.querySelector('button[type="submit"]');
-                    const originalText = btn.innerText;
-                    btn.innerText = 'Submitted!';
-                    btn.classList.add('bg-green-600');
-
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 800);
-                } else {
-                    alert('Error submitting ticket: ' + (result.message || 'Unknown error'));
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
-            }
-        }
-
-        function viewTicket(id) {
-            window.location.href = "{{ url('hr/tickets') }}/" + id;
-        }
-    </script>
 @endsection

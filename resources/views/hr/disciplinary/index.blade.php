@@ -92,7 +92,7 @@
                                         <button
                                             onclick="openEditModal({{ $da->da_id }}, {{ $da->da_status_id }}, '{{ addslashes($da->da_remark) }}')"
                                             class="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md">
-                                            <i class="fa-solid fa-pen-to-square text-sm"></i>
+                                            <i class="fa-solid fa-pen text-sm"></i>
                                         </button>
                                     </div>
                                 </td>

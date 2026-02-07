@@ -35,7 +35,7 @@
                     </button>
                 @endif
                 <button class="premium-button px-4 py-2">
-                    <i class="fa-solid fa-pen-to-square"></i>
+                    <i class="fa-solid fa-pen text-sm"></i>
                     <span>Edit Study</span>
                 </button>
             </div>

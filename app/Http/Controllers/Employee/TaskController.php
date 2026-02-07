@@ -47,9 +47,10 @@ class TaskController extends Controller
         $task = Task::with(['status', 'priority', 'assignedBy', 'assignedTo', 'logs.logger'])
             ->findOrFail($id);
 
-        $statuses = TaskStatus::all();
-
-        return view('emp.tasks.show', compact('task', 'statuses'));
+        return response()->json([
+            'success' => true,
+            'data' => $task
+        ]);
     }
 
     public function store(Request $request)
@@ -102,7 +103,7 @@ class TaskController extends Controller
         $log->log_type = 'int';
         $log->save();
 
-        return redirect()->back()->with('success', 'Task created successfully.');
+        return response()->json(['success' => true, 'message' => 'Task created successfully.']);
     }
 
     public function updateStatus(Request $request, $id)
@@ -145,6 +146,6 @@ class TaskController extends Controller
             $log->save();
         }
 
-        return redirect()->back()->with('success', 'Task updated successfully.');
+        return response()->json(['success' => true, 'message' => 'Task updated successfully.']);
     }
 }

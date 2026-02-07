@@ -41,7 +41,7 @@
                     <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button onclick="editPerformance({{ $rec }})"
                             class="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 flex items-center justify-center text-blue-600 transition-colors">
-                            <i class="fa-solid fa-pen-to-square text-sm"></i>
+                            <i class="fa-solid fa-pen text-sm"></i>
                         </button>
                     </div>
 

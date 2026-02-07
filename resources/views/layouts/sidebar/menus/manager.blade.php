@@ -17,12 +17,7 @@
     <a href="{{ route('hr.departments.index') }}"
         class="nav-item {{ request()->routeIs('hr.departments.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-sitemap text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Departments</span>
-    </a>
-    <a href="{{ route('hr.designations.index') }}"
-        class="nav-item {{ request()->routeIs('hr.designations.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
-        <i class="fa-solid fa-id-badge text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Designations</span>
+        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Org Chart</span>
     </a>
     <a href="{{ route('hr.employees.index') }}"
         class="nav-item {{ request()->routeIs('hr.employees.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
@@ -32,70 +27,86 @@
 
     <a href="{{ route('hr.requests.index') }}"
         class="nav-item {{ request()->routeIs('hr.requests.index') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
-        <i class="fa-solid fa-hubspot text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Operations Hub</span>
-    </a>
-    <a href="{{ route('hr.leaves.index') }}"
-        class="nav-item {{ request()->routeIs('hr.leaves.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
-        <i class="fa-solid fa-calendar-check text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Leaves</span>
-    </a>
-    <a href="{{ route('hr.permissions.index') }}"
-        class="nav-item {{ request()->routeIs('hr.permissions.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
-        <i class="fa-solid fa-person-walking-arrow-loop-left text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Permissions</span>
-    </a>
-    <a href="{{ route('hr.attendance.index') }}"
-        class="nav-item {{ request()->routeIs('hr.attendance.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
-        <i class="fa-solid fa-clipboard-user text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Attendance</span>
-    </a>
-    <a href="{{ route('hr.disciplinary.index') }}"
-        class="nav-item {{ request()->routeIs('hr.disciplinary.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
-        <i class="fa-solid fa-gavel text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Disciplinary</span>
-    </a>
-    <a href="{{ route('hr.performance.index') }}"
-        class="nav-item {{ request()->routeIs('hr.performance.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
-        <i class="fa-solid fa-star text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Performance</span>
-    </a>
-    <a href="{{ route('hr.exit_interviews.index') }}"
-        class="nav-item {{ request()->routeIs('hr.exit_interviews.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
-        <i class="fa-solid fa-door-open text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Exit Interviews</span>
+        <i class="fa-solid fa-folder-open text-2xl"></i>
+        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Requests</span>
     </a>
 
-    <!-- HR Documents -->
     <a href="{{ route('hr.documents.index') }}"
         class="nav-item {{ request()->routeIs('hr.documents.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-file text-2xl"></i>
         <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">HR Documents</span>
     </a>
 
+    <!-- Apps Drawer Trigger -->
+    <div x-data="{ open: false }" @click.away="open = false" class="relative">
+        <button @click="open = !open" 
+            class="nav-item {{ request()->routeIs('hr.groups.*', 'hr.tasks.*', 'hr.calendar.*', 'hr.tickets.*', 'hr.messages.*') ? 'active' : '' }} w-full flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white transition-all">
+            <i class="fa-solid fa-layer-group text-2xl"></i>
+            <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Apps</span>
+            <i class="fa-solid fa-chevron-right text-[10px] absolute right-2 opacity-0 group-hover:opacity-50 transition-all" :class="open ? 'rotate-90' : ''"></i>
+        </button>
 
-    <a href="{{ route('hr.groups.index') }}"
-        class="nav-item {{ request()->routeIs('hr.groups.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
-        <i class="fa-solid fa-users text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Groups</span>
-    </a>
+        <!-- Slide-Right Drawer -->
+        <div x-show="open" 
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 -translate-x-4"
+            x-transition:enter-end="opacity-100 translate-x-0"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 translate-x-0"
+            x-transition:leave-end="opacity-0 -translate-x-4"
+            class="fixed left-40 top-0 h-full w-64 bg-white/95 backdrop-blur-xl border-r border-slate-200 shadow-2xl z-50 p-6 flex flex-col gap-2 overflow-y-auto"
+            style="display: none;">
+            
+            <div class="mb-6 pb-4 border-b border-slate-100">
+                <h3 class="text-lg font-bold text-premium flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group text-indigo-500"></i>
+                    Apps
+                </h3>
+                <p class="text-xs text-slate-400 mt-1">Productivity & Collaboration</p>
+            </div>
 
-    <!-- Tasks, Calendar, Chats, Tickets - Assuming these exist or linking to Employee versions if HR uses same -->
-    <!-- HR likely uses same tools as Employee for these self-service aspects -->
-    <!-- We link to existing routes we know of -->
+            <a href="{{ route('hr.groups.index') }}" 
+               class="group flex items-center gap-3 p-3 rounded-xl hover:bg-indigo-50 transition-all {{ request()->routeIs('hr.groups.*') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600' }}">
+                <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+                <span class="font-semibold text-sm">Groups</span>
+            </a>
 
-    <!-- Using employee routes often shared for self-organization -->
-    <a href="{{ route('hr.tasks.index') }}"
-        class="nav-item {{ request()->routeIs('hr.tasks.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
-        <i class="fa-solid fa-list-check text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Tasks</span>
-    </a>
+            <a href="{{ route('hr.tasks.index') }}" 
+               class="group flex items-center gap-3 p-3 rounded-xl hover:bg-purple-50 transition-all {{ request()->routeIs('hr.tasks.*') ? 'bg-purple-50 text-purple-700' : 'text-slate-600' }}">
+                <div class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-list-check"></i>
+                </div>
+                <span class="font-semibold text-sm">Tasks</span>
+            </a>
 
-    <a href="{{ route('hr.calendar.index') }}"
-        class="nav-item {{ request()->routeIs('hr.calendar.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
-        <i class="fa-solid fa-calendar-days text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Calendar</span>
-    </a>
+            <a href="{{ route('hr.calendar.index') }}" 
+               class="group flex items-center gap-3 p-3 rounded-xl hover:bg-blue-50 transition-all {{ request()->routeIs('hr.calendar.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600' }}">
+                <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-calendar-days"></i>
+                </div>
+                <span class="font-semibold text-sm">Calendar</span>
+            </a>
+
+            <a href="{{ route('hr.tickets.index') }}" 
+               class="group flex items-center gap-3 p-3 rounded-xl hover:bg-rose-50 transition-all {{ request()->routeIs('hr.tickets.*') ? 'bg-rose-50 text-rose-700' : 'text-slate-600' }}">
+                <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-ticket"></i>
+                </div>
+                <span class="font-semibold text-sm">Tickets</span>
+            </a>
+
+            <a href="{{ route('hr.messages.index') }}" 
+               class="group flex items-center gap-3 p-3 rounded-xl hover:bg-emerald-50 transition-all {{ request()->routeIs('hr.messages.*') ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600' }}">
+                <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-comments"></i>
+                </div>
+                <span class="font-semibold text-sm">Chats</span>
+            </a>
+            
+        </div>
+    </div>
 
 @endif
 

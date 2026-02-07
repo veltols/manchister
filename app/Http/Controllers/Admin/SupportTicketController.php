@@ -28,6 +28,8 @@ class SupportTicketController extends Controller
             $query->where('status_id', 2);
         } elseif ($stt == 3) { // Resolved/Closed
             $query->whereIn('status_id', [3, 4]);
+        } elseif ($stt == 4) { // Unassigned
+            $query->where('assigned_to', 0)->whereIn('status_id', [1, 2]); // Open or In Progress but unassigned
         }
 
         $tickets = $query->orderBy('ticket_id', 'desc')->paginate(15);
@@ -110,8 +112,16 @@ class SupportTicketController extends Controller
         $ticket->status_id = 1; // Open
         $ticket->assigned_to = 0; // Unassigned initially
         $ticket->save();
-
+        
+        // Log Action
         $this->logAction($ticket->ticket_id, 'Ticket Created (Admin)', 'Ticket created by Admin');
+
+        // Notification: Notify the employee for whom the ticket was added
+        \App\Services\NotificationService::send(
+            "A new ticket has been created for you by Admin, REF: " . $ticket->ticket_ref,
+            "tickets/list", 
+            $ticket->added_by
+        );
 
         return redirect()->back()->with('success', 'Ticket created successfully.');
     }
@@ -125,9 +135,24 @@ class SupportTicketController extends Controller
 
         $ticket = SupportTicket::findOrFail($id);
         $ticket->assigned_to = $request->assigned_to;
+        $ticket->assigned_date = now(); // Ensure assigned date is set
         $ticket->save();
 
         $this->logAction($ticket->ticket_id, 'Ticket Assigned', $request->ticket_remarks);
+
+        // Notify Assignee
+        \App\Services\NotificationService::send(
+            "A ticket has been assigned to you by Admin, REF: " . $ticket->ticket_ref, 
+            "tickets/list/", 
+            $ticket->assigned_to
+        );
+
+        // Notify Requester
+        \App\Services\NotificationService::send(
+            "Your ticket has been assigned to an IT Agent, REF: " . $ticket->ticket_ref, 
+            "tickets/list/", 
+            $ticket->added_by
+        );
 
         return redirect()->back()->with('success', 'Ticket assigned successfully.');
     }
@@ -141,16 +166,24 @@ class SupportTicketController extends Controller
 
         $ticket = SupportTicket::findOrFail($id);
         
-        // Map status logic
-        // reOpenTicket sends op=100 in legacy, let's look at legacy logic
-        // Legacy: 2=In Progress, 3=Resolved. Reopen logic usually sets back to 1.
-        
         $statusId = $request->status_id;
         if($statusId == 100) { // Reopen code from legacy
             $statusId = 1; // Open
         }
 
         $ticket->status_id = $statusId;
+
+        // Handle Assignment Change if provided
+        if ($request->has('assigned_to') && !empty($request->assigned_to)) {
+            $ticket->assigned_to = $request->assigned_to;
+            $ticket->assigned_date = now();
+        }
+        
+        // Set end date if resolved
+        if ($statusId == 3) {
+            $ticket->ticket_end_date = now();
+        }
+        
         $ticket->save();
 
         $actionName = match((int)$statusId) {
@@ -161,6 +194,22 @@ class SupportTicketController extends Controller
         };
 
         $this->logAction($ticket->ticket_id, $actionName, $request->ticket_remarks);
+
+        // Notify Requester
+        \App\Services\NotificationService::send(
+            "Your ticket status has been updated to " . $ticket->status->status_name . ", REF: " . $ticket->ticket_ref, 
+            "tickets/list", 
+            $ticket->added_by
+        );
+        
+        // Notify Assignee (if ticket is assigned)
+        if ($ticket->assigned_to && $ticket->assigned_to != 0) {
+             \App\Services\NotificationService::send(
+                "Ticket status updated to " . $ticket->status->status_name . ", REF: " . $ticket->ticket_ref, 
+                "tickets/list", 
+                $ticket->assigned_to
+            );
+        }
 
         return redirect()->back()->with('success', 'Ticket status updated successfully.');
     }

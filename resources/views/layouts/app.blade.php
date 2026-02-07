@@ -461,11 +461,6 @@
             </div>
 
             <div class="flex items-center gap-4">
-                <div class="relative">
-                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                    <input type="text" class="premium-input pl-11 pr-4 py-2.5 w-80 text-sm"
-                        placeholder="Search anything...">
-                </div>
 
                 <div class="flex items-center gap-3">
                     @php
