@@ -98,7 +98,7 @@
 
                             <div class="space-y-1.5 overflow-y-auto max-h-[120px] scrollbar-hide">
                                 @foreach($tasks->filter(fn($t) => \Carbon\Carbon::parse($t->task_assigned_date)->isSameDay($day)) as $task)
-                                    <a href="{{ route('emp.tasks.show', $task->task_id) }}" 
+                                    <a href="{{ route('emp.tasks.index') }}" 
                                         @click.stop
                                         class="px-2 py-1 rounded-md text-[9px] font-bold truncate block transition-all hover:scale-105 border-l-2"
                                         style="background: #{{ $task->status->status_color ?? 'e0f2fe' }}20; color: #{{ $task->status->status_color ?? '0369a1' }}; border-color: #{{ $task->status->status_color ?? '0ea5e9' }};"
@@ -150,7 +150,7 @@
                                             $taskDate = \Carbon\Carbon::parse($t->task_assigned_date);
                                             return $taskDate->isSameDay($day) && $taskDate->hour == $hour;
                                         }) as $task)
-                                            <a href="{{ route('emp.tasks.show', $task->task_id) }}" 
+                                            <a href="{{ route('emp.tasks.index') }}" 
                                                 @click.stop
                                                 class="px-2 py-1.5 rounded-lg text-[9px] font-bold block transition-all hover:scale-105 border-l-4 shadow-sm"
                                                 style="background: white; color: #{{ $task->status->status_color ?? '0369a1' }}; border-color: #{{ $task->status->status_color ?? '0ea5e9' }};"
@@ -200,7 +200,7 @@
                                             $taskDate = \Carbon\Carbon::parse($t->task_assigned_date);
                                             return $taskDate->isSameDay($carbonDate) && $taskDate->hour == $hour;
                                         }) as $task)
-                                            <a href="{{ route('emp.tasks.show', $task->task_id) }}" 
+                                            <a href="{{ route('emp.tasks.index') }}" 
                                                 @click.stop
                                                 class="flex items-center gap-3 p-3 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all border-l-4"
                                                 style="border-left-color: #{{ $task->status->status_color ?? '0ea5e9' }}">
