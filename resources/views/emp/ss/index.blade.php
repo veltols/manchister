@@ -144,7 +144,8 @@
                     <label
                         class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-widest text-[10px]">Attachment
                         (Optional)</label>
-                    <input type="file" name="ss_attachment" class="premium-input w-full text-xs">
+                    <input type="file" name="ss_attachment" id="ss_attachment" class="premium-input w-full text-xs">
+                    <div id="ss-attachment-preview"></div>
                 </div>
 
                 <div class="pt-6 border-t border-slate-100 flex justify-end gap-3">
@@ -158,6 +159,8 @@
         </div>
     </div>
     <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+    <script src="{{ asset('js/attachment-preview.js') }}"></script>
     <script>
         window.ajaxPagination = new AjaxPagination({
             endpoint: "{{ route('emp.ss.data') }}",
@@ -208,6 +211,12 @@
                 });
                 return html;
             }
+        });
+
+        // Initialize Attachment Preview
+        window.initAttachmentPreview({
+            inputSelector: '#ss_attachment',
+            containerSelector: '#ss-attachment-preview'
         });
     </script>
 @endsection

@@ -156,6 +156,7 @@
     <div id="atps-pagination" class="premium-card p-4"></div>
 
     @if (false && $atps->hasPages())
+    @endif
 </div>
     <script src="{{ asset('js/ajax-pagination.js') }}"></script>
     <script>

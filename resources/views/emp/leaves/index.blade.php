@@ -160,19 +160,14 @@
                         <label class="block text-sm font-semibold text-slate-700 mb-2">
                             <i class="fa-solid fa-paperclip text-indigo-600 mr-2"></i>Attachment
                         </label>
-                        <input type="file" name="leave_attachment" class="premium-input w-full px-4 py-2 text-sm">
+                        <input type="file" name="leave_attachment" id="new_leave_attachment" class="premium-input w-full px-4 py-2 text-sm">
+                        <div id="new-leave-attachment-preview"></div>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">
                             <i class="fa-solid fa-calendar text-indigo-600 mr-2"></i>Start Date
-                        </label>
-                        <input type="date" name="start_date" class="premium-input w-full px-4 py-3 text-sm leave-start" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">
-                            <i class="fa-solid fa-calendar-check text-indigo-600 mr-2"></i>End Date
                         </label>
                         <input type="date" name="end_date" class="premium-input w-full px-4 py-3 text-sm leave-end" required>
                     </div>
@@ -231,7 +226,8 @@
                         <label class="block text-sm font-semibold text-slate-700 mb-2">
                             <i class="fa-solid fa-paperclip text-indigo-600 mr-2"></i>New Attachment
                         </label>
-                        <input type="file" name="leave_attachment" class="premium-input w-full px-4 py-2 text-sm">
+                        <input type="file" name="leave_attachment" id="resubmit_leave_attachment" class="premium-input w-full px-4 py-2 text-sm">
+                        <div id="resubmit-leave-attachment-preview"></div>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
@@ -278,6 +274,8 @@
 </div>
 
 <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+    <script src="{{ asset('js/attachment-preview.js') }}"></script>
     <script>
         window.ajaxPagination = new AjaxPagination({
             endpoint: "{{ route('emp.leaves.data') }}",
@@ -351,6 +349,17 @@
                 });
                 return html;
             }
+        });
+
+        // Initialize Attachment Previews
+        window.initAttachmentPreview({
+            inputSelector: '#new_leave_attachment',
+            containerSelector: '#new-leave-attachment-preview'
+        });
+
+        window.initAttachmentPreview({
+            inputSelector: '#resubmit_leave_attachment',
+            containerSelector: '#resubmit-leave-attachment-preview'
         });
     </script>
 <script>

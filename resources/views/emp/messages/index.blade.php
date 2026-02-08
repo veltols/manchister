@@ -142,8 +142,8 @@
                 <form action="{{ route('emp.messages.reply', $conversation->chat_id) }}" method="POST" enctype="multipart/form-data" class="flex items-end gap-3" x-data="{ hasFile: false }">
                     @csrf
                     <label class="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-400 transition-colors flex-shrink-0 flex items-center justify-center cursor-pointer">
-                        <i class="fa-solid fa-paperclip" :class="{ 'text-brand': hasFile }"></i>
-                        <input type="file" name="attachment" class="hidden" @change="hasFile = true">
+                        <i class="fa-solid fa-paperclip" :class="{ 'has-file': hasFile }"></i>
+                        <input type="file" name="attachment" id="chat_attachment" class="hidden" @change="hasFile = true">
                     </label>
                     
                     <div class="flex-1 bg-slate-50 rounded-xl border border-slate-200 transition-all">
@@ -154,6 +154,7 @@
                         <i class="fa-solid fa-paper-plane"></i>
                     </button>
                 </form>
+                <div id="chat-attachment-preview" class="px-4"></div>
             </div>
             
             <script>
@@ -397,4 +398,17 @@
         </form>
     </div>
 </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+    <script src="{{ asset('js/attachment-preview.js') }}"></script>
+    <script>
+        // Initialize Attachment Preview for Chat
+        window.initAttachmentPreview({
+            inputSelector: '#chat_attachment',
+            containerSelector: '#chat-attachment-preview',
+            onRemove: () => {
+                // Sync with Alpine state if possible, though not strictly required for purely visual preview
+                // We'll use a custom property on the input if needed, but let's keep it simple
+            }
+        });
+    </script>
 @endsection

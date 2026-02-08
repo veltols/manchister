@@ -152,6 +152,8 @@
 
     @push('scripts')
     <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+    <script src="{{ asset('js/attachment-preview.js') }}"></script>
     <script>
         function closeModal(id) {
             document.getElementById(id).classList.remove('active');
@@ -277,6 +279,12 @@
                 total: {{ $tickets->total() }}
             });
         @endif
+
+        // Initialize Attachment Preview
+        window.initAttachmentPreview({
+            inputSelector: 'input[name="ticket_attachment"]',
+            containerSelector: '#ticket-attachment-preview'
+        });
     </script>
     @endpush
 
@@ -354,6 +362,7 @@
                             <i class="fa-solid fa-paperclip text-indigo-600 mr-2"></i>Attachment (Optional)
                         </label>
                         <input type="file" name="ticket_attachment" class="premium-input w-full px-4 py-3 text-sm">
+                        <div id="ticket-attachment-preview"></div>
                     </div>
                 </div>
 
