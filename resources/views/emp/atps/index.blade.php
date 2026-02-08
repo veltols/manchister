@@ -124,19 +124,19 @@
                                     </button>
                                 </form>
                             @endif
-                            @if($atp->atp_status_id != 4)
+                            <!-- @if($atp->atp_status_id != 4)
                                 <form action="{{ route('emp.atps.accredit', $atp->atp_id) }}" method="POST" class="inline">
                                     @csrf
                                     <button type="submit" class="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md" title="Accredit Provider">
                                         <i class="fa-solid fa-check text-sm"></i>
                                     </button>
                                 </form>
-                            @endif
+                            @endif -->
                         </div>
                         
                         <a href="{{ route('emp.atps.show', $atp->atp_id) }}" 
                            class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md">
-                            <i class="fa-solid fa-arrow-right text-sm"></i>
+                            <i class="fa-solid fa-eye text-sm"></i>
                         </a>
                     </div>
                 </div>
