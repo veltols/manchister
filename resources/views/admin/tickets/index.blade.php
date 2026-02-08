@@ -218,7 +218,8 @@
                         <label class="block text-sm font-semibold text-slate-700 mb-2">
                             <i class="fa-solid fa-paperclip text-indigo-600 mr-2"></i>Attachment (Optional)
                         </label>
-                        <input type="file" name="ticket_attachment" class="premium-input w-full px-4 py-3 text-sm">
+                        <input type="file" name="ticket_attachment" id="ticket_attachment" class="premium-input w-full px-4 py-3 text-sm">
+                        <div id="ticket-attachment-preview"></div>
                     </div>
                 </div>
 
@@ -306,9 +307,16 @@
     </div>
 
     @push('scripts')
-    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+    <script src="{{ asset('js/attachment-preview.js') }}"></script>
     <script>
-        // ... (Existing modal scripts) ...
+        // Initialize Attachment Preview
+        window.initAttachmentPreview({
+            inputSelector: '#ticket_attachment',
+            containerSelector: '#ticket-attachment-preview'
+        });
+
+        // ... existing modal scripts ...
 
         // Ticket Rendering Helpers
         function getAddedByBadge(addedBy) {

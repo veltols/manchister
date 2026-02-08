@@ -144,33 +144,39 @@
         <form action="{{ route('emp.leaves.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">
-                            <i class="fa-solid fa-tag text-indigo-600 mr-2"></i>Leave Type
-                        </label>
-                        <select name="leave_type_id" class="premium-input w-full px-4 py-3 text-sm" required>
-                            <option value="">Select Type</option>
-                            @foreach($leaveTypes as $type)
-                                <option value="{{ $type->leave_type_id }}">{{ $type->leave_type_name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">
-                            <i class="fa-solid fa-paperclip text-indigo-600 mr-2"></i>Attachment
-                        </label>
-                        <input type="file" name="leave_attachment" id="new_leave_attachment" class="premium-input w-full px-4 py-2 text-sm">
-                        <div id="new-leave-attachment-preview"></div>
-                    </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        <i class="fa-solid fa-tag text-indigo-600 mr-2"></i>Leave Type
+                    </label>
+                    <select name="leave_type_id" class="premium-input w-full px-4 py-3 text-sm" required>
+                        <option value="">Select Type</option>
+                        @foreach($leaveTypes as $type)
+                            <option value="{{ $type->leave_type_id }}">{{ $type->leave_type_name }}</option>
+                        @endforeach
+                    </select>
                 </div>
+
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">
                             <i class="fa-solid fa-calendar text-indigo-600 mr-2"></i>Start Date
                         </label>
+                        <input type="date" name="start_date" class="premium-input w-full px-4 py-3 text-sm leave-start" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-calendar-check text-indigo-600 mr-2"></i>End Date
+                        </label>
                         <input type="date" name="end_date" class="premium-input w-full px-4 py-3 text-sm leave-end" required>
                     </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        <i class="fa-solid fa-paperclip text-indigo-600 mr-2"></i>Attachment (Optional)
+                    </label>
+                    <input type="file" name="leave_attachment" id="new_leave_attachment" class="premium-input w-full px-4 py-2 text-sm">
+                    <div id="new-leave-attachment-preview"></div>
                 </div>
 
                 <!-- Duration Summary -->
@@ -210,26 +216,18 @@
         <form id="resubmitForm" action="" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">
-                            <i class="fa-solid fa-tag text-indigo-600 mr-2"></i>Leave Type
-                        </label>
-                        <select name="leave_type_id" id="edit_leave_type_id" class="premium-input w-full px-4 py-3 text-sm" required>
-                            <option value="">Select Type</option>
-                            @foreach($leaveTypes as $type)
-                                <option value="{{ $type->leave_type_id }}">{{ $type->leave_type_name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">
-                            <i class="fa-solid fa-paperclip text-indigo-600 mr-2"></i>New Attachment
-                        </label>
-                        <input type="file" name="leave_attachment" id="resubmit_leave_attachment" class="premium-input w-full px-4 py-2 text-sm">
-                        <div id="resubmit-leave-attachment-preview"></div>
-                    </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        <i class="fa-solid fa-tag text-indigo-600 mr-2"></i>Leave Type
+                    </label>
+                    <select name="leave_type_id" id="edit_leave_type_id" class="premium-input w-full px-4 py-3 text-sm" required>
+                        <option value="">Select Type</option>
+                        @foreach($leaveTypes as $type)
+                            <option value="{{ $type->leave_type_id }}">{{ $type->leave_type_name }}</option>
+                        @endforeach
+                    </select>
                 </div>
+
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">
@@ -243,6 +241,14 @@
                         </label>
                         <input type="date" name="end_date" id="edit_end_date" class="premium-input w-full px-4 py-3 text-sm leave-end" required>
                     </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        <i class="fa-solid fa-paperclip text-indigo-600 mr-2"></i>New Attachment (Optional)
+                    </label>
+                    <input type="file" name="leave_attachment" id="resubmit_leave_attachment" class="premium-input w-full px-4 py-2 text-sm">
+                    <div id="resubmit-leave-attachment-preview"></div>
                 </div>
 
                 <!-- Duration Summary -->
