@@ -17,7 +17,7 @@
     <a href="{{ route('hr.departments.index') }}"
         class="nav-item {{ request()->routeIs('hr.departments.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-sitemap text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Org Chart</span>
+        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60 text-center">Organization Chart</span>
     </a>
     <a href="{{ route('hr.employees.index') }}"
         class="nav-item {{ request()->routeIs('hr.employees.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
@@ -116,7 +116,7 @@
     <a href="{{ route('admin.departments.index') }}"
         class="nav-item {{ request()->routeIs('admin.departments.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-sitemap text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Org Chart</span>
+        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60 text-center">Organization Chart</span>
     </a>
 
     <!-- Tickets -->

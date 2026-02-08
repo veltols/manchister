@@ -23,6 +23,29 @@ class DepartmentController extends Controller
         return view('hr.departments.index', compact('departments', 'employees', 'allDepartments'));
     }
 
+    public function getData(Request $request)
+    {
+        $page = $request->get('page', 1);
+        $perPage = $request->get('per_page', 15);
+        
+        $departments = Department::with(['mainDepartment', 'lineManager'])
+            ->orderBy('department_id', 'desc')
+            ->paginate($perPage);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $departments->items(),
+            'pagination' => [
+                'current_page' => $departments->currentPage(),
+                'last_page' => $departments->lastPage(),
+                'per_page' => $departments->perPage(),
+                'total' => $departments->total(),
+                'from' => $departments->firstItem(),
+                'to' => $departments->lastItem(),
+            ]
+        ]);
+    }
+
     public function orgChart()
     {
         $departments = Department::orderBy('department_name')->get();

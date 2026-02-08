@@ -34,7 +34,7 @@
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="users-container">
                         @forelse($users as $user)
                             <tr>
                                 <td>
@@ -92,13 +92,137 @@
                 </table>
             </div>
             
-            @if($users->hasPages())
-                <div class="p-4 border-t border-slate-100 flex justify-center">
-                    {{ $users->links() }}
-                </div>
-            @endif
+            <!-- AJAX Pagination Container -->
+            <div id="users-pagination"></div>
         </div>
     </div>
+
+    @push('scripts')
+        <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+        <script>
+            function closeModal(id) {
+                document.getElementById(id).classList.remove('active');
+            }
+            function openModal(id) {
+                document.getElementById(id).classList.add('active');
+            }
+
+            // Status Badge Helper
+            function getStatusBadge(isActive) {
+                if (isActive) {
+                    return `
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">
+                            <i class="fa-solid fa-circle text-[8px]"></i>
+                            Active
+                        </span>
+                    `;
+                }
+                return `
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-bold">
+                        <i class="fa-solid fa-circle text-[8px]"></i>
+                        Inactive
+                    </span>
+                `;
+            }
+
+            // Department Badge Helper
+            function getDeptBadge(dept) {
+                if (dept) {
+                    return `
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-purple-50 text-purple-700 text-xs font-medium border border-purple-100/50">
+                            <i class="fa-solid fa-building text-[10px] opacity-70"></i>
+                            ${dept.department_name}
+                        </span>
+                    `;
+                }
+                return `
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-slate-50 border border-slate-100 text-slate-400 text-xs font-medium italic">
+                        Unassigned
+                    </span>
+                `;
+            }
+
+            // Initialize AJAX Pagination
+            const prefix = "{{ route('admin.users.index') }}".replace('/users', ''); // Get base admin URL
+            
+            window.ajaxPagination = new AjaxPagination({
+                endpoint: "{{ route('admin.users.data') }}",
+                containerSelector: '#users-container',
+                paginationSelector: '#users-pagination',
+                perPage: 15,
+                renderCallback: function(users) {
+                    const container = document.querySelector('#users-container');
+                    
+                    if (users.length === 0) {
+                        container.innerHTML = `
+                            <tr>
+                                <td colspan="6" class="text-center py-12 text-slate-500">
+                                    No users found.
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+                    
+                    let html = '';
+                    users.forEach(user => {
+                        const firstInitial = user.first_name ? user.first_name.substring(0, 1) : '';
+                        const lastInitial = user.last_name ? user.last_name.substring(0, 1) : '';
+                        const designationName = user.designation ? user.designation.designation_name : 'Employee';
+                        const showUrl = `{{ route('admin.users.show', ':id') }}`.replace(':id', user.employee_id);
+
+                        html += `
+                            <tr>
+                                <td>
+                                    <span class="font-mono text-sm font-semibold text-slate-600">${user.employee_no || ''}</span>
+                                </td>
+                                <td>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm">
+                                            ${firstInitial}${lastInitial}
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-slate-800">${user.first_name} ${user.last_name}</p>
+                                            <p class="text-xs text-slate-400">${designationName}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-slate-600">${user.employee_email}</td>
+                                <td>
+                                    ${getDeptBadge(user.department)}
+                                </td>
+                                <td class="text-center">
+                                    ${getStatusBadge(user.is_active)}
+                                </td>
+                                <td class="text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <a href="${showUrl}" 
+                                           class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
+                                           title="View Details">
+                                            <i class="fa-solid fa-eye text-sm"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    container.innerHTML = html;
+                }
+            });
+
+            // Render initial pagination on page load
+            @if($users->hasPages())
+                window.ajaxPagination.renderPagination({
+                    current_page: {{ $users->currentPage() }},
+                    last_page: {{ $users->lastPage() }},
+                    from: {{ $users->firstItem() ?? 0 }},
+                    to: {{ $users->lastItem() ?? 0 }},
+                    total: {{ $users->total() }}
+                });
+            @endif
+        </script>
+    @endpush
 
     <!-- New User Modal -->
     <div id="newUserModal" class="modal">

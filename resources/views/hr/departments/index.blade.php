@@ -36,7 +36,7 @@
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="departments-container">
                         @forelse($departments as $dept)
                             <tr>
                                 <td><span
@@ -98,11 +98,8 @@
                 </table>
             </div>
 
-            @if($departments->hasPages())
-                <div class="px-6 py-4 border-t border-slate-100">
-                    {{ $departments->links('pagination::bootstrap-5') }}
-                </div>
-            @endif
+            <!-- AJAX Pagination Container -->
+            <div id="departments-pagination"></div>
         </div>
 
     </div>
@@ -228,6 +225,7 @@
     </div>
 
     @push('scripts')
+        <script src="{{ asset('js/ajax-pagination.js') }}"></script>
         <script>
             function editDepartment(id, code, name, mainId, managerId) {
                 document.getElementById('edit_code').value = code;
@@ -240,6 +238,88 @@
                 document.getElementById('editForm').action = prefix + "/departments/" + id + "/update";
                 openModal('editDeptModal');
             }
+
+            // Initialize AJAX Pagination
+            let prefix = window.location.pathname.startsWith('/admin') ? '/admin' : '/hr';
+            window.ajaxPagination = new AjaxPagination({
+                endpoint: prefix + '/departments/data',
+                containerSelector: '#departments-container',
+                paginationSelector: '#departments-pagination',
+                perPage: 15,
+                renderCallback: function(departments) {
+                    const container = document.querySelector('#departments-container');
+                    
+                    if (departments.length === 0) {
+                        container.innerHTML = `
+                            <tr>
+                                <td colspan="6" class="text-center py-12">
+                                    <div class="flex flex-col items-center gap-3">
+                                        <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+                                            <i class="fa-solid fa-building text-2xl text-slate-400"></i>
+                                        </div>
+                                        <p class="text-slate-500 font-medium">No departments found</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+                    
+                    let html = '';
+                    departments.forEach(dept => {
+                        const mainDept = dept.main_department;
+                        const lineManager = dept.line_manager;
+                        
+                        html += `
+                            <tr>
+                                <td><span class="font-mono text-sm font-semibold text-slate-600">#${dept.department_id}</span></td>
+                                <td><span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 text-indigo-800 text-sm font-bold">${dept.department_code}</span></td>
+                                <td><span class="font-semibold text-slate-800">${dept.department_name}</span></td>
+                                <td>
+                                    ${dept.main_department_id != 0 && mainDept ? `
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-purple-50 text-purple-700 text-sm font-medium">
+                                            <i class="fa-solid fa-building text-xs"></i>
+                                            ${mainDept.department_name}
+                                        </span>
+                                    ` : '<span class="text-slate-400 text-sm italic">Main Department</span>'}
+                                </td>
+                                <td>
+                                    ${lineManager ? `
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xs font-semibold shadow-md">
+                                                ${lineManager.first_name.charAt(0)}
+                                            </div>
+                                            <span class="text-sm text-slate-600">${lineManager.first_name} ${lineManager.last_name}</span>
+                                        </div>
+                                    ` : '<span class="text-red-400 text-sm">Not Assigned</span>'}
+                                </td>
+                                <td>
+                                    <div class="flex items-center justify-center">
+                                        <button onclick="editDepartment(${dept.department_id}, '${dept.department_code.replace(/'/g, "\\'")}', '${dept.department_name.replace(/'/g, "\\'")}', ${dept.main_department_id}, ${dept.line_manager_id || 0})"
+                                                class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
+                                                title="Edit">
+                                            <i class="fa-solid fa-pen text-sm"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    container.innerHTML = html;
+                }
+            });
+
+            // Render initial pagination on page load
+            @if($departments->hasPages())
+                window.ajaxPagination.renderPagination({
+                    current_page: {{ $departments->currentPage() }},
+                    last_page: {{ $departments->lastPage() }},
+                    from: {{ $departments->firstItem() ?? 0 }},
+                    to: {{ $departments->lastItem() ?? 0 }},
+                    total: {{ $departments->total() }}
+                });
+            @endif
         </script>
     @endpush
 @endsection

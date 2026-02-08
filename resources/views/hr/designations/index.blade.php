@@ -35,7 +35,7 @@
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="designations-container">
                         @forelse($designations as $designation)
                             <tr>
                                 <td><span
@@ -83,11 +83,8 @@
                 </table>
             </div>
 
-            @if($designations->hasPages())
-                <div class="px-6 py-4 border-t border-slate-100">
-                    {{ $designations->links() }}
-                </div>
-            @endif
+            <!-- AJAX Pagination Container -->
+            <div id="designations-pagination"></div>
         </div>
 
     </div>
@@ -197,6 +194,7 @@
     </div>
 
     @push('scripts')
+        <script src="{{ asset('js/ajax-pagination.js') }}"></script>
         <script>
             function editDesignation(id, code, name, deptId) {
                 document.getElementById('edit_designation_code').value = code;
@@ -208,6 +206,77 @@
                 document.getElementById('editDesignationForm').action = prefix + "/designations/" + id;
                 openModal('editDesignationModal');
             }
+
+            // Initialize AJAX Pagination
+            let prefix = window.location.pathname.startsWith('/admin') ? '/admin' : '/hr';
+            window.ajaxPagination = new AjaxPagination({
+                endpoint: prefix + '/designations/data',
+                containerSelector: '#designations-container',
+                paginationSelector: '#designations-pagination',
+                perPage: 15,
+                renderCallback: function(designations) {
+                    const container = document.querySelector('#designations-container');
+                    
+                    if (designations.length === 0) {
+                        container.innerHTML = `
+                            <tr>
+                                <td colspan="5" class="text-center py-12">
+                                    <div class="flex flex-col items-center gap-3">
+                                        <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+                                            <i class="fa-solid fa-briefcase text-2xl text-slate-400"></i>
+                                        </div>
+                                        <p class="text-slate-500 font-medium">No designations found</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+                    
+                    let html = '';
+                    designations.forEach(designation => {
+                        const department = designation.department;
+                        
+                        html += `
+                            <tr>
+                                <td><span class="font-mono text-sm font-semibold text-slate-600">#${designation.designation_id}</span></td>
+                                <td><span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 text-indigo-800 text-sm font-bold">${designation.designation_code}</span></td>
+                                <td><span class="font-semibold text-slate-800">${designation.designation_name}</span></td>
+                                <td>
+                                    ${department ? `
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-purple-50 text-purple-700 text-sm font-medium">
+                                            <i class="fa-solid fa-building text-xs"></i>
+                                            ${department.department_name}
+                                        </span>
+                                    ` : '<span class="text-red-400 text-sm italic">No Department</span>'}
+                                </td>
+                                <td>
+                                    <div class="flex items-center justify-center">
+                                        <button onclick="editDesignation(${designation.designation_id}, '${designation.designation_code.replace(/'/g, "\\'")}', '${designation.designation_name.replace(/'/g, "\\'")}', ${designation.department_id || 0})"
+                                                class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
+                                                title="Edit">
+                                            <i class="fa-solid fa-pen text-sm"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    container.innerHTML = html;
+                }
+            });
+
+            // Render initial pagination on page load
+            @if($designations->hasPages())
+                window.ajaxPagination.renderPagination({
+                    current_page: {{ $designations->currentPage() }},
+                    last_page: {{ $designations->lastPage() }},
+                    from: {{ $designations->firstItem() ?? 0 }},
+                    to: {{ $designations->lastItem() ?? 0 }},
+                    total: {{ $designations->total() }}
+                });
+            @endif
         </script>
     @endpush
 @endsection

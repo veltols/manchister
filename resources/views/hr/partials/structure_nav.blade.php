@@ -13,7 +13,7 @@
         </a>
         <a href="{{ route($prefix . '.departments.chart') }}"
            class="px-4 py-2 rounded-lg font-medium text-sm transition-all {{ request()->routeIs($prefix . '.departments.chart') ? 'premium-button from-indigo-600 to-purple-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100' }}">
-            <i class="fa-solid fa-sitemap mr-2"></i>Org Chart
+            <i class="fa-solid fa-sitemap mr-2"></i>Chart
         </a>
     </div>
 </div>

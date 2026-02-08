@@ -364,12 +364,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/departments/chart', [App\Http\Controllers\HR\DepartmentController::class, 'orgChart'])->name('departments.chart');
         Route::post('/departments', [App\Http\Controllers\HR\DepartmentController::class, 'store'])->name('departments.store');
         Route::post('/departments/{id}/update', [App\Http\Controllers\HR\DepartmentController::class, 'update'])->name('departments.update');
+        Route::get('/departments/data', [App\Http\Controllers\HR\DepartmentController::class, 'getData'])->name('departments.data');
 
         Route::get('/designations', [App\Http\Controllers\HR\DesignationController::class, 'index'])->name('designations.index');
         Route::get('/designations/create', [App\Http\Controllers\HR\DesignationController::class, 'create'])->name('designations.create');
         Route::post('/designations', [App\Http\Controllers\HR\DesignationController::class, 'store'])->name('designations.store');
         Route::get('/designations/{id}/edit', [App\Http\Controllers\HR\DesignationController::class, 'edit'])->name('designations.edit');
         Route::post('/designations/{id}', [App\Http\Controllers\HR\DesignationController::class, 'update'])->name('designations.update');
+        Route::get('/designations/data', [App\Http\Controllers\HR\DesignationController::class, 'getData'])->name('designations.data');
 
         // Feedback
         Route::get('/feedback', [App\Http\Controllers\Admin\FeedbackController::class, 'index'])->name('feedback.index');
@@ -397,6 +399,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/users/{id}/update-permissions', [App\Http\Controllers\Admin\UserController::class, 'updatePermissions'])->name('users.update-permissions');
         Route::post('/users/{id}/assign-asset', [App\Http\Controllers\Admin\UserController::class, 'assignAsset'])->name('users.assign-asset');
         Route::post('/users/{id}/revoke-asset', [App\Http\Controllers\Admin\UserController::class, 'revokeAsset'])->name('users.revoke-asset');
+        Route::get('/users/data', [App\Http\Controllers\Admin\UserController::class, 'getData'])->name('users.data');
 
         // Settings (Dynamics Lists)
         Route::get('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');

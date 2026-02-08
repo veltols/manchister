@@ -36,41 +36,45 @@ class UserController extends Controller
             'last_name' => 'required|string',
             'department_id' => 'required|exists:employees_list_departments,department_id',
             'employee_email' => 'required|email|unique:employees_list,employee_email',
-            'password' => 'required|string|min:6', // Legacy didn't strictly validate strength
+            'password' => 'required|string|min:6',
         ]);
 
-        // Create Employee
+        // 1. Create Employee
         $emp = new Employee();
         $emp->employee_no = $request->employee_no;
         $emp->first_name = $request->first_name;
         $emp->last_name = $request->last_name;
         $emp->department_id = $request->department_id;
         $emp->employee_email = $request->employee_email;
-        $emp->joined_date = now(); // Defaulting to now
-        $emp->is_active = 1; // Default
-        // Add other mandatory fields with defaults if necessary
+        $emp->employee_join_date = now();
+        $emp->employee_code = 'EMP-' . rand(1000, 9999);
+        $emp->designation_id = 0;
         $emp->save();
 
-        // Save Password
+        // 2. Save Password
         $pass = new EmployeePass();
         $pass->employee_id = $emp->employee_id;
-        $pass->pass_value = $request->password; // Legacy - check if hashing is used. 
-        // NOTE: Laravel Auth usually expects Hashed password.
-        // However, if we look at User model: return $this->employee->passwordData->pass_value;
-        // This implies it returns whatever is in DB. If Auth::attempt works, it compares Hash::make(input) with DB value.
-        // BUT strict legacy systems often store plain text or MD5. 
-        // If we want to be safe and "Premium", we should Hash it. 
-        // Converting to Hash::make($request->password). 
-        // CAUTION: If legacy system expects plain text, this will break legacy login.
-        // Given this is a revamp, I will use Hash::make() BUT I'll leave a comment.
-        // CHECK: detailed login logic was not fully visible but standard Laravel Auth expects Hash.
-        // Assuming we start using Hash for new users.
         $pass->pass_value = Hash::make($request->password);
-        
         $pass->is_active = 1;
-        $pass->entry_time = now();
-        $pass->entry_who = 1; // Admin
         $pass->save();
+
+        // 3. Get User Type from Department
+        $dept = Department::find($request->department_id);
+        $userType = $dept ? $dept->user_type : 'NA';
+
+        // 4. Create Credentials Record
+        $cred = new \App\Models\EmployeeCred();
+        $cred->employee_id = $emp->employee_id;
+        $cred->save();
+
+        // 5. Create System User Record (users_list)
+        $sysUser = new \App\Models\User();
+        $sysUser->user_id = $emp->employee_id;
+        $sysUser->user_email = $request->employee_email;
+        $sysUser->user_type = $userType;
+        $sysUser->int_ext = 'int';
+        $sysUser->user_family = 'employees_list';
+        $sysUser->save();
 
         // Log
         $this->logAction($emp->employee_id, 'User Created', "User {$emp->first_name} {$emp->last_name} created.");
@@ -198,6 +202,33 @@ class UserController extends Controller
             'log_remark' => $remark,
             'logger_type' => 'admin',
             'logged_by' => auth()->id() ?? 1,
+        ]);
+    }
+
+    public function getData(Request $request)
+    {
+        $page = $request->get('page', 1);
+        $perPage = $request->get('per_page', 15);
+
+        // Filter by user/email search if needed
+        $query = Employee::with(['department', 'systemUser'])
+            ->where('is_deleted', 0)
+            ->where('is_hidden', 0)
+            ->orderBy('employee_id', 'desc');
+
+        $users = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $users->items(),
+            'pagination' => [
+                'current_page' => $users->currentPage(),
+                'last_page' => $users->lastPage(),
+                'per_page' => $users->perPage(),
+                'total' => $users->total(),
+                'from' => $users->firstItem(),
+                'to' => $users->lastItem(),
+            ]
         ]);
     }
 }

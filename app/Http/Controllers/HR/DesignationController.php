@@ -19,6 +19,29 @@ class DesignationController extends Controller
         return view('hr.designations.index', compact('designations', 'departments'));
     }
 
+    public function getData(Request $request)
+    {
+        $page = $request->get('page', 1);
+        $perPage = $request->get('per_page', 15);
+        
+        $designations = Designation::with('department')
+            ->orderBy('designation_id', 'desc')
+            ->paginate($perPage);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $designations->items(),
+            'pagination' => [
+                'current_page' => $designations->currentPage(),
+                'last_page' => $designations->lastPage(),
+                'per_page' => $designations->perPage(),
+                'total' => $designations->total(),
+                'from' => $designations->firstItem(),
+                'to' => $designations->lastItem(),
+            ]
+        ]);
+    }
+
     public function create()
     {
         $departments = Department::orderBy('department_name')->get();
