@@ -151,6 +151,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/messages', [App\Http\Controllers\Employee\MessageController::class, 'store'])->name('messages.store');
         Route::get('/messages/{chat_id}', [App\Http\Controllers\Employee\MessageController::class, 'show'])->name('messages.show');
         Route::post('/messages/{chat_id}/reply', [App\Http\Controllers\Employee\MessageController::class, 'reply'])->name('messages.reply');
+        // Real-time messaging API
+        Route::get('/messages/{chat_id}/fetch', [App\Http\Controllers\Employee\MessageController::class, 'fetchNewMessages'])->name('messages.fetch');
+        Route::get('/messages-unread-count', [App\Http\Controllers\Employee\MessageController::class, 'getUnreadCount'])->name('messages.unread_count');
+        Route::get('/messages-conversation-list', [App\Http\Controllers\Employee\MessageController::class, 'getConversationList'])->name('messages.conversation_list');
 
         // Training Providers (ATPs)
         Route::post('/atps/{id}/send-email', [App\Http\Controllers\Employee\AtpController::class, 'sendEmail'])->name('atps.send-email');
@@ -239,6 +243,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/messages/{id}', [App\Http\Controllers\HR\MessageController::class, 'show'])->name('messages.show');
         Route::post('/messages', [App\Http\Controllers\HR\MessageController::class, 'store'])->name('messages.store');
         Route::post('/messages/{id}/reply', [App\Http\Controllers\HR\MessageController::class, 'reply'])->name('messages.reply');
+        // Real-time messaging API
+        Route::get('/messages/{id}/fetch', [App\Http\Controllers\HR\MessageController::class, 'fetchNewMessages'])->name('messages.fetch');
+        Route::get('/messages-unread-count', [App\Http\Controllers\HR\MessageController::class, 'getUnreadCount'])->name('messages.unread_count');
+        Route::get('/messages-conversation-list', [App\Http\Controllers\HR\MessageController::class, 'getConversationList'])->name('messages.conversation_list');
 
         // Tickets
         // Tickets (Legacy / Duplicate - Commented out)
@@ -322,6 +330,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/messages', [App\Http\Controllers\Admin\MessageController::class, 'index'])->name('messages.index');
         Route::post('/messages/create', [App\Http\Controllers\Admin\MessageController::class, 'create'])->name('messages.create');
         Route::post('/messages', [App\Http\Controllers\Admin\MessageController::class, 'store'])->name('messages.store');
+        // Real-time messaging API
+        Route::get('/messages/{chat_id}/fetch', [App\Http\Controllers\Admin\MessageController::class, 'fetchNewMessages'])->name('messages.fetch');
+        Route::get('/messages-unread-count', [App\Http\Controllers\Admin\MessageController::class, 'getUnreadCount'])->name('messages.unread_count');
+        Route::get('/messages-conversation-list', [App\Http\Controllers\Admin\MessageController::class, 'getConversationList'])->name('messages.conversation_list');
 
         Route::get('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');
         Route::get('/settings/leave_types', [App\Http\Controllers\Admin\SettingsController::class, 'leaveTypes'])->name('settings.leave_types');

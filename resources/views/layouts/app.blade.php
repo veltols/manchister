@@ -544,7 +544,7 @@
                             @if($unreadMessages > 0)
                                 <span class="absolute top-2 right-2 flex h-4 w-4">
                                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                                    <span class="relative inline-flex rounded-full h-4 w-4 bg-indigo-600 text-[9px] text-white font-bold items-center justify-center">
+                                    <span class="relative inline-flex rounded-full h-4 w-4 bg-indigo-600 text-[9px] text-white font-bold items-center justify-center transition-transform duration-200 ease-out">
                                         {{ $unreadMessages > 9 ? '9+' : $unreadMessages }}
                                     </span>
                                 </span>
@@ -681,6 +681,81 @@
             </div>
         </main>
     </div>
+
+    <script>
+        // Global real-time header message count update
+        @auth
+        (function() {
+            const messageLink = document.querySelector('a[href="{{ route($chatRoute) }}"]');
+            
+            if (!messageLink) return; // Exit if message link not found
+            
+            // Determine the correct route based on user type
+            let unreadCountRoute = '';
+            @if(auth()->user()->user_type === 'root' || auth()->user()->user_type === 'sys_admin')
+                unreadCountRoute = '/admin/messages-unread-count';
+            @elseif(in_array(auth()->user()->user_type, ['hr', 'admin_hr']))
+                unreadCountRoute = '/hr/messages-unread-count';
+            @else
+                unreadCountRoute = '/emp/messages-unread-count';
+            @endif
+
+            function updateHeaderMessageCount() {
+                fetch(unreadCountRoute)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const count = data.unread_count;
+                            
+                            // Find or create badge container
+                            let badgeContainer = messageLink.querySelector('span.absolute.top-2.right-2');
+                            
+                            if (count > 0) {
+                                const displayCount = count > 9 ? '9+' : count;
+                                
+                                if (!badgeContainer) {
+                                    // Create badge structure if it doesn't exist
+                                    badgeContainer = document.createElement('span');
+                                    badgeContainer.className = 'absolute top-2 right-2 flex h-4 w-4';
+                                    badgeContainer.innerHTML = `
+                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-4 w-4 bg-indigo-600 text-[9px] text-white font-bold items-center justify-center transition-transform duration-200 ease-out">
+                                            ${displayCount}
+                                        </span>
+                                    `;
+                                    messageLink.appendChild(badgeContainer);
+                                } else {
+                                    // Update existing badge
+                                    const badge = badgeContainer.querySelector('span.bg-indigo-600');
+                                    if (badge && badge.textContent !== displayCount.toString()) {
+                                        // Animate count change
+                                        badge.style.transform = 'scale(1.2)';
+                                        badge.textContent = displayCount;
+                                        setTimeout(() => {
+                                            badge.style.transform = 'scale(1)';
+                                        }, 200);
+                                    }
+                                    badgeContainer.style.display = 'flex';
+                                }
+                            } else {
+                                // Hide badge when no unread messages
+                                if (badgeContainer) {
+                                    badgeContainer.style.display = 'none';
+                                }
+                            }
+                        }
+                    })
+                    .catch(error => console.error('Error fetching unread count:', error));
+            }
+
+            // Poll every 5 seconds
+            setInterval(updateHeaderMessageCount, 5000);
+            
+            // Initial update
+            updateHeaderMessageCount();
+        })();
+        @endauth
+    </script>
 
     @stack('scripts')
 </body>

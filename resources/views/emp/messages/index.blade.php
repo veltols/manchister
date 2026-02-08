@@ -146,7 +146,7 @@
                         <input type="file" name="attachment" class="hidden" @change="hasFile = true">
                     </label>
                     
-                    <div class="flex-1 bg-slate-50 rounded-xl border border-slate-200 focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/10 transition-all">
+                    <div class="flex-1 bg-slate-50 rounded-xl border border-slate-200 transition-all">
                         <textarea name="post_text" rows="1" placeholder="Type your message..." class="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-sm text-slate-700 resize-none max-h-32 scrollbar-hide" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
                     </div>
 
@@ -157,8 +157,196 @@
             </div>
             
             <script>
+                // Auto-scroll to bottom on page load
                 const container = document.getElementById('messagesContainer');
-                container.scrollTop = container.scrollHeight;
+                if (container) {
+                    container.scrollTop = container.scrollHeight;
+                }
+
+                @if(isset($conversation))
+                // Real-time messaging variables
+                let lastMessageId = {{ $messages->last()->post_id ?? 0 }};
+                const chatId = {{ $conversation->chat_id }};
+                const currentUserId = {{ auth()->user()->employee->employee_id ?? 0 }};
+                let pollingInterval;
+
+                // Poll for new messages every 3 seconds
+                function pollNewMessages() {
+                    fetch(`/emp/messages/${chatId}/fetch?last_message_id=${lastMessageId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success && data.messages.length > 0) {
+                                data.messages.forEach(msg => {
+                                    appendMessage(msg);
+                                    lastMessageId = msg.post_id;
+                                });
+                                
+                                // Scroll to bottom
+                                container.scrollTop = container.scrollHeight;
+                            }
+                        })
+                        .catch(error => console.error('Error fetching messages:', error));
+                }
+
+                // Append new message to chat
+                function appendMessage(msg) {
+                    const isMine = msg.added_by == currentUserId;
+                    const messageHtml = `
+                        <div class="flex w-full ${isMine ? 'justify-end' : 'justify-start'}">
+                            <div class="flex max-w-[70%] ${isMine ? 'flex-row-reverse' : 'flex-row'} gap-3">
+                                ${!isMine ? `
+                                    <div class="w-8 h-8 rounded-full bg-brand/10 flex-shrink-0 flex items-center justify-center overflow-hidden self-end border border-brand/20">
+                                        ${msg.sender && msg.sender.employee_picture ? 
+                                            `<img src="/uploads/${msg.sender.employee_picture}" class="w-full h-full object-cover">` :
+                                            `<span class="text-[10px] font-bold text-brand">${msg.sender ? msg.sender.first_name.charAt(0) : '?'}</span>`
+                                        }
+                                    </div>
+                                ` : ''}
+                                
+                                <div class="flex flex-col ${isMine ? 'items-end' : 'items-start'}">
+                                    <div class="px-5 py-3 rounded-2xl ${isMine ? 'bg-brand text-white rounded-br-none shadow-brand/10' : 'bg-white border border-slate-100 text-slate-700 rounded-bl-none shadow-sm'} shadow-md">
+                                        <p class="text-sm leading-relaxed">${msg.post_text}</p>
+                                    </div>
+                                    <span class="text-[10px] text-slate-400 mt-1 font-medium px-1 uppercase tracking-tighter">
+                                        ${new Date(msg.added_date).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', messageHtml);
+                }
+
+                // Start polling
+                pollingInterval = setInterval(pollNewMessages, 3000);
+
+                // Send message via Ajax
+                const messageForm = document.querySelector('form[action="{{ route('emp.messages.reply', $conversation->chat_id) }}"]');
+                if (messageForm) {
+                    messageForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        
+                        const formData = new FormData(this);
+                        const messageText = formData.get('post_text');
+                        
+                        if (!messageText || !messageText.trim()) return;
+                        
+                        // Disable submit button
+                        const submitBtn = this.querySelector('button[type="submit"]');
+                        submitBtn.disabled = true;
+                        
+                        fetch(this.action, {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => {
+                            if (response.redirected || response.ok) {
+                                // Message sent successfully
+                                // Don't poll immediately - let the regular interval handle it
+                                
+                                // Clear textarea
+                                this.querySelector('textarea[name="post_text"]').value = '';
+                                this.querySelector('textarea[name="post_text"]').style.height = '';
+                                
+                                // Re-enable submit button
+                                submitBtn.disabled = false;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error sending message:', error);
+                            submitBtn.disabled = false;
+                        });
+                    });
+                }
+
+                // Stop polling when leaving page
+                window.addEventListener('beforeunload', function() {
+                    clearInterval(pollingInterval);
+                });
+                @endif
+
+                // Poll conversation list for unread count updates (every 5 seconds)
+                function updateConversationList() {
+                    fetch('/emp/messages-conversation-list')
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                console.log('Conversation list data:', data);
+                                const conversationContainer = document.querySelector('.flex-1.overflow-y-auto');
+                                if (!conversationContainer) {
+                                    console.error('Conversation container not found');
+                                    return;
+                                }
+
+                                // Sort conversations: unread first, then by chat_id (most recent)
+                                const sortedConversations = data.conversations.sort((a, b) => {
+                                    if (a.unread_count > 0 && b.unread_count === 0) return -1;
+                                    if (a.unread_count === 0 && b.unread_count > 0) return 1;
+                                    return b.chat_id - a.chat_id;
+                                });
+
+                                console.log('Sorted conversations:', sortedConversations);
+
+                                // Update each conversation
+                                sortedConversations.forEach((conv, index) => {
+                                    const convLink = document.querySelector(`a[href="/emp/messages/${conv.chat_id}"]`);
+                                    
+                                    if (convLink) {
+                                        // The <a> tag itself is the list item
+                                        const listItem = convLink;
+                                        
+                                        // Move to correct position
+                                        const currentIndex = Array.from(conversationContainer.children).indexOf(listItem);
+                                        if (currentIndex !== index && currentIndex !== -1) {
+                                            console.log(`Moving conversation ${conv.chat_id} from position ${currentIndex} to ${index}`);
+                                            conversationContainer.insertBefore(listItem, conversationContainer.children[index]);
+                                        }
+                                        
+                                        // Update badge
+                                        let badgeContainer = convLink.querySelector('.unread-badge');
+                                        
+                                        if (conv.unread_count > 0) {
+                                            if (badgeContainer) {
+                                                // Update existing badge
+                                                if (badgeContainer.textContent !== conv.unread_count.toString()) {
+                                                    console.log(`Updating badge for conversation ${conv.chat_id} to ${conv.unread_count}`);
+                                                    badgeContainer.textContent = conv.unread_count;
+                                                    // Add pulse animation
+                                                    badgeContainer.style.animation = 'pulse 0.5s';
+                                                    setTimeout(() => badgeContainer.style.animation = '', 500);
+                                                }
+                                            } else {
+                                                // Create new badge
+                                                console.log(`Creating new badge for conversation ${conv.chat_id} with count ${conv.unread_count}`);
+                                                const avatarDiv = convLink.querySelector('.relative');
+                                                if (avatarDiv) {
+                                                    const newBadge = document.createElement('div');
+                                                    newBadge.className = 'absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 border-2 border-white flex items-center justify-center text-[10px] font-bold text-white shadow-sm unread-badge';
+                                                    newBadge.textContent = conv.unread_count;
+                                                    avatarDiv.appendChild(newBadge);
+                                                }
+                                            }
+                                        } else {
+                                            // Remove badge if count is 0
+                                            if (badgeContainer) {
+                                                console.log(`Removing badge for conversation ${conv.chat_id}`);
+                                                badgeContainer.remove();
+                                            }
+                                        }
+                                    } else {
+                                        console.warn(`Conversation link not found for chat_id ${conv.chat_id}`);
+                                    }
+                                });
+                            }
+                        })
+                        .catch(error => console.error('Error updating conversation list:', error));
+                }
+
+                // Poll every 5 seconds
+                setInterval(updateConversationList, 5000);
+                
+                // Initial call
+                updateConversationList();
             </script>
 
         @else

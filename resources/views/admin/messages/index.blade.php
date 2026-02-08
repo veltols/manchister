@@ -108,20 +108,20 @@
                         <div class="flex w-full {{ $isMine ? 'justify-end' : 'justify-start' }}">
                             <div class="flex max-w-[70%] {{ $isMine ? 'flex-row-reverse' : 'flex-row' }} gap-3">
                                 @if(!$isMine)
-                                    <div class="w-8 h-8 rounded-full bg-indigo-100 flex-shrink-0 flex items-center justify-center overflow-hidden self-end">
+                                    <div class="w-8 h-8 rounded-full bg-brand/10 flex-shrink-0 flex items-center justify-center overflow-hidden self-end border border-brand/20">
                                         @if($msg->sender->employee_picture)
                                             <img src="{{ asset('uploads/' . $msg->sender->employee_picture) }}" class="w-full h-full object-cover">
                                         @else
-                                            <span class="text-[10px] font-bold text-indigo-600">{{ substr($msg->sender->first_name, 0, 1) }}</span>
+                                            <span class="text-[10px] font-bold text-brand">{{ substr($msg->sender->first_name, 0, 1) }}</span>
                                         @endif
                                     </div>
                                 @endif
                                 
                                 <div class="flex flex-col {{ $isMine ? 'items-end' : 'items-start' }}">
-                                    <div class="px-5 py-3 rounded-2xl {{ $isMine ? 'bg-indigo-600 text-white rounded-br-none shadow-indigo-100' : 'bg-white border border-slate-100 text-slate-700 rounded-bl-none shadow-sm' }} shadow-md">
+                                    <div class="px-5 py-3 rounded-2xl {{ $isMine ? 'bg-brand text-white rounded-br-none shadow-brand/10' : 'bg-white border border-slate-100 text-slate-700 rounded-bl-none shadow-sm' }} shadow-md">
                                         <p class="text-sm leading-relaxed">{{ $msg->post_text }}</p>
                                     </div>
-                                    <span class="text-[10px] text-slate-400 mt-1 font-medium px-1">
+                                    <span class="text-[10px] text-slate-400 mt-1 font-medium px-1 uppercase tracking-tighter">
                                         {{ \Carbon\Carbon::parse($msg->added_date)->format('h:i A') }}
                                     </span>
                                 </div>
@@ -141,20 +141,183 @@
                         <i class="fa-solid fa-paperclip"></i>
                     </button>
                     
-                    <div class="flex-1 bg-slate-50 rounded-xl border border-slate-200 focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+                    <div class="flex-1 bg-slate-50 rounded-xl border border-slate-200 transition-all">
                         <textarea name="message" rows="1" placeholder="Type your message..." class="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-sm text-slate-700 resize-none max-h-32" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
                     </div>
 
-                    <button type="submit" class="w-10 h-10 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white shadow-lg shadow-indigo-200 transition-all transform hover:scale-105 flex items-center justify-center flex-shrink-0">
+                    <button type="submit" class="w-10 h-10 rounded-xl bg-gradient-to-r from-brand to-cyan-600 hover:from-cyan-500 hover:to-brand text-white shadow-lg shadow-brand/30 transition-all transform hover:scale-105 flex items-center justify-center flex-shrink-0">
                         <i class="fa-solid fa-paper-plane"></i>
                     </button>
                 </form>
             </div>
             
             <script>
-                // Auto-scroll to bottom
+                // Auto-scroll to bottom on page load
                 const container = document.getElementById('messagesContainer');
-                container.scrollTop = container.scrollHeight;
+                if (container) {
+                    container.scrollTop = container.scrollHeight;
+                }
+
+                @if($activeChat)
+                // Real-time messaging variables
+                let lastMessageId = {{ $messages->last()->post_id ?? 0 }};
+                const chatId = {{ $activeChat->chat_id }};
+                const currentUserId = {{ $adminId }};
+                let pollingInterval;
+
+                // Poll for new messages every 3 seconds
+                function pollNewMessages() {
+                    fetch(`/admin/messages/${chatId}/fetch?last_message_id=${lastMessageId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success && data.messages.length > 0) {
+                                data.messages.forEach(msg => {
+                                    appendMessage(msg);
+                                    lastMessageId = msg.post_id;
+                                });
+                                
+                                // Scroll to bottom
+                                container.scrollTop = container.scrollHeight;
+                            }
+                        })
+                        .catch(error => console.error('Error fetching messages:', error));
+                }
+
+                // Append new message to chat
+                function appendMessage(msg) {
+                    const isMine = msg.added_by == currentUserId;
+                    const messageHtml = `
+                        <div class="flex w-full ${isMine ? 'justify-end' : 'justify-start'}">
+                            <div class="max-w-[70%] ${isMine ? 'order-1' : 'order-2'}">
+                                <div class="px-5 py-3 rounded-2xl shadow-sm text-sm leading-relaxed ${isMine ? 'bg-brand text-white rounded-br-none' : 'bg-white text-slate-700 rounded-bl-none border border-slate-100'}">
+                                    <p>${msg.post_text}</p>
+                                </div>
+                                <span class="text-[10px] text-slate-400 mt-1 block ${isMine ? 'text-right' : 'text-left'}">
+                                    ${new Date(msg.added_date).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', messageHtml);
+                }
+
+                // Start polling
+                pollingInterval = setInterval(pollNewMessages, 3000);
+
+                // Send message via Ajax
+                const messageForm = document.querySelector('form[action="{{ route('admin.messages.store') }}"]');
+                if (messageForm) {
+                    messageForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        
+                        const formData = new FormData(this);
+                        const messageText = formData.get('message');
+                        
+                        if (!messageText.trim()) return;
+                        
+                        // Disable submit button
+                        const submitBtn = this.querySelector('button[type="submit"]');
+                        submitBtn.disabled = true;
+                        
+                        fetch(this.action, {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => {
+                            if (response.redirected) {
+                                // Message sent successfully
+                                // Don't poll immediately - let the regular interval handle it
+                                
+                                // Clear textarea
+                                this.querySelector('textarea[name="message"]').value = '';
+                                this.querySelector('textarea[name="message"]').style.height = '';
+                                
+                                // Re-enable submit button
+                                submitBtn.disabled = false;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error sending message:', error);
+                            submitBtn.disabled = false;
+                        });
+                    });
+                }
+
+                // Stop polling when leaving page
+                window.addEventListener('beforeunload', function() {
+                    clearInterval(pollingInterval);
+                });
+                @endif
+
+                // Poll conversation list for unread count updates (every 5 seconds)
+                function updateConversationList() {
+                    fetch('/admin/messages-conversation-list')
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                console.log('Admin Conversation list data:', data);
+                                const conversationContainer = document.querySelector('.flex-1.overflow-y-auto');
+                                if (!conversationContainer) {
+                                    console.error('Conversation container not found');
+                                    return;
+                                }
+
+                                // Sort conversations: unread first, then by chat_id (most recent)
+                                const sortedConversations = data.conversations.sort((a, b) => {
+                                    if (a.unread_count > 0 && b.unread_count === 0) return -1;
+                                    if (a.unread_count === 0 && b.unread_count > 0) return 1;
+                                    return b.chat_id - a.chat_id;
+                                });
+
+                                // Update each conversation
+                                sortedConversations.forEach((conv, index) => {
+                                    const convLink = document.querySelector(`a[href*="/admin/messages?chat_id=${conv.chat_id}"]`);
+                                    
+                                    if (convLink) {
+                                        const listItem = convLink;
+                                        
+                                        // Move to correct position
+                                        const currentIndex = Array.from(conversationContainer.children).indexOf(listItem);
+                                        if (currentIndex !== index && currentIndex !== -1) {
+                                            conversationContainer.insertBefore(listItem, conversationContainer.children[index]);
+                                        }
+                                        
+                                        // Update badge
+                                        let badgeContainer = convLink.querySelector('.unread-badge');
+                                        
+                                        if (conv.unread_count > 0) {
+                                            if (badgeContainer) {
+                                                // Update existing badge
+                                                if (badgeContainer.textContent !== conv.unread_count.toString()) {
+                                                    badgeContainer.textContent = conv.unread_count;
+                                                    badgeContainer.style.animation = 'pulse 0.5s';
+                                                    setTimeout(() => badgeContainer.style.animation = '', 500);
+                                                }
+                                            } else {
+                                                // Create new badge
+                                                const avatarDiv = convLink.querySelector('.relative');
+                                                if (avatarDiv) {
+                                                    const newBadge = document.createElement('div');
+                                                    newBadge.className = 'absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 border-2 border-white flex items-center justify-center text-[10px] font-bold text-white shadow-sm unread-badge';
+                                                    newBadge.textContent = conv.unread_count;
+                                                    avatarDiv.appendChild(newBadge);
+                                                }
+                                            }
+                                        } else {
+                                            // Remove badge if count is 0
+                                            if (badgeContainer) {
+                                                badgeContainer.remove();
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        })
+                        .catch(error => console.error('Error updating conversation list:', error));
+                }
+
+                // Poll every 5 seconds
+                setInterval(updateConversationList, 5000);
             </script>
 
         @else
@@ -170,25 +333,25 @@
     </div>
 </div>
 
+
 <!-- New Chat Modal -->
 <div id="newChatModal" class="modal">
     <div class="modal-backdrop" onclick="closeModal('newChatModal')"></div>
-    <div class="modal-content w-full max-w-md p-6">
-        <div class="flex justify-between items-center mb-6">
+    <div class="modal-content w-full max-w-md p-0 overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
             <h3 class="text-xl font-display font-bold text-slate-800">Start New Chat</h3>
-            <button onclick="closeModal('newChatModal')" class="text-slate-400 hover:text-slate-600 transition-colors">
-                <i class="fa-solid fa-xmark text-xl"></i>
+            <button onclick="closeModal('newChatModal')" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
+                <i class="fa-solid fa-times"></i>
             </button>
         </div>
 
-        <form action="{{ route('admin.messages.create') }}" method="POST">
+        <form action="{{ route('admin.messages.create') }}" method="POST" class="p-8">
             @csrf
-            
-            <div class="mb-6">
-                <label for="employee_id" class="block text-sm font-medium text-slate-700 mb-2">Select Employee</label>
-                <div class="relative">
-                    <i class="fa-solid fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                    <select name="employee_id" id="employee_id" class="w-full premium-input pl-10 h-11" required>
+            <div class="mb-8">
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Target Colleague</label>
+                <div class="relative group">
+                    <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand transition-colors"></i>
+                    <select name="employee_id" class="w-full premium-input pl-12 h-12 text-sm" required>
                         <option value="">Choose a colleague...</option>
                         @foreach($employees as $emp)
                             <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
@@ -197,13 +360,10 @@
                 </div>
             </div>
 
-            <div class="flex justify-end gap-3">
-                <button type="button" onclick="closeModal('newChatModal')" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors">
-                    Cancel
-                </button>
-                <button type="submit" class="premium-button">
-                    <i class="fa-regular fa-paper-plane"></i>
-                    Start Chat
+            <div class="flex gap-3">
+                <button type="button" onclick="closeModal('newChatModal')" class="flex-1 px-6 py-3.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all">Cancel</button>
+                <button type="submit" class="flex-1 px-6 py-3.5 rounded-xl bg-brand text-white font-bold shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-95 transition-all">
+                    Start Chatting
                 </button>
             </div>
         </form>

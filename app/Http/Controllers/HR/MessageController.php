@@ -113,7 +113,7 @@ class MessageController extends Controller
         })->first();
 
         if ($existing) {
-            return response()->json(['success' => true, 'chat_id' => $existing->chat_id]);
+            return redirect()->route('hr.messages.show', $existing->chat_id);
         }
 
         $chat = new Conversation();
@@ -125,7 +125,7 @@ class MessageController extends Controller
         $chat->is_deleted = 0;
         $chat->save();
 
-        return response()->json(['success' => true, 'chat_id' => $chat->chat_id]);
+        return redirect()->route('hr.messages.show', $chat->chat_id);
     }
 
     public function reply(Request $request, $id)
@@ -161,5 +161,85 @@ class MessageController extends Controller
         $msg->save();
 
         return response()->json(['success' => true]);
+    }
+
+    // Real-time messaging API endpoints
+    public function fetchNewMessages(Request $request, $id)
+    {
+        $employeeId = optional(Auth::user()->employee)->employee_id ?? 0;
+        $lastMessageId = $request->input('last_message_id', 0);
+
+        // Verify user has access to this chat
+        $chat = Conversation::where('chat_id', $id)
+            ->where(function($q) use ($employeeId) {
+                $q->where('a_id', $employeeId)->orWhere('b_id', $employeeId);
+            })
+            ->first();
+
+        if (!$chat) {
+            return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
+        }
+
+        // Fetch new messages
+        $messages = Message::where('chat_id', $id)
+            ->where('post_id', '>', $lastMessageId)
+            ->with('sender')
+            ->orderBy('post_id', 'asc')
+            ->get();
+
+        // Mark new messages as read
+        Message::where('chat_id', $id)
+            ->where('post_id', '>', $lastMessageId)
+            ->where('added_by', '!=', $employeeId)
+            ->update(['is_read' => 1]);
+
+        return response()->json([
+            'success' => true,
+            'messages' => $messages,
+            'current_user_id' => $employeeId
+        ]);
+    }
+
+    public function getUnreadCount()
+    {
+        $employeeId = optional(Auth::user()->employee)->employee_id ?? 0;
+
+        // Count unread messages across all conversations
+        $unreadCount = Message::whereHas('conversation', function($q) use ($employeeId) {
+                $q->where('a_id', $employeeId)->orWhere('b_id', $employeeId);
+            })
+            ->where('added_by', '!=', $employeeId)
+            ->where('is_read', 0)
+            ->count();
+
+        return response()->json([
+            'success' => true,
+            'unread_count' => $unreadCount
+        ]);
+    }
+
+    public function getConversationList()
+    {
+        $employeeId = optional(Auth::user()->employee)->employee_id ?? 0;
+
+        // Fetch conversations with unread counts
+        $conversations = Conversation::where('a_id', $employeeId)
+            ->orWhere('b_id', $employeeId)
+            ->with(['participantA', 'participantB'])
+            ->get();
+            
+        // Calculate unread counts for each conversation
+        foreach ($conversations as $conv) {
+            $conv->unread_count = Message::where('chat_id', $conv->chat_id)
+                ->where('added_by', '!=', $employeeId)
+                ->where('is_read', 0)
+                ->count();
+        }
+
+        return response()->json([
+            'success' => true,
+            'conversations' => $conversations,
+            'current_user_id' => $employeeId
+        ]);
     }
 }

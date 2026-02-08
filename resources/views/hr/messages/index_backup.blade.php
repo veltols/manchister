@@ -1,85 +1,90 @@
 @extends('layouts.app')
 
-@section('title', 'Messaging Center')
-@section('subtitle', 'Stay connected with your team')
+@section('title', 'Messages')
+@section('subtitle', 'Connect and collaborate with your team.')
 
 @section('content')
-<div class="h-[calc(100vh-12rem)] flex gap-6 animate-fade-in-up" x-data="{ searchQuery: '' }">
-    <!-- Chat Sidebar -->
+<div class="h-[calc(100vh-12rem)] flex gap-6">
+    <!-- Sidebar: Conversations List -->
     <div class="w-80 bg-white rounded-[2rem] shadow-lg shadow-slate-200/50 border border-slate-100 flex flex-col overflow-hidden">
-        <!-- Sidebar Header -->
-        <div class="p-6 border-b border-slate-100 bg-slate-50/50">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-display font-bold text-slate-800">Direct Messages</h3>
-                <button onclick="openModal('newChatModal')" class="w-8 h-8 rounded-lg bg-brand hover:brightness-110 text-white flex items-center justify-center transition-all shadow-sm shadow-brand/20">
-                    <i class="fa-solid fa-plus text-sm"></i>
-                </button>
-            </div>
-            <div class="relative group">
-                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand transition-colors"></i>
-                <input type="text" x-model="searchQuery" placeholder="Search conversations..." class="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brand transition-colors">
+        <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-premium">Chats</h2>
+            <button onclick="openModal('newChatModal')"
+                class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+        </div>
+
+        <div class="p-4 border-b border-slate-100 bg-slate-50/50">
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" class="premium-input w-full pl-11 pr-4 py-2.5 text-sm bg-white" placeholder="Search chats...">
             </div>
         </div>
 
-        <!-- Conversation List -->
-        <div class="flex-1 overflow-y-auto">
-            @foreach($conversations as $conv)
-                @php
-                    $myId = optional(Auth::user()->employee)->employee_id ?? 0;
-                    $partA = $conv->participantA;
-                    $partB = $conv->participantB;
-                    
-                    if ($partA && $partA->employee_id == $myId) {
-                        $otherUser = $partB;
-                    } else {
-                        $otherUser = $partA;
-                    }
-                    
-                    $isActive = isset($conversation) && $conversation->chat_id == $conv->chat_id;
-                @endphp
+        <div class="flex-1 overflow-y-auto space-y-1 p-2">
+            @forelse($conversations as $conv)
+            @php
+                $myId = optional(Auth::user()->employee)->employee_id ?? 0;
                 
-                @if($otherUser)
-                <a href="{{ route('hr.messages.show', $conv->chat_id) }}" 
-                   class="flex items-center gap-3 p-4 hover:bg-slate-50 transition-colors border-b border-slate-50 {{ $isActive ? 'bg-brand/5 border-l-4 border-l-brand' : 'border-l-4 border-l-transparent' }}">
-                    <div class="relative">
-                        <div class="w-12 h-12 rounded-full bg-brand/10 text-brand flex items-center justify-center font-bold text-lg border border-brand/20 overflow-hidden">
-                            @if($otherUser && $otherUser->employee_picture)
-                                <img src="{{ asset('uploads/'.$otherUser->employee_picture) }}" class="w-full h-full object-cover">
-                            @else
-                                {{ strtoupper(substr($otherUser->first_name ?? '?', 0, 1)) }}
-                            @endif
-                        </div>
-                        <div class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></div>
-                        @if($conv->unread_count > 0)
-                            <div class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 border-2 border-white flex items-center justify-center text-[10px] font-bold text-white shadow-sm unread-badge">
-                                {{ $conv->unread_count }}
-                            </div>
+                // Get participants safely, defaulting to null if relationship is broken
+                $partA = $conv->participantA;
+                $partB = $conv->participantB;
+                
+                // Determine 'other' user. If A is me, other is B. If relationships are missing, handled gracefully below.
+                if ($partA && $partA->employee_id == $myId) {
+                    $otherUser = $partB;
+                } else {
+                    $otherUser = $partA;
+                }
+                
+                $isActive = isset($conversation) && $conversation->chat_id == $conv->chat_id;
+            @endphp
+            
+            @if($otherUser)
+            <a href="{{ route('hr.messages.show', $conv->chat_id) }}" 
+               class="conversation-item p-3 rounded-xl flex items-center gap-3 hover:bg-slate-50 transition-all {{ $isActive ? 'bg-indigo-50/60 ring-1 ring-indigo-100' : '' }}">
+                <div class="relative">
+                    <div class="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold text-lg overflow-hidden">
+                        @if($otherUser->image_path) 
+                            <img src="{{ asset('uploads/'.$otherUser->image_path) }}" class="w-full h-full object-cover">
+                        @else
+                            {{ substr($otherUser->first_name, 0, 1) }}
                         @endif
                     </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex justify-between items-baseline mb-1">
-                            <h4 class="font-bold text-slate-700 truncate {{ $isActive ? 'text-brand' : '' }}">
-                                {{ $otherUser->first_name ?? 'Unknown' }} {{ $otherUser->last_name ?? '' }}
-                            </h4>
-                            <span class="text-[10px] text-slate-400 font-medium whitespace-nowrap">
-                                {{ $conv->messages->last() ? \Carbon\Carbon::parse($conv->messages->last()->added_date)->format('h:i A') : '' }}
-                            </span>
-                        </div>
-                        <p class="text-xs text-slate-500 truncate">
-                            {{ $conv->messages->last()->post_text ?? 'Start a conversation...' }}
-                        </p>
+                    @if($conv->unread_count > 0)
+                    <div class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white">
+                        {{ $conv->unread_count }}
                     </div>
-                </a>
-                @endif
-            @endforeach
+                    @endif
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-baseline mb-0.5">
+                        <h4 class="font-bold text-slate-800 truncate {{ $isActive ? 'text-indigo-700' : '' }}">
+                            {{ $otherUser->first_name }} {{ $otherUser->last_name }}
+                        </h4>
+                        <!-- <span class="text-[10px] text-slate-400">12:30 PM</span> -->
+                    </div>
+                    <p class="text-xs text-slate-500 truncate">
+                        Click to view conversation
+                    </p>
+                </div>
+            </a>
+            @endif
+            @empty
+            <div class="text-center py-10">
+                <p class="text-slate-400 text-sm">No conversations yet</p>
+            </div>
+            @endforelse
         </div>
     </div>
 
-    <!-- Chat Area -->
+    <!-- Main Content: Chat Area -->
     <div class="flex-1 bg-white rounded-[2rem] shadow-lg shadow-slate-200/50 border border-slate-100 flex flex-col overflow-hidden relative">
         @if(isset($conversation) && $conversation)
             @php
                 $currentUser = optional(Auth::user()->employee)->employee_id ?? 0;
+                
                 $partA = $conversation->participantA;
                 $partB = $conversation->participantB;
                 
@@ -89,84 +94,81 @@
                     $chatPartner = $partA;
                 }
             @endphp
-            
             @if($chatPartner)
             <!-- Chat Header -->
-            <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div class="p-4 border-b border-slate-100 bg-white flex justify-between items-center shadow-sm z-10">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-brand/10 text-brand flex items-center justify-center font-bold border border-brand/20 overflow-hidden">
-                        @if($chatPartner && $chatPartner->employee_picture)
-                            <img src="{{ asset('uploads/'.$chatPartner->employee_picture) }}" class="w-full h-full object-cover">
+                    <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold overflow-hidden">
+                         @if($chatPartner->image_path) 
+                            <img src="{{ asset('uploads/'.$chatPartner->image_path) }}" class="w-full h-full object-cover">
                         @else
-                            {{ strtoupper(substr($chatPartner->first_name ?? '?', 0, 1)) }}
+                            {{ substr($chatPartner->first_name, 0, 1) }}
                         @endif
                     </div>
                     <div>
-                        <h3 class="font-bold text-slate-800">{{ $chatPartner->first_name ?? 'Unknown' }} {{ $chatPartner->last_name ?? '' }}</h3>
+                        <h3 class="font-bold text-slate-800">{{ $chatPartner->first_name }} {{ $chatPartner->last_name }}</h3>
                         <div class="flex items-center gap-1.5">
-                            <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"></div>
-                            <span class="text-xs text-slate-500 font-medium">Online</span>
+                            <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                            <span class="text-xs text-slate-500">Online</span>
                         </div>
                     </div>
                 </div>
-                <div class="flex gap-2 text-slate-400">
-                    <button class="w-8 h-8 rounded-lg hover:bg-slate-100 transition-colors"><i class="fa-solid fa-phone"></i></button>
-                    <button class="w-8 h-8 rounded-lg hover:bg-slate-100 transition-colors"><i class="fa-solid fa-video"></i></button>
-                    <button class="w-8 h-8 rounded-lg hover:bg-slate-100 transition-colors"><i class="fa-solid fa-ellipsis-vertical"></i></button>
-                </div>
+                <!-- <div class="flex gap-2">
+                    <button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
+                        <i class="fa-solid fa-phone"></i>
+                    </button>
+                    <button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
+                        <i class="fa-solid fa-video"></i>
+                    </button> 
+                    <button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </button>
+                </div> -->
             </div>
 
-            <!-- Messages Container -->
-            <div class="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/30 scrollbar-hide" id="messagesContainer">
-                @foreach($messages as $msg)
-                    @php $isMine = $msg->sender->employee_id == $currentUser; @endphp
-                    <div class="flex w-full {{ $isMine ? 'justify-end' : 'justify-start' }}">
-                        <div class="flex max-w-[70%] {{ $isMine ? 'flex-row-reverse' : 'flex-row' }} gap-3">
-                             @if(!$isMine)
-                                <div class="w-8 h-8 rounded-full bg-brand/10 flex-shrink-0 flex items-center justify-center overflow-hidden self-end border border-brand/20">
-                                    @if($msg->sender && $msg->sender->employee_picture)
-                                         <img src="{{ asset('uploads/' . $msg->sender->employee_picture) }}" class="w-full h-full object-cover">
-                                    @else
-                                        <span class="text-[10px] font-bold text-brand">{{ substr($msg->sender->first_name ?? '?', 0, 1) }}</span>
-                                    @endif
-                                </div>
-                            @endif
-                            
-                            <div class="flex flex-col {{ $isMine ? 'items-end' : 'items-start' }}">
-                                <div class="px-5 py-3 rounded-2xl {{ $isMine ? 'bg-brand text-white rounded-br-none shadow-brand/10' : 'bg-white border border-slate-100 text-slate-700 rounded-bl-none shadow-sm' }} shadow-md">
-                                    @if($msg->post_type == 'text')
-                                        <p class="text-sm leading-relaxed">{{ $msg->post_text }}</p>
-                                    @elseif($msg->post_type == 'image')
-                                        <img src="{{ asset('uploads/'.$msg->post_file_path) }}" class="rounded-lg max-w-xs transition-opacity hover:opacity-90 cursor-pointer">
-                                        @if($msg->post_text != $msg->post_file_path)<p class="mt-2">{{ $msg->post_text }}</p>@endif
+            <!-- Messages Area -->
+            <div class="flex-1 overflow-hidden bg-slate-50">
+                <div id="messages-container" style="overflow-y: auto !important; height: 100% !important; padding: 1.5rem; scroll-behavior: smooth;" class="space-y-4">
+                    @foreach($messages as $msg)
+                        @php 
+                            $isMe = $msg->sender->employee_id == $currentUser;
+                        @endphp
+                        <div class="flex {{ $isMe ? 'justify-end' : 'justify-start' }}">
+                            <div class="max-w-[70%] {{ $isMe ? 'order-1' : 'order-2' }}">
+                                <div class="px-5 py-3 rounded-2xl shadow-sm text-sm leading-relaxed {{ $isMe ? 'bg-brand text-white rounded-br-none' : 'bg-white text-slate-700 rounded-bl-none border border-slate-100' }}">
+                                    @if($msg->post_type == 'image')
+                                        <img src="{{ asset('uploads/'.$msg->post_file_path) }}" class="rounded-lg mb-2 max-w-full">
+                                        @if($msg->post_text != $msg->post_file_path)<p>{{ $msg->post_text }}</p>@endif
                                     @elseif($msg->post_type == 'document')
-                                        <a href="{{ asset('uploads/'.$msg->post_file_path) }}" target="_blank" class="flex items-center gap-3 p-2 rounded-xl {{ $isMine ? 'bg-white/10 text-white' : 'bg-slate-50 text-slate-700' }} no-underline">
-                                            <i class="fa-solid fa-file-invoice text-xl opacity-60"></i>
-                                            <span class="text-xs font-bold truncate max-w-[120px]">{{ $msg->post_file_name ?? 'Download File' }}</span>
+                                        <a href="{{ asset('uploads/'.$msg->post_file_path) }}" target="_blank" class="flex items-center gap-2 p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors">
+                                            <i class="fa-solid fa-file-arrow-down"></i>
+                                            <span class="truncate">{{ $msg->post_file_name ?? 'Download File' }}</span>
                                         </a>
                                         @if($msg->post_text)<p class="mt-2">{{ $msg->post_text }}</p>@endif
+                                    @else
+                                        <p>{{ $msg->post_text }}</p>
                                     @endif
                                 </div>
-                                <span class="text-[10px] text-slate-400 mt-1 font-medium px-1 uppercase tracking-tighter">
+                                <span class="text-[10px] text-slate-400 mt-1 block {{ $isMe ? 'text-right' : 'text-left' }}">
                                     {{ \Carbon\Carbon::parse($msg->added_date)->format('h:i A') }}
                                 </span>
                             </div>
                         </div>
-                    </div>
-                @endforeach
+                    @endforeach
+                </div>
             </div>
 
             <!-- Input Area -->
             <div class="p-4 bg-white border-t border-slate-100">
                 <form onsubmit="sendMessage(event)" enctype="multipart/form-data" class="flex items-end gap-3">
                     @csrf
-                    <button type="button" onclick="document.getElementById('file-input').click()" class="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-400 transition-colors">
+                    <button type="button" onclick="document.getElementById('file-input').click()" class="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors">
                         <i class="fa-solid fa-paperclip"></i>
                     </button>
                     <input type="file" name="attachment" id="file-input" class="hidden" onchange="//show preview">
                     
                     <div class="flex-1 bg-slate-50 rounded-xl border border-slate-200 transition-all">
-                        <textarea name="post_text" rows="1" class="w-full bg-transparent border-none focus:ring-0 p-3 text-sm resize-none max-h-32 scrollbar-hide" placeholder="Type a message..." oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
+                        <textarea name="post_text" rows="1" class="w-full bg-transparent border-none focus:ring-0 p-3 text-sm resize-none max-h-32" placeholder="Type a message..."></textarea>
                     </div>
                     
                     <button type="submit" class="w-12 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-gradient-to-r from-brand to-cyan-600 hover:from-cyan-500 hover:to-brand text-white shadow-lg shadow-brand/30 hover:scale-105 transition-all">
@@ -174,22 +176,22 @@
                     </button>
                 </form>
             </div>
-            
+
             <script>
                 // Auto-scroll to bottom on page load
-                const container = document.getElementById('messagesContainer');
+                const container = document.getElementById('messages-container');
                 if (container) {
                     container.scrollTop = container.scrollHeight;
                 }
 
-                @if(isset($conversation))
+                @if(isset($conversation) && $conversation)
                 // Real-time messaging variables
                 let lastMessageId = {{ $messages->last()->post_id ?? 0 }};
                 const chatId = {{ $conversation->chat_id }};
                 const currentUserId = {{ optional(Auth::user()->employee)->employee_id ?? 0 }};
                 let pollingInterval;
 
-                // Poll for new messages
+                // Poll for new messages every 3 seconds
                 function pollNewMessages() {
                     fetch(`/hr/messages/${chatId}/fetch?last_message_id=${lastMessageId}`)
                         .then(response => response.json())
@@ -258,8 +260,8 @@
                             // Re-enable submit button
                             btn.disabled = false;
                         }
-                    } catch (error) {
-                        console.error('Error sending message:', error);
+                    } catch(err) { 
+                        console.error(err);
                         btn.disabled = false;
                     }
                 }
@@ -269,7 +271,7 @@
                     clearInterval(pollingInterval);
                 });
                 @endif
-                
+
                 // Poll conversation list for unread count updates (every 5 seconds)
                 function updateConversationList() {
                     fetch('/hr/messages-conversation-list')
@@ -340,52 +342,59 @@
                 // Poll every 5 seconds
                 setInterval(updateConversationList, 5000);
             </script>
-            @endif
-        @else
-            <div class="flex-1 flex items-center justify-center">
-                <div class="text-center">
-                    <i class="fa-solid fa-comments text-6xl text-slate-200 mb-4"></i>
-                    <h3 class="text-xl font-bold text-slate-400">Select a conversation</h3>
-                    <p class="text-sm text-slate-400 mt-2">Choose a conversation from the sidebar to start messaging</p>
-                </div>
+            @else
+            <div class="h-full flex flex-col items-center justify-center p-12 text-center text-slate-400">
+                <i class="fa-solid fa-user-slash text-4xl mb-4"></i>
+                <p>Chat partner not found or account deleted.</p>
             </div>
+            @endif
         @endif
     </div>
 </div>
 
 <!-- New Chat Modal -->
-<div id="newChatModal" class="modal">
+<div class="modal" id="newChatModal">
     <div class="modal-backdrop" onclick="closeModal('newChatModal')"></div>
-    <div class="modal-content w-full max-w-md p-0 overflow-hidden">
-        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-            <h3 class="text-xl font-display font-bold text-slate-800">Start New Chat</h3>
-            <button onclick="closeModal('newChatModal')" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
-                <i class="fa-solid fa-times"></i>
-            </button>
+    <div class="modal-content max-w-md p-0 border-none shadow-2xl">
+        <div class="p-6 bg-slate-900 text-white flex justify-between items-center rounded-t-[24px]">
+            <h2 class="text-xl font-bold">New Message</h2>
+            <button onclick="closeModal('newChatModal')" class="text-white/60 hover:text-white"><i class="fa-solid fa-times"></i></button>
         </div>
-
-        <form action="{{ route('hr.messages.store') }}" method="POST" class="p-8">
+        
+        <form onsubmit="startChat(event)" class="p-6 space-y-6">
             @csrf
-            <div class="mb-8">
-                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Target Colleague</label>
-                <div class="relative group">
-                    <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand transition-colors"></i>
-                    <select name="employee_id" class="w-full premium-input pl-12 h-12 text-sm" required>
-                        <option value="">Choose a colleague...</option>
-                        @foreach($employees as $emp)
-                            <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
-                        @endforeach
-                    </select>
-                </div>
+            <div class="space-y-1">
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Select Employee</label>
+                <select name="employee_id" required class="premium-input w-full h-11 text-sm bg-white">
+                    <option value="">Choose...</option>
+                    @foreach($employees as $emp)
+                    <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                    @endforeach
+                </select>
             </div>
 
-            <div class="flex gap-3">
-                <button type="button" onclick="closeModal('newChatModal')" class="flex-1 px-6 py-3.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all">Cancel</button>
-                <button type="submit" class="flex-1 px-6 py-3.5 rounded-xl bg-brand text-white font-bold shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-95 transition-all">
-                    Start Chatting
-                </button>
-            </div>
+            <button type="submit" class="w-full premium-button from-indigo-600 to-purple-600 text-white font-bold py-3 rounded-2xl shadow-lg shadow-indigo-100 justify-center">
+                Start Conversation
+            </button>
         </form>
     </div>
-</div>
+
+<script>
+    async function startChat(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        
+        try {
+            const response = await fetch("{{ route('hr.messages.store') }}", {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                body: formData
+            });
+            const result = await response.json();
+            if(result.success) {
+                window.location.href = "{{ url('hr/messages') }}/" + result.chat_id;
+            }
+        } catch(err) { console.error(err); }
+    }
+</script>
 @endsection

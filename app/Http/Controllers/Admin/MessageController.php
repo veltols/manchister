@@ -118,4 +118,84 @@ class MessageController extends Controller
 
         return redirect()->route('admin.messages.index', ['chat_id' => $request->chat_id]);
     }
+
+    // Real-time messaging API endpoints
+    public function fetchNewMessages(Request $request, $chatId)
+    {
+        $adminId = Auth::id() ?? 550;
+        $lastMessageId = $request->input('last_message_id', 0);
+
+        // Verify user has access to this chat
+        $chat = Conversation::where('chat_id', $chatId)
+            ->where(function($q) use ($adminId) {
+                $q->where('a_id', $adminId)->orWhere('b_id', $adminId);
+            })
+            ->first();
+
+        if (!$chat) {
+            return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
+        }
+
+        // Fetch new messages
+        $messages = Message::where('chat_id', $chatId)
+            ->where('post_id', '>', $lastMessageId)
+            ->with('sender')
+            ->orderBy('post_id', 'asc')
+            ->get();
+
+        // Mark new messages as read
+        Message::where('chat_id', $chatId)
+            ->where('post_id', '>', $lastMessageId)
+            ->where('added_by', '!=', $adminId)
+            ->update(['is_read' => 1]);
+
+        return response()->json([
+            'success' => true,
+            'messages' => $messages,
+            'current_user_id' => $adminId
+        ]);
+    }
+
+    public function getUnreadCount()
+    {
+        $adminId = Auth::id() ?? 550;
+
+        // Count unread messages across all conversations
+        $unreadCount = Message::whereHas('conversation', function($q) use ($adminId) {
+                $q->where('a_id', $adminId)->orWhere('b_id', $adminId);
+            })
+            ->where('added_by', '!=', $adminId)
+            ->where('is_read', 0)
+            ->count();
+
+        return response()->json([
+            'success' => true,
+            'unread_count' => $unreadCount
+        ]);
+    }
+
+    public function getConversationList()
+    {
+        $adminId = Auth::id() ?? 550;
+
+        // Fetch conversations with unread counts
+        $conversations = Conversation::where('a_id', $adminId)
+            ->orWhere('b_id', $adminId)
+            ->with(['participantA', 'participantB'])
+            ->get();
+            
+        // Calculate unread counts for each conversation
+        foreach ($conversations as $conv) {
+            $conv->unread_count = Message::where('chat_id', $conv->chat_id)
+                ->where('added_by', '!=', $adminId)
+                ->where('is_read', 0)
+                ->count();
+        }
+
+        return response()->json([
+            'success' => true,
+            'conversations' => $conversations,
+            'current_user_id' => $adminId
+        ]);
+    }
 }
