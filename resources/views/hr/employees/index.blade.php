@@ -65,16 +65,7 @@
                                             class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-semibold shadow-md">
                                             {{ strtoupper(substr($employee->first_name, 0, 1)) }}{{ strtoupper(substr($employee->last_name, 0, 1)) }}
                                         </div>
-                                        <div>
-                                            <div class="flex items-center gap-2">
-                                                <span class="font-semibold text-slate-800">{{ $employee->first_name }}
-                                                    {{ $employee->last_name }}</span>
-                                                @if($employee->is_new == 1)
-                                                    <span
-                                                        class="px-2 py-0.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold">NEW</span>
-                                                @endif
-                                            </div>
-                                        </div>
+                                       
                                     </div>
                                 </td>
                                 <td>
