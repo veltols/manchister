@@ -60,7 +60,8 @@ class LeaveController extends Controller
 
         if ($request->hasFile('leave_attachment')) {
             $file = $request->file('leave_attachment');
-            $filename = time() . '_' . $file->getClientOriginalName();
+            $extension = $file->getClientOriginalExtension();
+            $filename = \Illuminate\Support\Str::random(64) . '.' . $extension;
             $file->move(public_path('uploads'), $filename);
             $leave->leave_attachment = $filename;
         }
@@ -126,7 +127,8 @@ class LeaveController extends Controller
 
         if ($request->hasFile('leave_attachment')) {
             $file = $request->file('leave_attachment');
-            $filename = time() . '_' . $file->getClientOriginalName();
+            $extension = $file->getClientOriginalExtension();
+            $filename = \Illuminate\Support\Str::random(64) . '.' . $extension;
             $file->move(public_path('uploads'), $filename);
             $leave->leave_attachment = $filename;
         }

@@ -58,7 +58,7 @@ class SupportTicketController extends Controller
             'ticket_description' => 'required|string',
             'category_id' => 'required|integer',
             'priority_id' => 'required|integer',
-            'ticket_attachment' => 'nullable|file|max:10240', // 10MB max
+            'ticket_attachment' => 'nullable|file|max:8192', // 8MB max
         ]);
 
         $user = Auth::user();
@@ -75,7 +75,8 @@ class SupportTicketController extends Controller
         $attachmentName = 'no-img.png';
         if ($request->hasFile('ticket_attachment')) {
             $file = $request->file('ticket_attachment');
-            $filename = time() . '_' . $file->getClientOriginalName();
+            $extension = $file->getClientOriginalExtension();
+            $filename = \Illuminate\Support\Str::random(64) . '.' . $extension;
             $file->move(public_path('uploads'), $filename);
             $attachmentName = $filename;
         }
@@ -100,6 +101,15 @@ class SupportTicketController extends Controller
         $ticket->save();
 
         // Create Initial Log
+        $log = new \App\Models\SystemLog();
+        $log->related_table = 'support_tickets_list';
+        $log->related_id = $ticket->ticket_id;
+        $log->log_action = 'Ticket Created';
+        $log->log_remark = 'Ticket created by employee.';
+        $log->log_date = now();
+        $log->logged_by = $employeeId;
+        $log->logger_type = 'employees_list';
+        $log->log_type = 'int';
         $log->save();
 
         // Send Notifications

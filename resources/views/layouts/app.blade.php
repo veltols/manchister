@@ -473,7 +473,9 @@
             style="display: none;">
             
             <div class="h-20 flex items-center justify-between px-4 border-b border-white/10">
-                <img src="{{ asset('images/logo.png') }}" alt="IQC Logo" class="h-10 w-auto">
+                <a href="{{ route('dashboard') }}">
+                    <img src="{{ asset('images/logo.png') }}" alt="IQC Logo" class="h-10 w-auto">
+                </a>
                 <button @click="mobileSidebarOpen = false" class="text-white hover:text-slate-300">
                     <i class="fa-solid fa-xmark text-2xl"></i>
                 </button>

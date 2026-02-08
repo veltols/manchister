@@ -31,6 +31,10 @@
                 <button id="toggleFullscreen" class="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-50 transition-colors" title="Toggle Fullscreen">
                     <i class="fa-solid fa-expand text-xs md:text-sm"></i>
                 </button>
+                <div class="h-6 w-px bg-slate-100 mx-1"></div>
+                <button id="exportPDF" class="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-xl text-indigo-600 hover:bg-indigo-50 transition-colors" title="Export as PDF">
+                    <i class="fa-solid fa-file-pdf text-xs md:text-sm"></i>
+                </button>
             </div>
             
             {{-- Floating controls removed as per user request --}}
@@ -70,6 +74,8 @@
     </div>
 
     @push('scripts')
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
         <script type="text/javascript">
             let chart;
@@ -120,8 +126,12 @@
                                                 </div>';
                             }
 
-                            $html = '<div class="org-node-inner">
-                                        <div class="text-sm md:text-base font-extrabold text-slate-800 tracking-tight leading-tight text-left px-0.5">' . $name . '</div>
+                            $levelColor = 'bg-brand';
+                            if (!$parentId) $levelColor = 'bg-gradient-to-r from-brand to-indigo-600';
+                            
+                            $html = '<div class="org-node-inner relative overflow-hidden">
+                                        <div class="absolute top-0 left-0 right-0 h-1.5 '.$levelColor.'"></div>
+                                        <div class="text-sm md:text-base font-extrabold text-slate-800 tracking-tight leading-tight text-left px-0.5 mt-2">' . $name . '</div>
                                         ' . $code . '
                                         ' . $managerHtml . '
                                     </div>';
@@ -256,6 +266,98 @@
                 window.addEventListener('touchend', stopDragging);
                 wrapper.addEventListener('mousemove', moveDragging);
                 wrapper.addEventListener('touchmove', moveDragging, { passive: false });
+
+                // PDF Export
+                const exportPDF = document.getElementById('exportPDF');
+                exportPDF.addEventListener('click', async () => {
+                    const { jsPDF } = window.jspdf;
+                    const chartDiv = document.getElementById('chart_div');
+                    
+                    const originalBtn = exportPDF.innerHTML;
+                    exportPDF.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs md:text-sm"></i>';
+                    exportPDF.disabled = true;
+
+                    // Store current scale
+                    const currentScale = scale;
+                    
+                    try {
+                        // Create high-res capture
+                        const canvas = await html2canvas(chartDiv, {
+                            scale: 3, // Ultra-high resolution
+                            useCORS: true,
+                            backgroundColor: '#f8fafc',
+                            logging: false,
+                            onclone: (clonedDoc) => {
+                                const clonedChart = clonedDoc.getElementById('chart_div');
+                                clonedChart.style.transform = 'scale(1)';
+                                clonedChart.style.transformOrigin = 'top center';
+                                clonedChart.style.width = 'auto';
+                                clonedChart.style.height = 'auto';
+                                clonedChart.style.overflow = 'visible';
+                                clonedChart.style.display = 'inline-flex';
+                                clonedChart.style.margin = '40px';
+                                
+                                // Add a professional header inside the capture area for "beautification"
+                                const header = clonedDoc.createElement('div');
+                                header.style.padding = '40px 60px';
+                                header.style.borderBottom = '2px solid #e2e8f0';
+                                header.style.marginBottom = '40px';
+                                header.style.display = 'flex';
+                                header.style.alignItems = 'center';
+                                header.style.justifyContent = 'space-between';
+                                header.style.width = '100%';
+                                header.style.background = 'white';
+                                
+                                header.innerHTML = `
+                                    <div style="display: flex; align-items: center; gap: 20px;">
+                                        <div style="width: 50px; height: 50px; background: #004F68; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                            <span style="color: white; font-weight: bold; font-family: sans-serif; font-size: 24px;">I</span>
+                                        </div>
+                                        <div>
+                                            <h1 style="margin: 0; font-family: sans-serif; font-size: 32px; font-weight: 800; color: #004F68;">IQC SENSE</h1>
+                                            <p style="margin: 4px 0 0; font-family: sans-serif; font-size: 16px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Organization Structure Report</p>
+                                        </div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <p style="margin: 0; font-family: sans-serif; font-size: 14px; color: #94a3b8; font-weight: 700;">PRINT DATE</p>
+                                        <p style="margin: 0; font-family: sans-serif; font-size: 18px; color: #475569; font-weight: 600;">${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                                    </div>
+                                `;
+                                clonedChart.prepend(header);
+                                
+                                // Add footer
+                                const footer = clonedDoc.createElement('div');
+                                footer.style.padding = '20px 60px';
+                                footer.style.marginTop = '40px';
+                                footer.style.borderTop = '1px solid #f1f5f9';
+                                footer.style.fontFamily = 'sans-serif';
+                                footer.style.fontSize = '12px';
+                                footer.style.color = '#94a3b8';
+                                footer.style.textAlign = 'center';
+                                footer.innerHTML = 'Confidential Organization Hierarchy | Generated by IQC Sense Enterprise Platform';
+                                clonedChart.appendChild(footer);
+                            }
+                        });
+
+                        const imgData = canvas.toDataURL('image/png');
+                        const pdf = new jsPDF({
+                            orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+                            unit: 'px',
+                            format: [canvas.width + 80, canvas.height + 80]
+                        });
+
+                        pdf.addImage(imgData, 'PNG', 40, 40, canvas.width, canvas.height);
+                        pdf.save(`Org_Structure_${new Date().getTime()}.pdf`);
+                        
+                        Toast.fire({ icon: 'success', title: 'Export Generated Successfully' });
+                    } catch (error) {
+                        console.error('Export failed:', error);
+                        Toast.fire({ icon: 'error', title: 'Export Failed' });
+                    } finally {
+                        exportPDF.innerHTML = originalBtn;
+                        exportPDF.disabled = false;
+                    }
+                });
             }
         </script>
     @endpush

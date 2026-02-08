@@ -174,9 +174,10 @@
     @endpush
 
     <!-- Create/Edit Modal -->
-    <div class="modal" id="addPerfModal">
-        <div class="modal-backdrop" onclick="closeModal('addPerfModal')"></div>
-        <div class="modal-content max-w-2xl p-6">
+    <div class="modal fixed inset-0 z-50 overflow-y-auto hidden" id="addPerfModal" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="modal-backdrop fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="closeModal('addPerfModal')"></div>
+        <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
+            <div class="modal-content relative bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-2xl sm:w-full p-6">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-display font-bold text-premium" id="modalTitle">New Performance Record</h2>
                 <button onclick="closeModal('addPerfModal')"
@@ -223,6 +224,7 @@
                         class="px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">Save</button>
                 </div>
             </form>
+            </div>
         </div>
     </div>
 

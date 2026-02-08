@@ -56,14 +56,15 @@ class SupportTicketController extends Controller
             'ticket_description' => 'required|string',
             'category_id' => 'required|integer',
             'priority_id' => 'required|integer',
-            'ticket_attachment' => 'nullable|file|max:10240', // 10MB max
+            'ticket_attachment' => 'nullable|file|max:8192', // 8MB max
         ]);
 
         // Upload attachment if exists
         $attachmentName = 'no-img.png';
         if ($request->hasFile('ticket_attachment')) {
             $file = $request->file('ticket_attachment');
-            $filename = time() . '_' . $file->getClientOriginalName();
+            $extension = $file->getClientOriginalExtension();
+            $filename = \Illuminate\Support\Str::random(64) . '.' . $extension;
             $file->move(public_path('uploads'), $filename);
             $attachmentName = $filename;
         }

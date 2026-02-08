@@ -282,9 +282,33 @@
 
         // Initialize Attachment Preview
         window.initAttachmentPreview({
-            inputSelector: 'input[name="ticket_attachment"]',
+            inputSelector: '#ticket_attachment',
             containerSelector: '#ticket-attachment-preview'
         });
+
+        // File Size Validation (Max 8MB)
+        const attachmentInput = document.getElementById('ticket_attachment');
+        if (attachmentInput) {
+            attachmentInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const fileSize = this.files[0].size; // in bytes
+                    const maxSize = 8 * 1024 * 1024; // 8MB
+
+                    if (fileSize > maxSize) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'File Too Large',
+                            text: 'The attachment size must not exceed 8MB.',
+                            confirmButtonColor: '#4f46e5'
+                        });
+                        this.value = ''; // Clear the input
+                        // Clear preview if exists
+                        const previewContainer = document.getElementById('ticket-attachment-preview');
+                        if (previewContainer) previewContainer.innerHTML = '';
+                    }
+                }
+            });
+        }
     </script>
     @endpush
 
@@ -361,7 +385,7 @@
                         <label class="block text-sm font-semibold text-slate-700 mb-2">
                             <i class="fa-solid fa-paperclip text-indigo-600 mr-2"></i>Attachment (Optional)
                         </label>
-                        <input type="file" name="ticket_attachment" class="premium-input w-full px-4 py-3 text-sm">
+                        <input type="file" name="ticket_attachment" id="ticket_attachment" class="premium-input w-full px-4 py-3 text-sm">
                         <div id="ticket-attachment-preview"></div>
                     </div>
                 </div>

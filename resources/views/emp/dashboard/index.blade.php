@@ -118,7 +118,7 @@
             <!-- IT Tickets -->
             <div>
                 <div class="flex items-center justify-between mb-4 px-1">
-                    <h3 class="text-xl font-display font-bold text-premium">Support Center</h3>
+                    <h3 class="text-xl font-display font-bold text-premium">My Tickets</h3>
                     <a href="{{ route('emp.tickets.index') }}" class="group flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-brand text-white text-xs font-bold shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:-translate-y-0.5 transition-all duration-300 border border-white/10">
                         <span>View All</span>
                         <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
@@ -193,7 +193,7 @@
                             </div>
                         </div>
                     </a>
-                    <a href="{{ route('emp.tasks.index', ['status_id' => 1]) }}" class="stat-card group hover:border-amber-500 transition-all duration-300">
+                    <a href="{{ route('emp.tasks.index') }}" class="stat-card group hover:border-amber-500 transition-all duration-300">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">To Do</p>
@@ -217,7 +217,7 @@
                             </div>
                         </a>
                     @else
-                        <a href="{{ route('emp.tasks.index', ['status_id' => 2]) }}" class="stat-card group hover:border-brand-dark transition-all duration-300">
+                        <a href="{{ route('emp.tasks.index') }}" class="stat-card group hover:border-brand-dark transition-all duration-300">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">In Progress</p>
@@ -229,7 +229,7 @@
                             </div>
                         </a>
                     @endif
-                    <a href="{{ route('emp.tasks.index', ['status_id' => 3]) }}" class="stat-card group hover:border-green-600 transition-all duration-300">
+                    <a href="{{ route('emp.tasks.index') }}" class="stat-card group hover:border-green-600 transition-all duration-300">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Done</p>
@@ -267,7 +267,7 @@
                             </thead>
                             <tbody class="divide-y divide-slate-50">
                                 @forelse($recentTasks as $task)
-                                    <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="window.location='{{ route('emp.tasks.show', $task->task_id) }}'">
+                                    <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="window.location='{{ route('emp.tasks.index') }}'">
                                         <td>
                                             <div class="font-bold text-slate-700 truncate max-w-[200px]">{{ $task->task_title }}</div>
                                             <div class="text-[10px] text-slate-400 uppercase">{{ $task->priority->priority_name ?? 'Normal' }} Priority</div>

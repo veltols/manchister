@@ -316,6 +316,30 @@
             containerSelector: '#ticket-attachment-preview'
         });
 
+        // File Size Validation (Max 8MB)
+        const attachmentInput = document.getElementById('ticket_attachment');
+        if (attachmentInput) {
+            attachmentInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const fileSize = this.files[0].size; // in bytes
+                    const maxSize = 8 * 1024 * 1024; // 8MB
+
+                    if (fileSize > maxSize) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'File Too Large',
+                            text: 'The attachment size must not exceed 8MB.',
+                            confirmButtonColor: '#4f46e5'
+                        });
+                        this.value = ''; // Clear the input
+                        // Clear preview if exists (using the preview instance if accessible, or manually)
+                        const previewContainer = document.getElementById('ticket-attachment-preview');
+                        if (previewContainer) previewContainer.innerHTML = '';
+                    }
+                }
+            });
+        }
+
         // ... existing modal scripts ...
 
         // Ticket Rendering Helpers

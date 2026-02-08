@@ -3,7 +3,9 @@
 <aside class="sidebar-gradient w-40 flex-shrink-0 flex flex-col text-white shadow-2xl relative z-20 hidden md:flex">
     <!-- Logo Area -->
     <div class="h-20 flex items-center justify-center border-b border-white/10 px-2 text-center">
-        <img src="{{ asset('images/logo.png') }}" alt="IQC Logo" class="w-12 h-12 object-contain">
+        <a href="{{ route('dashboard') }}">
+            <img src="{{ asset('images/logo.png') }}" alt="IQC Logo" class="w-12 h-12 object-contain">
+        </a>
     </div>
 
     <!-- Navigation -->

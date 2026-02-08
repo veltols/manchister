@@ -160,9 +160,9 @@
             <div x-show="tab === 'credentials'" class="animate-fade-in">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     @php $cred_items = [
-                        ['Passport', 'fa-passport', 'indigo', $employee->credentials->passport_no, $employee->credentials->passport_issue_date, $employee->credentials->passport_expiry_date],
-                        ['Visa', 'fa-address-card', 'blue', $employee->credentials->visa_no, $employee->credentials->visa_issue_date, $employee->credentials->visa_expiry_date],
-                        ['Emirates ID', 'fa-id-card', 'emerald', $employee->credentials->eid_no, $employee->credentials->eid_issue_date, $employee->credentials->eid_expiry_date]
+                        ['Passport', 'fa-passport', 'indigo', optional($employee->credentials)->passport_no, optional($employee->credentials)->passport_issue_date, optional($employee->credentials)->passport_expiry_date],
+                        ['Visa', 'fa-address-card', 'blue', optional($employee->credentials)->visa_no, optional($employee->credentials)->visa_issue_date, optional($employee->credentials)->visa_expiry_date],
+                        ['Emirates ID', 'fa-id-card', 'emerald', optional($employee->credentials)->eid_no, optional($employee->credentials)->eid_issue_date, optional($employee->credentials)->eid_expiry_date]
                     ]; @endphp
 
                     @foreach($cred_items as $item)
@@ -469,15 +469,15 @@
                         <i class="fa-solid fa-passport"></i> PASSPORT DETAILS
                     </h3>
                     <div class="space-y-3">
-                        <input type="text" name="passport_no" placeholder="Passport Number" value="{{ $employee->credentials->passport_no ?? '' }}" class="premium-input w-full px-4 py-2.5 text-sm">
+                        <input type="text" name="passport_no" placeholder="Passport Number" value="{{ optional($employee->credentials)->passport_no ?? '' }}" class="premium-input w-full px-4 py-2.5 text-sm">
                         <div class="grid grid-cols-2 gap-3">
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Issue Date</label>
-                                <input type="date" name="passport_issue_date" value="{{ $employee->credentials->passport_issue_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs">
+                                <input type="date" name="passport_issue_date" value="{{ optional($employee->credentials)->passport_issue_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs">
                             </div>
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Expiry Date</label>
-                                <input type="date" name="passport_expiry_date" value="{{ $employee->credentials->passport_expiry_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs">
+                                <input type="date" name="passport_expiry_date" value="{{ optional($employee->credentials)->passport_expiry_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs">
                             </div>
                         </div>
                     </div>
@@ -489,15 +489,15 @@
                         <i class="fa-solid fa-plane"></i> VISA DETAILS
                     </h3>
                     <div class="space-y-3">
-                        <input type="text" name="visa_no" placeholder="Visa Number" value="{{ $employee->credentials->visa_no ?? '' }}" class="premium-input w-full px-4 py-2.5 text-sm">
+                        <input type="text" name="visa_no" placeholder="Visa Number" value="{{ optional($employee->credentials)->visa_no ?? '' }}" class="premium-input w-full px-4 py-2.5 text-sm">
                         <div class="grid grid-cols-2 gap-3">
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Issue Date</label>
-                                <input type="date" name="visa_issue_date" value="{{ $employee->credentials->visa_issue_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs">
+                                <input type="date" name="visa_issue_date" value="{{ optional($employee->credentials)->visa_issue_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs">
                             </div>
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Expiry Date</label>
-                                <input type="date" name="visa_expiry_date" value="{{ $employee->credentials->visa_expiry_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs">
+                                <input type="date" name="visa_expiry_date" value="{{ optional($employee->credentials)->visa_expiry_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs">
                             </div>
                         </div>
                     </div>
@@ -509,15 +509,15 @@
                         <i class="fa-solid fa-id-card-clip"></i> EMIRATES ID DETAILS
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <input type="text" name="eid_no" placeholder="Emirates ID (784-XXXX-XXXXXXX-X)" value="{{ $employee->credentials->eid_no ?? '' }}" class="premium-input w-full px-4 py-2.5 text-sm self-center">
+                        <input type="text" name="eid_no" placeholder="Emirates ID (784-XXXX-XXXXXXX-X)" value="{{ optional($employee->credentials)->eid_no ?? '' }}" class="premium-input w-full px-4 py-2.5 text-sm self-center">
                         <div class="grid grid-cols-2 gap-3">
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Issue Date</label>
-                                <input type="date" name="eid_issue_date" value="{{ $employee->credentials->eid_issue_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs">
+                                <input type="date" name="eid_issue_date" value="{{ optional($employee->credentials)->eid_issue_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs">
                             </div>
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Expiry Date</label>
-                                <input type="date" name="eid_expiry_date" value="{{ $employee->credentials->eid_expiry_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs">
+                                <input type="date" name="eid_expiry_date" value="{{ optional($employee->credentials)->eid_expiry_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs">
                             </div>
                         </div>
                     </div>

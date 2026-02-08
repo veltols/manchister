@@ -367,6 +367,35 @@
             inputSelector: '#resubmit_leave_attachment',
             containerSelector: '#resubmit-leave-attachment-preview'
         });
+
+        // File Size Validation (Max 8MB)
+        const leaveInputs = ['new_leave_attachment', 'resubmit_leave_attachment'];
+        leaveInputs.forEach(inputId => {
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.addEventListener('change', function() {
+                    if (this.files && this.files[0]) {
+                        const fileSize = this.files[0].size; // in bytes
+                        const maxSize = 8 * 1024 * 1024; // 8MB
+
+                        if (fileSize > maxSize) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'File Too Large',
+                                text: 'The attachment size must not exceed 8MB.',
+                                confirmButtonColor: '#4f46e5'
+                            });
+                            this.value = ''; // Clear the input
+                            
+                            // Clear preview
+                            const previewId = inputId === 'new_leave_attachment' ? 'new-leave-attachment-preview' : 'resubmit-leave-attachment-preview';
+                            const previewContainer = document.getElementById(previewId);
+                            if (previewContainer) previewContainer.innerHTML = '';
+                        }
+                    }
+                });
+            }
+        });
     </script>
 <script>
     function openResubmitModal(leave) {

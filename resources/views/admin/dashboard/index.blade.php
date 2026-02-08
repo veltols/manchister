@@ -34,7 +34,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             
             <!-- Total (Full Width Hero) -->
-            <div class="lg:col-span-4 bg-gradient-to-r from-indigo-600 to-violet-600 p-8 rounded-2xl shadow-xl shadow-indigo-200 text-white relative group overflow-hidden transition-all hover:-translate-y-1">
+            <div class="lg:col-span-4 bg-gradient-brand p-8 rounded-2xl shadow-xl shadow-brand/20 text-white relative group overflow-hidden transition-all hover:-translate-y-1">
                 <div class="absolute right-0 top-0 h-full w-1/2 bg-gradient-to-l from-white/10 to-transparent pointer-events-none"></div>
                 <div class="absolute right-10 top-1/2 -translate-y-1/2 opacity-20 scale-150 transform rotate-12">
                     <i class="fa-solid fa-ticket text-9xl"></i>
@@ -46,7 +46,7 @@
                             <i class="fa-solid fa-layer-group"></i>
                         </div>
                         <div>
-                            <p class="text-indigo-100 font-medium text-lg mb-1">Total System Tickets</p>
+                            <p class="text-cyan-50 font-medium text-lg mb-1">Total System Tickets</p>
                             <h3 class="text-5xl font-black tracking-tight text-white">{{ $totalTickets }}</h3>
                         </div>
                     </div>
@@ -54,15 +54,15 @@
                     <div class="flex gap-8 border-l border-white/20 pl-8 hidden md:flex">
                         <div class="text-center">
                              <span class="block text-3xl font-bold">{{ $totalOpen }}</span>
-                             <span class="text-xs text-indigo-200 uppercase tracking-wider font-semibold">Open</span>
+                             <span class="text-xs text-cyan-100 uppercase tracking-wider font-semibold">Open</span>
                         </div>
                         <div class="text-center">
                              <span class="block text-3xl font-bold">{{ $totalProgress }}</span>
-                             <span class="text-xs text-indigo-200 uppercase tracking-wider font-semibold">Processing</span>
+                             <span class="text-xs text-cyan-100 uppercase tracking-wider font-semibold">Processing</span>
                         </div>
                          <div class="text-center">
                              <span class="block text-3xl font-bold">{{ $totalResolved }}</span>
-                             <span class="text-xs text-indigo-200 uppercase tracking-wider font-semibold">Resolved</span>
+                             <span class="text-xs text-cyan-100 uppercase tracking-wider font-semibold">Resolved</span>
                         </div>
                     </div>
                 </div>
@@ -185,15 +185,15 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             
             <!-- Total -->
-            <div class="bg-gradient-to-br from-indigo-600 to-indigo-800 p-6 rounded-2xl shadow-lg shadow-indigo-200 text-white relative group overflow-hidden transition-all hover:-translate-y-1">
+            <div class="bg-gradient-brand p-6 rounded-2xl shadow-lg shadow-brand/20 text-white relative group overflow-hidden transition-all hover:-translate-y-1">
                 <div class="absolute right-0 top-0 opacity-10 scale-150 transform translate-x-4 -translate-y-4">
                     <i class="fa-solid fa-cubes text-9xl"></i>
                 </div>
-                <p class="text-xs font-bold text-indigo-200 uppercase tracking-wider mb-1">Total Assets</p>
+                <p class="text-xs font-bold text-cyan-100 uppercase tracking-wider mb-1">Total Assets</p>
                 <div class="flex items-end gap-2 mt-2">
                     <h3 class="text-4xl font-black tracking-tight">{{ $totalAssets }}</h3>
                 </div>
-                <div class="mt-4 flex items-center gap-2 text-xs font-medium text-indigo-200 bg-white/10 w-fit px-3 py-1 rounded-full backdrop-blur-sm">
+                <div class="mt-4 flex items-center gap-2 text-xs font-medium text-cyan-50 bg-white/10 w-fit px-3 py-1 rounded-full backdrop-blur-sm">
                     <i class="fa-solid fa-database"></i> System Total
                 </div>
             </div>
@@ -379,8 +379,8 @@
     <script>
         // Colors
         const colors = {
-            primary: '#4f46e5', // Indigo-600
-            primaryLight: '#818cf8',
+            primary: '#004F68', // Brand Default
+            primaryLight: '#006a8a', // Brand Light
             accent: '#06b6d4',
             success: '#22c55e',
             warning: '#f59e0b',

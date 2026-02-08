@@ -80,13 +80,14 @@ class SupportTicketController extends Controller
             'priority_id' => 'required|exists:sys_list_priorities,priority_id',
             'ticket_subject' => 'required|string|max:255',
             'ticket_description' => 'required|string',
-            'ticket_attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:10240'
+            'ticket_attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:8192'
         ]);
 
         $attachmentPath = '';
         if ($request->hasFile('ticket_attachment')) {
             $file = $request->file('ticket_attachment');
-            $filename = time() . '_' . $file->getClientOriginalName();
+            $extension = $file->getClientOriginalExtension();
+            $filename = Str::random(64) . '.' . $extension;
             $file->move(public_path('uploads/tickets'), $filename);
             $attachmentPath = 'uploads/tickets/' . $filename;
         } else {
