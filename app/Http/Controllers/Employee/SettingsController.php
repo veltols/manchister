@@ -37,4 +37,20 @@ class SettingsController extends Controller
 
         return redirect()->back()->with('success', 'Theme updated successfully.');
     }
+
+    public function updateStatus(Request $request)
+    {
+        $request->validate([
+            'new_status' => 'required|exists:employees_list_staus,staus_id',
+        ]);
+
+        $user = Auth::user();
+        if ($user && $user->employee) {
+            $user->employee->emp_status_id = $request->new_status;
+            $user->employee->save();
+            return response()->json([['success' => true, 'message' => 'Status updated']]);
+        }
+
+        return response()->json([['success' => false, 'message' => 'User not found']], 404);
+    }
 }

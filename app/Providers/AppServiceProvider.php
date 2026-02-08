@@ -20,5 +20,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         \Illuminate\Pagination\Paginator::useTailwind();
+        
+        // Share statuses with layout
+        \Illuminate\Support\Facades\View::composer('layouts.app', function ($view) {
+            $view->with('userStatuses', \App\Models\UserStatus::orderBy('staus_id')->get());
+        });
     }
 }

@@ -444,3 +444,4 @@ Route::middleware('auth')->group(function () {
     });
 });
 Route::fallback(function () { return view('errors.404'); });
+Route::post('/emp/status/update', [App\Http\Controllers\Employee\SettingsController::class, 'updateStatus'])->name('emp.status.update');

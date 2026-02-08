@@ -594,6 +594,10 @@
                                 <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-[#004F68] to-[#00384a] flex items-center justify-center shadow-lg group-hover:scale-105 transition-all">
                                     <i class="fa-solid fa-user text-white text-xs"></i>
                                 </div>
+                                @if($user && $user->employee && $user->employee->status)
+                                    <div class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white"
+                                         style="background-color: {{ $user->employee->status->staus_color }};"></div>
+                                @endif
                                 <div class="hidden lg:block text-left mr-1">
                                     <p class="text-[10px] font-bold text-slate-900 leading-none">Account</p>
                                     <p class="text-[9px] text-slate-500 leading-none mt-1">{{ ucfirst($user->user_type ?? 'User') }}</p>
@@ -613,6 +617,26 @@
                                     <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Logged in as</p>
                                     <p class="text-sm font-bold text-slate-900 truncate">{{ $user->user_email }}</p>
                                 </div>
+
+                                @if(isset($userStatuses) && $user && $user->employee)
+                                <div class="px-2 py-2">
+                                    <p class="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Set Status</p>
+                                    <div class="grid grid-cols-1 gap-1">
+                                        @foreach($userStatuses as $status)
+                                            <button onclick="updateUserStatus({{ $status->staus_id }})" 
+                                                class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-50 transition-all text-left w-full group
+                                                {{ $user->employee->emp_status_id == $status->staus_id ? 'bg-slate-50' : '' }}">
+                                                <div class="w-2 h-2 rounded-full" style="background-color: {{ $status->staus_color }}"></div>
+                                                <span class="text-xs font-medium text-slate-600 group-hover:text-slate-900">{{ $status->staus_name }}</span>
+                                                @if($user->employee->emp_status_id == $status->staus_id)
+                                                    <i class="fa-solid fa-check text-xs text-indigo-600 ml-auto"></i>
+                                                @endif
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                <div class="h-px bg-slate-50 my-1"></div>
+                                @endif
 
                                 <div class="px-2">
                                     <button @click="showPasswordModal = true; open = false" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-all group text-left">
@@ -706,7 +730,14 @@
         (function() {
             const messageLink = document.querySelector('a[href="{{ route($chatRoute) }}"]');
             
-            if (!messageLink) return; // Exit if message link not found
+            console.log('Message count polling initialized');
+            console.log('Message link:', messageLink);
+            console.log('Chat route:', '{{ route($chatRoute) }}');
+            
+            if (!messageLink) {
+                console.error('Message link not found!');
+                return; // Exit if message link not found
+            }
             
             // Determine the correct route based on user type
             let unreadCountRoute = '';
@@ -718,48 +749,37 @@
                 unreadCountRoute = '/emp/messages-unread-count';
             @endif
 
+            console.log('Unread count route:', unreadCountRoute);
+
             function updateHeaderMessageCount() {
                 fetch(unreadCountRoute)
                     .then(response => response.json())
                     .then(data => {
+                        console.log('Unread count response:', data);
                         if (data.success) {
                             const count = data.unread_count;
+                            console.log('Count:', count);
                             
-                            // Find or create badge container
-                            let badgeContainer = messageLink.querySelector('span.absolute.top-2.right-2');
+                            // Remove any existing badge first
+                            const existingBadge = messageLink.querySelector('span.absolute.top-2.right-2');
+                            if (existingBadge) {
+                                existingBadge.remove();
+                                console.log('Removed existing badge');
+                            }
                             
+                            // Create new badge if count > 0
                             if (count > 0) {
                                 const displayCount = count > 9 ? '9+' : count;
-                                
-                                if (!badgeContainer) {
-                                    // Create badge structure if it doesn't exist
-                                    badgeContainer = document.createElement('span');
-                                    badgeContainer.className = 'absolute top-2 right-2 flex h-4 w-4';
-                                    badgeContainer.innerHTML = `
-                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                                        <span class="relative inline-flex rounded-full h-4 w-4 bg-indigo-600 text-[9px] text-white font-bold items-center justify-center transition-transform duration-200 ease-out">
-                                            ${displayCount}
-                                        </span>
-                                    `;
-                                    messageLink.appendChild(badgeContainer);
-                                } else {
-                                    // Update existing badge
-                                    const badge = badgeContainer.querySelector('span.bg-indigo-600');
-                                    if (badge && badge.textContent !== displayCount.toString()) {
-                                        // Animate count change
-                                        badge.style.transform = 'scale(1.2)';
-                                        badge.textContent = displayCount;
-                                        setTimeout(() => {
-                                            badge.style.transform = 'scale(1)';
-                                        }, 200);
-                                    }
-                                    badgeContainer.style.display = 'flex';
-                                }
-                            } else {
-                                // Hide badge when no unread messages
-                                if (badgeContainer) {
-                                    badgeContainer.style.display = 'none';
-                                }
+                                const badgeContainer = document.createElement('span');
+                                badgeContainer.className = 'absolute top-2 right-2 flex h-4 w-4';
+                                badgeContainer.innerHTML = `
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-4 w-4 bg-indigo-600 text-[9px] text-white font-bold items-center justify-center transition-transform duration-200 ease-out">
+                                        ${displayCount}
+                                    </span>
+                                `;
+                                messageLink.appendChild(badgeContainer);
+                                console.log('Created new badge with count:', displayCount);
                             }
                         }
                     })
@@ -775,6 +795,28 @@
         @endauth
     </script>
 
+    <script>
+        function updateUserStatus(statusId) {
+            fetch("{{ route('emp.status.update') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ new_status: statusId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data[0].success) {
+                    window.location.reload();
+                } else {
+                    alert('Failed to update status');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+    
     @stack('scripts')
 </body>
 

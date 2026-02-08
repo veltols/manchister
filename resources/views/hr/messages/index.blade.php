@@ -103,17 +103,20 @@
                     </div>
                     <div>
                         <h3 class="font-bold text-slate-800">{{ $chatPartner->first_name ?? 'Unknown' }} {{ $chatPartner->last_name ?? '' }}</h3>
-                        <div class="flex items-center gap-1.5">
-                            <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"></div>
-                            <span class="text-xs text-slate-500 font-medium">Online</span>
-                        </div>
+                        @if($chatPartner && $chatPartner->status)
+                            <div class="flex items-center gap-1.5">
+                                <div class="w-2 h-2 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.1)]" style="background-color: {{ $chatPartner->status->staus_color }}"></div>
+                                <span class="text-xs text-slate-500 font-medium">{{ $chatPartner->status->staus_name }}</span>
+                            </div>
+                        @else
+                             <div class="flex items-center gap-1.5">
+                                <div class="w-2 h-2 rounded-full bg-slate-300"></div>
+                                <span class="text-xs text-slate-500 font-medium">Offline</span>
+                            </div>
+                        @endif
                     </div>
                 </div>
-                <div class="flex gap-2 text-slate-400">
-                    <button class="w-8 h-8 rounded-lg hover:bg-slate-100 transition-colors"><i class="fa-solid fa-phone"></i></button>
-                    <button class="w-8 h-8 rounded-lg hover:bg-slate-100 transition-colors"><i class="fa-solid fa-video"></i></button>
-                    <button class="w-8 h-8 rounded-lg hover:bg-slate-100 transition-colors"><i class="fa-solid fa-ellipsis-vertical"></i></button>
-                </div>
+                
             </div>
 
             <!-- Messages Container -->

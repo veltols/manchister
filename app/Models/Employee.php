@@ -41,6 +41,11 @@ class Employee extends Model
         return $this->belongsTo(Designation::class, 'designation_id', 'designation_id');
     }
 
+    public function status()
+    {
+        return $this->belongsTo(UserStatus::class, 'emp_status_id', 'staus_id');
+    }
+
     public function credentials()
     {
         return $this->hasOne(EmployeeCred::class, 'employee_id', 'employee_id');

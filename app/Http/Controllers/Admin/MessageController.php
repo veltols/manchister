@@ -22,7 +22,7 @@ class MessageController extends Controller
         
         $conversations = Conversation::where('a_id', $adminId)
             ->orWhere('b_id', $adminId)
-            ->with(['participantA', 'participantB'])
+            ->with(['participantA.status', 'participantB.status'])
             ->orderBy('chat_id', 'desc') // Legacy order
             ->get();
 
@@ -40,7 +40,7 @@ class MessageController extends Controller
         
         if ($request->has('chat_id')) {
             $chatId = $request->chat_id;
-            $activeChat = Conversation::with(['participantA', 'participantB'])
+            $activeChat = Conversation::with(['participantA.status', 'participantB.status'])
                 ->where('chat_id', $chatId)
                 ->where(function($q) use ($adminId) {
                     $q->where('a_id', $adminId)->orWhere('b_id', $adminId);
@@ -181,7 +181,7 @@ class MessageController extends Controller
         // Fetch conversations with unread counts
         $conversations = Conversation::where('a_id', $adminId)
             ->orWhere('b_id', $adminId)
-            ->with(['participantA', 'participantB'])
+            ->with(['participantA.status', 'participantB.status'])
             ->get();
             
         // Calculate unread counts for each conversation

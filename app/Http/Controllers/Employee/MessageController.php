@@ -19,7 +19,7 @@ class MessageController extends Controller
         // Fetch conversations where user is a participant
         $conversations = Conversation::where('a_id', $employeeId)
             ->orWhere('b_id', $employeeId)
-            ->with(['participantA', 'participantB'])
+            ->with(['participantA.status', 'participantB.status'])
             ->get();
             
         // Calculate unread counts for each conversation
@@ -52,7 +52,7 @@ class MessageController extends Controller
             ->where(function ($q) use ($employeeId) {
                 $q->where('a_id', $employeeId)->orWhere('b_id', $employeeId);
             })
-            ->with(['participantA', 'participantB'])
+            ->with(['participantA.status', 'participantB.status'])
             ->firstOrFail();
 
         // Mark messages as read
@@ -68,7 +68,7 @@ class MessageController extends Controller
 
         $conversations = Conversation::where('a_id', $employeeId)
             ->orWhere('b_id', $employeeId)
-            ->with(['participantA', 'participantB'])
+            ->with(['participantA.status', 'participantB.status'])
             ->get();
             
         foreach ($conversations as $conv) {
@@ -215,7 +215,7 @@ class MessageController extends Controller
         // Fetch conversations with unread counts
         $conversations = Conversation::where('a_id', $employeeId)
             ->orWhere('b_id', $employeeId)
-            ->with(['participantA', 'participantB'])
+            ->with(['participantA.status', 'participantB.status'])
             ->get();
             
         // Calculate unread counts for each conversation
