@@ -35,7 +35,7 @@
                             <th class="text-center font-bold text-slate-400">Action</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-50">
+                    <tbody class="divide-y divide-slate-50" id="reviews-container">
                         @forelse($reviews as $rev)
                             <tr class="hover:bg-slate-50/50 transition-colors">
                                 <td class="whitespace-nowrap">
@@ -89,7 +89,10 @@
                     </tbody>
                 </table>
             </div>
-            @if($reviews->hasPages())
+                    <!-- AJAX Pagination -->
+                    <div id="reviews-pagination"></div>
+
+                    @if (false && $reviews->hasPages())
                 <div class="px-6 py-4 border-t border-slate-100">
                     {{ $reviews->links() }}
                 </div>
@@ -147,11 +150,12 @@
         </div>
     </div>
 
+    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
     <script>
-        const reviews = @json($reviews->items());
+        let performanceReviews = @json($reviews->items());
 
         function viewDetails(id) {
-            const rev = reviews.find(r => r.performance_id == id);
+            const rev = performanceReviews.find(r => r.performance_id == id);
             if (rev) {
                 document.getElementById('modal-date').innerText = `Ref: #${rev.performance_id} | Date: ${rev.added_date}`;
                 document.getElementById('modal-objectives').innerText = rev.performance_object;
@@ -161,5 +165,63 @@
                 openModal('reviewModal');
             }
         }
+
+        window.ajaxPagination = new AjaxPagination({
+            endpoint: "{{ route('emp.performance.data') }}",
+            containerSelector: '#reviews-container',
+            paginationSelector: '#reviews-pagination',
+            renderCallback: function(data) {
+                performanceReviews = data; // Update local cache for modals
+                let html = '';
+                data.forEach(rev => {
+                    const date = new Date(rev.added_date).toLocaleDateString(undefined, {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                    });
+                    const markerInitial = (rev.marker && rev.marker.first_name) ? rev.marker.first_name[0] : '?';
+                    const markerName = (rev.marker && rev.marker.first_name) ? rev.marker.first_name : 'Manager';
+
+                    html += `
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="whitespace-nowrap">
+                                <div class="flex flex-col">
+                                    <span class="font-bold text-slate-700">${date}</span>
+                                    <span class="text-[10px] text-slate-400 font-medium">Ref #${rev.performance_id}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <p class="text-sm text-slate-600 line-clamp-1 max-w-xs" title="${rev.performance_object}">
+                                    ${rev.performance_object}
+                                </p>
+                            </td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                    <p class="text-sm text-slate-600 line-clamp-1 max-w-xs" title="${rev.performance_kpi}">
+                                        ${rev.performance_kpi}
+                                    </p>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="flex items-center justify-center gap-2">
+                                    <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
+                                        ${markerInitial}
+                                    </div>
+                                    <span class="text-xs text-slate-600 font-medium">${markerName}</span>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <button onclick="viewDetails(${rev.performance_id})"
+                                    class="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-brand-dark hover:text-white transition-all shadow-sm mx-auto">
+                                    <i class="fa-solid fa-eye text-xs"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                return html;
+            }
+        });
     </script>
 @endsection

@@ -32,7 +32,7 @@
                             <th class="text-center font-bold text-slate-400">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-50">
+                    <tbody class="divide-y divide-slate-50" id="ss-container">
                         @forelse($services as $sv)
                             <tr class="hover:bg-slate-50/50 transition-colors">
                                 <td>
@@ -84,7 +84,10 @@
                     </tbody>
                 </table>
             </div>
-            @if($services->hasPages())
+                    <!-- AJAX Pagination -->
+                    <div id="ss-pagination"></div>
+
+                    @if (false && $services->hasPages())
                 <div class="px-6 py-4 border-t border-slate-100">
                     {{ $services->links() }}
                 </div>
@@ -154,4 +157,57 @@
             </form>
         </div>
     </div>
+    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+    <script>
+        window.ajaxPagination = new AjaxPagination({
+            endpoint: "{{ route('emp.ss.data') }}",
+            containerSelector: '#ss-container',
+            paginationSelector: '#ss-pagination',
+            renderCallback: function(data) {
+                let html = '';
+                data.forEach(sv => {
+                    const statusColor = sv.status ? sv.status.status_color : '64748b';
+                    const statusName = sv.status ? sv.status.status_name : 'Pending';
+                    const initial = ((sv.receiver.first_name || '?')[0] + (sv.receiver.last_name || '?')[0]).toUpperCase();
+
+                    html += `
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td>
+                                <span class="font-mono text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded">${sv.ss_ref}</span>
+                            </td>
+                            <td>
+                                <span class="font-bold text-slate-700 text-sm">${sv.category ? sv.category.category_name : '-'}</span>
+                            </td>
+                            <td class="max-w-xs">
+                                <p class="text-sm text-slate-500 truncate" title="${sv.ss_description}">
+                                    ${sv.ss_description}
+                                </p>
+                            </td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 uppercase">
+                                        ${initial}
+                                    </div>
+                                    <span class="text-sm text-slate-600 font-medium">${sv.receiver.first_name || 'Unknown'} ${sv.receiver.last_name || ''}</span>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-[10px] font-bold uppercase shadow-sm"
+                                    style="background: #${statusColor};">
+                                    ${statusName}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <a href="/emp/ss/${sv.ss_id}"
+                                    class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md mx-auto">
+                                    <i class="fa-solid fa-eye text-sm"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    `;
+                });
+                return html;
+            }
+        });
+    </script>
 @endsection

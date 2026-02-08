@@ -89,4 +89,32 @@ class SupportServiceController extends Controller
 
         return view('emp.ss.show', compact('service'));
     }
+
+    public function getData(Request $request)
+    {
+        $user = Auth::user();
+        $employeeId = $user->employee ? $user->employee->employee_id : 0;
+        $perPage = $request->input('per_page', 15);
+
+        $services = SupportService::with(['category', 'status', 'sender', 'receiver'])
+            ->where(function($query) use ($employeeId) {
+                $query->where('added_by', $employeeId)
+                      ->orWhere('sent_to_id', $employeeId);
+            })
+            ->orderBy('ss_id', 'desc')
+            ->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $services->items(),
+            'pagination' => [
+                'current_page' => $services->currentPage(),
+                'last_page' => $services->lastPage(),
+                'per_page' => $services->perPage(),
+                'total' => $services->total(),
+                'from' => $services->firstItem(),
+                'to' => $services->lastItem(),
+            ]
+        ]);
+    }
 }

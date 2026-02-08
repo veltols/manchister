@@ -69,4 +69,29 @@ class PermissionController extends Controller
 
         return redirect()->back()->with('success', 'Permission request submitted successfully');
     }
+
+    public function getData(Request $request)
+    {
+        $user = Auth::user();
+        $employeeId = $user->employee ? $user->employee->employee_id : 0;
+        $perPage = $request->input('per_page', 10);
+
+        $permissions = Permission::with('status')
+            ->where('employee_id', $employeeId)
+            ->orderBy('permission_id', 'desc')
+            ->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $permissions->items(),
+            'pagination' => [
+                'current_page' => $permissions->currentPage(),
+                'last_page' => $permissions->lastPage(),
+                'per_page' => $permissions->perPage(),
+                'total' => $permissions->total(),
+                'from' => $permissions->firstItem(),
+                'to' => $permissions->lastItem(),
+            ]
+        ]);
+    }
 }

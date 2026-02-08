@@ -69,8 +69,10 @@
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    </thead>
+                    <tbody id="tickets-container">
                         @forelse($tickets as $ticket)
+                            <!-- Initial server-side render -->
                             <tr>
                                 <td>
                                     <span class="font-mono text-sm font-semibold text-slate-600">{{ $ticket->ticket_ref }}</span>
@@ -148,15 +150,135 @@
                 </table>
             </div>
 
-            <!-- Pagination -->
-            @if($tickets->hasPages())
-                <div class="mt-6 flex justify-center">
-                    {{ $tickets->appends(['stt' => $stt])->links() }}
-                </div>
-            @endif
+            <!-- AJAX Pagination Container -->
+            <div id="tickets-pagination"></div>
         </div>
 
     </div>
+
+    @push('scripts')
+    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+    <script>
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        // Initialize AJAX Pagination
+        window.ajaxPagination = new AjaxPagination({
+            endpoint: "{{ route('emp.tickets.data', ['stt' => $stt]) }}", // Pass current filter
+            containerSelector: '#tickets-container',
+            paginationSelector: '#tickets-pagination',
+            perPage: 10,
+            renderCallback: function(tickets) {
+                const container = document.querySelector('#tickets-container');
+                
+                if (tickets.length === 0) {
+                    container.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="text-center py-12">
+                                <div class="flex flex-col items-center gap-3">
+                                    <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+                                        <i class="fa-solid fa-ticket text-2xl text-slate-400"></i>
+                                    </div>
+                                    <p class="text-slate-500 font-medium">No tickets found</p>
+                                    <button onclick="openModal('newTicketModal')"
+                                        class="text-brand-dark hover:text-brand-light font-bold text-sm">
+                                        Create your first ticket
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                tickets.forEach(ticket => {
+                    const showUrl = `{{ route('emp.tickets.show', ':id') }}`.replace(':id', ticket.ticket_id);
+                    
+                    // Logger info
+                    let loggerInitial = '-';
+                    let loggerName = '-';
+                    if (ticket.latest_log && ticket.latest_log.logger) {
+                        loggerInitial = (ticket.latest_log.logger.first_name.charAt(0) + ticket.latest_log.logger.last_name.charAt(0)).toUpperCase();
+                        loggerName = ticket.latest_log.logger.first_name + ' ' + ticket.latest_log.logger.last_name;
+                    }
+
+                    // Date parsing
+                    const updatedDate = ticket.last_updated_date ? new Date(ticket.last_updated_date).toLocaleDateString() : '-';
+
+                    html += `
+                        <tr>
+                            <td>
+                                <span class="font-mono text-sm font-semibold text-slate-600">${ticket.ticket_ref}</span>
+                            </td>
+                            <td class="max-w-xs">
+                                <span class="font-semibold text-slate-800 block truncate"
+                                    title="${ticket.ticket_subject}">${ticket.ticket_subject}</span>
+                            </td>
+                            <td>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 text-indigo-800 text-sm font-medium">
+                                    <i class="fa-solid fa-tag text-xs"></i>
+                                    ${ticket.category ? ticket.category.category_name : 'N/A'}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="text-sm text-slate-600">
+                                    ${updatedDate}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border border-slate-200">
+                                        ${loggerInitial}
+                                    </div>
+                                    <span class="text-sm text-slate-600 font-medium">
+                                        ${loggerName}
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #${ticket.priority ? ticket.priority.priority_color : 'ccc'}">
+                                    ${ticket.priority ? ticket.priority.priority_name : 'Normal'}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #${ticket.status ? ticket.status.status_color : 'ccc'}">
+                                    ${ticket.status ? ticket.status.status_name : 'Open'}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <a href="${showUrl}"
+                                        class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
+                                        title="View Details">
+                                        <i class="fa-solid fa-eye text-sm"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            }
+        });
+
+        // Use server-side rendered data for initial page load
+        @if($tickets->hasPages())
+            window.ajaxPagination.renderPagination({
+                current_page: {{ $tickets->currentPage() }},
+                last_page: {{ $tickets->lastPage() }},
+                from: {{ $tickets->firstItem() ?? 0 }},
+                to: {{ $tickets->lastItem() ?? 0 }},
+                total: {{ $tickets->total() }}
+            });
+        @endif
+    </script>
+    @endpush
 
     <!-- New Ticket Modal -->
     <div id="newTicketModal" class="modal">

@@ -19,7 +19,7 @@ class FeedbackController extends Controller
             ->join('employees_list', 'employees_list.employee_id', '=', 'feedback_forms.employee_id')
             ->select('feedback_forms_answers.*', 'feedback_forms.added_date', 'employees_list.first_name', 'employees_list.last_name')
             ->orderBy('feedback_forms.added_date', 'desc')
-            ->paginate(50);
+            ->paginate(15);
 
         return view('admin.feedback.index', compact('feedbacks'));
     }
@@ -66,5 +66,29 @@ class FeedbackController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+    public function getData(Request $request)
+    {
+        $perPage = $request->get('per_page', 15);
+
+        $feedbacks = DB::table('feedback_forms_answers')
+            ->join('feedback_forms', 'feedback_forms.form_id', '=', 'feedback_forms_answers.form_id')
+            ->join('employees_list', 'employees_list.employee_id', '=', 'feedback_forms.employee_id')
+            ->select('feedback_forms_answers.*', 'feedback_forms.added_date', 'employees_list.first_name', 'employees_list.last_name')
+            ->orderBy('feedback_forms.added_date', 'desc')
+            ->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $feedbacks->items(),
+            'pagination' => [
+                'current_page' => $feedbacks->currentPage(),
+                'last_page' => $feedbacks->lastPage(),
+                'per_page' => $feedbacks->perPage(),
+                'total' => $feedbacks->total(),
+                'from' => $feedbacks->firstItem(),
+                'to' => $feedbacks->lastItem(),
+            ]
+        ]);
     }
 }

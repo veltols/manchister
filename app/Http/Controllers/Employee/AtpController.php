@@ -232,4 +232,40 @@ class AtpController extends Controller
 
         return view('emp.atps.show', compact('atp', 'apps', 'logs', 'renewals', 'cancellations', 'leRecords'));
     }
+
+    public function getData(Request $request)
+    {
+        $perPage = $request->input('per_page', 12);
+        $query = Atp::with(['status', 'creator', 'category', 'type']);
+
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(function($q) use ($s) {
+                $q->where('atp_name', 'like', "%$s%")
+                  ->orWhere('atp_ref', 'like', "%$s%")
+                  ->orWhere('atp_email', 'like', "%$s%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('atp_status_id', $request->status);
+        } elseif ($request->filled('stt') && $request->stt != '00') {
+            $query->where('atp_status_id', $request->stt);
+        }
+
+        $atps = $query->orderBy('atp_id', 'desc')->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $atps->items(),
+            'pagination' => [
+                'current_page' => $atps->currentPage(),
+                'last_page' => $atps->lastPage(),
+                'per_page' => $atps->perPage(),
+                'total' => $atps->total(),
+                'from' => $atps->firstItem(),
+                'to' => $atps->lastItem(),
+            ]
+        ]);
+    }
 }

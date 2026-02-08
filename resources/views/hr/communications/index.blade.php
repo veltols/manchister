@@ -46,7 +46,7 @@
                         <th class="text-center">Status</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="comm-container">
                     @forelse($records as $rec)
                     <tr>
                         <td><span class="font-mono text-sm font-semibold text-indigo-600">{{ $rec->communication_code }}</span></td>
@@ -81,14 +81,78 @@
             </table>
         </div>
 
-        @if($records->hasPages())
-        <div class="px-6 py-4 border-t border-slate-100">
-            {{ $records->links('pagination::bootstrap-5') }}
-        </div>
-        @endif
+        <!-- AJAX Pagination -->
+        <div id="comm-pagination"></div>
     </div>
 
 </div>
+
+@push('scripts')
+<script src="{{ asset('js/ajax-pagination.js') }}"></script>
+<script>
+    window.ajaxPagination = new AjaxPagination({
+        endpoint: "{{ route('hr.communications.data', request()->query()) }}",
+        containerSelector: '#comm-container',
+        paginationSelector: '#comm-pagination',
+        renderCallback: function(records) {
+            const container = document.querySelector('#comm-container');
+            if (records.length === 0) {
+                container.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-12">
+                            <div class="flex flex-col items-center gap-3">
+                                <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+                                    <i class="fa-solid fa-bullhorn text-2xl text-slate-400"></i>
+                                </div>
+                                <p class="text-slate-500 font-medium">No communication logs found</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            records.forEach(rec => {
+                const typeName = (rec.type && rec.type.communication_type_name) ? rec.type.communication_type_name : '-';
+                const statusName = (rec.status && rec.status.communication_status_name) ? rec.status.communication_status_name : 'Unknown';
+                
+                html += `
+                    <tr>
+                        <td><span class="font-mono text-sm font-semibold text-indigo-600">${rec.communication_code}</span></td>
+                        <td><span class="font-semibold text-slate-800">${rec.external_party_name}</span></td>
+                        <td><span class="text-sm text-slate-600">${rec.communication_subject}</span></td>
+                        <td class="text-center">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-medium">
+                                <i class="fa-solid fa-tag text-xs"></i>
+                                ${typeName}
+                            </span>
+                        </td>
+                        <td><span class="text-sm text-slate-600">${rec.requested_date || '-'}</span></td>
+                        <td class="text-center">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-medium">
+                                ${statusName}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+            container.innerHTML = html;
+        }
+    });
+
+    // Initial pagination setup
+    @if($records->hasPages())
+        window.ajaxPagination.renderPagination({
+            current_page: {{ $records->currentPage() }},
+            last_page: {{ $records->lastPage() }},
+            from: {{ $records->firstItem() }},
+            to: {{ $records->lastItem() }},
+            total: {{ $records->total() }}
+        });
+    @endif
+</script>
+@endpush
 
 <!-- Create Modal -->
 <div class="modal" id="addCommModal">

@@ -91,12 +91,40 @@ class SettingsController extends Controller
         $conf = $this->config[$type];
         $model = new $conf['model'];
         
-        $records = $model->orderBy($conf['pk'], 'desc')->get();
+        $records = $model->orderBy($conf['pk'], 'desc')->paginate(15);
         
         // Employees for dropdowns
         $employees = Employee::where('is_deleted', 0)->where('is_hidden', 0)->orderBy('first_name')->get();
 
         return view('admin.settings.index', compact('records', 'type', 'conf', 'employees'));
+    }
+
+    public function getData(Request $request)
+    {
+        $type = $request->input('type', 'tc');
+        $perPage = $request->get('per_page', 15);
+
+        if (!array_key_exists($type, $this->config)) {
+            return response()->json(['success' => false, 'message' => 'Invalid type']);
+        }
+
+        $conf = $this->config[$type];
+        $model = new $conf['model'];
+        
+        $records = $model->orderBy($conf['pk'], 'desc')->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $records->items(),
+            'pagination' => [
+                'current_page' => $records->currentPage(),
+                'last_page' => $records->lastPage(),
+                'per_page' => $records->perPage(),
+                'total' => $records->total(),
+                'from' => $records->firstItem(),
+                'to' => $records->lastItem(),
+            ]
+        ]);
     }
 
     public function store(Request $request)

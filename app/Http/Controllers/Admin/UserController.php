@@ -35,7 +35,7 @@ class UserController extends Controller
             'first_name' => 'required|string',
             'last_name' => 'required|string',
             'department_id' => 'required|exists:employees_list_departments,department_id',
-            'employee_email' => 'required|email|unique:employees_list,employee_email',
+            'employee_email' => 'required|unique:employees_list,employee_email',
             'password' => 'required|string|min:6',
         ]);
 
@@ -136,8 +136,7 @@ class UserController extends Controller
         $pass = EmployeePass::where('employee_id', $id)->first() ?? new EmployeePass();
         $pass->employee_id = $id;
         $pass->pass_value = Hash::make($request->password);
-        $pass->entry_time = now();
-        $pass->entry_who = auth()->id() ?? 1;
+        $pass->is_active = 1;
         $pass->save();
 
         $this->logAction($id, 'Password Reset', $request->log_remark);

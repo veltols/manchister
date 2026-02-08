@@ -62,8 +62,9 @@
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="tickets-container">
                         @forelse($tickets as $ticket)
+                            <!-- Initial server-side render -->
                             <tr>
                                 <td>
                                     <span class="font-mono text-sm font-semibold text-slate-600">{{ $ticket->ticket_ref }}</span>
@@ -138,11 +139,8 @@
                 </table>
             </div>
 
-            @if($tickets->hasPages())
-                <div class="mt-6 flex justify-center">
-                    {{ $tickets->appends(['stt' => request('stt')])->links() }}
-                </div>
-            @endif
+            <!-- AJAX Pagination Container -->
+            <div id="tickets-pagination"></div>
         </div>
     </div>
 
@@ -308,26 +306,152 @@
     </div>
 
     @push('scripts')
+    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
     <script>
-        function openAssignModal(ticketId) {
-            document.getElementById('assignModal').classList.add('active');
-            document.getElementById('assignForm').action = "/admin/tickets/" + ticketId + "/assign";
+        // ... (Existing modal scripts) ...
+
+        // Ticket Rendering Helpers
+        function getAddedByBadge(addedBy) {
+            if (addedBy) {
+                const initial = addedBy.first_name ? addedBy.first_name.charAt(0) : 'S';
+                const name = addedBy.first_name + ' ' + addedBy.last_name;
+                return `
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border border-slate-200">
+                            ${initial}
+                        </div>
+                        <span class="text-sm text-slate-600 font-medium">
+                            ${name}
+                        </span>
+                    </div>
+                `;
+            }
+            return `
+                 <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border border-slate-200">
+                        S
+                    </div>
+                    <span class="text-sm text-slate-600 font-medium">
+                        System
+                    </span>
+                 </div>
+            `;
         }
 
-        function closeAssignModal() {
-             document.getElementById('assignModal').classList.remove('active');
+        function getAssignedToBadge(assignedTo) {
+            if (assignedTo) {
+                const initial = assignedTo.first_name ? assignedTo.first_name.charAt(0) : 'U';
+                const name = assignedTo.first_name + ' ' + assignedTo.last_name;
+                return `
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-full bg-indigo-50 flex items-center justify-center text-[10px] font-bold text-indigo-600 border border-indigo-100">
+                            ${initial}
+                        </div>
+                        <span class="text-sm text-indigo-700 font-medium">
+                            ${name}
+                        </span>
+                    </div>
+                `;
+            }
+            return `<span class="text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-100 px-2 py-1 rounded">Unassigned</span>`;
+        }
+        
+        // Initialize AJAX Pagination
+        window.ajaxPagination = new AjaxPagination({
+            endpoint: "{{ route('admin.tickets.data', ['stt' => $stt]) }}", // Pass current filter
+            containerSelector: '#tickets-container',
+            paginationSelector: '#tickets-pagination',
+            perPage: 15,
+            renderCallback: function(tickets) {
+                const container = document.querySelector('#tickets-container');
+                
+                if (tickets.length === 0) {
+                    container.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="text-center py-12">
+                                <div class="flex flex-col items-center gap-3">
+                                    <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+                                        <i class="fa-solid fa-ticket text-2xl text-slate-400"></i>
+                                    </div>
+                                    <p class="text-slate-500 font-medium">No tickets found</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                tickets.forEach(ticket => {
+                    const showUrl = `{{ route('admin.tickets.show', ':id') }}`.replace(':id', ticket.ticket_id);
+                    
+                    html += `
+                        <tr>
+                            <td>
+                                <span class="font-mono text-sm font-semibold text-slate-600">${ticket.ticket_ref}</span>
+                            </td>
+                            <td class="max-w-xs">
+                                <div class="flex flex-col">
+                                    <span class="font-semibold text-slate-800 block truncate" title="${ticket.ticket_subject}">
+                                        ${ticket.ticket_subject}
+                                    </span>
+                                    <span class="text-xs text-slate-500">
+                                        ${ticket.category ? ticket.category.category_name : 'General'}
+                                    </span>
+                                </div>
+                            </td>
+                            <td>
+                                ${getAddedByBadge(ticket.added_by)}
+                            </td>
+                            <td>
+                                ${getAssignedToBadge(ticket.assigned_to)}
+                            </td>
+                            <td class="text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #${ticket.priority ? ticket.priority.priority_color : 'ccc'}">
+                                    ${ticket.priority ? ticket.priority.priority_name : 'Normal'}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #${ticket.status ? ticket.status.status_color : 'ccc'}">
+                                    ${ticket.status ? ticket.status.status_name : 'Open'}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <a href="${showUrl}"
+                                        class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
+                                        title="View Details & Manage">
+                                        <i class="fa-solid fa-eye text-sm"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            }
+        });
+
+        // Use server-side rendered data for initial page load if exists
+        @if($tickets->hasPages())
+            window.ajaxPagination.renderPagination({
+                current_page: {{ $tickets->currentPage() }},
+                last_page: {{ $tickets->lastPage() }},
+                from: {{ $tickets->firstItem() ?? 0 }},
+                to: {{ $tickets->lastItem() ?? 0 }},
+                total: {{ $tickets->total() }}
+            });
+        @endif
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
         }
 
-        function openStatusModal(ticketId, statusId, title) {
-            document.getElementById('statusModal').classList.add('active');
-            document.getElementById('statusForm').action = "/admin/tickets/" + ticketId + "/status";
-            document.getElementById('modalStatusId').value = statusId;
-            document.getElementById('statusModalTitle').innerText = title;
-        }
-
-        function closeStatusModal() {
-            document.getElementById('statusModal').classList.remove('active');
-        }
+        // ... existing open/close modals functions ...
     </script>
     @endpush
 @endsection

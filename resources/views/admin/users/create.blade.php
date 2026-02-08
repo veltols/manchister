@@ -73,10 +73,10 @@
                     @enderror
                 </div>
 
-                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">Login Email <span class="text-red-500">*</span></label>
-                    <input type="email" name="email" value="{{ old('email') }}" class="premium-input w-full px-4 py-3 text-sm" required>
-                    @error('email')
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Login Identifier (Email or Name) <span class="text-red-500">*</span></label>
+                    <input type="text" name="login_identifier" value="{{ old('login_identifier') }}" class="premium-input w-full px-4 py-3 text-sm" placeholder="e.g. name or email" required>
+                    @error('login_identifier')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>

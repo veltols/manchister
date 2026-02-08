@@ -88,7 +88,7 @@
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="leaves-container">
                         @forelse($leaves as $leave)
                             <tr>
                                 <td>
@@ -177,7 +177,7 @@
                                                     title="Quick Approve">
                                                     <i class="fa-solid fa-check text-sm"></i>
                                                 </button>
-                                            </form>
+                                             </form>
                                         @endif
 
                                         @if($leave->leave_attachment && $leave->leave_attachment != 'no-img.png')
@@ -212,15 +212,157 @@
                 </table>
             </div>
 
-            <!-- Pagination -->
-            @if($leaves->hasPages())
-                <div class="px-6 py-4 border-t border-slate-100">
-                    {{ $leaves->links('pagination::bootstrap-5') }}
-                </div>
-            @endif
+            <!-- AJAX Pagination -->
+            <div id="leaves-pagination"></div>
         </div>
 
     </div>
+
+    @push('scripts')
+    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+    <script>
+        window.ajaxPagination = new AjaxPagination({
+            endpoint: "{{ route('hr.leaves.data') }}",
+            containerSelector: '#leaves-container',
+            paginationSelector: '#leaves-pagination',
+            renderCallback: function(leaves) {
+                const container = document.querySelector('#leaves-container');
+                if (leaves.length === 0) {
+                    container.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center py-12">
+                                <div class="flex flex-col items-center gap-3">
+                                    <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+                                        <i class="fa-solid fa-calendar-days text-2xl text-slate-400"></i>
+                                    </div>
+                                    <p class="text-slate-500 font-medium">No leave requests found</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                leaves.forEach(leave => {
+                    let initials = 'U';
+                    let fullName = `<span class="text-red-500 italic">Unknown Employee (${leave.employee_id})</span>`;
+                    if (leave.employee) {
+                        initials = (leave.employee.first_name.charAt(0) + leave.employee.last_name.charAt(0)).toUpperCase();
+                        fullName = leave.employee.first_name + ' ' + leave.employee.last_name;
+                    }
+
+                    const startDate = leave.start_date ? new Date(leave.start_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : '-';
+                    const endDate = leave.end_date ? new Date(leave.end_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : '-';
+
+                    let statusConfig = { bg: 'from-slate-400 to-slate-500', text: 'Unknown', icon: 'question' };
+                    switch(parseInt(leave.leave_status_id)) {
+                        case 1: statusConfig = { bg: 'from-yellow-400 to-amber-500', text: 'Pending HR', icon: 'clock' }; break;
+                        case 2: statusConfig = { bg: 'from-blue-500 to-cyan-600', text: 'Pending Manager', icon: 'user-check' }; break;
+                        case 3: statusConfig = { bg: 'from-green-500 to-emerald-600', text: 'Approved', icon: 'check-double' }; break;
+                        case 4: statusConfig = { bg: 'from-red-500 to-rose-600', text: 'Rejected', icon: 'times-circle' }; break;
+                        case 6: statusConfig = { bg: 'from-purple-500 to-indigo-600', text: 'Pending Employee', icon: 'user-edit' }; break;
+                    }
+
+                    let actionsHtml = '';
+                    if (leave.leave_status_id == 1) {
+                        actionsHtml += `
+                            <button onclick="openStatusModal(${leave.leave_id}, 100, 'Send for Approval')"
+                                class="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
+                                title="Send for Approval">
+                                <i class="fa-solid fa-share text-sm"></i>
+                            </button>
+                            <button onclick="openStatusModal(${leave.leave_id}, 200, 'Send Back to User')"
+                                class="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
+                                title="Send Back to User">
+                                <i class="fa-solid fa-user-pen text-sm"></i>
+                            </button>
+                        `;
+                    }
+                    if (leave.leave_status_id == 2) {
+                        actionsHtml += `
+                            <form action="/hr/leaves/${leave.leave_id}/status" method="POST" class="inline">
+                                <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').content}">
+                                <input type="hidden" name="status_id" value="3">
+                                <button type="submit"
+                                    class="w-9 h-9 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
+                                    title="Quick Approve">
+                                    <i class="fa-solid fa-check text-sm"></i>
+                                </button>
+                            </form>
+                        `;
+                    }
+                    if (leave.leave_attachment && leave.leave_attachment !== 'no-img.png') {
+                        actionsHtml += `
+                            <a href="/uploads/${leave.leave_attachment}" target="_blank"
+                                class="w-9 h-9 rounded-lg bg-gradient-to-br from-slate-500 to-slate-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
+                                title="View Attachment">
+                                <i class="fa-solid fa-paperclip text-sm"></i>
+                            </a>
+                        `;
+                    }
+                    actionsHtml += `
+                        <button class="w-9 h-9 rounded-lg bg-gradient-to-br from-slate-400 to-slate-500 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
+                            title="View Details">
+                            <i class="fa-solid fa-eye text-sm"></i>
+                        </button>
+                    `;
+
+                    html += `
+                        <tr>
+                            <td><span class="font-mono text-sm font-semibold text-slate-600">#${leave.leave_id}</span></td>
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-semibold shadow-md">
+                                        ${initials}
+                                    </div>
+                                    <div><span class="font-semibold text-slate-800">${fullName}</span></div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-purple-50 text-purple-700 text-sm font-medium">
+                                    <i class="fa-solid fa-tag text-xs"></i>
+                                    ${leave.type ? leave.type.leave_type_name : 'N/A'}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="text-sm">
+                                    <div class="flex items-center gap-2 text-slate-600">
+                                        <i class="fa-solid fa-calendar-day text-xs text-slate-400"></i>
+                                        <span>${startDate}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-slate-600 mt-1">
+                                        <i class="fa-solid fa-calendar-check text-xs text-slate-400"></i>
+                                        <span>${endDate}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r ${statusConfig.bg} text-white text-xs font-bold shadow-md whitespace-nowrap">
+                                    <i class="fa-solid fa-${statusConfig.icon}"></i>
+                                    ${statusConfig.text}
+                                </span>
+                            </td>
+                            <td><div class="flex items-center justify-center gap-2">${actionsHtml}</div></td>
+                        </tr>
+                    `;
+                });
+                container.innerHTML = html;
+            }
+        });
+
+        // Initial pagination setup
+        @if($leaves->hasPages())
+            window.ajaxPagination.renderPagination({
+                current_page: {{ $leaves->currentPage() }},
+                last_page: {{ $leaves->lastPage() }},
+                from: {{ $leaves->firstItem() }},
+                to: {{ $leaves->lastItem() }},
+                total: {{ $leaves->total() }}
+            });
+        @endif
+    </script>
+    @endpush
 
     <!-- Create Modal -->
     @include('hr.leaves.create')

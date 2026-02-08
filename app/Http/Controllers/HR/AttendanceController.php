@@ -21,6 +21,28 @@ class AttendanceController extends Controller
         return view('hr.attendance.index', compact('attendances', 'employees'));
     }
 
+    public function getData(Request $request)
+    {
+        $perPage = $request->get('per_page', 20);
+        $attendances = Attendance::with('employee')
+            ->orderBy('checkin_date', 'desc')
+            ->orderBy('checkin_time', 'desc')
+            ->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $attendances->items(),
+            'pagination' => [
+                'current_page' => $attendances->currentPage(),
+                'last_page' => $attendances->lastPage(),
+                'per_page' => $attendances->perPage(),
+                'total' => $attendances->total(),
+                'from' => $attendances->firstItem(),
+                'to' => $attendances->lastItem(),
+            ]
+        ]);
+    }
+
     public function store(Request $request)
     {
         $request->validate([

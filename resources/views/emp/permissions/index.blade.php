@@ -31,7 +31,7 @@
                             <th class="text-center">Status</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="permissions-container">
                         @forelse($permissions as $perm)
                             <tr>
                                 <td class="font-bold text-slate-700">
@@ -76,7 +76,10 @@
                     </tbody>
                 </table>
             </div>
-            @if($permissions->hasPages())
+                    <!-- AJAX Pagination -->
+                    <div id="permissions-pagination"></div>
+
+                    @if (false && $permissions->hasPages())
                 <div class="px-6 py-4 border-t border-slate-100">
                     {{ $permissions->links() }}
                 </div>
@@ -136,4 +139,55 @@
             </form>
         </div>
     </div>
+    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+    <script>
+        window.ajaxPagination = new AjaxPagination({
+            endpoint: "{{ route('emp.permissions.data') }}",
+            containerSelector: '#permissions-container',
+            paginationSelector: '#permissions-pagination',
+            renderCallback: function(data) {
+                let html = '';
+                data.forEach(perm => {
+                    const statusColor = perm.status ? perm.status.status_color : '64748b';
+                    const statusName = perm.status ? perm.status.status_name : 'Pending';
+                    const permDate = perm.permission_date ? new Date(perm.permission_date).toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                    }) : '-';
+
+                    html += `
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="font-bold text-slate-700">
+                                ${permDate}
+                            </td>
+                            <td>
+                                <div class="flex items-center gap-2 text-sm text-slate-600">
+                                    <span class="px-2 py-1 bg-slate-100 rounded-lg">${perm.start_time}</span>
+                                    <i class="fa-solid fa-arrow-right text-[10px] text-slate-400"></i>
+                                    <span class="px-2 py-1 bg-slate-100 rounded-lg">${perm.end_time}</span>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="font-bold text-indigo-600">${perm.total_hours}h</span>
+                            </td>
+                            <td class="max-w-xs">
+                                <p class="text-sm text-slate-500 truncate" title="${perm.permission_remarks}">
+                                    ${perm.permission_remarks}
+                                </p>
+                            </td>
+                            <td class="text-center">
+                                <span
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-sm"
+                                    style="background: #${statusColor};">
+                                    ${statusName}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                });
+                return html;
+            }
+        });
+    </script>
 @endsection

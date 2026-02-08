@@ -230,4 +230,36 @@ class SupportTicketController extends Controller
         $log->log_type = 'int';
         $log->save();
     }
+    public function getData(Request $request)
+    {
+        $stt = $request->input('stt', 0);
+        $perPage = $request->get('per_page', 15);
+
+        $query = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'assignedTo']);
+
+        if ($stt == 1) {
+            $query->where('status_id', 1);
+        } elseif ($stt == 2) {
+            $query->where('status_id', 2);
+        } elseif ($stt == 3) {
+            $query->whereIn('status_id', [3, 4]);
+        } elseif ($stt == 4) {
+             $query->where('assigned_to', 0)->whereIn('status_id', [1, 2]);
+        }
+
+        $tickets = $query->orderBy('ticket_id', 'desc')->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $tickets->items(),
+            'pagination' => [
+                'current_page' => $tickets->currentPage(),
+                'last_page' => $tickets->lastPage(),
+                'per_page' => $tickets->perPage(),
+                'total' => $tickets->total(),
+                'from' => $tickets->firstItem(),
+                'to' => $tickets->lastItem(),
+            ]
+        ]);
+    }
 }

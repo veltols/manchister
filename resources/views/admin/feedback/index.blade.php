@@ -39,7 +39,7 @@
                             @endfor
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="feedback-container">
                         @forelse($feedbacks as $fb)
                             <tr class="group hover:bg-slate-50/80 transition-all duration-200">
                                 <td>
@@ -96,27 +96,138 @@
                 </table>
             </div>
 
-            <!-- Pagination -->
-            @if($feedbacks->hasPages())
-                <div class="p-4 border-t border-slate-100 bg-slate-50/30">
-                    {{ $feedbacks->links() }}
-                </div>
-            @endif
-        </div>
-
-        <!-- Help Info -->
-        <div class="p-4 rounded-xl bg-indigo-50/50 border border-indigo-100/50 flex items-start gap-3">
-            <div class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
-                <i class="fa-solid fa-info-circle"></i>
-            </div>
-            <div>
-                <p class="text-sm font-semibold text-indigo-900">Understanding Ratings</p>
-                <p class="text-xs text-indigo-600/80 leading-relaxed mt-0.5">
-                    Questions Q1-Q15 are typically numeric ratings (1-5). Q16 and Q17 often contain textual feedback.
-                    <span class="font-bold">Green:</span> High satisfaction (4-5), <span class="font-bold">Amber:</span> Moderate (2-3), <span class="font-bold">Red:</span> Improvement needed (1).
-                </p>
+            <!-- Pagination Container -->
+            <div id="feedback-pagination">
+                @if($feedbacks->hasPages())
+                    <div class="p-4 border-t border-slate-100 bg-slate-50/30">
+                        {{ $feedbacks->links() }}
+                    </div>
+                @endif
             </div>
         </div>
 
     </div>
+
+    @push('scripts')
+    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+    <script>
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const d = date.getDate();
+            const m = months[date.getMonth()];
+            const y = date.getFullYear();
+            
+            let hours = date.getHours();
+            let minutes = date.getMinutes();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            minutes = minutes < 10 ? '0'+minutes : minutes;
+            
+            return {
+                full: `${m} ${d < 10 ? '0'+d : d}, ${y}`,
+                time: `${hours}:${minutes} ${ampm}`
+            };
+        }
+
+        window.ajaxPagination = new AjaxPagination({
+            endpoint: "{{ route('admin.feedback.data') }}",
+            containerSelector: '#feedback-container',
+            paginationSelector: '#feedback-pagination',
+            perPage: 15,
+            renderCallback: function(feedbacks) {
+                const container = document.querySelector('#feedback-container');
+                
+                if (feedbacks.length === 0) {
+                    container.innerHTML = `
+                        <tr>
+                            <td colspan="20" class="py-20 text-center">
+                                <div class="flex flex-col items-center gap-3">
+                                    <div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center text-slate-200">
+                                        <i class="fa-solid fa-comment-slash text-2xl"></i>
+                                    </div>
+                                    <p class="text-slate-400 font-medium italic">No feedback records found.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                feedbacks.forEach(fb => {
+                    const initials = (fb.first_name?.[0] || '') + (fb.last_name?.[0] || '');
+                    const dateInfo = formatDate(fb.added_date);
+                    
+                    html += `
+                        <tr class="group hover:bg-slate-50/80 transition-all duration-200">
+                            <td>
+                                <span class="font-mono text-xs font-bold text-slate-400">#${fb.record_id}</span>
+                            </td>
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center text-indigo-500 font-bold text-xs border border-indigo-100/50">
+                                        ${initials}
+                                    </div>
+                                    <span class="font-semibold text-slate-700 group-hover:text-indigo-600 transition-colors">${fb.first_name} ${fb.last_name}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-slate-600 font-medium">${dateInfo.full}</span>
+                                    <span class="text-[10px] text-slate-400 font-bold">${dateInfo.time}</span>
+                                </div>
+                            </td>
+                    `;
+                    
+                    for (let i = 1; i <= 17; i++) {
+                        const ans = fb['a' + i];
+                        const isNumeric = !isNaN(parseFloat(ans)) && isFinite(ans);
+                        const val = parseInt(ans);
+                        
+                        if (isNumeric && val >= 1 && val <= 5) {
+                            const colorClass = val >= 4 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100/50' : 
+                                              (val >= 2 ? 'bg-amber-50 text-amber-600 border border-amber-100/50' : 'bg-rose-50 text-rose-600 border border-rose-100/50');
+                            
+                            html += `
+                                <td class="text-center">
+                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold ${colorClass}">
+                                        ${val}
+                                    </span>
+                                </td>
+                            `;
+                        } else {
+                            const truncatedAns = ans && ans.length > 25 ? ans.substring(0, 25) + '...' : (ans || '');
+                            html += `
+                                <td class="text-center">
+                                    <div class="max-w-[150px] mx-auto">
+                                        <p class="text-xs text-slate-500 truncate italic cursor-help" title="${ans || ''}">
+                                            ${truncatedAns}
+                                        </p>
+                                    </div>
+                                </td>
+                            `;
+                        }
+                    }
+                    
+                    html += `</tr>`;
+                });
+                
+                container.innerHTML = html;
+            }
+        });
+
+        // Initialize pagination helper with server-side data for first load
+        @if($feedbacks->hasPages())
+            window.ajaxPagination.renderPagination({
+                current_page: {{ $feedbacks->currentPage() }},
+                last_page: {{ $feedbacks->lastPage() }},
+                from: {{ $feedbacks->firstItem() ?? 0 }},
+                to: {{ $feedbacks->lastItem() ?? 0 }},
+                total: {{ $feedbacks->total() }}
+            });
+        @endif
+    </script>
+    @endpush
 @endsection

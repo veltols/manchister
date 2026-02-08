@@ -85,4 +85,29 @@ class CommunicationRequestController extends Controller
 
         return view('emp.communications.show', compact('request'));
     }
+
+    public function getData(Request $request)
+    {
+        $user = Auth::user();
+        $employeeId = $user->employee ? $user->employee->employee_id : 0;
+        $perPage = $request->input('per_page', 15);
+
+        $requests = CommunicationRequest::with(['type', 'status'])
+            ->where('requested_by', $employeeId)
+            ->orderBy('communication_id', 'desc')
+            ->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $requests->items(),
+            'pagination' => [
+                'current_page' => $requests->currentPage(),
+                'last_page' => $requests->lastPage(),
+                'per_page' => $requests->perPage(),
+                'total' => $requests->total(),
+                'from' => $requests->firstItem(),
+                'to' => $requests->lastItem(),
+            ]
+        ]);
+    }
 }

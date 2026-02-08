@@ -11,16 +11,7 @@
             @include('hr.partials.structure_nav')
         </div>
 
-        <div class="w-full flex justify-between items-end gap-6 px-4 md:px-6 pt-4 pb-2">
-            <div class="space-y-1">
-                <h2 class="text-3xl font-display font-extrabold text-premium tracking-tight">Company Hierarchy</h2>
-                <div class="flex items-center gap-2 text-slate-500">
-                    <div class="w-8 h-px bg-indigo-200"></div>
-                    <p class="text-sm font-medium">Visualizing department reporting lines</p>
-                </div>
-            </div>
-        </div>
-
+       
         <div id="chartContainer" class="premium-card relative bg-slate-50/30 overflow-hidden min-h-[500px] border border-slate-100 h-[calc(100vh-280px)]">
             
             <!-- Floating Chart Controls (Absolute to prevent shifting) -->
@@ -119,7 +110,7 @@
                                 $managerHtml = '<div class="mt-4 pt-4 border-t border-slate-100/80 flex items-center gap-2.5 text-left">
                                                     <div class="shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-[11px] font-bold shadow-indigo-200 shadow-lg">'.$initial.'</div>
                                                     <div class="min-w-0">
-                                                        <div class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter leading-none mb-1">Lead</div>
+                                                        <div class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter leading-none mb-1">line manager</div>
                                                         <div class="text-[11px] text-slate-700 font-bold truncate">'.$mName.'</div>
                                                     </div>
                                                 </div>';

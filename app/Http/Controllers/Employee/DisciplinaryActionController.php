@@ -31,4 +31,29 @@ class DisciplinaryActionController extends Controller
 
         return view('emp.da.show', compact('action'));
     }
+
+    public function getData(Request $request)
+    {
+        $user = Auth::user();
+        $employeeId = $user->employee ? $user->employee->employee_id : 0;
+        $perPage = $request->input('per_page', 15);
+
+        $actions = DisciplinaryAction::with(['type', 'warning', 'status'])
+            ->where('employee_id', $employeeId)
+            ->orderBy('da_id', 'desc')
+            ->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $actions->items(),
+            'pagination' => [
+                'current_page' => $actions->currentPage(),
+                'last_page' => $actions->lastPage(),
+                'per_page' => $actions->perPage(),
+                'total' => $actions->total(),
+                'from' => $actions->firstItem(),
+                'to' => $actions->lastItem(),
+            ]
+        ]);
+    }
 }

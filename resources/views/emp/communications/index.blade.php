@@ -32,7 +32,7 @@
                             <th class="text-center font-bold text-slate-400">Details</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-50">
+                    <tbody class="divide-y divide-slate-50" id="comms-container">
                         @forelse($requests as $req)
                             <tr class="hover:bg-slate-50/50 transition-colors">
                                 <td>
@@ -83,7 +83,10 @@
                     </tbody>
                 </table>
             </div>
-            @if($requests->hasPages())
+                    <!-- AJAX Pagination -->
+                    <div id="comms-pagination"></div>
+
+                    @if (false && $requests->hasPages())
                 <div class="px-6 py-4 border-t border-slate-100">
                     {{ $requests->links() }}
                 </div>
@@ -160,4 +163,59 @@
             </form>
         </div>
     </div>
+    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+    <script>
+        window.ajaxPagination = new AjaxPagination({
+            endpoint: "{{ route('emp.communications.data') }}",
+            containerSelector: '#comms-container',
+            paginationSelector: '#comms-pagination',
+            renderCallback: function(data) {
+                let html = '';
+                data.forEach(req => {
+                    const statusColor = req.status ? req.status.status_color : '64748b';
+                    const statusName = req.status ? req.status.communication_status_name : 'Pending';
+                    const typeName = req.type ? req.type.communication_type_name : '-';
+
+                    html += `
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td>
+                                <span class="font-mono text-xs font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded">${req.communication_code}</span>
+                            </td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                                        <i class="fa-solid fa-building text-[10px]"></i>
+                                    </div>
+                                    <span class="text-sm font-bold text-slate-700">${req.external_party_name}</span>
+                                </div>
+                            </td>
+                            <td class="max-w-xs">
+                                <p class="text-sm text-slate-500 truncate" title="${req.communication_subject}">
+                                    ${req.communication_subject}
+                                </p>
+                            </td>
+                            <td>
+                                <span class="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded-lg">
+                                    ${typeName}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-[10px] font-bold uppercase shadow-sm"
+                                    style="background: #${statusColor};">
+                                    ${statusName}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <a href="/emp/communications/${req.communication_id}"
+                                    class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md mx-auto">
+                                    <i class="fa-solid fa-eye text-sm"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    `;
+                });
+                return html;
+            }
+        });
+    </script>
 @endsection

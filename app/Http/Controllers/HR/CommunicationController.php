@@ -16,12 +16,6 @@ class CommunicationController extends Controller
     {
         $query = Communication::with(['status', 'type', 'requester'])->orderBy('communication_id', 'desc');
 
-        // Legacy: if ($USER_ID != 1) { $COND = "requested_by = USER_ID" ... }
-        // We will assume 'root' user (ID 1 equivalent) or HR Admin sees all.
-        // For now, let's allow HR to see all.
-        // If we strictly follow legacy: only ID 1 sees all.
-        // Let's implement filters.
-
         if ($request->has('type_id') && $request->type_id != '') {
             $query->where('communication_type_id', $request->type_id);
         }
@@ -31,6 +25,31 @@ class CommunicationController extends Controller
         $statuses = CommunicationStatus::all();
 
         return view('hr.communications.index', compact('records', 'types', 'statuses'));
+    }
+
+    public function getData(Request $request)
+    {
+        $perPage = $request->get('per_page', 15);
+        $query = Communication::with(['status', 'type', 'requester'])->orderBy('communication_id', 'desc');
+
+        if ($request->has('type_id') && $request->type_id != '') {
+            $query->where('communication_type_id', $request->type_id);
+        }
+
+        $records = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $records->items(),
+            'pagination' => [
+                'current_page' => $records->currentPage(),
+                'last_page' => $records->lastPage(),
+                'per_page' => $records->perPage(),
+                'total' => $records->total(),
+                'from' => $records->firstItem(),
+                'to' => $records->lastItem(),
+            ]
+        ]);
     }
 
     public function store(Request $request)

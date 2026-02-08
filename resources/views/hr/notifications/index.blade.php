@@ -15,9 +15,14 @@
             }
         },
         markRead(ids) {
-            if (!ids) return;
-            // Existing AJAX logic will be called by this wrapper
-            markReadAjax(ids);
+            let form = document.getElementById('markReadForm');
+            let input = document.getElementById('markReadIds');
+            if (ids) {
+                input.value = Array.isArray(ids) ? ids.join(',') : ids;
+            } else {
+                input.value = '0'; // 0 means Mark All as Read in controller
+            }
+            form.submit();
         }
     }">
 
@@ -48,10 +53,15 @@
             </div>
         </div>
 
+        <form id="markReadForm" action="{{ route('hr.notifications.mark_as_read') }}" method="POST" style="display: none;">
+            @csrf
+            <input type="hidden" name="ids" id="markReadIds">
+            <input type="hidden" name="notification_id" value="0">
+        </form>
+
         <div class="space-y-4">
             @forelse($notifications as $notif)
                 <div
-                    id="notif-{{ $notif->notification_id }}"
                     class="premium-card p-4 flex items-center gap-6 hover:shadow-lg transition-all border-slate-50 {{ !$notif->is_seen ? 'bg-brand/5 border-l-4 border-l-brand' : 'bg-white' }}">
                     
                     <div class="flex items-center gap-4 shrink-0">
@@ -85,17 +95,10 @@
                     </div>
 
                     <div class="flex items-center gap-2 shrink-0 ml-auto">
-                        @if($notif->related_page)
-                            <a href="{{ url($notif->related_page) }}" onclick="markReadAjax({{ $notif->notification_id }})"
-                                class="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-brand hover:text-white transition-all shadow-sm group"
-                                title="Go to Page">
-                                <i class="fa-solid fa-arrow-up-right-from-square text-xs group-hover:scale-110 transition-transform"></i>
-                            </a>
-                        @endif
                         @if(!$notif->is_seen)
-                            <button onclick="markReadAjax({{ $notif->notification_id }})"
-                                class="btn-mark-seen w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center hover:bg-teal-600 hover:text-white transition-all shadow-sm"
-                                title="Mark as Seen">
+                            <button @click="markRead([{{ $notif->notification_id }}])"
+                                class="btn-mark-seen w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
+                                title="Mark as Read">
                                 <i class="fa-solid fa-check text-sm"></i>
                             </button>
                         @endif
@@ -118,44 +121,4 @@
             </div>
         @endif
     </div>
-
-    @push('scripts')
-        <script>
-            function markReadAjax(id) {
-                let data = {
-                    _token: "{{ csrf_token() }}"
-                };
-
-                if (Array.isArray(id)) {
-                    data.ids = id;
-                } else {
-                    data.notification_id = id;
-                }
-
-                $.ajax({
-                    url: "{{ route('hr.notifications.mark_as_read') }}",
-                    type: 'POST',
-                    data: data,
-                    success: function(response) {
-                        if (response.success) {
-                            if (id === 0 || Array.isArray(id)) {
-                                location.reload();
-                            } else {
-                                const card = $('#notif-' + id);
-                                card.removeClass('bg-brand/5 border-l-4 border-l-brand');
-                                card.find('.notif-icon-wrapper')
-                                    .removeClass('bg-gradient-brand text-white shadow-lg shadow-brand/30')
-                                    .addClass('bg-slate-50 text-slate-200 shadow-none');
-                                card.find('.notif-icon-wrapper i')
-                                    .removeClass('fa-bell animate-bounce')
-                                    .addClass('fa-circle-check');
-                                card.find('.badge-new').fadeOut();
-                                card.find('.btn-mark-seen').fadeOut();
-                            }
-                        }
-                    }
-                });
-            }
-        </script>
-    @endpush
 @endsection

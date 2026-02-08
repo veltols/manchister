@@ -41,4 +41,28 @@ class NotificationController extends Controller
 
         return redirect()->back()->with('success', 'Notifications updated successfully.');
     }
+
+    public function getData(Request $request)
+    {
+        $user = Auth::user();
+        $employeeId = $user->user_id;
+        $perPage = $request->input('per_page', 20);
+
+        $notifications = EmployeeNotification::where('employee_id', $employeeId)
+            ->orderBy('notification_id', 'desc')
+            ->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $notifications->items(),
+            'pagination' => [
+                'current_page' => $notifications->currentPage(),
+                'last_page' => $notifications->lastPage(),
+                'per_page' => $notifications->perPage(),
+                'total' => $notifications->total(),
+                'from' => $notifications->firstItem(),
+                'to' => $notifications->lastItem(),
+            ]
+        ]);
+    }
 }

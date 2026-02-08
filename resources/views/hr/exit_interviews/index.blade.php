@@ -47,7 +47,7 @@
                             <th class="text-left">Remarks</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="exit-container">
                         @forelse($interviews as $iv)
                             <tr>
                                 <td><span class="font-mono text-sm font-semibold text-slate-600">#{{ $iv->interview_id }}</span>
@@ -89,14 +89,81 @@
                 </table>
             </div>
 
-            @if($interviews->hasPages())
-                <div class="px-6 py-4 border-t border-slate-100">
-                    {{ $interviews->links('pagination::bootstrap-5') }}
-                </div>
-            @endif
+            <!-- AJAX Pagination -->
+            <div id="exit-pagination"></div>
         </div>
 
     </div>
+
+    @push('scripts')
+    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+    <script>
+        window.ajaxPagination = new AjaxPagination({
+            endpoint: "{{ route('hr.exit_interviews.data') }}",
+            containerSelector: '#exit-container',
+            paginationSelector: '#exit-pagination',
+            renderCallback: function(interviews) {
+                const container = document.querySelector('#exit-container');
+                if (interviews.length === 0) {
+                    container.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center py-12">
+                                <div class="flex flex-col items-center gap-3">
+                                    <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+                                        <i class="fa-solid fa-person-walking-arrow-right text-2xl text-slate-400"></i>
+                                    </div>
+                                    <p class="text-slate-500 font-medium">No exit interviews recorded</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                interviews.forEach(iv => {
+                    const initials = (iv.employee ? iv.employee.first_name : 'U').charAt(0);
+                    const fullName = iv.employee ? `${iv.employee.first_name} ${iv.employee.last_name || ''}` : 'Unknown';
+                    const deptName = (iv.employee && iv.employee.department) ? iv.employee.department.department_name : '-';
+
+                    html += `
+                        <tr>
+                            <td><span class="font-mono text-sm font-semibold text-slate-600">#${iv.interview_id}</span></td>
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-semibold shadow-md">
+                                        ${initials}
+                                    </div>
+                                    <span class="font-semibold text-slate-800">${fullName}</span>
+                                </div>
+                            </td>
+                            <td><span class="text-sm text-slate-600">${iv.interview_date || '-'}</span></td>
+                            <td>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-purple-50 text-purple-700 text-sm font-medium">
+                                    <i class="fa-solid fa-building text-xs"></i>
+                                    ${deptName}
+                                </span>
+                            </td>
+                            <td><span class="text-sm text-slate-600 truncate max-w-xs block" title="${iv.interview_remarks || ''}">${iv.interview_remarks || ''}</span></td>
+                        </tr>
+                    `;
+                });
+                container.innerHTML = html;
+            }
+        });
+
+        // Initial pagination setup
+        @if($interviews->hasPages())
+            window.ajaxPagination.renderPagination({
+                current_page: {{ $interviews->currentPage() }},
+                last_page: {{ $interviews->lastPage() }},
+                from: {{ $interviews->firstItem() }},
+                to: {{ $interviews->lastItem() }},
+                total: {{ $interviews->total() }}
+            });
+        @endif
+    </script>
+    @endpush
 
     <!-- Create Modal -->
     <div class="modal" id="addExitModal">

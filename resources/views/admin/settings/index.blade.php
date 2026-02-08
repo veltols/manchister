@@ -76,7 +76,7 @@
                                 <th class="text-center w-24">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="settings-container">
                             @forelse($records as $record)
                                 <tr>
                                     <td class="text-slate-500 font-mono text-xs">{{ $record->{$conf['pk']} }}</td>
@@ -127,6 +127,15 @@
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+
+                <!-- AJAX Pagination Container -->
+                <div id="settings-pagination">
+                    @if($records->hasPages())
+                        <div class="p-4 border-t border-slate-100 bg-slate-50/30">
+                            {{ $records->links() }}
+                        </div>
+                    @endif
                 </div>
             </div>
 
@@ -210,10 +219,13 @@
     </div>
 
     @push('scripts')
+    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
     <script>
         // Config passed from PHP for JS use
         const fieldsConfig = @json($conf['fields']);
         const employees = @json($employees);
+        const pkName = @json($conf['pk']);
+        const settingType = "{{ $type }}";
 
         function openEditModal(record, pkName) {
             const modal = document.getElementById('editModal');
@@ -221,7 +233,7 @@
             const container = document.getElementById('editFields');
             
             // Set update route
-            form.action = "{{ route('admin.settings.store') }}".replace('store', 'update') + '/' + record[pkName];
+            form.action = "{{ route('admin.settings.index') }}" + '/' + record[pkName];
 
             // Clear previous fields
             container.innerHTML = '';
@@ -245,7 +257,7 @@
                     fieldHtml += `</select>`;
                 } else {
                     const inputType = meta === 'number' ? 'number' : 'text';
-                    fieldHtml += `<input type="${inputType}" name="${key}" value="${value}" class="premium-input w-full px-4 py-2.5 text-sm" required>`;
+                    fieldHtml += `<input type="${inputType}" name="${key}" value="${value || ''}" class="premium-input w-full px-4 py-2.5 text-sm" required>`;
                 }
                 
                 fieldHtml += `</div>`;
@@ -254,7 +266,92 @@
 
             modal.classList.add('active');
         }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        window.ajaxPagination = new AjaxPagination({
+            endpoint: "{{ route('admin.settings.data', ['type' => $type]) }}",
+            containerSelector: '#settings-container',
+            paginationSelector: '#settings-pagination',
+            perPage: 15,
+            renderCallback: function(records) {
+                const container = document.querySelector('#settings-container');
+                
+                if (records.length === 0) {
+                    container.innerHTML = `
+                        <tr>
+                            <td colspan="${Object.keys(fieldsConfig).length + 2}" class="text-center py-8 text-slate-500">
+                                No records found.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                records.forEach(record => {
+                    html += `<tr>`;
+                    html += `<td class="text-slate-500 font-mono text-xs">${record[pkName]}</td>`;
+                    
+                    for (const [key, labelInfo] of Object.entries(fieldsConfig)) {
+                        const meta = labelInfo.split('|')[1] || 'text';
+                        const value = record[key];
+                        
+                        html += `<td class="px-4">`;
+                        if (meta === 'employee') {
+                            const emp = employees.find(e => e.employee_id == value);
+                            if (emp) {
+                                html += `
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs text-slate-500 font-bold">
+                                            ${emp.first_name.charAt(0)}
+                                        </div>
+                                        <span class="text-sm text-slate-700">${emp.first_name} ${emp.last_name}</span>
+                                    </div>
+                                `;
+                            } else {
+                                html += `<span class="text-slate-400 italic text-xs">Unassigned</span>`;
+                            }
+                        } else if (meta === 'number') {
+                            html += `<span class="font-mono text-slate-600">${value}</span>`;
+                        } else {
+                            html += `<span class="text-slate-800 font-medium">${value || ''}</span>`;
+                        }
+                        html += `</td>`;
+                    }
+                    
+                    const recordJson = JSON.stringify(record).replace(/"/g, '&quot;');
+                    html += `
+                        <td class="text-center">
+                            <button onclick="openEditModal(${recordJson}, '${pkName}')" 
+                                class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
+                                title="Edit Record">
+                                <i class="fa-solid fa-pen text-sm"></i>
+                            </button>
+                        </td>
+                    `;
+                    html += `</tr>`;
+                });
+                
+                container.innerHTML = html;
+            }
+        });
+
+        // Initialize pagination helper with server-side data for first load
+        @if($records->hasPages())
+            window.ajaxPagination.renderPagination({
+                current_page: {{ $records->currentPage() }},
+                last_page: {{ $records->lastPage() }},
+                from: {{ $records->firstItem() ?? 0 }},
+                to: {{ $records->lastItem() ?? 0 }},
+                total: {{ $records->total() }}
+            });
+        @endif
     </script>
     @endpush
-
 @endsection

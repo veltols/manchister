@@ -19,13 +19,34 @@ class TaskController extends Controller
     {
         $tasks = Task::with(['status', 'priority', 'assignedBy'])
             ->orderBy('task_id', 'desc')
-            ->get();
+            ->paginate(15);
 
         $statuses = TaskStatus::all();
         $priorities = TaskPriority::all();
         $employees = Employee::orderBy('first_name')->get();
 
         return view('hr.tasks.index', compact('tasks', 'statuses', 'priorities', 'employees'));
+    }
+
+    public function getData(Request $request)
+    {
+        $perPage = $request->get('per_page', 15);
+        $tasks = Task::with(['status', 'priority', 'assignedBy'])
+            ->orderBy('task_id', 'desc')
+            ->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $tasks->items(),
+            'pagination' => [
+                'current_page' => $tasks->currentPage(),
+                'last_page' => $tasks->lastPage(),
+                'per_page' => $tasks->perPage(),
+                'total' => $tasks->total(),
+                'from' => $tasks->firstItem(),
+                'to' => $tasks->lastItem(),
+            ]
+        ]);
     }
 
     public function show($id)

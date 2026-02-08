@@ -10,7 +10,7 @@
             <!-- List of Previous Interviews (Usually just one) -->
             <div class="premium-card p-8">
                 <h3 class="text-xl font-display font-bold text-premium mb-6">Historical Records</h3>
-                <div class="space-y-4">
+                <div class="space-y-4" id="interviews-container">
                     @foreach($interviews as $interview)
                         <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
                             <div class="flex items-center gap-4">
@@ -27,6 +27,8 @@
                                 class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-600 text-[10px] font-bold uppercase tracking-wider">Submitted</span>
                         </div>
                     @endforeach
+                    <!-- AJAX Pagination -->
+                    <div id="interviews-pagination" class="pt-4"></div>
                 </div>
             </div>
         @endif
@@ -77,4 +79,37 @@
         </div>
 
     </div>
+    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+    <script>
+        window.ajaxPagination = new AjaxPagination({
+            endpoint: "{{ route('emp.exit_interview.data') }}",
+            containerSelector: '#interviews-container',
+            paginationSelector: '#interviews-pagination',
+            renderCallback: function(data) {
+                let html = '';
+                data.forEach(interview => {
+                    const date = new Date(interview.interview_date).toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                    });
+                    html += `
+                        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-slate-400">
+                                    <i class="fa-solid fa-clipboard-check"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-slate-700">Interview Ref #${interview.interview_id}</p>
+                                    <p class="text-xs text-slate-400">${date}</p>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-600 text-[10px] font-bold uppercase tracking-wider">Submitted</span>
+                        </div>
+                    `;
+                });
+                return html;
+            }
+        });
+    </script>
 @endsection

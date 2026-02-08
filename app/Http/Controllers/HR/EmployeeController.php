@@ -25,6 +25,30 @@ class EmployeeController extends Controller
         return view('hr.employees.index', compact('employees'));
     }
 
+    public function getData(Request $request)
+    {
+        $perPage = $request->get('per_page', 20);
+
+        $employees = Employee::with(['department', 'designation'])
+            ->where('is_hidden', 0)
+            ->where('is_deleted', 0)
+            ->orderBy('employee_id', 'desc')
+            ->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $employees->items(),
+            'pagination' => [
+                'current_page' => $employees->currentPage(),
+                'last_page' => $employees->lastPage(),
+                'per_page' => $employees->perPage(),
+                'total' => $employees->total(),
+                'from' => $employees->firstItem(),
+                'to' => $employees->lastItem(),
+            ]
+        ]);
+    }
+
     public function show($id)
     {
         $employee = Employee::with([

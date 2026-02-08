@@ -50,7 +50,7 @@
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="da-container">
                         @forelse($actions as $da)
                             <tr>
                                 <td><span class="font-mono text-sm font-semibold text-slate-600">#{{ $da->da_id }}</span></td>
@@ -113,14 +113,99 @@
                 </table>
             </div>
 
-            @if($actions->hasPages())
-                <div class="px-6 py-4 border-t border-slate-100">
-                    {{ $actions->links('pagination::bootstrap-5') }}
-                </div>
-            @endif
+            <!-- AJAX Pagination -->
+            <div id="da-pagination"></div>
         </div>
 
     </div>
+
+    @push('scripts')
+    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+    <script>
+        window.ajaxPagination = new AjaxPagination({
+            endpoint: "{{ route('hr.disciplinary.data') }}",
+            containerSelector: '#da-container',
+            paginationSelector: '#da-pagination',
+            renderCallback: function(actions) {
+                const container = document.querySelector('#da-container');
+                if (actions.length === 0) {
+                    container.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="text-center py-12">
+                                <div class="flex flex-col items-center gap-3">
+                                    <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+                                        <i class="fa-solid fa-gavel text-2xl text-slate-400"></i>
+                                    </div>
+                                    <p class="text-slate-500 font-medium">No disciplinary records found</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                actions.forEach(da => {
+                    const initials = (da.employee ? da.employee.first_name : 'U').charAt(0);
+                    const fullName = da.employee ? `${da.employee.first_name} ${da.employee.last_name || ''}` : 'Unknown';
+                    
+                    const isFinal = (da.warning && da.warning.da_warning_name) ? da.warning.da_warning_name.toLowerCase().includes('final') : false;
+                    const warningConfig = isFinal 
+                        ? { bg: 'from-red-500 to-rose-600', icon: 'exclamation-triangle' }
+                        : { bg: 'from-yellow-500 to-amber-600', icon: 'exclamation-circle' };
+
+                    html += `
+                        <tr>
+                            <td><span class="font-mono text-sm font-semibold text-slate-600">#${da.da_id}</span></td>
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-semibold shadow-md">
+                                        ${initials}
+                                    </div>
+                                    <span class="font-semibold text-slate-800">${fullName}</span>
+                                </div>
+                            </td>
+                            <td><span class="text-sm text-slate-600">${da.added_date || '-'}</span></td>
+                            <td class="text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r ${warningConfig.bg} text-white text-xs font-bold shadow-md">
+                                    <i class="fa-solid fa-${warningConfig.icon}"></i>
+                                    ${da.warning ? da.warning.da_warning_name : 'N/A'}
+                                </span>
+                            </td>
+                            <td><span class="text-sm text-slate-600">${da.type ? da.type.da_type_text : '-'}</span></td>
+                            <td class="text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-medium">
+                                    ${da.status ? da.status.da_status_name : 'Unknown'}
+                                </span>
+                            </td>
+                            <td><span class="text-sm text-slate-600 truncate max-w-xs block" title="${da.da_remark || ''}">${da.da_remark || ''}</span></td>
+                            <td>
+                                <div class="flex items-center justify-center">
+                                    <button onclick="openEditModal(${da.da_id}, ${da.da_status_id}, '${(da.da_remark || '').replace(/'/g, "\\'")}')"
+                                        class="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md">
+                                        <i class="fa-solid fa-pen text-sm"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+                container.innerHTML = html;
+            }
+        });
+
+        // Initial pagination setup
+        @if($actions->hasPages())
+            window.ajaxPagination.renderPagination({
+                current_page: {{ $actions->currentPage() }},
+                last_page: {{ $actions->lastPage() }},
+                from: {{ $actions->firstItem() }},
+                to: {{ $actions->lastItem() }},
+                total: {{ $actions->total() }}
+            });
+        @endif
+    </script>
+    @endpush
 
     <!-- Create Modal -->
     <div class="modal" id="addDAModal">

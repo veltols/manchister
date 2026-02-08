@@ -91,16 +91,9 @@
                     </div>
 
                     <div class="flex items-center gap-2 shrink-0 ml-auto">
-                        @if($notif->related_page)
-                            <a href="{{ url($notif->related_page) }}" @click="markRead({{ $notif->notification_id }})"
-                                class="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-brand hover:text-white transition-all shadow-sm group"
-                                title="Go to Page">
-                                <i class="fa-solid fa-arrow-up-right-from-square text-xs group-hover:scale-110 transition-transform"></i>
-                            </a>
-                        @endif
                         @if(!$notif->is_seen)
                             <button @click="markRead({{ $notif->notification_id }})"
-                                class="btn-mark-seen w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center hover:bg-teal-600 hover:text-white transition-all shadow-sm"
+                                class="btn-mark-seen w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
                                 title="Mark as Read">
                                 <i class="fa-solid fa-check text-sm"></i>
                             </button>

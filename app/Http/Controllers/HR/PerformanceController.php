@@ -24,6 +24,31 @@ class PerformanceController extends Controller
         return view('hr.performance.index', compact('records', 'employees'));
     }
 
+    public function getData(Request $request)
+    {
+        $perPage = $request->get('per_page', 15);
+        $query = Performance::with('employee')->orderBy('performance_id', 'desc');
+
+        if ($request->has('employee_id') && $request->employee_id != '') {
+             $query->where('employee_id', $request->employee_id);
+        }
+
+        $records = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $records->items(),
+            'pagination' => [
+                'current_page' => $records->currentPage(),
+                'last_page' => $records->lastPage(),
+                'per_page' => $records->perPage(),
+                'total' => $records->total(),
+                'from' => $records->firstItem(),
+                'to' => $records->lastItem(),
+            ]
+        ]);
+    }
+
     public function store(Request $request)
     {
         $request->validate([

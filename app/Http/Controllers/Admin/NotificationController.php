@@ -11,7 +11,8 @@ class NotificationController extends Controller
 {
     public function index()
     {
-        $employeeId = Auth::id() ?? 550;
+        $user = Auth::user();
+        $employeeId = $user->user_id;
 
         $notifications = EmployeeNotification::where('employee_id', $employeeId)
             ->orderBy('notification_id', 'desc')
@@ -22,16 +23,18 @@ class NotificationController extends Controller
 
     public function markAsRead(Request $request)
     {
-        $employeeId = Auth::id() ?? 550;
-        $id = $request->notification_id;
-        $ids = $request->ids;
+        $user = Auth::user();
+        $employeeId = $user->user_id;
+        
+        $id = $request->notification_id; // For single or 0
+        $ids = $request->ids; // For multiple selection (as comma separated string from view)
 
         if ($ids) {
-            $idArray = explode(',', $ids);
+            $idArray = is_array($ids) ? $ids : explode(',', $ids);
             EmployeeNotification::where('employee_id', $employeeId)
                 ->whereIn('notification_id', $idArray)
                 ->update(['is_seen' => 1]);
-        } elseif ($id == 0) {
+        } elseif ($id === '0' || $id === 0) {
             // Mark all as read
             EmployeeNotification::where('employee_id', $employeeId)
                 ->where('is_seen', 0)

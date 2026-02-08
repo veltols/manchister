@@ -148,4 +148,42 @@ class TaskController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Task updated successfully.']);
     }
+
+    public function getData(Request $request)
+    {
+        $viewMode = $request->input('view_mode', 'my_tasks');
+        $statusId = $request->input('status_id');
+        $user = Auth::user();
+        $employeeId = $user->employee ? $user->employee->employee_id : 0;
+        $perPage = $request->input('per_page', 15);
+
+        $query = Task::with(['status', 'priority', 'assignedBy', 'assignedTo']);
+
+        if ($viewMode == 'others_tasks') {
+            $query->where('assigned_by', $employeeId);
+        } else {
+            $query->where('assigned_to', $employeeId);
+        }
+
+        if ($statusId) {
+            $query->where('status_id', $statusId);
+        }
+
+        $query->orderBy('task_id', 'desc');
+
+        $tasks = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $tasks->items(),
+            'pagination' => [
+                'current_page' => $tasks->currentPage(),
+                'last_page' => $tasks->lastPage(),
+                'per_page' => $tasks->perPage(),
+                'total' => $tasks->total(),
+                'from' => $tasks->firstItem(),
+                'to' => $tasks->lastItem(),
+            ]
+        ]);
+    }
 }

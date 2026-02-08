@@ -35,11 +35,11 @@
         </div>
 
         <!-- Grid Layout -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div id="performance-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @forelse($records as $rec)
                 <div class="premium-card p-6 relative group">
                     <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onclick="editPerformance({{ $rec }})"
+                        <button onclick='editPerformance(@json($rec))'
                             class="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 flex items-center justify-center text-blue-600 transition-colors">
                             <i class="fa-solid fa-pen text-sm"></i>
                         </button>
@@ -85,13 +85,93 @@
             @endforelse
         </div>
 
-        @if($records->hasPages())
-            <div class="flex justify-center">
-                {{ $records->links('pagination::bootstrap-5') }}
-            </div>
-        @endif
+        <!-- AJAX Pagination -->
+        <div id="performance-pagination"></div>
 
     </div>
+
+    @push('scripts')
+    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+    <script>
+        window.ajaxPagination = new AjaxPagination({
+            endpoint: "{{ route('hr.performance.data') }}",
+            containerSelector: '#performance-container',
+            paginationSelector: '#performance-pagination',
+            renderCallback: function(records) {
+                const container = document.querySelector('#performance-container');
+                if (records.length === 0) {
+                    container.innerHTML = `
+                        <div class="col-span-full premium-card p-12">
+                            <div class="flex flex-col items-center gap-3">
+                                <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+                                    <i class="fa-solid fa-chart-simple text-2xl text-slate-400"></i>
+                                </div>
+                                <p class="text-slate-500 font-medium">No performance records found</p>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                records.forEach(rec => {
+                    const initials = (rec.employee ? rec.employee.first_name : 'U').charAt(0);
+                    const fullName = rec.employee ? `${rec.employee.first_name} ${rec.employee.last_name || ''}` : 'Unknown';
+                    const remarkHtml = rec.performance_remark ? `
+                        <div class="bg-blue-50 p-3 rounded-lg text-xs text-blue-700 italic border border-blue-100">
+                            "${rec.performance_remark}"
+                        </div>
+                    ` : '';
+
+                    html += `
+                        <div class="premium-card p-6 relative group">
+                            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onclick='editPerformance(${JSON.stringify(rec)})'
+                                    class="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 flex items-center justify-center text-blue-600 transition-colors">
+                                    <i class="fa-solid fa-pen text-sm"></i>
+                                </button>
+                            </div>
+
+                            <div class="flex items-center gap-3 mb-4 pb-4 border-b border-slate-100">
+                                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold shadow-md">
+                                    ${initials}
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-premium">${fullName}</h3>
+                                    <span class="text-xs text-slate-500">${rec.added_date}</span>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3">
+                                <div>
+                                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Objectives</span>
+                                    <p class="text-sm text-slate-700 mt-1">${rec.performance_object}</p>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">KPIs</span>
+                                    <p class="text-sm text-slate-700 mt-1">${rec.performance_kpi}</p>
+                                </div>
+                                ${remarkHtml}
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            }
+        });
+
+        // Initial pagination setup
+        @if($records->hasPages())
+            window.ajaxPagination.renderPagination({
+                current_page: {{ $records->currentPage() }},
+                last_page: {{ $records->lastPage() }},
+                from: {{ $records->firstItem() }},
+                to: {{ $records->lastItem() }},
+                total: {{ $records->total() }}
+            });
+        @endif
+    </script>
+    @endpush
 
     <!-- Create/Edit Modal -->
     <div class="modal" id="addPerfModal">

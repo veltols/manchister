@@ -18,7 +18,7 @@ class AssetController extends Controller
     {
         $stt = $request->input('stt', 0); // 0=All, 1=About to Expire, 2=Expired
 
-        $query = Asset::with(['category', 'assignee', 'assignedBy']);
+        $query = Asset::with(['category', 'assignee', 'assignedBy', 'status']);
 
         if ($stt == 1) {
             // About to expire (next 30 days)
@@ -30,7 +30,7 @@ class AssetController extends Controller
 
         $assets = $query->orderBy('asset_id', 'desc')->paginate(15);
 
-        // Data for Create Modal
+        // Data for Modals
         $categories = AssetCategory::all();
         $statuses = AssetStatus::all();
         $employees = Employee::where('is_deleted', 0)->where('is_hidden', 0)->orderBy('first_name')->get();
@@ -78,7 +78,8 @@ class AssetController extends Controller
 
     public function show($id)
     {
-        $asset = Asset::with(['category', 'assignee'])->findOrFail($id);
+        $asset = Asset::with(['category', 'assignee', 'status', 'assignedBy'])->findOrFail($id);
+        $statuses = AssetStatus::all();
         $employees = Employee::where('is_deleted', 0)->where('is_hidden', 0)->orderBy('first_name')->get();
         
         // Logs are not related to Asset model in legacy directly via relationship usually, 
@@ -92,7 +93,7 @@ class AssetController extends Controller
             ->orderBy('log_date', 'desc')
             ->get();
 
-        return view('admin.assets.show', compact('asset', 'employees', 'logs'));
+        return view('admin.assets.show', compact('asset', 'employees', 'logs', 'statuses'));
     }
 
     public function assign(Request $request, $id)
@@ -116,6 +117,72 @@ class AssetController extends Controller
         $this->logAction($id, 'Asset Assigned', "Assigned to $empName. " . $request->remarks);
 
         return redirect()->back()->with('success', 'Asset assigned successfully.');
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status_id' => 'required|exists:z_assets_list_status,status_id',
+            'assigned_to' => 'nullable|exists:employees_list,employee_id',
+            'remarks' => 'required|string'
+        ]);
+
+        $asset = Asset::findOrFail($id);
+        
+        $oldStatusId = $asset->status_id;
+        $asset->status_id = $request->status_id;
+        
+        $logSuffix = "";
+        if ($request->has('assigned_to') && $request->assigned_to != $asset->assigned_to) {
+            $asset->assigned_to = $request->assigned_to;
+            $asset->assigned_date = now();
+            $asset->assigned_by = 1; // Admin
+            
+            $emp = Employee::find($request->assigned_to);
+            $empName = $emp ? $emp->first_name . ' ' . $emp->last_name : 'Stock';
+            $logSuffix = " & Assigned to $empName";
+        }
+        
+        $asset->save();
+
+        $newStatus = AssetStatus::find($request->status_id);
+        $statusName = $newStatus ? $newStatus->status_name : 'Unknown';
+
+        $this->logAction($id, 'Asset Updated', "Status: $statusName$logSuffix. " . $request->remarks);
+
+        return redirect()->back()->with('success', 'Asset updated successfully.');
+    }
+
+    public function getData(Request $request)
+    {
+        $stt = $request->input('stt', 0);
+        $perPage = $request->get('per_page', 15);
+
+        $query = Asset::with(['category', 'assignee', 'assignedBy', 'status']);
+
+        if ($stt == 1) {
+            $query->whereBetween('expiry_date', [Carbon::now(), Carbon::now()->addDays(30)]);
+        } elseif ($stt == 2) {
+            $query->where('expiry_date', '<', Carbon::now());
+        }
+
+        $assets = $query->orderBy('asset_id', 'desc')->paginate($perPage);
+
+        $statuses = AssetStatus::all()->keyBy('status_id');
+
+        return response()->json([
+            'success' => true,
+            'data' => $assets->items(),
+            'pagination' => [
+                'current_page' => $assets->currentPage(),
+                'last_page' => $assets->lastPage(),
+                'per_page' => $assets->perPage(),
+                'total' => $assets->total(),
+                'from' => $assets->firstItem(),
+                'to' => $assets->lastItem(),
+            ],
+            'statuses' => $statuses
+        ]);
     }
 
     private function logAction($refId, $action, $remark)

@@ -45,6 +45,6 @@ class NotificationController extends Controller
                 ->update(['is_seen' => 1]);
         }
 
-        return response()->json(['success' => true]);
+        return redirect()->back()->with('success', 'Notifications updated successfully.');
     }
 }

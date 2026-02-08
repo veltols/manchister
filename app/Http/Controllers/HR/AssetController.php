@@ -22,6 +22,27 @@ class AssetController extends Controller
         return view('hr.assets.index', compact('assets', 'employees', 'categories'));
     }
 
+    public function getData(Request $request)
+    {
+        $perPage = $request->get('per_page', 15);
+        $assets = Asset::with(['category', 'assignee'])
+            ->orderBy('asset_id', 'desc')
+            ->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $assets->items(),
+            'pagination' => [
+                'current_page' => $assets->currentPage(),
+                'last_page' => $assets->lastPage(),
+                'per_page' => $assets->perPage(),
+                'total' => $assets->total(),
+                'from' => $assets->firstItem(),
+                'to' => $assets->lastItem(),
+            ]
+        ]);
+    }
+
     public function store(Request $request)
     {
         $request->validate([

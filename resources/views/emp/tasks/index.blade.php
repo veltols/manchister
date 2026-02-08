@@ -50,7 +50,7 @@
             </div>
 
             <div class="flex-1" style="overflow-y: auto !important; height: 100% !important; padding: 1rem; padding-right: 10px !important;">
-                <div class="space-y-3">
+                <div class="space-y-3" id="tasks-container">
                     @forelse($tasks as $task)
                         <div onclick="loadTask({{ $task->task_id }})" id="task-item-{{ $task->task_id }}"
                             class="task-card p-4 rounded-2xl bg-white border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden">
@@ -96,7 +96,10 @@
                         </div>
                     @endforelse
                     
-                    @if($tasks->hasPages())
+                    <!-- AJAX Pagination -->
+                    <div id="tasks-pagination" class="pt-4"></div>
+
+                    @if (false && $tasks->hasPages())
                         <div class="pt-4 flex justify-center">
                             {{ $tasks->appends(['view_mode' => $viewMode, 'status_id' => $statusId])->links('pagination::simple-tailwind') }}
                         </div>
@@ -560,5 +563,63 @@
                 }
             } catch (err) { console.error(err); }
         }
+    </script>
+    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+    <script>
+        window.ajaxPagination = new AjaxPagination({
+            endpoint: "{{ route('emp.tasks.data', ['view_mode' => $viewMode, 'status_id' => $statusId]) }}",
+            containerSelector: '#tasks-container',
+            paginationSelector: '#tasks-pagination',
+            renderCallback: function(data) {
+                let html = '';
+                const currentViewMode = "{{ $viewMode }}";
+                data.forEach(task => {
+                    const priorityColor = task.priority ? task.priority.priority_color : 'ccc';
+                    const priorityName = task.priority ? task.priority.priority_name : 'Normal';
+                    const statusColor = task.status ? task.status.status_color : 'ccc';
+                    const statusName = task.status ? task.status.status_name : 'Unknown';
+                    
+                    const person = (currentViewMode == 'my_tasks') ? task.assigned_by : task.assigned_to;
+                    const personInitial = (person && person.first_name) ? person.first_name[0].toUpperCase() : 'U';
+                    const personName = (person && person.first_name) ? person.first_name : 'Unknown';
+
+                    html += `
+                        <div onclick="loadTask(${task.task_id})" id="task-item-${task.task_id}"
+                            class="task-card p-4 rounded-2xl bg-white border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden ${activeTaskId == task.task_id ? 'active' : ''}">
+    
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider"
+                                    style="background: #${priorityColor}20; color: #${priorityColor}">
+                                    ${priorityName}
+                                </span>
+                                <span class="text-[10px] text-slate-400 font-mono">#${task.task_id}</span>
+                            </div>
+    
+                            <h3 class="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors mb-1 line-clamp-2">
+                                ${task.task_title}
+                            </h3>
+    
+                            <div class="flex items-center justify-between mt-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
+                                        ${personInitial}
+                                    </div>
+                                    <span class="text-xs text-slate-500 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[80px]">
+                                        ${personName}
+                                    </span>
+                                </div>
+                                <span class="px-2 py-1 rounded-md text-[10px] font-bold"
+                                    style="background: #${statusColor}20; color: #${statusColor}">
+                                    ${statusName}
+                                </span>
+                            </div>
+    
+                            <div class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 ${activeTaskId == task.task_id ? 'opacity-1' : 'opacity-0'} transition-opacity"></div>
+                        </div>
+                    `;
+                });
+                return html;
+            }
+        });
     </script>
 @endsection

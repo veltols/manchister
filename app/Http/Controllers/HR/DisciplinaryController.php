@@ -31,6 +31,32 @@ class DisciplinaryController extends Controller
         return view('hr.disciplinary.index', compact('actions', 'employees', 'types', 'statuses', 'warnings'));
     }
 
+    public function getData(Request $request)
+    {
+        $perPage = $request->get('per_page', 15);
+        $query = DisciplinaryAction::with(['employee', 'type', 'status', 'warning'])
+            ->orderBy('da_id', 'desc');
+
+        if ($request->has('employee_id') && $request->employee_id != '') {
+            $query->where('employee_id', $request->employee_id);
+        }
+
+        $actions = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $actions->items(),
+            'pagination' => [
+                'current_page' => $actions->currentPage(),
+                'last_page' => $actions->lastPage(),
+                'per_page' => $actions->perPage(),
+                'total' => $actions->total(),
+                'from' => $actions->firstItem(),
+                'to' => $actions->lastItem(),
+            ]
+        ]);
+    }
+
     public function store(Request $request)
     {
         $request->validate([

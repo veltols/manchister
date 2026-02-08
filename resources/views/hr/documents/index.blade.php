@@ -38,7 +38,7 @@
         </div>
 
         <!-- Documents Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div id="docs-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @forelse($documents as $doc)
                 <div class="premium-card p-6 relative group">
                     <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -90,13 +90,90 @@
             @endforelse
         </div>
 
-        @if($documents->hasPages())
-            <div class="flex justify-center">
-                {{ $documents->links('pagination::bootstrap-5') }}
-            </div>
-        @endif
+        <!-- AJAX Pagination -->
+        <div id="docs-pagination"></div>
 
     </div>
+
+    @push('scripts')
+    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+    <script>
+        window.ajaxPagination = new AjaxPagination({
+            endpoint: "{{ route('hr.documents.data', request()->query()) }}",
+            containerSelector: '#docs-container',
+            paginationSelector: '#docs-pagination',
+            renderCallback: function(docs) {
+                const container = document.querySelector('#docs-container');
+                if (docs.length === 0) {
+                    container.innerHTML = `
+                        <div class="col-span-full premium-card p-12">
+                            <div class="flex flex-col items-center gap-3">
+                                <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+                                    <i class="fa-regular fa-folder-open text-2xl text-slate-400"></i>
+                                </div>
+                                <p class="text-slate-500 font-medium">No documents found</p>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                docs.forEach(doc => {
+                    const icon = (doc.type && doc.type.document_type_icon) ? doc.type.document_type_icon : 'fa-solid fa-file-pdf';
+                    const typeName = (doc.type && doc.type.document_type_name) ? doc.type.document_type_name : 'General';
+                    
+                    html += `
+                        <div class="premium-card p-6 relative group">
+                            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <form action="/hr/documents/${doc.document_id}" method="POST" onsubmit="return confirm('Are you sure?');">
+                                    <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').content}">
+                                    <input type="hidden" name="_method" value="DELETE">
+                                    <button type="submit" class="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 flex items-center justify-center text-red-500 hover:text-red-600 transition-colors">
+                                        <i class="fa-solid fa-trash text-sm"></i>
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div class="flex items-start gap-4 mb-4">
+                                <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-md">
+                                    <i class="${icon} text-2xl"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="font-bold text-premium line-clamp-2 mb-2" title="${doc.document_title}">${doc.document_title}</h3>
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-medium">
+                                        <i class="fa-solid fa-tag text-xs"></i>
+                                        ${typeName}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <p class="text-sm text-slate-600 mb-4 line-clamp-2">${doc.document_description || ''}</p>
+
+                            <a href="/uploads/${doc.document_attachment}" target="_blank"
+                                class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 border-2 border-indigo-200 text-indigo-600 font-semibold rounded-xl hover:bg-indigo-50 transition-colors">
+                                <i class="fa-solid fa-download"></i>
+                                Download
+                            </a>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            }
+        });
+
+        // Initial pagination setup
+        @if($documents->hasPages())
+            window.ajaxPagination.renderPagination({
+                current_page: {{ $documents->currentPage() }},
+                last_page: {{ $documents->lastPage() }},
+                from: {{ $documents->firstItem() }},
+                to: {{ $documents->lastItem() }},
+                total: {{ $documents->total() }}
+            });
+        @endif
+    </script>
+    @endpush
 
     <!-- Upload Modal -->
     <div class="modal" id="addDocModal">

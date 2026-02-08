@@ -86,8 +86,6 @@ class SupportTicketController extends Controller
         $ticket->department_id = $addedByEmp ? $addedByEmp->department_id : 0;
         
         $ticket->ticket_added_date = now();
-        $ticket->employee_id = Auth::id() ?? 0; // Logged in user (HR)
-
         $ticket->status_id = 1; // Open
         $ticket->assigned_to = 0; 
         $ticket->save();
@@ -188,5 +186,37 @@ class SupportTicketController extends Controller
         }
 
         return redirect()->back()->with('success', 'Ticket status updated successfully');
+    }
+    public function getData(Request $request)
+    {
+        $stt = $request->input('stt', 0);
+        $perPage = $request->get('per_page', 10);
+
+        $query = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'latestLog.logger']);
+
+        if ($stt == 1) {
+            $query->where('status_id', 1);
+        } elseif ($stt == 2) {
+            $query->where('status_id', 2);
+        } elseif ($stt == 3) {
+            $query->where('status_id', 3);
+        } elseif ($stt == 4) {
+             $query->where('status_id', 1)->where('assigned_to', 0);
+        }
+
+        $tickets = $query->orderBy('ticket_id', 'desc')->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $tickets->items(),
+            'pagination' => [
+                'current_page' => $tickets->currentPage(),
+                'last_page' => $tickets->lastPage(),
+                'per_page' => $tickets->perPage(),
+                'total' => $tickets->total(),
+                'from' => $tickets->firstItem(),
+                'to' => $tickets->lastItem(),
+            ]
+        ]);
     }
 }

@@ -25,8 +25,8 @@
                 </div>
             </div>
 
-            <div class="flex-1" style="overflow-y: auto !important; height: 100% !important; padding: 1rem; padding-right: 10px !important;">
-                <div class="space-y-3">
+            <div id="tasks-container-wrapper" class="flex-1" style="overflow-y: auto !important; height: 100% !important; padding: 1rem; padding-right: 10px !important;">
+                <div id="tasks-container" class="space-y-3">
                     @forelse($tasks as $task)
                     <div onclick="loadTask({{ $task->task_id }})" id="task-item-{{ $task->task_id }}"
                         class="task-card p-4 rounded-2xl bg-white border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden">
@@ -72,6 +72,9 @@
                     </div>
                 @endforelse
             </div>
+
+            <!-- AJAX Pagination -->
+            <div id="tasks-pagination" class="mt-4"></div>
         </div>
     </div>
 
@@ -305,7 +308,80 @@
         }
     </style>
 
+    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
     <script>
+        window.ajaxPagination = new AjaxPagination({
+            endpoint: "{{ route('hr.tasks.data') }}",
+            containerSelector: '#tasks-container',
+            paginationSelector: '#tasks-pagination',
+            renderCallback: function(tasks) {
+                const container = document.querySelector('#tasks-container');
+                if (tasks.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-10">
+                            <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                                <i class="fa-solid fa-clipboard-check text-2xl"></i>
+                            </div>
+                            <p class="text-slate-400 text-sm">No tasks found</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                tasks.forEach(task => {
+                    const initials = (task.assigned_by ? task.assigned_by.first_name : 'S').charAt(0);
+                    const createdAt = task.created_at ? new Date(task.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A';
+                    
+                    html += `
+                        <div onclick="loadTask(${task.task_id})" id="task-item-${task.task_id}"
+                            class="task-card p-4 rounded-2xl bg-white border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden ${activeTaskId == task.task_id ? 'active' : ''}">
+
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider"
+                                    style="background: #${task.priority.priority_color}20; color: #${task.priority.priority_color}">
+                                    ${task.priority.priority_name}
+                                </span>
+                                <span class="text-[10px] text-slate-400 font-mono">#${task.task_id}</span>
+                            </div>
+
+                            <h3 class="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors mb-1 line-clamp-2">
+                                ${task.task_title}
+                            </h3>
+
+                            <div class="flex items-center justify-between mt-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
+                                        ${initials}
+                                    </div>
+                                    <span class="text-xs text-slate-500">${createdAt}</span>
+                                </div>
+                                <span class="px-2 py-1 rounded-md text-[10px] font-bold"
+                                    style="background: #${task.status.status_color}20; color: #${task.status.status_color}">
+                                    ${task.status.status_name}
+                                </span>
+                            </div>
+
+                            <div class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 ${activeTaskId == task.task_id ? 'opacity-100' : 'opacity-0'} transition-opacity">
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            }
+        });
+
+        // Initial pagination setup
+        @if($tasks->hasPages())
+            window.ajaxPagination.renderPagination({
+                current_page: {{ $tasks->currentPage() }},
+                last_page: {{ $tasks->lastPage() }},
+                from: {{ $tasks->firstItem() }},
+                to: {{ $tasks->lastItem() }},
+                total: {{ $tasks->total() }}
+            });
+        @endif
+
         let activeTaskId = null;
 
         async function loadTask(id) {

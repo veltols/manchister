@@ -128,16 +128,7 @@
         <div class="premium-card p-6">
             <h3 class="text-lg font-display font-bold text-premium mb-4">Quick Actions</h3>
             <div class="space-y-3">
-                <a href="{{ route('hr.employees.create') }}" class="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-700 hover:shadow-lg hover:shadow-indigo-200 transition-all group">
-                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-user-plus text-white"></i>
-                    </div>
-                    <div class="flex-1">
-                        <p class="font-semibold text-white text-sm">Add Employee</p>
-                        <p class="text-xs text-white/70">Create new record</p>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-white/50 group-hover:text-white transition-colors"></i>
-                </a>
+                
 
                 <a href="{{ route('hr.leaves.index') }}" class="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-br from-cyan-600 to-blue-700 hover:shadow-lg hover:shadow-cyan-200 transition-all group">
                     <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">

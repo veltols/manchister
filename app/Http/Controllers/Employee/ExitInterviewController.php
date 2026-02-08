@@ -19,11 +19,35 @@ class ExitInterviewController extends Controller
 
         $interviews = ExitInterview::where('employee_id', $employeeId)
             ->orderBy('interview_date', 'desc')
-            ->get();
+            ->paginate(10);
 
         $questions = ExitInterviewQuestion::orderBy('question_id', 'asc')->get();
 
         return view('emp.exit_interview.index', compact('interviews', 'questions'));
+    }
+
+    public function getData(Request $request)
+    {
+        $user = Auth::user();
+        $employeeId = $user->employee ? $user->employee->employee_id : 0;
+        $perPage = $request->input('per_page', 10);
+
+        $interviews = ExitInterview::where('employee_id', $employeeId)
+            ->orderBy('interview_date', 'desc')
+            ->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $interviews->items(),
+            'pagination' => [
+                'current_page' => $interviews->currentPage(),
+                'last_page' => $interviews->lastPage(),
+                'per_page' => $interviews->perPage(),
+                'total' => $interviews->total(),
+                'from' => $interviews->firstItem(),
+                'to' => $interviews->lastItem(),
+            ]
+        ]);
     }
 
     public function store(Request $request)

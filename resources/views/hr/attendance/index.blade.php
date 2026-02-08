@@ -86,7 +86,7 @@
                             <th class="text-left">Added On</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="attendance-container">
                         @forelse($attendances as $attendance)
                             <tr>
                                 <td><span
@@ -134,14 +134,93 @@
                 </table>
             </div>
 
-            @if($attendances->hasPages())
-                <div class="px-6 py-4 border-t border-slate-100">
-                    {{ $attendances->links('pagination::bootstrap-5') }}
-                </div>
-            @endif
+            <!-- AJAX Pagination -->
+            <div id="attendance-pagination"></div>
         </div>
 
     </div>
+
+    @push('scripts')
+    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+    <script>
+        window.ajaxPagination = new AjaxPagination({
+            endpoint: "{{ route('hr.attendance.data') }}",
+            containerSelector: '#attendance-container',
+            paginationSelector: '#attendance-pagination',
+            perPage: 20,
+            renderCallback: function(entries) {
+                const container = document.querySelector('#attendance-container');
+                if (entries.length === 0) {
+                    container.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center py-12">
+                                <div class="flex flex-col items-center gap-3">
+                                    <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+                                        <i class="fa-solid fa-clock text-2xl text-slate-400"></i>
+                                    </div>
+                                    <p class="text-slate-500 font-medium">No attendance records found</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                entries.forEach(entry => {
+                    let initials = '?';
+                    let fullName = 'Unknown Employee';
+                    if (entry.employee) {
+                        initials = (entry.employee.first_name.charAt(0) + entry.employee.last_name.charAt(0)).toUpperCase();
+                        fullName = entry.employee.first_name + ' ' + entry.employee.last_name;
+                    }
+
+                    // Format date (backend returns Y-m-d)
+                    let checkinDate = entry.checkin_date;
+                    try {
+                        const d = new Date(entry.checkin_date);
+                        checkinDate = d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+                    } catch(e) {}
+
+                    html += `
+                        <tr>
+                            <td><span class="font-mono text-sm font-semibold text-slate-600">#${entry.attendance_id}</span></td>
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-semibold shadow-md">
+                                        ${initials}
+                                    </div>
+                                    <span class="font-semibold text-slate-800">${fullName}</span>
+                                </div>
+                            </td>
+                            <td class="text-sm text-slate-600">${checkinDate}</td>
+                            <td>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium font-mono">
+                                    <i class="fa-regular fa-clock text-xs"></i>
+                                    ${entry.checkin_time}
+                                </span>
+                            </td>
+                            <td><span class="text-sm text-slate-600">${entry.attendance_remarks || ''}</span></td>
+                            <td><span class="text-sm text-slate-400">${entry.added_date ? entry.added_date.split('T')[0] : '-'}</span></td>
+                        </tr>
+                    `;
+                });
+                container.innerHTML = html;
+            }
+        });
+
+        // Initial pagination setup
+        @if($attendances->hasPages())
+            window.ajaxPagination.renderPagination({
+                current_page: {{ $attendances->currentPage() }},
+                last_page: {{ $attendances->lastPage() }},
+                from: {{ $attendances->firstItem() }},
+                to: {{ $attendances->lastItem() }},
+                total: {{ $attendances->total() }}
+            });
+        @endif
+    </script>
+    @endpush
 
     <!-- Add Attendance Modal -->
     <div class="modal" id="addAttendanceModal">

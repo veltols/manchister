@@ -58,7 +58,7 @@
             <input type="hidden" name="ids" id="markReadIds">
         </form>
 
-        <div class="space-y-4">
+        <div class="space-y-4" id="notifications-container">
             @forelse($notifications as $notif)
                 <div
                     class="premium-card p-4 flex items-center gap-6 hover:shadow-lg transition-all border-slate-50 {{ $notif->is_seen == 0 ? 'bg-brand/5 border-l-4 border-l-brand' : 'bg-white' }}">
@@ -92,13 +92,6 @@
                     </div>
 
                     <div class="flex items-center gap-2 shrink-0 ml-auto">
-                        @if($notif->related_page)
-                            <a href="{{ url($notif->related_page) }}"
-                                class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md group"
-                                title="Go to Page">
-                                <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-                            </a>
-                        @endif
                         @if($notif->is_seen == 0)
                             <button @click="markRead([{{ $notif->notification_id }}])"
                                 class="btn-mark-seen w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
@@ -120,11 +113,68 @@
             @endforelse
         </div>
 
-        @if($notifications->hasPages())
+        <!-- AJAX Pagination -->
+        <div id="notifications-pagination" class="pt-6"></div>
+
+        @if (false && $notifications->hasPages())
             <div class="pt-6">
                 {{ $notifications->links() }}
             </div>
         @endif
 
     </div>
+    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+    <script>
+        window.ajaxPagination = new AjaxPagination({
+            endpoint: "{{ route('emp.notifications.data') }}",
+            containerSelector: '#notifications-container',
+            paginationSelector: '#notifications-pagination',
+            renderCallback: function(data) {
+                let html = '';
+                data.forEach(notif => {
+                    const isNew = notif.is_seen == 0;
+                    const cardClass = isNew ? 'bg-brand/5 border-l-4 border-l-brand' : 'bg-white';
+                    const iconClass = isNew ? 'bg-gradient-brand text-white shadow-lg shadow-brand/30' : 'bg-slate-50 text-slate-400';
+                    const iconHtml = isNew ? '<i class="fa-solid fa-bell animate-bounce text-lg"></i>' : '<i class="fa-solid fa-circle-check text-lg"></i>';
+
+                    html += `
+                        <div class="premium-card p-4 flex items-center gap-6 hover:shadow-lg transition-all border-slate-50 ${cardClass}">
+                            <div class="flex items-center gap-4 shrink-0">
+                                <input type="checkbox" value="${notif.notification_id}" x-model="selected" 
+                                       class="w-5 h-5 rounded border-slate-200 text-brand focus:ring-brand cursor-pointer">
+                                
+                                <div class="notif-icon-wrapper w-12 h-12 rounded-2xl ${iconClass} flex items-center justify-center shrink-0 transition-all duration-300">
+                                     ${iconHtml}
+                                </div>
+                            </div>
+
+                            <div class="flex-1 min-w-0 py-2">
+                                <div class="flex items-center justify-between gap-4 mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">${notif.notification_date}</span>
+                                        <span class="px-2 py-0.5 rounded-md bg-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">System Alert</span>
+                                    </div>
+                                    ${isNew ? '<span class="px-2 py-0.5 rounded-full bg-brand/10 text-brand text-[9px] font-black uppercase tracking-wider">New</span>' : ''}
+                                </div>
+                                <p class="notif-text text-slate-700 font-medium line-clamp-2 md:line-clamp-none">
+                                    ${notif.notification_text}
+                                </p>
+                            </div>
+
+                            <div class="flex items-center gap-2 shrink-0 ml-auto">
+                                ${isNew ? `
+                                    <button @click="markRead([${notif.notification_id}])"
+                                        class="btn-mark-seen w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
+                                        title="Mark as Read">
+                                        <i class="fa-solid fa-check text-sm"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                return html;
+            }
+        });
+    </script>
 @endsection

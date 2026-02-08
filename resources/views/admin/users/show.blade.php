@@ -101,15 +101,15 @@
         <div class="md:col-span-2 space-y-6">
             
             <div x-data="{ activeTab: 'assets' }" class="premium-card overflow-hidden min-h-[500px]">
-                <div class="flex border-b border-slate-100">
+                <div class="flex items-center gap-4 p-4 border-b border-slate-100 bg-slate-50/30">
                     <button @click="activeTab = 'assets'"
-                        :class="activeTab === 'assets' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'"
-                        class="px-6 py-4 text-sm font-semibold border-b-2 transition-all">
+                        :class="activeTab === 'assets' ? 'premium-button from-indigo-600 to-purple-600 text-white shadow-md' : 'bg-white text-slate-500 hover:bg-slate-100'"
+                        class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300">
                         Assets
                     </button>
                     <button @click="activeTab = 'logs'"
-                        :class="activeTab === 'logs' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'"
-                        class="px-6 py-4 text-sm font-semibold border-b-2 transition-all">
+                        :class="activeTab === 'logs' ? 'premium-button from-indigo-600 to-purple-600 text-white shadow-md' : 'bg-white text-slate-500 hover:bg-slate-100'"
+                        class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300">
                         Activity Logs
                     </button>
                 </div>

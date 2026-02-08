@@ -20,7 +20,7 @@ class TicketController extends Controller
 
         $tickets = \App\Models\SupportTicket::with(['category', 'priority', 'status', 'addedBy'])
             ->orderBy('ticket_id', 'desc')
-            ->get();
+            ->paginate(15);
 
         $categories = \App\Models\TicketCategory::all();
         $priorities = \App\Models\TaskPriority::all();
@@ -33,6 +33,27 @@ class TicketController extends Controller
             'priorities' => $priorities,
             'statuses' => $statuses,
             'employees' => $employees
+        ]);
+    }
+
+    public function getData(Request $request)
+    {
+        $perPage = $request->get('per_page', 15);
+        $tickets = \App\Models\SupportTicket::with(['category', 'priority', 'status', 'addedBy'])
+            ->orderBy('ticket_id', 'desc')
+            ->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $tickets->items(),
+            'pagination' => [
+                'current_page' => $tickets->currentPage(),
+                'last_page' => $tickets->lastPage(),
+                'per_page' => $tickets->perPage(),
+                'total' => $tickets->total(),
+                'from' => $tickets->firstItem(),
+                'to' => $tickets->lastItem(),
+            ]
         ]);
     }
 

@@ -25,6 +25,31 @@ class DocumentController extends Controller
         return view('hr.documents.index', compact('documents', 'types'));
     }
 
+    public function getData(Request $request)
+    {
+        $perPage = $request->get('per_page', 15);
+        $query = HrDocument::with('type')->orderBy('document_id', 'desc');
+
+        if ($request->has('type_id') && $request->type_id != '') {
+             $query->where('document_type_id', $request->type_id);
+        }
+
+        $documents = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $documents->items(),
+            'pagination' => [
+                'current_page' => $documents->currentPage(),
+                'last_page' => $documents->lastPage(),
+                'per_page' => $documents->perPage(),
+                'total' => $documents->total(),
+                'from' => $documents->firstItem(),
+                'to' => $documents->lastItem(),
+            ]
+        ]);
+    }
+
     public function store(Request $request)
     {
         $request->validate([

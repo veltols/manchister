@@ -199,7 +199,7 @@
                 </button>
             </div>
 
-            <form action="{{ route('hr.tickets.status.update', $ticket->ticket_id) }}" method="POST">
+            <form action="{{ route('hr.tickets.update_status', $ticket->ticket_id) }}" method="POST">
                 @csrf
                 <div class="space-y-4">
                     <div>

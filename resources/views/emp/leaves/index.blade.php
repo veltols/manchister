@@ -118,9 +118,10 @@
                     @endforelse
                 </tbody>
             </table>
-        </div>
+                    <!-- AJAX Pagination -->
+                    <div id="leaves-pagination"></div>
 
-        @if($leaves->hasPages())
+                    @if (false && $leaves->hasPages())
         <div class="px-6 py-4 border-t border-slate-100">
             {{ $leaves->links('pagination::bootstrap-5') }}
         </div>
@@ -276,6 +277,82 @@
     </div>
 </div>
 
+<script src="{{ asset('js/ajax-pagination.js') }}"></script>
+    <script>
+        window.ajaxPagination = new AjaxPagination({
+            endpoint: "{{ route('emp.leaves.data') }}",
+            containerSelector: '#leaves-container',
+            paginationSelector: '#leaves-pagination',
+            renderCallback: function(data) {
+                let html = '';
+                data.forEach(leave => {
+                    const statusClass = {
+                        1: 'bg-amber-100 text-amber-700',
+                        2: 'bg-green-100 text-green-700',
+                        3: 'bg-red-100 text-red-700',
+                        4: 'bg-blue-100 text-blue-700'
+                    } [leave.leave_status_id] || 'bg-slate-100 text-slate-700';
+
+                    const statusName = {
+                        1: 'Pending',
+                        2: 'Approved',
+                        3: 'Rejected',
+                        4: 'Cancelled'
+                    } [leave.leave_status_id] || 'Unknown';
+
+                    const latestLogTime = leave.latest_log ?
+                        new Date(leave.latest_log.log_date).toLocaleString() :
+                        'Initial Request';
+
+                    html += `
+                        <tr class="hover:bg-slate-50/50 transition-colors group">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
+                                        <i class="${leave.type.leave_type_icon || 'fa-solid fa-calendar-day'}"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-slate-700">${leave.type.leave_type_name}</div>
+                                        <div class="text-xs text-slate-400">#${leave.leave_id}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-slate-600">${new Date(leave.leave_start_date).toLocaleDateString()}</div>
+                                <div class="text-xs text-slate-400">to ${new Date(leave.leave_end_date).toLocaleDateString()}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
+                                    ${leave.total_days} Days
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-xs text-slate-500">${latestLogTime}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${statusClass}">
+                                    ${statusName}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <button class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 hover:bg-brand-dark hover:text-white transition-all shadow-sm" title="View Details">
+                                        <i class="fa-solid fa-eye text-xs"></i>
+                                    </button>
+                                    ${leave.leave_status_id == 1 ? `
+                                        <button class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition-all shadow-sm" title="Edit Request">
+                                            <i class="fa-solid fa-pen text-xs"></i>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+                return html;
+            }
+        });
+    </script>
 <script>
     function openResubmitModal(leave) {
         document.getElementById('resubmitForm').action = "/emp/leaves/" + leave.leave_id + "/resubmit";

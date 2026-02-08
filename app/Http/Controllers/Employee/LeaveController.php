@@ -155,6 +155,36 @@ class LeaveController extends Controller
         return redirect()->back()->with('success', 'Leave request resubmitted successfully.');
     }
 
+    public function getData(Request $request)
+    {
+        $user = Auth::user();
+        $employeeId = $user->employee ? $user->employee->employee_id : 0;
+        $statusId = $request->input('status');
+        $perPage = $request->input('per_page', 15);
+
+        $query = HrLeave::with(['type', 'latestLog'])
+            ->where('employee_id', $employeeId);
+
+        if ($statusId) {
+            $query->where('leave_status_id', $statusId);
+        }
+
+        $leaves = $query->orderBy('leave_id', 'desc')->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $leaves->items(),
+            'pagination' => [
+                'current_page' => $leaves->currentPage(),
+                'last_page' => $leaves->lastPage(),
+                'per_page' => $leaves->perPage(),
+                'total' => $leaves->total(),
+                'from' => $leaves->firstItem(),
+                'to' => $leaves->lastItem(),
+            ]
+        ]);
+    }
+
     private function calculateTotalDays($start, $end)
     {
         $startDate = Carbon::parse($start);

@@ -27,6 +27,27 @@ class LeaveController extends Controller
         return view('hr.leaves.index', compact('leaves', 'employees', 'types'));
     }
 
+    public function getData(Request $request)
+    {
+        $perPage = $request->get('per_page', 15);
+        $leaves = HrLeave::with(['employee', 'type'])
+            ->orderBy('leave_id', 'desc')
+            ->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $leaves->items(),
+            'pagination' => [
+                'current_page' => $leaves->currentPage(),
+                'last_page' => $leaves->lastPage(),
+                'per_page' => $leaves->perPage(),
+                'total' => $leaves->total(),
+                'from' => $leaves->firstItem(),
+                'to' => $leaves->lastItem(),
+            ]
+        ]);
+    }
+
     public function create()
     {
         $employees = Employee::where('is_deleted', 0)

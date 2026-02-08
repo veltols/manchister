@@ -33,7 +33,7 @@
                             <th class="text-left font-bold text-slate-400">Remarks</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-50">
+                    <tbody class="divide-y divide-slate-50" id="attendance-container">
                         @forelse($attendances as $att)
                             <tr class="hover:bg-slate-50/50 transition-colors">
                                 <td>
@@ -71,7 +71,65 @@
                     </tbody>
                 </table>
             </div>
+            <!-- AJAX Pagination -->
+            <div id="attendance-pagination" class="px-6 py-4 border-t border-slate-100"></div>
         </div>
 
     </div>
+    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+    <script>
+        window.ajaxPagination = new AjaxPagination({
+            endpoint: "{{ route('emp.attendance.data', ['month' => $month]) }}",
+            containerSelector: '#attendance-container',
+            paginationSelector: '#attendance-pagination',
+            renderCallback: function(data) {
+                let html = '';
+                data.forEach(att => {
+                    const checkinDate = new Date(att.checkin_date);
+                    const formattedDate = checkinDate.toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                    });
+                    const formattedDay = checkinDate.toLocaleDateString(undefined, {
+                        weekday: 'long'
+                    });
+                    
+                    // Format time h:i A
+                    const [hour, minute] = att.checkin_time.split(':');
+                    const h = parseInt(hour);
+                    const ampm = h >= 12 ? 'PM' : 'AM';
+                    const h12 = h % 12 || 12;
+                    const formattedTime = `${h12}:${minute} ${ampm}`;
+
+                    const isAuto = att.attendance_remarks === 'AUTO_CHECK_IN';
+
+                    html += `
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td>
+                                <span class="font-bold text-slate-700">${formattedDate}</span>
+                            </td>
+                            <td>
+                                <span class="text-sm font-medium text-slate-500">${formattedDay}</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-xl border border-green-100 font-bold">
+                                    <i class="fa-regular fa-clock text-xs"></i>
+                                    ${formattedTime}
+                                </div>
+                            </td>
+                            <td>
+                                ${isAuto ? `
+                                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-slate-100 px-2 py-0.5 rounded">System Auto</span>
+                                ` : `
+                                    <span class="text-sm text-slate-600">${att.attendance_remarks || '-'}</span>
+                                `}
+                            </td>
+                        </tr>
+                    `;
+                });
+                return html;
+            }
+        });
+    </script>
 @endsection

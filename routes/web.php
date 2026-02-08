@@ -53,16 +53,20 @@ Route::middleware('auth')->group(function () {
         Route::get('/profile', [App\Http\Controllers\Employee\ProfileController::class, 'index'])->name('profile.index');
 
         Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.index');
+        Route::get('/feedback/data', [FeedbackController::class, 'getData'])->name('feedback.data');
         Route::post('/feedback', [FeedbackController::class, 'store'])->name('feedback.store');
 
         // Documents
         Route::get('/documents', [HrDocumentController::class, 'index'])->name('documents.index');
+        Route::get('/documents/data', [HrDocumentController::class, 'getData'])->name('documents.data');
 
         // Performance
         Route::get('/performance', [PerformanceController::class, 'index'])->name('performance.index');
+        Route::get('/performance/data', [PerformanceController::class, 'getData'])->name('performance.data');
 
         // Exit Interview
         Route::get('/exit-interview', [ExitInterviewController::class, 'index'])->name('exit_interview.index');
+        Route::get('/exit-interview/data', [ExitInterviewController::class, 'getData'])->name('exit_interview.data');
         Route::post('/exit-interview', [ExitInterviewController::class, 'store'])->name('exit_interview.store');
 
         // External / RC Modules (Matching Legacy Structure: emp/ext/...)
@@ -92,38 +96,46 @@ Route::middleware('auth')->group(function () {
             Route::get('/strategies/self_studies/view/{id}', [App\Http\Controllers\Employee\Ext\StrategicStudyController::class, 'show'])->name('strategies.self_studies.show');
         });
 
-        // Tickets
+        // Support Tickets
         Route::get('/tickets', [App\Http\Controllers\Employee\SupportTicketController::class, 'index'])->name('tickets.index');
         Route::post('/tickets', [App\Http\Controllers\Employee\SupportTicketController::class, 'store'])->name('tickets.store');
         Route::get('/tickets/{id}', [App\Http\Controllers\Employee\SupportTicketController::class, 'show'])->name('tickets.show');
         Route::post('/tickets/{id}/status', [App\Http\Controllers\Employee\SupportTicketController::class, 'updateStatus'])->name('tickets.update_status');
+        Route::get('/tickets/data', [App\Http\Controllers\Employee\SupportTicketController::class, 'getData'])->name('tickets.data');
 
         // Request Center Hub
         Route::get('/requests', [App\Http\Controllers\Employee\RequestController::class, 'index'])->name('requests.index');
+        Route::get('/requests/data', [App\Http\Controllers\Employee\RequestController::class, 'getData'])->name('requests.data');
 
         // My Leaves
         Route::get('/leaves', [App\Http\Controllers\Employee\LeaveController::class, 'index'])->name('leaves.index');
+        Route::get('/leaves/data', [App\Http\Controllers\Employee\LeaveController::class, 'getData'])->name('leaves.data');
         Route::post('/leaves', [App\Http\Controllers\Employee\LeaveController::class, 'store'])->name('leaves.store');
         Route::post('/leaves/{id}/resubmit', [App\Http\Controllers\Employee\LeaveController::class, 'resubmit'])->name('leaves.resubmit');
 
         // My Permissions
         Route::get('/permissions', [App\Http\Controllers\Employee\PermissionController::class, 'index'])->name('permissions.index');
+        Route::get('/permissions/data', [App\Http\Controllers\Employee\PermissionController::class, 'getData'])->name('permissions.data');
         Route::post('/permissions', [App\Http\Controllers\Employee\PermissionController::class, 'store'])->name('permissions.store');
 
         // My Attendance
         Route::get('/attendance', [App\Http\Controllers\Employee\AttendanceController::class, 'index'])->name('attendance.index');
+        Route::get('/attendance/data', [App\Http\Controllers\Employee\AttendanceController::class, 'getData'])->name('attendance.data');
 
         // My Support Services (General Requests)
         Route::get('/ss', [App\Http\Controllers\Employee\SupportServiceController::class, 'index'])->name('ss.index');
+        Route::get('/ss/data', [App\Http\Controllers\Employee\SupportServiceController::class, 'getData'])->name('ss.data');
         Route::post('/ss', [App\Http\Controllers\Employee\SupportServiceController::class, 'store'])->name('ss.store');
         Route::get('/ss/{id}', [App\Http\Controllers\Employee\SupportServiceController::class, 'show'])->name('ss.show');
 
         // My Disciplinary Actions
         Route::get('/da', [App\Http\Controllers\Employee\DisciplinaryActionController::class, 'index'])->name('da.index');
+        Route::get('/da/data', [App\Http\Controllers\Employee\DisciplinaryActionController::class, 'getData'])->name('da.data');
         Route::get('/da/{id}', [App\Http\Controllers\Employee\DisciplinaryActionController::class, 'show'])->name('da.show');
 
         // My Communications (External Requests)
         Route::get('/communications', [App\Http\Controllers\Employee\CommunicationRequestController::class, 'index'])->name('communications.index');
+        Route::get('/communications/data', [App\Http\Controllers\Employee\CommunicationRequestController::class, 'getData'])->name('communications.data');
         Route::post('/communications', [App\Http\Controllers\Employee\CommunicationRequestController::class, 'store'])->name('communications.store');
         Route::get('/communications/{id}', [App\Http\Controllers\Employee\CommunicationRequestController::class, 'show'])->name('communications.show');
 
@@ -138,10 +150,12 @@ Route::middleware('auth')->group(function () {
 
         // My Notifications
         Route::get('/notifications', [App\Http\Controllers\Employee\NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('/notifications/data', [App\Http\Controllers\Employee\NotificationController::class, 'getData'])->name('notifications.data');
         Route::post('/notifications/mark-read', [App\Http\Controllers\Employee\NotificationController::class, 'markRead'])->name('notifications.mark_read');
 
         // My Tasks
         Route::get('/tasks', [App\Http\Controllers\Employee\TaskController::class, 'index'])->name('tasks.index');
+        Route::get('/tasks/data', [App\Http\Controllers\Employee\TaskController::class, 'getData'])->name('tasks.data');
         Route::get('/tasks/{id}', [App\Http\Controllers\Employee\TaskController::class, 'show'])->name('tasks.show');
         Route::post('/tasks', [App\Http\Controllers\Employee\TaskController::class, 'store'])->name('tasks.store');
         Route::post('/tasks/{id}/status', [App\Http\Controllers\Employee\TaskController::class, 'updateStatus'])->name('tasks.status');
@@ -159,6 +173,7 @@ Route::middleware('auth')->group(function () {
         // Training Providers (ATPs)
         Route::post('/atps/{id}/send-email', [App\Http\Controllers\Employee\AtpController::class, 'sendEmail'])->name('atps.send-email');
         Route::post('/atps/{id}/accredit', [App\Http\Controllers\Employee\AtpController::class, 'accredit'])->name('atps.accredit');
+        Route::get('/atps/data', [App\Http\Controllers\Employee\AtpController::class, 'getData'])->name('atps.data');
         Route::resource('atps', App\Http\Controllers\Employee\AtpController::class)->names('atps');
 
         // ATP Detailed Form Views
@@ -179,6 +194,7 @@ Route::middleware('auth')->group(function () {
 
         // Employees
         Route::get('/employees', [App\Http\Controllers\HR\EmployeeController::class, 'index'])->name('employees.index');
+        Route::get('/employees/data', [App\Http\Controllers\HR\EmployeeController::class, 'getData'])->name('employees.data');
         Route::get('/employees/create', [App\Http\Controllers\HR\EmployeeController::class, 'create'])->name('employees.create');
         Route::post('/employees', [App\Http\Controllers\HR\EmployeeController::class, 'store'])->name('employees.store');
         Route::get('/employees/{id}', [App\Http\Controllers\HR\EmployeeController::class, 'show'])->name('employees.show');
@@ -187,7 +203,8 @@ Route::middleware('auth')->group(function () {
 
         // Leaves
         Route::get('/leaves', [App\Http\Controllers\HR\LeaveController::class, 'index'])->name('leaves.index');
-        Route::get('/leaves/create', [App\Http\Controllers\HR\LeaveController::class, 'create'])->name('leaves.create'); // Optional if using modal
+        Route::get('/leaves/data', [App\Http\Controllers\HR\LeaveController::class, 'getData'])->name('leaves.data');
+        Route::get('/leaves/create', [App\Http\Controllers\HR\LeaveController::class, 'create'])->name('leaves.create'); 
         Route::post('/leaves', [App\Http\Controllers\HR\LeaveController::class, 'store'])->name('leaves.store');
         Route::post('/leaves/{id}/status', [App\Http\Controllers\HR\LeaveController::class, 'updateStatus'])->name('leaves.status');
 
@@ -197,6 +214,7 @@ Route::middleware('auth')->group(function () {
 
         // Attendance
         Route::get('/attendance', [App\Http\Controllers\HR\AttendanceController::class, 'index'])->name('attendance.index');
+        Route::get('/attendance/data', [App\Http\Controllers\HR\AttendanceController::class, 'getData'])->name('attendance.data');
         Route::post('/attendance', [App\Http\Controllers\HR\AttendanceController::class, 'store'])->name('attendance.store');
 
         // Departments
@@ -204,14 +222,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/departments/chart', [App\Http\Controllers\HR\DepartmentController::class, 'orgChart'])->name('departments.chart');
         Route::post('/departments', [App\Http\Controllers\HR\DepartmentController::class, 'store'])->name('departments.store');
         Route::post('/departments/{id}/update', [App\Http\Controllers\HR\DepartmentController::class, 'update'])->name('departments.update');
+        Route::get('/departments/data', [App\Http\Controllers\HR\DepartmentController::class, 'getData'])->name('departments.data');
 
         // Assets
         Route::get('/assets', [App\Http\Controllers\HR\AssetController::class, 'index'])->name('assets.index');
+        Route::get('/assets/data', [App\Http\Controllers\HR\AssetController::class, 'getData'])->name('assets.data');
         Route::post('/assets', [App\Http\Controllers\HR\AssetController::class, 'store'])->name('assets.store');
         Route::post('/assets/{id}/update', [App\Http\Controllers\HR\AssetController::class, 'update'])->name('assets.update');
 
         // Documents
         Route::get('/documents', [App\Http\Controllers\HR\DocumentController::class, 'index'])->name('documents.index');
+        Route::get('/documents/data', [App\Http\Controllers\HR\DocumentController::class, 'getData'])->name('documents.data');
         Route::post('/documents', [App\Http\Controllers\HR\DocumentController::class, 'store'])->name('documents.store');
         Route::delete('/documents/{id}', [App\Http\Controllers\HR\DocumentController::class, 'destroy'])->name('documents.destroy');
 
@@ -225,6 +246,7 @@ Route::middleware('auth')->group(function () {
 
         // Tasks
         Route::get('/tasks', [App\Http\Controllers\HR\TaskController::class, 'index'])->name('tasks.index');
+        Route::get('/tasks/data', [App\Http\Controllers\HR\TaskController::class, 'getData'])->name('tasks.data');
         Route::get('/tasks/{id}', [App\Http\Controllers\HR\TaskController::class, 'show'])->name('tasks.show');
         Route::post('/tasks', [App\Http\Controllers\HR\TaskController::class, 'store'])->name('tasks.store');
         Route::post('/tasks/status', [App\Http\Controllers\HR\TaskController::class, 'updateStatus'])->name('tasks.status.update');
@@ -235,6 +257,7 @@ Route::middleware('auth')->group(function () {
 
         // Disciplinary (DA)
         Route::get('/disciplinary', [App\Http\Controllers\HR\DisciplinaryController::class, 'index'])->name('disciplinary.index');
+        Route::get('/disciplinary/data', [App\Http\Controllers\HR\DisciplinaryController::class, 'getData'])->name('disciplinary.data');
         Route::post('/disciplinary', [App\Http\Controllers\HR\DisciplinaryController::class, 'store'])->name('disciplinary.store');
         Route::post('/disciplinary/{id}/update', [App\Http\Controllers\HR\DisciplinaryController::class, 'update'])->name('disciplinary.update');
 
@@ -257,23 +280,20 @@ Route::middleware('auth')->group(function () {
 
         // Exit Interviews
         Route::get('/exit-interviews', [App\Http\Controllers\HR\ExitInterviewController::class, 'index'])->name('exit_interviews.index');
+        Route::get('/exit-interviews/data', [App\Http\Controllers\HR\ExitInterviewController::class, 'getData'])->name('exit_interviews.data');
         Route::post('/exit-interviews', [App\Http\Controllers\HR\ExitInterviewController::class, 'store'])->name('exit_interviews.store');
 
         // Performance
         Route::get('/performance', [App\Http\Controllers\HR\PerformanceController::class, 'index'])->name('performance.index');
+        Route::get('/performance/data', [App\Http\Controllers\HR\PerformanceController::class, 'getData'])->name('performance.data');
         Route::post('/performance', [App\Http\Controllers\HR\PerformanceController::class, 'store'])->name('performance.store');
         Route::post('/performance/{id}/update', [App\Http\Controllers\HR\PerformanceController::class, 'update'])->name('performance.update');
 
         // Communications
         Route::get('/communications', [App\Http\Controllers\HR\CommunicationController::class, 'index'])->name('communications.index');
+        Route::get('/communications/data', [App\Http\Controllers\HR\CommunicationController::class, 'getData'])->name('communications.data');
         Route::post('/communications', [App\Http\Controllers\HR\CommunicationController::class, 'store'])->name('communications.store');
 
-        // Groups
-        Route::get('/groups', [App\Http\Controllers\HR\GroupController::class, 'index'])->name('groups.index');
-        Route::post('/groups', [App\Http\Controllers\HR\GroupController::class, 'store'])->name('groups.store');
-        Route::get('/groups/{id}', [App\Http\Controllers\HR\GroupController::class, 'show'])->name('groups.show');
-        Route::post('/groups/{id}/post', [App\Http\Controllers\HR\GroupController::class, 'storePost'])->name('groups.post');
-        Route::post('/groups/{id}/member', [App\Http\Controllers\HR\GroupController::class, 'addMember'])->name('groups.add_member');
 
         // Designations
         Route::get('/designations', [App\Http\Controllers\HR\DesignationController::class, 'index'])->name('designations.index');
@@ -281,22 +301,17 @@ Route::middleware('auth')->group(function () {
         Route::post('/designations', [App\Http\Controllers\HR\DesignationController::class, 'store'])->name('designations.store');
         Route::get('/designations/{id}/edit', [App\Http\Controllers\HR\DesignationController::class, 'edit'])->name('designations.edit');
         Route::post('/designations/{id}', [App\Http\Controllers\HR\DesignationController::class, 'update'])->name('designations.update'); // Using POST for update per legacy style or standard
+        Route::get('/designations/data', [App\Http\Controllers\HR\DesignationController::class, 'getData'])->name('designations.data');
 
-        // Tasks
-        Route::get('/tasks', [App\Http\Controllers\HR\TaskController::class, 'index'])->name('tasks.index');
-        Route::get('/tasks/create', [App\Http\Controllers\HR\TaskController::class, 'create'])->name('tasks.create');
-        Route::post('/tasks', [App\Http\Controllers\HR\TaskController::class, 'store'])->name('tasks.store');
-        Route::get('/tasks/{id}', [App\Http\Controllers\HR\TaskController::class, 'show'])->name('tasks.show');
 
-        // Tickets
+        // Support Tickets
         Route::get('/tickets', [App\Http\Controllers\HR\SupportTicketController::class, 'index'])->name('tickets.index');
         Route::get('/tickets/create', [App\Http\Controllers\HR\SupportTicketController::class, 'create'])->name('tickets.create');
         Route::post('/tickets', [App\Http\Controllers\HR\SupportTicketController::class, 'store'])->name('tickets.store');
         Route::get('/tickets/{id}', [App\Http\Controllers\HR\SupportTicketController::class, 'show'])->name('tickets.show');
-        Route::post('/tickets/{id}/status', [App\Http\Controllers\HR\SupportTicketController::class, 'updateStatus'])->name('tickets.status.update');
+        Route::post('/tickets/{id}/status', [App\Http\Controllers\HR\SupportTicketController::class, 'updateStatus'])->name('tickets.update_status');
+        Route::get('/tickets/data', [App\Http\Controllers\HR\SupportTicketController::class, 'getData'])->name('tickets.data');
 
-        // Calendar
-        Route::get('/calendar', [App\Http\Controllers\HR\CalendarController::class, 'index'])->name('calendar.index');
 
         // Settings / Profile
         Route::get('/profile/settings', [App\Http\Controllers\HR\SettingsController::class, 'profile'])->name('settings.profile');
@@ -335,19 +350,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/messages-unread-count', [App\Http\Controllers\Admin\MessageController::class, 'getUnreadCount'])->name('messages.unread_count');
         Route::get('/messages-conversation-list', [App\Http\Controllers\Admin\MessageController::class, 'getConversationList'])->name('messages.conversation_list');
 
-        Route::get('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');
-        Route::get('/settings/leave_types', [App\Http\Controllers\Admin\SettingsController::class, 'leaveTypes'])->name('settings.leave_types');
-        Route::post('/settings/leave_types', [App\Http\Controllers\Admin\SettingsController::class, 'storeLeaveType'])->name('settings.leave_types.store');
-        Route::get('/settings/asset_categories', [App\Http\Controllers\Admin\SettingsController::class, 'assetCategories'])->name('settings.asset_categories');
-        Route::post('/settings/asset_categories', [App\Http\Controllers\Admin\SettingsController::class, 'storeAssetCategory'])->name('settings.asset_categories.store');
 
-        // System Lists
-        Route::get('/settings/asset_statuses', [App\Http\Controllers\Admin\SettingsController::class, 'assetStatuses'])->name('settings.asset_statuses');
-        Route::post('/settings/asset_statuses', [App\Http\Controllers\Admin\SettingsController::class, 'storeAssetStatus'])->name('settings.asset_statuses.store');
-        Route::get('/settings/support_categories', [App\Http\Controllers\Admin\SettingsController::class, 'supportCategories'])->name('settings.support_categories');
-        Route::post('/settings/support_categories', [App\Http\Controllers\Admin\SettingsController::class, 'storeSupportCategory'])->name('settings.support_categories.store');
-        Route::get('/settings/priorities', [App\Http\Controllers\Admin\SettingsController::class, 'priorities'])->name('settings.priorities');
-        Route::post('/settings/priorities', [App\Http\Controllers\Admin\SettingsController::class, 'storePriority'])->name('settings.priorities.store');
 
         // Users Management
         Route::get('/users', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
@@ -375,6 +378,7 @@ Route::middleware('auth')->group(function () {
 
         // Feedback
         Route::get('/feedback', [App\Http\Controllers\Admin\FeedbackController::class, 'index'])->name('feedback.index');
+        Route::get('/feedback/data', [App\Http\Controllers\Admin\FeedbackController::class, 'getData'])->name('feedback.data');
         Route::get('/feedback/export', [App\Http\Controllers\Admin\FeedbackController::class, 'export'])->name('feedback.export');
 
         // Support Tickets
@@ -383,12 +387,15 @@ Route::middleware('auth')->group(function () {
         Route::post('/tickets/{id}/assign', [App\Http\Controllers\Admin\SupportTicketController::class, 'assign'])->name('tickets.assign');
         Route::post('/tickets/{id}/status', [App\Http\Controllers\Admin\SupportTicketController::class, 'updateStatus'])->name('tickets.update_status');
         Route::get('/tickets/{id}', [App\Http\Controllers\Admin\SupportTicketController::class, 'show'])->name('tickets.show');
+        Route::get('/tickets/data', [App\Http\Controllers\Admin\SupportTicketController::class, 'getData'])->name('tickets.data');
 
         // Assets
         Route::get('/assets', [App\Http\Controllers\Admin\AssetController::class, 'index'])->name('assets.index');
         Route::post('/assets', [App\Http\Controllers\Admin\AssetController::class, 'store'])->name('assets.store');
         Route::get('/assets/{id}', [App\Http\Controllers\Admin\AssetController::class, 'show'])->name('assets.show');
         Route::post('/assets/{id}/assign', [App\Http\Controllers\Admin\AssetController::class, 'assign'])->name('assets.assign');
+        Route::post('/assets/{id}/status', [App\Http\Controllers\Admin\AssetController::class, 'updateStatus'])->name('assets.update_status');
+        Route::get('/assets/data', [App\Http\Controllers\Admin\AssetController::class, 'getData'])->name('assets.data');
 
         // Users
         Route::get('/users', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
@@ -403,6 +410,7 @@ Route::middleware('auth')->group(function () {
 
         // Settings (Dynamics Lists)
         Route::get('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');
+        Route::get('/settings/data', [App\Http\Controllers\Admin\SettingsController::class, 'getData'])->name('settings.data');
         Route::post('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'store'])->name('settings.store');
         Route::post('/settings/{id}', [App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('settings.update');
     });

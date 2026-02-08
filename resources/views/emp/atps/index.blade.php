@@ -74,7 +74,7 @@
     </div>
 
     <!-- ATP Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="atps-container">
         @forelse($atps as $atp)
             <div class="premium-card group hover:scale-[1.02] transition-all duration-300">
                 <div class="p-6 space-y-6">
@@ -152,9 +152,90 @@
         @endforelse
     </div>
 
-    <!-- Pagination -->
-    <div class="premium-card p-4">
-        {{ $atps->links() }}
-    </div>
+    <!-- AJAX Pagination -->
+    <div id="atps-pagination" class="premium-card p-4"></div>
+
+    @if (false && $atps->hasPages())
 </div>
+    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+    <script>
+        window.ajaxPagination = new AjaxPagination({
+            endpoint: "{{ route('emp.atps.data', ['search' => request('search'), 'status' => request('status'), 'stt' => request('stt')]) }}",
+            containerSelector: '#atps-container',
+            paginationSelector: '#atps-pagination',
+            renderCallback: function(data) {
+                let html = '';
+                data.forEach(atp => {
+                    const statusClass = atp.atp_status_id == 1 ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100';
+                    const statusName = atp.status ? atp.status.atp_status_name : 'Unknown';
+                    const typeName = atp.type ? atp.type.atp_type_name : 'N/A';
+                    const catName = atp.category ? atp.category.atp_category_name : 'N/A';
+
+                    html += `
+                        <div class="premium-card group hover:scale-[1.02] transition-all duration-300">
+                            <div class="p-6 space-y-6">
+                                <div class="flex items-start justify-between">
+                                    <div class="w-14 h-14 rounded-2xl bg-brand/5 flex items-center justify-center text-brand border border-brand/10 group-hover:bg-brand group-hover:text-white transition-colors">
+                                        <i class="fa-solid fa-building-columns text-2xl"></i>
+                                    </div>
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusClass}">
+                                        ${statusName}
+                                    </span>
+                                </div>
+
+                                <div class="space-y-1">
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">${atp.atp_ref}</div>
+                                    <h3 class="font-bold text-premium truncate group-hover:text-brand transition-colors" title="${atp.atp_name}">
+                                        ${atp.atp_name}
+                                    </h3>
+                                    <p class="text-xs text-slate-400 flex items-center gap-2">
+                                        <i class="fa-solid fa-user text-[10px]"></i>
+                                        ${atp.contact_name}
+                                    </p>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4 py-4 border-y border-slate-50">
+                                    <div class="space-y-1">
+                                        <div class="text-[10px] font-medium text-slate-400 tracking-wider">Type</div>
+                                        <div class="text-xs font-bold text-slate-700 truncate">${typeName}</div>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <div class="text-[10px] font-medium text-slate-400 tracking-wider">Category</div>
+                                        <div class="text-xs font-bold text-slate-700 truncate">${catName}</div>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between pt-2">
+                                    <div class="flex items-center gap-1">
+                                        ${atp.atp_status_id == 1 ? `
+                                            <form action="/emp/atps/${atp.atp_id}/send-email" method="POST" class="inline">
+                                                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md" title="Send Registration Email">
+                                                    <i class="fa-solid fa-envelope text-sm"></i>
+                                                </button>
+                                            </form>
+                                        ` : ''}
+                                        ${atp.atp_status_id != 4 ? `
+                                            <form action="/emp/atps/${atp.atp_id}/accredit" method="POST" class="inline">
+                                                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md" title="Accredit Provider">
+                                                    <i class="fa-solid fa-check text-sm"></i>
+                                                </button>
+                                            </form>
+                                        ` : ''}
+                                    </div>
+                                    
+                                    <a href="/emp/atps/${atp.atp_id}" 
+                                       class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md">
+                                        <i class="fa-solid fa-arrow-right text-sm"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                return html;
+            }
+        });
+    </script>
 @endsection
