@@ -27,7 +27,7 @@
     <!-- RC Toggle Button -->
     <button onclick="switchEmpMenu('rc')"
         class="w-full nav-item flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white hover:bg-white/10 transition-colors">
-        <i class="fa-solid fa-server text-2xl"></i>
+        <i class="fa-solid fa-cubes text-2xl"></i>
         <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">RC</span>
     </button>
 </div>
