@@ -86,7 +86,7 @@
 
         /* Sidebar Gradient */
         .sidebar-gradient {
-            background: linear-gradient(180deg, #004F68 0%, #00384a 100%);
+            background: linear-gradient(180deg, var(--theme-color) 0%, var(--theme-secondary) 100%);
             position: relative;
         }
 
@@ -439,6 +439,12 @@
         });
     </script>
     @stack('styles')
+    <style>
+        :root {
+            --theme-color: {{ $themeColor ?? '#004F68' }};
+            --theme-secondary: {{ $themeSecondary ?? '#00384a' }};
+        }
+    </style>
 </head>
 
 <body class="bg-slate-50 font-sans h-screen flex overflow-hidden">
@@ -569,6 +575,16 @@
                             @endif
                         </a>
                     </div>
+
+                    @if($user && ($user->user_type == 'emp' || $user->user_type == 'employee'))
+                    <div class="w-px h-6 bg-slate-200 mx-1"></div>
+                    <a href="{{ route('emp.settings.index') }}" 
+                       class="w-11 h-11 rounded-xl flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all duration-300 group relative"
+                       title="Settings">
+                        <i class="fa-solid fa-cog group-hover:rotate-90 transition-transform duration-500"></i>
+                    </a>
+                    @endif
+
                     <div class="w-px h-6 bg-slate-200 mx-1"></div>
 
                         <!-- User Profile Dropdown -->

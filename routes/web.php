@@ -181,6 +181,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/atps/{id}/sed', [App\Http\Controllers\Employee\AtpFormController::class, 'showSed'])->name('atps.forms.sed');
         Route::get('/atps/{id}/compliance/{main_id}', [App\Http\Controllers\Employee\AtpFormController::class, 'showCompliance'])->name('atps.forms.compliance');
         Route::get('/atps/{id}/faculty', [App\Http\Controllers\Employee\AtpFormController::class, 'showFaculty'])->name('atps.forms.faculty');
+        Route::get('/atps/{id}/faculty', [App\Http\Controllers\Employee\AtpFormController::class, 'showFaculty'])->name('atps.forms.faculty');
+
+        // Settings
+        Route::get('/settings', [App\Http\Controllers\Employee\SettingsController::class, 'index'])->name('settings.index');
+        Route::post('/settings', [App\Http\Controllers\Employee\SettingsController::class, 'update'])->name('settings.update');
     });
 
     // HR Portal
@@ -438,3 +443,4 @@ Route::middleware('auth')->group(function () {
         Route::post('/register/step1', [App\Http\Controllers\RC\PortalController::class, 'submitStep1'])->name('wizard.submit1');
     });
 });
+Route::fallback(function () { return view('errors.404'); });

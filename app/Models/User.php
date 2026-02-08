@@ -33,6 +33,8 @@ class User extends Authenticatable
         'user_type',
         'int_ext',
         'user_id',
+        'user_theme_id',
+        'user_lang',
     ];
 
     protected $hidden = [];
@@ -47,6 +49,11 @@ class User extends Authenticatable
     public function employee()
     {
         return $this->hasOne(EmployeesList::class, 'employee_id', 'user_id');
+    }
+
+    public function theme()
+    {
+        return $this->belongsTo(UserTheme::class, 'user_theme_id', 'user_theme_id');
     }
 
     public function internal_notifications()

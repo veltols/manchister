@@ -74,6 +74,7 @@ class UserController extends Controller
         $sysUser->user_type = $userType;
         $sysUser->int_ext = 'int';
         $sysUser->user_family = 'employees_list';
+        $sysUser->user_theme_id = 7;
         $sysUser->save();
 
         // Log
