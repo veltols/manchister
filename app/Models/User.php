@@ -45,6 +45,12 @@ class User extends Authenticatable
         return $this->user_email;
     }
 
+    // Route notifications to the correct email address
+    public function routeNotificationForMail($notification)
+    {
+        return $this->user_email;
+    }
+
     // Relationship to Employee details
     public function employee()
     {

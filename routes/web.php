@@ -17,6 +17,11 @@ Route::get('/', function () {
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+
+// OTP Login Routes (2FA)
+Route::get('/login/otp/verify', [AuthController::class, 'showOtpVerifyForm'])->name('login.otp.verify');
+Route::post('/login/otp/verify', [AuthController::class, 'verifyOtp'])->name('login.otp.verify.post');
+
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::post('/profile/change-password', [AuthController::class, 'changePassword'])->name('profile.change-password');
 
