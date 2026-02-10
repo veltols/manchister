@@ -295,7 +295,7 @@
 
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">
-                            <i class="fa-solid fa-user text-brand-dark mr-2"></i>Email
+                            <i class="fa-solid fa-envelope text-brand-dark mr-2"></i>Email
                         </label>
                         <div class="relative">
                             <input type="text" name="username"
