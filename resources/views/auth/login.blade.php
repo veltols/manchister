@@ -295,12 +295,12 @@
 
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">
-                            <i class="fa-solid fa-user text-brand-dark mr-2"></i>Username
+                            <i class="fa-solid fa-user text-brand-dark mr-2"></i>Email
                         </label>
                         <div class="relative">
                             <input type="text" name="username"
                                 class="premium-input w-full px-4 py-3.5 rounded-xl border-2 border-slate-200 bg-white focus:border-brand-dark focus:ring-4 focus:ring-brand-dark/10 transition-all outline-none text-slate-700 font-medium"
-                                placeholder="Enter your username" required autofocus>
+                                placeholder="Enter your email" required autofocus>
                         </div>
                     </div>
 
