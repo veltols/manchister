@@ -4,8 +4,8 @@ namespace App\Http\Controllers\EQA;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\ATP;
-use App\Models\ATPStatus;
+use App\Models\Atp;
+use App\Models\AtpStatus;
 use Illuminate\Support\Facades\DB;
 
 class ATPController extends Controller
@@ -13,7 +13,7 @@ class ATPController extends Controller
     public function index(Request $request)
     {
         $stt = $request->input('stt', '00');
-        $query = ATP::with(['status', 'adder', 'emirate'])->orderBy('atp_id', 'desc');
+        $query = Atp::with(['status', 'adder', 'emirate'])->orderBy('atp_id', 'desc');
 
         if ($stt != '00') {
             $query->where('atp_status_id', $stt);
@@ -26,7 +26,7 @@ class ATPController extends Controller
 
     public function create()
     {
-        // $statuses = ATPStatus::all(); 
+        // $statuses = AtpStatus::all(); 
         return view('eqa.atps.create');
     }
 
@@ -39,7 +39,7 @@ class ATPController extends Controller
             'atp_phone' => 'required|string'
         ]);
 
-        $atp = new ATP();
+        $atp = new Atp();
         $atp->atp_ref = 'ATP-' . strtoupper(uniqid());
         $atp->atp_name = $request->atp_name;
         $atp->contact_name = $request->contact_name;
@@ -56,7 +56,7 @@ class ATPController extends Controller
 
     public function show($id, Request $request)
     {
-        $atp = ATP::with(['status', 'adder', 'emirate'])->findOrFail($id);
+        $atp = Atp::with(['status', 'adder', 'emirate'])->findOrFail($id);
         $tab = $request->input('tab', 'planner'); // Default tab
 
         // Visit Planner Data (Info Requests)
@@ -80,7 +80,7 @@ class ATPController extends Controller
 
     public function sendRegistrationEmail($id)
     {
-        $atp = ATP::findOrFail($id);
+        $atp = Atp::findOrFail($id);
         
         // Send the premium registration email
         $atp->notify(new \App\Notifications\AtpRegistrationNotification($atp));
@@ -95,7 +95,7 @@ class ATPController extends Controller
 
     public function accredit($id)
     {
-        $atp = ATP::findOrFail($id);
+        $atp = Atp::findOrFail($id);
         $atp->atp_status_id = 4; // Accredited (Mapping based on legacy logic)
         $atp->save();
 
@@ -107,7 +107,7 @@ class ATPController extends Controller
     // Visit Planner: Information Requests
     public function newInfoRequest($atp_id)
     {
-        $atp = ATP::findOrFail($atp_id);
+        $atp = Atp::findOrFail($atp_id);
         return view('eqa.atps.requests.new', compact('atp'));
     }
 
@@ -143,7 +143,7 @@ class ATPController extends Controller
 
     public function viewInfoRequest($atp_id, $request_id)
     {
-        $atp = ATP::findOrFail($atp_id);
+        $atp = Atp::findOrFail($atp_id);
         
         $infoRequest = DB::table('atps_info_request')
             ->leftJoin('employees_list', 'atps_info_request.added_by', '=', 'employees_list.employee_id')
@@ -177,7 +177,7 @@ class ATPController extends Controller
     {
         $perPage = $request->get('per_page', 20);
         $stt = $request->input('stt', '00');
-        $query = ATP::with(['status', 'adder', 'emirate'])->orderBy('atp_id', 'desc');
+        $query = Atp::with(['status', 'adder', 'emirate'])->orderBy('atp_id', 'desc');
 
         // Status Filtering (Legacy Parity)
         if ($stt != '00') {

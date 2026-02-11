@@ -4,7 +4,7 @@ namespace App\Http\Controllers\EQA;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\ATP;
+use App\Models\Atp;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -13,7 +13,7 @@ class FormController extends Controller
     // Generic method to load a form
     public function show($form_id, $atp_id)
     {
-        $atp = ATP::findOrFail($atp_id);
+        $atp = Atp::findOrFail($atp_id);
 
         // Map form_id to view
         $viewMap = [
