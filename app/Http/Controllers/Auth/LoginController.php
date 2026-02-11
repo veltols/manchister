@@ -297,7 +297,7 @@ class LoginController extends Controller
             case 'emp':
                 return redirect()->route('emp.dashboard');
             case 'eqa':
-                return redirect()->route('eqa.atps.index');
+                return redirect()->route('emp.dashboard');
             default:
                 return redirect()->route('emp.dashboard');
         }

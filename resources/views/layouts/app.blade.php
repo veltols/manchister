@@ -576,7 +576,7 @@
                         </a>
                     </div>
 
-                    @if($user && ($user->user_type == 'emp' || $user->user_type == 'employee'))
+                    @if($user && ($user->user_type == 'emp' || $user->user_type == 'eqa'))
                     <div class="w-px h-6 bg-slate-200 mx-1"></div>
                     <a href="{{ route('emp.settings.index') }}" 
                        class="w-11 h-11 rounded-xl flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all duration-300 group relative"

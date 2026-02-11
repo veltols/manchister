@@ -431,7 +431,20 @@ Route::middleware('auth')->group(function () {
         Route::get('/atps/create', [App\Http\Controllers\EQA\ATPController::class, 'create'])->name('atps.create');
         Route::post('/atps', [App\Http\Controllers\EQA\ATPController::class, 'store'])->name('atps.store');
         Route::get('/atps/{id}', [App\Http\Controllers\EQA\ATPController::class, 'show'])->name('atps.show');
+        Route::get('/atps-data', [App\Http\Controllers\EQA\ATPController::class, 'getData'])->name('atps.data');
         Route::post('/atps/{id}/send-email', [App\Http\Controllers\EQA\ATPController::class, 'sendRegistrationEmail'])->name('atps.send_email');
+        Route::post('/atps/{id}/accredit', [App\Http\Controllers\EQA\ATPController::class, 'accredit'])->name('atps.accredit');
+    
+    // Info Requests
+    Route::get('/atps/{atp_id}/info-request/new', [App\Http\Controllers\EQA\ATPController::class, 'newInfoRequest'])->name('atps.new_info_request');
+    Route::post('/atps/{atp_id}/info-request/store', [App\Http\Controllers\EQA\ATPController::class, 'storeInfoRequest'])->name('atps.store_info_request');
+    Route::get('/atps/{atp_id}/info-request/{request_id}', [App\Http\Controllers\EQA\ATPController::class, 'viewInfoRequest'])->name('atps.view_info_request');
+    
+        // Form Actions
+        Route::post('/forms/save-006', [App\Http\Controllers\EQA\FormController::class, 'save006'])->name('forms.save_006');
+        Route::post('/forms/save-007', [App\Http\Controllers\EQA\FormController::class, 'save007'])->name('forms.save_007');
+
+        // Forms Routes
 
         // Forms Routes
         Route::get('/forms/{form_id}/{atp_id}', [App\Http\Controllers\EQA\FormController::class, 'show'])->name('forms.show');

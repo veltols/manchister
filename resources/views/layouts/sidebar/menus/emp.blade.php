@@ -24,21 +24,29 @@
         <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Calendar</span>
     </a>
 
-    <!-- RC Toggle Button -->
+    <!-- RC/EQA Toggle Button -->
     <button onclick="switchEmpMenu('rc')"
         class="w-full nav-item flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white hover:bg-white/10 transition-colors">
         <i class="fa-solid fa-cubes text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">RC</span>
+        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">{{ Auth::user()->user_type == 'eqa' ? 'EQA' : 'RC' }}</span>
     </button>
 </div>
 
 <!-- RC Menu Items (Hidden Initially) -->
 <div id="emp-rc-menu" style="display: none;">
+@if(Auth::user()->user_type == 'eqa')
+    <a href="{{ route('eqa.atps.index') }}"
+        class="nav-item flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white mb-2">
+        <i class="fa-solid fa-user-shield text-2xl"></i>
+        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60 text-center">EQA</span>
+    </a>
+@else
     <a href="{{ route('emp.atps.index') }}"
         class="nav-item {{ request()->routeIs('emp.atps.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white mb-2">
         <i class="fa-solid fa-building-columns text-2xl"></i>
         <span class="text-[10px] font-bold uppercase tracking-wider opacity-60 text-center">Training Providers</span>
     </a>
+@endif
 
     <!-- Back to Main Menu Button -->
     <button onclick="switchEmpMenu('std')"

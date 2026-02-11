@@ -30,7 +30,7 @@
                     <i class="fa-solid fa-rotate-right mr-2"></i>
                     Try Again
                 </button>
-                <a href="{{ url('/') }}" 
+                <a href="{{ route('dashboard') }}" 
                     class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-3 px-6 rounded-xl transition-colors duration-200 inline-block">
                     <i class="fa-solid fa-home mr-2"></i>
                     Go to Homepage

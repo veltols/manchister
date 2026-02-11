@@ -12,13 +12,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::table('users_list_themes')->insert([
-            'theme_name' => 'Premium Teal',
-            'color_primary' => '00384a', // Darker shade (Bottom)
-            'color_secondary' => '004F68', // Brand color (Top)
-            'color_text' => 'ffffff',
-            'is_deleted' => 0
-        ]);
+        if (Schema::hasColumn('users_list_themes', 'theme_name')) {
+            DB::table('users_list_themes')->insert([
+                'theme_name' => 'Premium Teal',
+                'color_primary' => '00384a', // Darker shade (Bottom)
+                'color_secondary' => '004F68', // Brand color (Top)
+                'color_text' => 'ffffff',
+                'is_deleted' => 0
+            ]);
+        }
     }
 
     /**

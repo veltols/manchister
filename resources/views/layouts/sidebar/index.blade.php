@@ -10,7 +10,7 @@
 
     <!-- Navigation -->
     <nav class="flex-1 overflow-y-auto py-6 px-3 space-y-1">
-        @if($user && $user->user_type == 'emp')
+        @if($user && in_array($user->user_type, ['emp', 'eqa']))
             @include('layouts.sidebar.menus.emp')
         @elseif($user && in_array($user->user_type, ['hr', 'admin_hr', 'sys_admin', 'root', 'eqa']))
             @include('layouts.sidebar.menus.manager')

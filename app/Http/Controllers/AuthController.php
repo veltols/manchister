@@ -35,7 +35,7 @@ class AuthController extends Controller
         if ($user) {
             // ... [Existing Employee Password Check Logic] ...
             $isValid = false;
-            if (in_array($user->user_type, ['emp', 'hr', 'root', 'sys_admin', 'admin_hr'])) {
+            if (in_array($user->user_type, ['emp', 'eqa', 'hr', 'root', 'sys_admin', 'admin_hr'])) {
                 $employee = $user->employee;
                 if ($employee && $employee->passwordData && Hash::check($password, $employee->passwordData->pass_value)) {
                     $isValid = true;
@@ -43,6 +43,25 @@ class AuthController extends Controller
             }
 
             if ($isValid) {
+                // Check if 2FA is enabled
+                if (env('ENABLE_2FA', true) === false) {
+                    Auth::login($user);
+                    Log::info('2FA is disabled. Direct login for: ' . $username);
+
+                    if (in_array($user->user_type, ['hr', 'admin_hr'])) {
+                        return redirect()->route('hr.dashboard');
+                    }
+
+                    if (in_array($user->user_type, ['root', 'sys_admin'])) {
+                        return redirect()->route('admin.dashboard');
+                    }
+                    if (in_array($user->user_type, ['eqa', 'emp'])) {
+                        return redirect()->route('emp.dashboard');
+                    }
+
+                    // return redirect()->route('emp.dashboard');
+                }
+
                 // Password is correct - now send OTP for 2FA instead of logging in
                 Log::info('Password verified for: ' . $username . ', sending OTP for 2FA');
 
@@ -286,6 +305,10 @@ class AuthController extends Controller
 
         if (in_array($user->user_type, ['root', 'sys_admin'])) {
             return redirect()->route('admin.dashboard');
+        }
+
+        if (in_array($user->user_type, ['eqa', 'emp'])) {
+            return redirect()->route('emp.dashboard');
         }
 
         return redirect()->route('emp.dashboard');

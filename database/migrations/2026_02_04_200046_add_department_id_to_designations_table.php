@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('employees_list_designations', function (Blueprint $table) {
-            $table->unsignedInteger('department_id')->after('designation_name')->nullable();
+            if (!Schema::hasColumn('employees_list_designations', 'department_id')) {
+                $table->unsignedInteger('department_id')->after('designation_name')->nullable();
+            }
         });
     }
 

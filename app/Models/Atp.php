@@ -4,10 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
 
 class Atp extends Model
 {
-    use HasFactory;
+    use HasFactory, Notifiable;
+
+    /**
+     * Route notifications for the mail channel.
+     *
+     * @return string
+     */
+    public function routeNotificationForMail()
+    {
+        return $this->atp_email;
+    }
 
     protected $table = 'atps_list';
     protected $primaryKey = 'atp_id';
@@ -30,9 +41,14 @@ class Atp extends Model
         return $this->belongsTo(AtpType::class, 'atp_type_id', 'atp_type_id');
     }
 
-    public function creator()
+    public function adder()
     {
         return $this->belongsTo(Employee::class, 'added_by', 'employee_id');
+    }
+
+    public function creator()
+    {
+        return $this->adder();
     }
 
     public function emirate()
