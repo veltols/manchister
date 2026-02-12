@@ -716,9 +716,9 @@
             </div>
         </header>
 
-        <!-- Content Area -->
+        <!-- Content Area  max-w-7xl-->
         <main class="flex-1 overflow-y-auto overflow-x-hidden p-8 bg-gradient-to-br from-slate-50 via-cyan-50/10 to-blue-50/10">
-            <div class="max-w-7xl mx-auto w-full animate-fade-in-up">
+            <div class=" mx-auto w-full animate-fade-in-up">
                 @yield('content')
             </div>
         </main>
