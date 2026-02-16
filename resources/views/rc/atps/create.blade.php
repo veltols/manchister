@@ -32,7 +32,7 @@
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Institution
                         Name</label>
                     <input type="text" name="atp_name" class="premium-input w-full"
-                        placeholder="e.g. Manchester Training Center" required>
+                        placeholder="e.g. IQC Sense" required>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

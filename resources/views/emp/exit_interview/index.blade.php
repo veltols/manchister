@@ -41,7 +41,7 @@
                 </div>
                 <div>
                     <h2 class="text-2xl font-display font-bold text-premium">Exit Assessment Form</h2>
-                    <p class="text-sm text-slate-500">Please provide honest feedback about your journey at Manchester</p>
+                    <p class="text-sm text-slate-500">Please provide honest feedback about your journey at IQC Sense</p>
                 </div>
             </div>
 

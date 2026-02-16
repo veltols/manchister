@@ -16,19 +16,19 @@
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">MANCHESTER</div>
+            <div class="logo">IQC Sense</div>
         </div>
         <div class="content">
             <h1>Welcome to the Network</h1>
             <p>Hello <strong>{{ $atp->contact_name }}</strong>,</p>
-            <p>You have been registered as an <strong>Authorized Training Provider (ATP)</strong> for Manchester Training Center.</p>
+            <p>You have been registered as an <strong>Authorized Training Provider (ATP)</strong> for IQC Sense.</p>
             <p>Your unique reference ID: <strong>{{ $atp->atp_ref }}</strong></p>
             <p>You can now log in to the portal and complete your accreditation profile.</p>
             <a href="{{ url('/login') }}" class="btn">Access Portal</a>
             <p style="margin-top: 40px; font-size: 11px; color: #94a3b8;">If you did not expect this invitation, please ignore this email.</p>
         </div>
         <div class="footer">
-            &copy; {{ date('Y') }} Manchester Training Center. All rights reserved.
+            &copy; {{ date('Y') }} IQC Sense. All rights reserved.
         </div>
     </div>
 </body>

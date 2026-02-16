@@ -37,7 +37,7 @@ class AtpRegistrationNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Welcome to Manchester Training Center')
+            ->subject('Welcome to IQC Sense')
             ->view('emails.atp_registration', ['atp' => $this->atp]);
     }
 

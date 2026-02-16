@@ -59,7 +59,7 @@
                     <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-4">
                         <i class="fa-solid fa-shield-halved"></i>
                     </div>
-                    <p class="text-xs text-slate-400 max-w-lg">This is an official record of Manchester. Disciplinary
+                    <p class="text-xs text-slate-400 max-w-lg">This is an official record of IQC Sense. Disciplinary
                         actions are kept on file and may influence future appraisals or contract renewals. If you wish to
                         appeal this action, please contact HR within 48 hours.</p>
                     <div class="mt-6 flex gap-4">

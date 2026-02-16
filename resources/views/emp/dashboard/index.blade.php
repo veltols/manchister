@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'My Dashboard')
-@section('subtitle', 'Welcome back to Manchester Portal')
+@section('subtitle', 'Welcome back to IQC Sense Portal')
 
 @section('content')
     <div class="space-y-6">

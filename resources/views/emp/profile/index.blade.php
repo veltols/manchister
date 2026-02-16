@@ -44,7 +44,7 @@
                             {{ $employee->last_name ?? '' }}</h2>
                         <p class="text-brand-dark font-bold flex items-center gap-2">
                             <i class="fa-solid fa-briefcase text-xs"></i>
-                            {{ $employee->designation->designation_name ?? 'Manchester Staff' }}
+                            {{ $employee->designation->designation_name ?? 'IQC Sense Staff' }}
                             <span class="text-slate-300">•</span>
                             <span
                                 class="text-slate-400 font-medium">{{ $employee->department->department_name ?? 'Corporate' }}</span>
@@ -136,7 +136,7 @@
                         </div>
                         <div class="pt-6 border-t border-white/10 mt-6">
                             <p class="text-[10px] text-white/40 leading-relaxed italic italic">"Commitment to excellence and
-                                teamwork represents our core values at Manchester."</p>
+                                teamwork represents our core values at IQC Sense."</p>
                         </div>
                     </div>
                 </div>
