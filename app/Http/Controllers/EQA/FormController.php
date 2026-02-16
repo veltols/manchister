@@ -52,9 +52,26 @@ class FormController extends Controller
             }
         }
 
-        // Ensure formData is an object to avoid "property of non-object" or "collection instance" errors
         if (!$formData) {
             $formData = (object) [];
+        } else {
+            // Merge JSON fields if present
+            if (isset($formData->details)) {
+                $details = json_decode($formData->details);
+                if ($details) {
+                    foreach ($details as $key => $val) {
+                        $formData->$key = $val;
+                    }
+                }
+            }
+            if (isset($formData->criteria_data)) {
+                $criteria = json_decode($formData->criteria_data);
+                if ($criteria) {
+                    foreach ($criteria as $key => $val) {
+                        $formData->$key = $val;
+                    }
+                }
+            }
         }
 
         // Context Data
@@ -74,7 +91,7 @@ class FormController extends Controller
 
         if ($form_id == '006') {
             $sed_data = DB::table('atps_sed_form')->where('atp_id', $atp_id)->first();
-            
+
             // Compliance/Evidence Data
             // Compliance/Evidence Data
             if (Schema::hasTable('quality_standards_cats')) {
@@ -88,7 +105,7 @@ class FormController extends Controller
                 $complianceData = DB::table('atp_compliance')
                     ->where('atp_id', $atp_id)
                     ->get()
-                    ->map(function($item) {
+                    ->map(function ($item) {
                         $item->cat_ref = 'N/A';
                         $item->cat_description = 'Description unavailable (Missing Table)';
                         return $item;
@@ -99,17 +116,17 @@ class FormController extends Controller
             if (Schema::hasTable('quality_standards_mains')) {
                 $qsMains = DB::table('quality_standards_mains')->orderBy('main_id')->get();
             } elseif (Schema::hasTable('quality_standard_main')) {
-                 $qsMains = DB::table('quality_standard_main')->orderBy('main_id')->get();
+                $qsMains = DB::table('quality_standard_main')->orderBy('main_id')->get();
             } else {
                 $qsMains = collect([]);
             }
-            
+
             return view($viewMap[$form_id], compact('atp', 'formData', 'form_id', 'sed_data', 'complianceData', 'qsMains'));
         }
 
         if ($form_id == '007') {
             $sed_data = DB::table('atps_sed_form')->where('atp_id', $atp_id)->first();
-            
+
             $areas = [];
             if (Schema::hasTable('eqa_007_areas')) {
                 $areas = DB::table('eqa_007_areas')->where('atp_id', $atp_id)->get();
@@ -142,17 +159,43 @@ class FormController extends Controller
         $data = $request->except(['_token']);
         $data['atp_id'] = $atp_id;
 
-        // Special handling for checklists (004, 014)
-        if (in_array($form_id, ['004', '014'])) {
-            // This normally involves a loop of multiple items
-            // For now, if it's a generic save, we handle it.
-            // If the request contains arrays, we need to iterate.
+        // Special handling for forms with dynamic array inputs
+        if (in_array($form_id, ['004', '014', '017', '018', '019', '020', '028'])) {
+            // Encode arrays to JSON for storage
+            foreach ($data as $key => $value) {
+                if (is_array($value)) {
+                    $data[$key] = json_encode($value);
+                }
+            }
         }
 
         if (Schema::hasTable($tableName)) {
+            // Get all columns from the table to filter data
+            $columns = Schema::getColumnListing($tableName);
+
+            // Partition data into existing columns and extra data
+            $columnData = [];
+            $extraData = [];
+
+            foreach ($data as $key => $value) {
+                if (in_array($key, $columns)) {
+                    $columnData[$key] = $value;
+                } else {
+                    $extraData[$key] = $value;
+                }
+            }
+
+            // If table has 'details' column, store extra data there
+            if (in_array('details', $columns) && !empty($extraData)) {
+                $columnData['details'] = json_encode($extraData);
+            } elseif (in_array('criteria_data', $columns) && !empty($extraData)) {
+                $columnData['criteria_data'] = json_encode($extraData);
+            }
+
+            // Always ensure atp_id is present for the condition
             DB::table($tableName)->updateOrInsert(
                 ['atp_id' => $atp_id],
-                $data
+                $columnData
             );
         }
 
@@ -180,7 +223,7 @@ class FormController extends Controller
         if ($updated) {
             return response()->json(['success' => true]);
         }
-        
+
         return response()->json(['success' => false, 'message' => 'Record not found or no changes made.']);
     }
 
@@ -196,7 +239,8 @@ class FormController extends Controller
             $a3s = $request->a3s ?? [];
 
             foreach ($areas as $index => $id) {
-                if (!isset($a1s[$index])) continue; // Skip empty/malformed
+                if (!isset($a1s[$index]))
+                    continue; // Skip empty/malformed
 
                 $data = [
                     'atp_id' => $atp_id,
@@ -255,7 +299,7 @@ class FormController extends Controller
                     'question' => $q,
                     'answer' => $answers[$index] ?? '',
                 ];
-                
+
                 $this->saveInterview($id, $data);
             }
         }
@@ -274,7 +318,7 @@ class FormController extends Controller
                     'question' => $q,
                     'answer' => $answers[$index] ?? '',
                 ];
-                
+
                 $this->saveInterview($id, $data);
             }
         }
@@ -282,8 +326,10 @@ class FormController extends Controller
         return response()->json(['success' => true]);
     }
 
-    private function saveInterview($id, $data) {
-        if (!Schema::hasTable('eqa_007_interview')) return;
+    private function saveInterview($id, $data)
+    {
+        if (!Schema::hasTable('eqa_007_interview'))
+            return;
 
         if ($id > 0) {
             DB::table('eqa_007_interview')->where('interview_type', $data['interview_type'])->where('interview_id', $id)->update($data);

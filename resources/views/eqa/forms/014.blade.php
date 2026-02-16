@@ -7,24 +7,28 @@
     <div class="max-w-6xl mx-auto space-y-8 animate-fade-in-up">
 
         <!-- Header Action Bar -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-white/20 shadow-sm">
+        <div
+            class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-white/20 shadow-sm">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-gradient-brand flex items-center justify-center text-white shadow-lg shadow-brand/20">
+                <div
+                    class="w-12 h-12 rounded-xl bg-brand flex items-center justify-center text-white shadow-lg shadow-brand/20">
                     <i class="fa-solid fa-clipboard-check text-xl"></i>
                 </div>
                 <div>
                     <h2 class="text-xl font-bold text-premium leading-tight">{{ $atp->atp_name }}</h2>
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">ATP Approval Site Inspection Checklist</p>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">ATP Approval Site
+                        Inspection Checklist</p>
                 </div>
             </div>
             <a href="{{ route('eqa.atps.show', ['id' => $atp->atp_id, 'tab' => 'visit']) }}"
-                class="group flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 text-slate-500 hover:bg-brand hover:text-white transition-all duration-300 font-bold text-xs uppercase tracking-tighter shadow-sm">
-                <i class="fa-solid fa-arrow-left transition-transform group-hover:-translate-x-1"></i>
-                <span>Back to ATP</span>
+                class="premium-button bg-stone-500 hover:bg-stone-600 shadow-md">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Back to Visit</span>
             </a>
         </div>
 
-        <form action="{{ route('eqa.forms.store', ['form_id' => '014', 'atp_id' => $atp->atp_id]) }}" method="POST" class="space-y-8">
+        <form action="{{ route('eqa.forms.store', ['form_id' => '014', 'atp_id' => $atp->atp_id]) }}" method="POST"
+            class="space-y-8">
             @csrf
 
             <!-- Standard Checklist Sections -->
@@ -67,13 +71,15 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 @foreach($checklistSections as $sectionName => $sectionData)
-                    <div class="premium-card overflow-hidden">
+                    <div class="premium-card overflow-hidden bg-white shadow-lg shadow-slate-200/50 border-slate-100/50">
                         <div class="bg-slate-50 border-b border-slate-100 px-8 py-5 flex items-center justify-between">
                             <h3 class="font-bold text-slate-600 uppercase text-[10px] tracking-[0.2em] flex items-center gap-3">
                                 <i class="fa-solid {{ $sectionData['icon'] }} text-brand"></i>
                                 {{ $sectionName }}
                             </h3>
-                            <span class="px-2 py-0.5 rounded bg-brand/10 text-brand text-[10px] font-black uppercase tracking-tighter">{{ count($sectionData['items']) }} Items</span>
+                            <span
+                                class="px-2 py-0.5 rounded bg-brand/10 text-brand text-[10px] font-black uppercase tracking-tighter">{{ count($sectionData['items']) }}
+                                Items</span>
                         </div>
                         <div class="p-6 space-y-6">
                             @foreach($sectionData['items'] as $idx => $item)
@@ -88,7 +94,7 @@
                                         </select>
                                     </div>
                                     <textarea name="feedback_{{ Str::slug($sectionName) }}_{{ $idx }}" rows="2"
-                                        class="premium-input w-full text-xs bg-slate-50/30 border-dashed focus:bg-white resize-none" 
+                                        class="premium-input w-full text-xs bg-slate-50/30 border-dashed focus:bg-white resize-none focus:border-brand focus:ring-brand/5"
                                         placeholder="Add specific observations for this item...">{{ $formData->{Str::slug($sectionName) . "_$idx"} ?? '' }}</textarea>
                                 </div>
                             @endforeach
@@ -98,10 +104,12 @@
             </div>
 
             <!-- Staff Met During Visit -->
-            <div class="premium-card p-8">
+            <div class="premium-card p-8 bg-white shadow-lg shadow-slate-200/50 border-slate-100/50">
                 <div class="flex items-center justify-between mb-8">
-                    <h3 class="font-bold text-premium uppercase text-xs tracking-[0.2em] border-l-4 border-l-brand pl-4">Staff Interaction Log</h3>
-                    <div class="px-4 py-1.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-widest border border-slate-200">
+                    <h3 class="font-bold text-premium uppercase text-xs tracking-[0.2em] border-l-4 border-l-brand pl-4">
+                        Staff Interaction Log</h3>
+                    <div
+                        class="px-4 py-1.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-widest border border-slate-200">
                         Visit Interaction Traceability
                     </div>
                 </div>
@@ -109,43 +117,82 @@
                 <div id="staff-container" class="space-y-4">
                     @php
                         $staffCount = 3; // Default rows
+                        // Load saved interactions if any, theoretically could loop saved data here if available
+                        $staffNames = isset($formData->staff_name) ? $formData->staff_name : array_fill(0, $staffCount, null);
+                        $staffRoles = isset($formData->staff_role) ? $formData->staff_role : array_fill(0, $staffCount, null);
                     @endphp
-                    @for($i = 0; $i < $staffCount; $i++)
-                        <div class="flex flex-col md:flex-row gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100 group hover:bg-white hover:border-brand/30 hover:shadow-md transition-all">
+                    @foreach($staffNames as $i => $name)
+                        <div
+                            class="flex flex-col md:flex-row gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100 group hover:bg-white hover:border-brand/30 hover:shadow-md transition-all">
                             <div class="flex-1 space-y-1">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Staff Name</label>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Staff
+                                    Name</label>
                                 <div class="relative">
                                     <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"></i>
-                                    <input type="text" name="staff_name[]" placeholder="Enter full name" class="premium-input w-full pl-11 bg-white">
+                                    <input type="text" name="staff_name[]" value="{{ $name }}" placeholder="Enter full name"
+                                        class="premium-input w-full pl-11 bg-white focus:border-brand focus:ring-brand/5">
                                 </div>
                             </div>
                             <div class="flex-1 space-y-1">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Role / Position</label>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Role /
+                                    Position</label>
                                 <div class="relative">
-                                    <i class="fa-solid fa-briefcase absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"></i>
-                                    <input type="text" name="staff_role[]" placeholder="e.g. Training Manager" class="premium-input w-full pl-11 bg-white">
+                                    <i
+                                        class="fa-solid fa-briefcase absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"></i>
+                                    <input type="text" name="staff_role[]" value="{{ $staffRoles[$i] ?? '' }}"
+                                        placeholder="e.g. Training Manager"
+                                        class="premium-input w-full pl-11 bg-white focus:border-brand focus:ring-brand/5">
                                 </div>
                             </div>
                         </div>
-                    @endfor
+                    @endforeach
                 </div>
-                
+
                 <div class="mt-6 flex justify-center">
-                    <button type="button" class="group flex items-center gap-2 px-6 py-2 rounded-xl bg-white border border-slate-200 text-slate-500 hover:border-brand hover:text-brand hover:shadow-lg transition-all text-[10px] font-bold uppercase tracking-widest">
+                    <button type="button" onclick="addStaffRow()"
+                        class="group flex items-center gap-2 px-6 py-2 rounded-xl bg-white border border-slate-200 text-slate-500 hover:border-brand hover:text-brand hover:shadow-lg transition-all text-[10px] font-bold uppercase tracking-widest">
                         <i class="fa-solid fa-plus-circle transition-transform group-hover:rotate-90"></i>
                         <span>Add Another Staff Member</span>
                     </button>
                 </div>
             </div>
 
+            <script>
+                function addStaffRow() {
+                    const container = document.getElementById('staff-container');
+                    const row = document.createElement('div');
+                    row.className = 'flex flex-col md:flex-row gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100 group hover:bg-white hover:border-brand/30 hover:shadow-md transition-all animate-fade-in-up';
+                    row.innerHTML = `
+                            <div class="flex-1 space-y-1">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Staff Name</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"></i>
+                                    <input type="text" name="staff_name[]" placeholder="Enter full name" class="premium-input w-full pl-11 bg-white focus:border-brand focus:ring-brand/5">
+                                </div>
+                            </div>
+                            <div class="flex-1 space-y-1">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Role / Position</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-briefcase absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"></i>
+                                    <input type="text" name="staff_role[]" placeholder="e.g. Training Manager" class="premium-input w-full pl-11 bg-white focus:border-brand focus:ring-brand/5">
+                                </div>
+                            </div>
+                        `;
+                    container.appendChild(row);
+                }
+            </script>
+
             <!-- Action Buttons -->
-            <div class="flex items-center justify-between bg-white/40 backdrop-blur-md p-6 rounded-2xl border border-white/20 shadow-xl">
+            <div
+                class="flex items-center justify-between bg-white/40 backdrop-blur-md p-6 rounded-2xl border border-white/20 shadow-xl">
                 <div class="flex items-center gap-3 text-slate-400">
                     <i class="fa-solid fa-eye text-brand"></i>
-                    <span class="text-xs font-bold uppercase tracking-widest">Site inspection data will be logged in audit trail</span>
+                    <span class="text-xs font-bold uppercase tracking-widest">Site inspection data will be logged in audit
+                        trail</span>
                 </div>
                 <div class="flex items-center gap-4">
-                    <button type="reset" class="px-6 py-3 rounded-xl bg-slate-100 text-slate-500 font-bold text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all">
+                    <button type="reset"
+                        class="px-6 py-3 rounded-xl bg-slate-100 text-slate-500 font-bold text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all">
                         Reset Checklist
                     </button>
                     <button type="submit" class="premium-button px-10 py-3.5 text-sm shadow-xl shadow-brand/30">
