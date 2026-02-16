@@ -28,6 +28,7 @@ class FormController extends Controller
             '019' => 'eqa.forms.019', // Learner Interview
             '020' => 'eqa.forms.020', // Lead IQA Interview
             '028' => 'eqa.forms.028', // Live Assessment
+            '049' => 'eqa.forms.049', // Teaching Observation
         ];
 
         if (!array_key_exists($form_id, $viewMap)) {
@@ -87,41 +88,118 @@ class FormController extends Controller
 
         if ($form_id == '004') {
             $sed_data = DB::table('atps_sed_form')->where('atp_id', $atp_id)->first();
+            
+            // Decode JSON arrays for Form 004
+            if ($formData && !empty((array)$formData)) {
+                foreach ($formData as $key => $value) {
+                    if (is_string($value) && (strpos($value, '[') === 0 || strpos($value, '{') === 0)) {
+                        $decoded = json_decode($value, true);
+                        if (json_last_error() === JSON_ERROR_NONE) {
+                            $formData->$key = $decoded;
+                        }
+                    }
+                }
+            }
+        }
+
+        if ($form_id == '014') {
+            // Decode JSON arrays for Form 014
+            if ($formData && !empty((array)$formData)) {
+                foreach ($formData as $key => $value) {
+                    if (is_string($value) && (strpos($value, '[') === 0 || strpos($value, '{') === 0)) {
+                        $decoded = json_decode($value, true);
+                        if (json_last_error() === JSON_ERROR_NONE) {
+                            $formData->$key = $decoded;
+                        }
+                    }
+                }
+            }
         }
 
         if ($form_id == '006') {
             $sed_data = DB::table('atps_sed_form')->where('atp_id', $atp_id)->first();
 
-            // Compliance/Evidence Data
-            // Compliance/Evidence Data
+            // Ensure atp_compliance is populated for this ATP if it's empty
+            $existingComplianceCount = DB::table('atp_compliance')->where('atp_id', $atp_id)->count();
+            if ($existingComplianceCount == 0 && Schema::hasTable('quality_standards_cats')) {
+                $categories = DB::table('quality_standards_cats')
+                    ->join('quality_standards', 'quality_standards_cats.qs_id', '=', 'quality_standards.qs_id')
+                    ->select('quality_standards_cats.cat_id', 'quality_standards.main_id')
+                    ->get();
+
+                foreach ($categories as $cat) {
+                    DB::table('atp_compliance')->insert([
+                        'atp_id' => $atp_id,
+                        'main_id' => $cat->main_id,
+                        'criteria_id' => $cat->cat_id,
+                        'answer' => 2, // Not Applicable by default (Legacy Switch 2)
+                    ]);
+                }
+            }
+
+            // Quality Standards Mains for Summary
+            $qsMains = DB::table('quality_standard_main')->orderBy('main_id')->get();
+
+            // Calculate KPIs for each main
+            $kpiData = [];
+            $totalScore = 0;
+            foreach ($qsMains as $main) {
+                $totFilled = DB::table('atp_compliance')
+                    ->where('atp_id', $atp_id)
+                    ->where('main_id', $main->main_id)
+                    ->count();
+
+                $totOk = DB::table('atp_compliance')
+                    ->where('atp_id', $atp_id)
+                    ->where('main_id', $main->main_id)
+                    ->where('answer', 1) // YES/Applicable
+                    ->count();
+
+                $score = ($totFilled > 0) ? ceil(($totOk / $totFilled) * 100) : 0;
+                
+                $status = 'danger';
+                if ($score > 80) $status = 'success';
+                elseif ($score > 35) $status = 'warning';
+
+                $kpiData[$main->main_id] = [
+                    'score' => $score,
+                    'status' => $status
+                ];
+                $totalScore += $score;
+            }
+            $avgScore = (count($qsMains) > 0) ? ceil($totalScore / count($qsMains)) : 0;
+            $avgStatus = 'danger';
+            if ($avgScore > 80) $avgStatus = 'success';
+            elseif ($avgScore > 35) $avgStatus = 'warning';
+
+            $kpis = [
+                'mains' => $kpiData,
+                'avg' => [
+                    'score' => $avgScore,
+                    'status' => $avgStatus
+                ]
+            ];
+
+            // Fetch compliance data with category info
             if (Schema::hasTable('quality_standards_cats')) {
                 $complianceData = DB::table('atp_compliance')
-                    ->join('quality_standards_cats', 'atp_compliance.cat_id', '=', 'quality_standards_cats.cat_id')
+                    ->join('quality_standards_cats', 'atp_compliance.criteria_id', '=', 'quality_standards_cats.cat_id')
                     ->where('atp_compliance.atp_id', $atp_id)
                     ->select('atp_compliance.*', 'quality_standards_cats.cat_ref', 'quality_standards_cats.cat_description')
                     ->get();
             } else {
-                // Fallback if table doesn't exist
+                // Fallback
                 $complianceData = DB::table('atp_compliance')
                     ->where('atp_id', $atp_id)
                     ->get()
                     ->map(function ($item) {
                         $item->cat_ref = 'N/A';
-                        $item->cat_description = 'Description unavailable (Missing Table)';
+                        $item->cat_description = 'Description unavailable';
                         return $item;
-                    });
+                });
             }
 
-            // Quality Standards Mains for Summary
-            if (Schema::hasTable('quality_standards_mains')) {
-                $qsMains = DB::table('quality_standards_mains')->orderBy('main_id')->get();
-            } elseif (Schema::hasTable('quality_standard_main')) {
-                $qsMains = DB::table('quality_standard_main')->orderBy('main_id')->get();
-            } else {
-                $qsMains = collect([]);
-            }
-
-            return view($viewMap[$form_id], compact('atp', 'formData', 'form_id', 'sed_data', 'complianceData', 'qsMains'));
+            return view('eqa.forms.006', compact('atp', 'sed_data', 'complianceData', 'qsMains', 'kpis'));
         }
 
         if ($form_id == '007') {
@@ -149,6 +227,34 @@ class FormController extends Controller
 
     public function store($form_id, $atp_id, Request $request)
     {
+        // Validation per form
+        if ($form_id == '008') {
+            $request->validate([
+                'eqa_visit_date' => 'required|date',
+                'visit_type' => 'required',
+                'activity' => 'required',
+                'visit_length' => 'required',
+                'visit_scope' => 'required',
+                'visit_agenda' => 'required',
+                'visit_comment' => 'required',
+            ]);
+        }
+
+        if ($form_id == '003') {
+            $request->validate([
+                'eqa_visit_date' => 'required|date',
+                'sed_author' => 'required|string',
+                'criteria_0' => 'required',
+                'criteria_1' => 'required',
+                'criteria_2' => 'required',
+                'criteria_3' => 'required',
+                'feedback_0' => 'required',
+                'feedback_1' => 'required',
+                'feedback_2' => 'required',
+                'feedback_3' => 'required',
+            ]);
+        }
+
         $tableName = 'eqa_' . $form_id;
 
         // Custom Table Mapping for Consolidated Data
@@ -238,6 +344,14 @@ class FormController extends Controller
             $a2s = $request->a2s ?? [];
             $a3s = $request->a3s ?? [];
 
+            // Delete removed areas
+            if (Schema::hasTable('eqa_007_areas')) {
+                DB::table('eqa_007_areas')
+                    ->where('atp_id', $atp_id)
+                    ->whereNotIn('record_id', array_filter($areas, fn($id) => $id > 0))
+                    ->delete();
+            }
+
             foreach ($areas as $index => $id) {
                 if (!isset($a1s[$index]))
                     continue; // Skip empty/malformed
@@ -271,6 +385,14 @@ class FormController extends Controller
             $roles = $request->staff_roles ?? [];
             $comments = $request->eqa_comments ?? [];
 
+            if (Schema::hasTable('eqa_007_interview')) {
+                DB::table('eqa_007_interview')
+                    ->where('atp_id', $atp_id)
+                    ->where('interview_type', 'staff')
+                    ->whereNotIn('interview_id', array_filter($ids, fn($id) => $id > 0))
+                    ->delete();
+            }
+
             foreach ($names as $index => $name) {
                 $id = $ids[$index] ?? 0;
                 $data = [
@@ -291,6 +413,14 @@ class FormController extends Controller
             $questions = $request->iqa_questions;
             $answers = $request->iqa_answers ?? [];
 
+            if (Schema::hasTable('eqa_007_interview')) {
+                DB::table('eqa_007_interview')
+                    ->where('atp_id', $atp_id)
+                    ->where('interview_type', 'iqa')
+                    ->whereNotIn('interview_id', array_filter($ids, fn($id) => $id > 0))
+                    ->delete();
+            }
+
             foreach ($questions as $index => $q) {
                 $id = $ids[$index] ?? 0;
                 $data = [
@@ -309,6 +439,14 @@ class FormController extends Controller
             $ids = $request->train_ids ?? [];
             $questions = $request->train_questions;
             $answers = $request->train_answers ?? [];
+
+            if (Schema::hasTable('eqa_007_interview')) {
+                DB::table('eqa_007_interview')
+                    ->where('atp_id', $atp_id)
+                    ->where('interview_type', 'train')
+                    ->whereNotIn('interview_id', array_filter($ids, fn($id) => $id > 0))
+                    ->delete();
+            }
 
             foreach ($questions as $index => $q) {
                 $id = $ids[$index] ?? 0;

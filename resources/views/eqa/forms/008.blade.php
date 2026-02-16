@@ -6,6 +6,27 @@
 @section('content')
     <div class="max-w-6xl mx-auto space-y-8 animate-fade-in-up">
 
+        @if (session('success'))
+            <div class="bg-emerald-50 border border-emerald-200 text-emerald-600 px-6 py-4 rounded-2xl flex items-center gap-4 animate-fade-in">
+                <i class="fa-solid fa-circle-check text-xl"></i>
+                <p class="font-bold text-sm">{{ session('success') }}</p>
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="bg-rose-50 border border-rose-200 text-rose-600 px-6 py-4 rounded-2xl animate-fade-in">
+                <div class="flex items-center gap-4 mb-2">
+                    <i class="fa-solid fa-circle-exclamation text-xl"></i>
+                    <p class="font-black uppercase tracking-widest text-[10px]">Verification Errors</p>
+                </div>
+                <ul class="list-disc list-inside text-xs font-bold space-y-1 ml-9">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <!-- Header Action Bar -->
         <div
             class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-white/20 shadow-sm">
@@ -37,23 +58,18 @@
                         <span>Institutional Context</span>
                     </h3>
                 </div>
-                <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="space-y-1">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Institute
-                            Name</label>
-                        <div
-                            class="p-4 rounded-xl bg-slate-50 border border-slate-100 text-premium font-bold text-sm shadow-inner group transition-all">
-                            <i
-                                class="fa-solid fa-building-columns text-brand/30 mr-2 group-hover:text-brand transition-colors"></i>
+                <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2 flex flex-col">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Institute Name</label>
+                        <div class="flex-1 p-3.5 rounded-xl bg-slate-50 border-2 border-slate-100 text-premium font-bold text-sm shadow-inner group transition-all flex items-center">
+                            <i class="fa-solid fa-building-columns text-brand/30 mr-3 group-hover:text-brand transition-colors"></i>
                             {{ $atp->atp_name }}
                         </div>
                     </div>
-                    <div class="space-y-1">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Author of
-                            SED</label>
-                        <div
-                            class="p-4 rounded-xl bg-slate-50 border border-slate-100 text-premium font-bold text-sm shadow-inner group transition-all">
-                            <i class="fa-solid fa-user-pen text-brand/30 mr-2 group-hover:text-brand transition-colors"></i>
+                    <div class="space-y-2 flex flex-col">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Author of SED</label>
+                        <div class="flex-1 p-3.5 rounded-xl bg-slate-50 border-2 border-slate-100 text-premium font-bold text-sm shadow-inner group transition-all flex items-center">
+                            <i class="fa-solid fa-user-pen text-brand/30 mr-3 group-hover:text-brand transition-colors"></i>
                             {{ $sed_data->sed_1 ?? 'Legacy Data (N/A)' }}
                         </div>
                     </div>

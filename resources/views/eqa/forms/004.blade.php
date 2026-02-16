@@ -35,24 +35,24 @@
                         Institutional Overview
                     </h3>
                 </div>
-                <div class="p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div class="space-y-1">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Institute Name</label>
-                        <div class="p-4 rounded-xl bg-slate-50 border border-slate-100 text-premium font-bold text-sm shadow-inner group transition-all">
+                <div class="p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="space-y-2 flex flex-col">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Institute Name</label>
+                        <div class="flex-1 p-3.5 rounded-xl bg-slate-50 border-2 border-slate-100 text-premium font-bold text-sm shadow-inner group transition-all flex items-center">
                             {{ $atp->atp_name }}
                         </div>
                     </div>
-                    <div class="space-y-1">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact Name</label>
-                        <div class="p-4 rounded-xl bg-slate-50 border border-slate-100 text-premium font-bold text-sm shadow-inner group transition-all">
+                    <div class="space-y-2 flex flex-col">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Contact Name</label>
+                        <div class="flex-1 p-3.5 rounded-xl bg-slate-50 border-2 border-slate-100 text-premium font-bold text-sm shadow-inner group transition-all flex items-center">
                             {{ $atp->contact_name }}
                         </div>
                     </div>
-                     <div class="space-y-1">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Date of Visit</label>
-                        <div class="relative">
+                     <div class="space-y-2 flex flex-col">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Date of Visit</label>
+                        <div class="relative flex-1">
                              <i class="fa-solid fa-calendar-day absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"></i>
-                             <input type="date" name="visit_date" class="premium-input w-full pl-11 focus:border-brand focus:ring-brand/5"
+                             <input type="date" name="visit_date" class="premium-input w-full h-full pl-11 focus:border-brand focus:ring-brand/5 !bg-slate-50 border-2 border-slate-100 shadow-inner"
                                 value="{{ $formData->visit_date ?? '' }}" required>
                         </div>
                     </div>

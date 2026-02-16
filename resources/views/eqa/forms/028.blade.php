@@ -138,12 +138,16 @@
                                         <p class="text-xs font-bold text-slate-600 leading-snug">{{ $item }}</p>
                                     </div>
                                     <div class="md:col-span-2">
+                                        @php
+                                            $statusKey = 'criteria_status_' . $key;
+                                            $savedStatus = $formData->$statusKey ?? '';
+                                        @endphp
                                         <select name="criteria_status_{{ $key }}"
                                             class="w-full text-[10px] font-black uppercase tracking-widest bg-white border border-slate-200 rounded-lg px-2 py-2 text-slate-600 focus:ring-brand focus:border-brand shadow-sm transition-all focus:ring-4 focus:ring-brand/5">
                                             <option value="">Select</option>
-                                            <option value="Yes">Yes</option>
-                                            <option value="No">No</option>
-                                            <option value="N/A">N/A</option>
+                                            <option value="Yes" {{ $savedStatus == 'Yes' ? 'selected' : '' }}>Yes</option>
+                                            <option value="No" {{ $savedStatus == 'No' ? 'selected' : '' }}>No</option>
+                                            <option value="N/A" {{ $savedStatus == 'N/A' ? 'selected' : '' }}>N/A</option>
                                         </select>
                                     </div>
                                     <div class="md:col-span-5">

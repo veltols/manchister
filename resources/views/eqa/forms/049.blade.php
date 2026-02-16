@@ -37,23 +37,23 @@
                     <span>Instructor Information</span>
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="space-y-2">
+                    <div class="space-y-2 flex flex-col">
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Instructor
                             Name</label>
-                        <div class="relative">
+                        <div class="relative flex-1">
                             <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"></i>
                             <input type="text" name="instructor_name"
-                                class="premium-input w-full pl-11 focus:border-brand focus:ring-brand/5"
+                                class="premium-input w-full h-full pl-11 focus:border-brand focus:ring-brand/5"
                                 value="{{ $formData->instructor_name ?? '' }}" placeholder="Name">
                         </div>
                     </div>
-                    <div class="space-y-2">
+                    <div class="space-y-2 flex flex-col">
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Course /
                             Module</label>
-                        <div class="relative">
+                        <div class="relative flex-1">
                             <i class="fa-solid fa-book absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"></i>
                             <input type="text" name="course_module"
-                                class="premium-input w-full pl-11 focus:border-brand focus:ring-brand/5"
+                                class="premium-input w-full h-full pl-11 focus:border-brand focus:ring-brand/5"
                                 value="{{ $formData->course_module ?? '' }}" placeholder="Course Title">
                         </div>
                     </div>
@@ -67,21 +67,21 @@
                     <span>Pre-Observation Details</span>
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div class="space-y-2">
+                    <div class="space-y-2 flex flex-col">
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Lesson Plan
                             Available?</label>
                         <select name="lesson_plan_available"
-                            class="premium-input w-full focus:border-brand focus:ring-brand/5">
+                            class="premium-input w-full h-full focus:border-brand focus:ring-brand/5">
                             <option value="">Select</option>
                             <option value="Yes" {{ (isset($formData->lesson_plan_available) && $formData->lesson_plan_available == 'Yes') ? 'selected' : '' }}>Yes</option>
                             <option value="No" {{ (isset($formData->lesson_plan_available) && $formData->lesson_plan_available == 'No') ? 'selected' : '' }}>No</option>
                         </select>
                     </div>
-                    <div class="space-y-2">
+                    <div class="space-y-2 flex flex-col">
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Materials
                             Prepared?</label>
                         <select name="materials_prepared"
-                            class="premium-input w-full focus:border-brand focus:ring-brand/5">
+                            class="premium-input w-full h-full focus:border-brand focus:ring-brand/5">
                             <option value="">Select</option>
                             <option value="Yes" {{ (isset($formData->materials_prepared) && $formData->materials_prepared == 'Yes') ? 'selected' : '' }}>Yes</option>
                             <option value="No" {{ (isset($formData->materials_prepared) && $formData->materials_prepared == 'No') ? 'selected' : '' }}>No</option>
@@ -144,14 +144,18 @@
                                         <p class="text-xs font-bold text-slate-600 leading-snug">{{ $item }}</p>
                                     </div>
                                     <div class="md:col-span-2">
+                                        @php
+                                            $ratingKey = 'rating_' . $key;
+                                            $savedRating = $formData->$ratingKey ?? '';
+                                        @endphp
                                         <select name="rating_{{ $key }}"
                                             class="w-full text-[10px] font-black uppercase tracking-widest bg-white border border-slate-200 rounded-lg px-2 py-2 text-slate-600 focus:ring-brand focus:border-brand shadow-sm focus:ring-4 focus:ring-brand/5 transition-all">
                                             <option value="">Rate</option>
-                                            <option value="1">1</option>
-                                            <option value="2">2</option>
-                                            <option value="3">3</option>
-                                            <option value="4">4</option>
-                                            <option value="5">5</option>
+                                            <option value="1" {{ $savedRating == '1' ? 'selected' : '' }}>1</option>
+                                            <option value="2" {{ $savedRating == '2' ? 'selected' : '' }}>2</option>
+                                            <option value="3" {{ $savedRating == '3' ? 'selected' : '' }}>3</option>
+                                            <option value="4" {{ $savedRating == '4' ? 'selected' : '' }}>4</option>
+                                            <option value="5" {{ $savedRating == '5' ? 'selected' : '' }}>5</option>
                                         </select>
                                     </div>
                                     <div class="md:col-span-5">

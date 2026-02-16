@@ -1,6 +1,15 @@
 <?php
-$conn = mysqli_connect("127.0.0.1", "root", "", "manchester");
-$res = mysqli_query($conn, 'SHOW TABLES');
-while ($row = mysqli_fetch_row($res)) {
-    echo $row[0] . PHP_EOL;
+require 'vendor/autoload.php';
+$app = require_once 'bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel->bootstrap();
+
+use Illuminate\Support\Facades\DB;
+
+$tables = DB::select('SHOW TABLES');
+foreach ($tables as $table) {
+    $name = array_values((array)$table)[0];
+    if (strpos($name, 'quality') !== false || strpos($name, 'compliance') !== false) {
+        echo $name . "\n";
+    }
 }

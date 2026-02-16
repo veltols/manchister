@@ -131,12 +131,10 @@ class ATPController extends Controller
             DB::table('atps_info_request_evs')->insert([
                 'request_id' => $requestId,
                 'required_evidence' => $evidence,
-                'atp_id' => $atp_id,
-                'request_department' => 2, // EQA
             ]);
         }
         
-        $this->logAtpAction($atp_id, 'Created Information Request #' . $requestId);
+        // $this->logAtpAction($atp_id, 'Created Information Request #' . $requestId);
 
         return redirect()->route('eqa.atps.show', ['id' => $atp_id, 'tab' => 'planner'])->with('success', 'Information Request created successfully.');
     }

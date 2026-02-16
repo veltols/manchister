@@ -1,0 +1,13 @@
+ATP_COMPLIANCE:
+record_id (int(10) unsigned)
+atp_id (int(11))
+main_id (int(11))
+answer (int(11))
+feedback (text)
+criteria_id (int(11))
+attachment (text)
+
+QUALITY_STANDARD_MAIN:
+main_id (int(10) unsigned)
+main_title (varchar(255))
+main_icon (varchar(255))

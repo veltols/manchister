@@ -83,19 +83,25 @@
                         </div>
                         <div class="p-6 space-y-6">
                             @foreach($sectionData['items'] as $idx => $item)
+                                @php
+                                    $criteriaKey = 'criteria_' . Str::slug($sectionName) . '_' . $idx;
+                                    $feedbackKey = 'feedback_' . Str::slug($sectionName) . '_' . $idx;
+                                    $savedCriteria = $formData->$criteriaKey ?? '';
+                                    $savedFeedback = $formData->$feedbackKey ?? '';
+                                @endphp
                                 <div class="space-y-4 pb-6 border-b border-slate-50 last:border-0 last:pb-0">
                                     <div class="flex justify-between items-start gap-4">
                                         <p class="text-sm font-bold text-premium leading-snug">{{ $item }}</p>
                                         <select name="criteria_{{ Str::slug($sectionName) }}_{{ $idx }}"
                                             class="w-24 text-[10px] font-black uppercase tracking-widest bg-slate-50 border border-slate-100 rounded-lg px-2 py-1.5 text-slate-500 focus:ring-brand focus:border-brand shadow-inner cursor-pointer transition-all">
                                             <option value="">STT</option>
-                                            <option value="1">YES</option>
-                                            <option value="0">NO</option>
+                                            <option value="1" {{ $savedCriteria == '1' ? 'selected' : '' }}>YES</option>
+                                            <option value="0" {{ $savedCriteria == '0' ? 'selected' : '' }}>NO</option>
                                         </select>
                                     </div>
                                     <textarea name="feedback_{{ Str::slug($sectionName) }}_{{ $idx }}" rows="2"
                                         class="premium-input w-full text-xs bg-slate-50/30 border-dashed focus:bg-white resize-none focus:border-brand focus:ring-brand/5"
-                                        placeholder="Add specific observations for this item...">{{ $formData->{Str::slug($sectionName) . "_$idx"} ?? '' }}</textarea>
+                                        placeholder="Add specific observations for this item...">{{ $savedFeedback }}</textarea>
                                 </div>
                             @endforeach
                         </div>

@@ -1,11 +1,10 @@
 <?php
-$conn = mysqli_connect("127.0.0.1", "root", "", "m_old");
-$res = mysqli_query($conn, "SELECT * FROM atp_compliance LIMIT 20");
-if ($res) {
-    while ($row = mysqli_fetch_assoc($res)) {
-        print_r($row);
-    }
-} else {
-    echo "Error: " . mysqli_error($conn);
-}
-mysqli_close($conn);
+require 'vendor/autoload.php';
+$app = require_once 'bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel->bootstrap();
+
+use Illuminate\Support\Facades\DB;
+
+$rows = DB::table('atp_compliance')->limit(10)->get();
+print_r($rows);

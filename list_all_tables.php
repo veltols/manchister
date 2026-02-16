@@ -1,14 +1,14 @@
 <?php
-$conn = mysqli_connect("127.0.0.1", "root", "", "m_old");
-if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
+require 'vendor/autoload.php';
+$app = require_once 'bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel->bootstrap();
+
+use Illuminate\Support\Facades\DB;
+
+$tables = DB::select('SHOW TABLES');
+$output = "";
+foreach ($tables as $table) {
+    $output .= array_values((array)$table)[0] . "\n";
 }
-$res = mysqli_query($conn, 'SHOW TABLES');
-if ($res) {
-    while ($row = mysqli_fetch_row($res)) {
-        echo $row[0] . PHP_EOL;
-    }
-} else {
-    echo "Error: " . mysqli_error($conn);
-}
-mysqli_close($conn);
+file_put_contents('all_tables.txt', $output);
