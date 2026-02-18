@@ -8,7 +8,7 @@
 <a href="{{ $isAdmin ? route('admin.dashboard') : route('hr.dashboard') }}"
     class="nav-item {{ (request()->routeIs('hr.dashboard') || request()->routeIs('admin.dashboard')) ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white mb-4">
     <i class="fa-solid fa-chart-line text-2xl"></i>
-    <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Dashboard</span>
+    <span class="text-[12px] font-bold uppercase tracking-wider opacity-60">Dashboard</span>
 </a>
 
 @if($isHR)
@@ -17,24 +17,24 @@
     <a href="{{ route('hr.departments.index') }}"
         class="nav-item {{ request()->routeIs('hr.departments.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-sitemap text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60 text-center">Organization Chart</span>
+        <span class="text-[12px] font-bold uppercase tracking-wider opacity-60 text-center">Organization Chart</span>
     </a>
     <a href="{{ route('hr.employees.index') }}"
         class="nav-item {{ request()->routeIs('hr.employees.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-users text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Employees</span>
+        <span class="text-[12px] font-bold uppercase tracking-wider opacity-60">Employees</span>
     </a>
 
     <a href="{{ route('hr.requests.index') }}"
         class="nav-item {{ request()->routeIs('hr.requests.index') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-folder-open text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Requests</span>
+        <span class="text-[12px] font-bold uppercase tracking-wider opacity-60">Requests</span>
     </a>
 
     <a href="{{ route('hr.documents.index') }}"
         class="nav-item {{ request()->routeIs('hr.documents.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-file text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">HR Documents</span>
+        <span class="text-[12px] font-bold uppercase tracking-wider opacity-60">HR Documents</span>
     </a>
 
     <!-- Apps Drawer Trigger -->
@@ -42,8 +42,8 @@
         <button @click="open = !open" 
             class="nav-item {{ request()->routeIs('hr.groups.*', 'hr.tasks.*', 'hr.calendar.*', 'hr.tickets.*', 'hr.messages.*') ? 'active' : '' }} w-full flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white transition-all">
             <i class="fa-solid fa-layer-group text-2xl"></i>
-            <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Apps</span>
-            <i class="fa-solid fa-chevron-right text-[10px] absolute right-2 opacity-0 group-hover:opacity-50 transition-all" :class="open ? 'rotate-90' : ''"></i>
+            <span class="text-[12px] font-bold uppercase tracking-wider opacity-60">Apps</span>
+            <i class="fa-solid fa-chevron-right text-[12px] absolute right-2 opacity-0 group-hover:opacity-50 transition-all" :class="open ? 'rotate-90' : ''"></i>
         </button>
 
         <!-- Slide-Right Drawer -->
@@ -116,7 +116,7 @@
     <a href="{{ route('admin.departments.index') }}"
         class="nav-item {{ request()->routeIs('admin.departments.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-sitemap text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60 text-center">Organization Chart</span>
+        <span class="text-[12px] font-bold uppercase tracking-wider opacity-60 text-center">Organization Chart</span>
     </a>
 
     <!-- Tickets -->
@@ -124,35 +124,35 @@
     <a href="{{ route('admin.tickets.index') }}"
         class="nav-item {{ request()->routeIs('admin.tickets.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-ticket text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Tickets</span>
+        <span class="text-[12px] font-bold uppercase tracking-wider opacity-60">Tickets</span>
     </a>
 
     <!-- Assets -->
     <a href="{{ route('admin.assets.index') }}"
         class="nav-item {{ request()->routeIs('admin.assets.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-laptop text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Assets</span>
+        <span class="text-[12px] font-bold uppercase tracking-wider opacity-60">Assets</span>
     </a>
 
     <!-- Users -->
     <a href="{{ route('admin.users.index') }}"
         class="nav-item {{ request()->routeIs('admin.users.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-users-gear text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Users</span>
+        <span class="text-[12px] font-bold uppercase tracking-wider opacity-60">Users</span>
     </a>
 
     <!-- Settings -->
     <a href="{{ route('admin.settings.index') }}"
         class="nav-item {{ request()->routeIs('admin.settings.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-cog text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Settings</span>
+        <span class="text-[12px] font-bold uppercase tracking-wider opacity-60">Settings</span>
     </a>
 
     <!-- Feedback -->
     <a href="{{ route('admin.feedback.index') }}"
         class="nav-item {{ request()->routeIs('admin.feedback.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-comment-dots text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Feedback</span>
+        <span class="text-[12px] font-bold uppercase tracking-wider opacity-60">Feedback</span>
     </a>
 
 @endif
@@ -161,11 +161,11 @@
     <a href="{{ route('emp.ext.atps.index') }}"
         class="nav-item {{ request()->routeIs('emp.ext.atps.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-certificate text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Partners</span>
+        <span class="text-[12px] font-bold uppercase tracking-wider opacity-60">Partners</span>
     </a>
     <a href="{{ route('eqa.atps.index') }}"
         class="nav-item {{ request()->routeIs('eqa.atps.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-list-check text-2xl"></i>
-        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Audits</span>
+        <span class="text-[12px] font-bold uppercase tracking-wider opacity-60">Audits</span>
     </a>
 @endif
