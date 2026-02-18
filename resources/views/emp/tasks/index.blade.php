@@ -54,7 +54,7 @@
                     @forelse($tasks as $task)
                         <div onclick="loadTask({{ $task->task_id }})" id="task-item-{{ $task->task_id }}"
                             class="task-card p-4 rounded-2xl bg-white border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden">
-    
+
                             <div class="flex justify-between items-start mb-2">
                                 <span class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider"
                                     style="background: #{{ $task->priority->priority_color ?? 'ccc' }}20; color: #{{ $task->priority->priority_color ?? 'ccc' }}">
@@ -62,11 +62,11 @@
                                 </span>
                                 <span class="text-[10px] text-slate-400 font-mono">#{{ $task->task_id }}</span>
                             </div>
-    
+
                             <h3 class="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors mb-1 line-clamp-2">
                                 {{ $task->task_title }}
                             </h3>
-    
+
                             <div class="flex items-center justify-between mt-3">
                                 <div class="flex items-center gap-2">
                                     @php 
@@ -84,7 +84,7 @@
                                     {{ $task->status->status_name ?? 'Unknown' }}
                                 </span>
                             </div>
-    
+
                             <div class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 opacity-0 transition-opacity"></div>
                         </div>
                     @empty
@@ -95,7 +95,7 @@
                             <p class="text-slate-400 text-sm">No tasks found</p>
                         </div>
                     @endforelse
-                    
+
                     <!-- AJAX Pagination -->
                     <div id="tasks-pagination" class="pt-4"></div>
 
@@ -171,7 +171,7 @@
                 </div>
 
                 <!-- Content Split -->
-                <div class="flex-1 overflow-hidden flex flex-col md:flex-row">
+                <div class="flex-1 flex flex-col md:flex-row" style="overflow: hidden; min-height: 0;">
                     <!-- Description -->
                     <div class="flex-1 border-b md:border-b-0 md:border-r border-slate-100 bg-white" style="overflow: hidden;">
                         <div style="overflow-y: auto !important; height: 100% !important; padding: 2rem; padding-right: 10px !important;">
@@ -181,9 +181,11 @@
                     </div>
 
                     <!-- Logs -->
-                    <div class="w-full md:w-96 bg-slate-50/50 p-6 flex flex-col" style="overflow: hidden;">
-                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Activity Log</h3>
-                        <div style="overflow-y: auto !important; height: 100% !important; padding-right: 10px !important;">
+                    <div class="w-full md:w-96 bg-slate-50/50 flex flex-col">
+                        <div class="px-6 pt-6 pb-3 flex-shrink-0">
+                            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest">Activity Log</h3>
+                        </div>
+                        <div class="logs-scroll-panel px-6 pb-6">
                             <div id="logs-timeline" class="space-y-6 border-l-2 border-slate-200 ml-3 pl-6 relative">
                                 <!-- Dynamic Logs -->
                             </div>
@@ -208,10 +210,10 @@
                     <i class="fa-solid fa-times text-xl"></i>
                 </button>
             </div>
-            
+
             <form onsubmit="saveTask(event)" class="space-y-4">
                 @csrf
-                
+
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Assign To</label>
@@ -236,7 +238,7 @@
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Task Title</label>
                     <input type="text" name="task_title" class="premium-input w-full px-4 py-3 text-sm" required placeholder="What needs to be done?">
                 </div>
-                
+
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description</label>
                     <textarea name="task_description" rows="3" class="premium-input w-full px-4 py-3 text-sm" placeholder="Additional details..."></textarea>
@@ -248,7 +250,7 @@
                         <input type="date" name="task_assigned_date" class="premium-input w-full text-sm" value="{{ date('Y-m-d') }}" required>
                         <select name="start_time" class="premium-input w-full text-sm">
                             <option value="">Start Time (Optional)</option>
-                            @for($i=6; $i<=22; $i++)
+                            @for($i = 6; $i <= 22; $i++)
                                 @php $h = str_pad($i, 2, '0', STR_PAD_LEFT); @endphp
                                 <option value="{{ $h }}:00:00">{{ $h }}:00</option>
                             @endfor
@@ -259,7 +261,7 @@
                         <input type="date" name="task_due_date" class="premium-input w-full text-sm" required>
                         <select name="end_time" class="premium-input w-full text-sm">
                             <option value="">End Time (Optional)</option>
-                            @for($i=6; $i<=22; $i++)
+                            @for($i = 6; $i <= 22; $i++)
                                 @php $h = str_pad($i, 2, '0', STR_PAD_LEFT); @endphp
                                 <option value="{{ $h }}:00:00" {{ $i == 14 ? 'selected' : '' }}>{{ $h }}:00</option>
                             @endfor
@@ -291,13 +293,13 @@
                 <input type="hidden" id="update-task-id" name="task_id">
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">New Status</label>
-                    <select name="status_id" id="update-status-id" class="premium-input w-full px-4 py-3" required>
+                    <select name="status_id" id="update-status-id" class="premium-input w-full px-4 py-3" required onchange="onStatusChange(this)">
                         @foreach($statuses as $status)
-                            <option value="{{ $status->status_id }}">{{ $status->status_name }}</option>
+                            <option value="{{ $status->status_id }}" data-name="{{ strtolower($status->status_name) }}">{{ $status->status_name }}</option>
                         @endforeach
                     </select>
                 </div>
-                
+
                 <div x-data="{ localProgress: 0 }" x-init="localProgress = parseInt(document.getElementById('update-task-progress')?.value || 0)">
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Progress: <span class="text-brand-primary font-bold text-lg" x-text="localProgress + '%'"></span></label>
                     <input type="range" name="task_progress" id="update-task-progress" min="0" max="100" x-model="localProgress" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
@@ -330,7 +332,7 @@
             <form onsubmit="updateTaskStatus(event)" class="space-y-6">
                 @csrf
                 <input type="hidden" id="update-progress-task-id" name="task_id">
-                
+
                 <div x-data="{ localProgress: 0 }" x-init="$watch('$parent.activeTaskProgress', value => localProgress = value)">
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">New Progress: <span class="text-brand-primary font-bold text-lg" x-text="localProgress + '%'"></span></label>
                     <input type="range" name="task_progress" min="0" max="100" x-model="localProgress" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
@@ -341,7 +343,7 @@
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Remark / Note</label>
                     <textarea name="log_remark" rows="3" class="premium-input w-full px-4 py-3" placeholder="What was achieved?" required></textarea>
                 </div>
-                
+
                 <div class="pt-4 flex justify-end gap-3 border-t border-slate-100 mt-4">
                     <button type="button" onclick="closeModal('updateProgressModal')" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
                     <button type="submit" class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">Update Progress</button>
@@ -349,6 +351,7 @@
             </form>
         </div>
     </div>
+
 
     <style>
         .tasks-layout {
@@ -400,18 +403,39 @@
 
         @media (max-width: 768px) {
             .tasks-layout {
-                grid-template-columns: 1fr; /* Stack on mobile */
+                grid-template-columns: 1fr;
                 height: auto;
             }
             .tasks-main {
-                display: none; /* Hide main content initially on mobile if needed or overlay */
+                display: none;
             }
-            /* Need logic to toggle views on mobile, but for now assuming desktop-first like HR */
+        }
+
+        /* Activity Log scrollable panel */
+        .logs-scroll-panel {
+            height: calc(100vh - 145px - 80px - 130px);
+            overflow-y: auto;
+            overflow-x: hidden;
         }
     </style>
 
     <script>
         let activeTaskId = null;
+
+        // Auto-set progress to 100% when Done/Completed status is selected
+        function onStatusChange(select) {
+            const selectedOption = select.options[select.selectedIndex];
+            const statusName = (selectedOption.dataset.name || '').toLowerCase();
+            const statusId = parseInt(select.value);
+            const isDone = statusId === 4 || statusName.includes('done') || statusName.includes('complet');
+
+            const progressInput = document.getElementById('update-task-progress');
+            if (progressInput && isDone) {
+                progressInput.value = 100;
+                progressInput.dispatchEvent(new Event('input'));
+            }
+        }
+
 
         // Progress Slider Logic
         const progressInput = document.getElementById('update-task-progress');
@@ -460,11 +484,11 @@
                     // Stats
                     const assignedBy = task.assignedBy || task.assigned_by;
                     const assignedTo = task.assignedTo || task.assigned_to;
-                    
+
                     document.getElementById('detail-assigned-by').innerText = assignedBy ? `${assignedBy.first_name} ${assignedBy.last_name}` : 'N/A';
                     document.getElementById('detail-assigned-to').innerText = assignedTo ? `${assignedTo.first_name} ${assignedTo.last_name}` : 'N/A';
                     document.getElementById('detail-due-date').innerText = task.task_due_date ? new Date(task.task_due_date).toLocaleDateString() : 'N/A';
-                    
+
                     // Progress
                     const prog = task.task_progress || 0;
                     document.getElementById('detail-progress-bar').style.width = `${prog}%`;
@@ -482,12 +506,7 @@
                     // Logs
                     renderLogs(task.logs);
 
-                    // Button visibility (optional logic)
-                    if (task.status_id == 4) { // Completed
-                       // document.getElementById('btn-update-status').classList.add('hidden');
-                    } else {
-                        document.getElementById('btn-update-status').classList.remove('hidden');
-                    }
+
                 }
             } catch (e) { console.error('Error loading task:', e); }
         }
@@ -578,7 +597,7 @@
                     const priorityName = task.priority ? task.priority.priority_name : 'Normal';
                     const statusColor = task.status ? task.status.status_color : 'ccc';
                     const statusName = task.status ? task.status.status_name : 'Unknown';
-                    
+
                     const person = (currentViewMode == 'my_tasks') ? task.assigned_by : task.assigned_to;
                     const personInitial = (person && person.first_name) ? person.first_name[0].toUpperCase() : 'U';
                     const personName = (person && person.first_name) ? person.first_name : 'Unknown';
@@ -586,7 +605,7 @@
                     html += `
                         <div onclick="loadTask(${task.task_id})" id="task-item-${task.task_id}"
                             class="task-card p-4 rounded-2xl bg-white border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden ${activeTaskId == task.task_id ? 'active' : ''}">
-    
+
                             <div class="flex justify-between items-start mb-2">
                                 <span class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider"
                                     style="background: #${priorityColor}20; color: #${priorityColor}">
@@ -594,11 +613,11 @@
                                 </span>
                                 <span class="text-[10px] text-slate-400 font-mono">#${task.task_id}</span>
                             </div>
-    
+
                             <h3 class="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors mb-1 line-clamp-2">
                                 ${task.task_title}
                             </h3>
-    
+
                             <div class="flex items-center justify-between mt-3">
                                 <div class="flex items-center gap-2">
                                     <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
@@ -613,7 +632,7 @@
                                     ${statusName}
                                 </span>
                             </div>
-    
+
                             <div class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 ${activeTaskId == task.task_id ? 'opacity-1' : 'opacity-0'} transition-opacity"></div>
                         </div>
                     `;

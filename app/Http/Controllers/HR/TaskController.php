@@ -118,8 +118,9 @@ class TaskController extends Controller
             $oldStatus = $task->status ? $task->status->status_name : 'Unknown';
 
             $task->status_id = $request->status_id;
-            if ($request->status_id == 4) { // Assuming 4 is Completed based on legacy logic
+            if ($request->status_id == 4) { // Completed/Done
                 $task->task_end_date = now();
+                $task->task_progress = 100; // Auto-set progress to 100% when done
             }
             $task->save();
 
@@ -135,7 +136,7 @@ class TaskController extends Controller
             if ($request->status_id == 4) { // Completed
                 \App\Services\NotificationService::send(
                     "Task Completed: " . $task->task_title,
-                    "hr/tasks", 
+                    "hr/tasks",
                     $task->assigned_by
                 );
             }

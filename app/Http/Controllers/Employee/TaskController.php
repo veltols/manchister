@@ -68,7 +68,7 @@ class TaskController extends Controller
         $task = new Task();
         $task->task_title = $request->task_title;
         $task->task_description = $request->task_description ?? '';
-        
+
         $assignedDate = $request->task_assigned_date;
         if ($request->filled('start_time')) {
             $assignedDate .= ' ' . $request->start_time;
@@ -84,7 +84,7 @@ class TaskController extends Controller
         $task->assigned_by = $employeeId;
         $task->assigned_to = $request->assigned_to ?? $employeeId;
         $task->priority_id = $request->priority_id;
-        
+
         // Default Status (New/Open)
         $firstStatus = TaskStatus::orderBy('status_id')->first();
         $task->status_id = $firstStatus ? $firstStatus->status_id : 1;
@@ -124,6 +124,10 @@ class TaskController extends Controller
         if ($request->has('status_id')) {
             $task->status_id = $request->status_id;
             $logAction = "Status Update";
+            // Auto-set progress to 100% when status is Done/Completed
+            if ($request->status_id == 4) {
+                $task->task_progress = 100;
+            }
         }
 
         if ($request->has('task_progress')) {
