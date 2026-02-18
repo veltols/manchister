@@ -508,12 +508,14 @@
                     <i class="fa-solid fa-bars text-xl"></i>
                 </button>
                 
-                <div>
-                    <h1 class="text-xl md:text-2xl font-display font-bold text-premium flex items-center gap-2 md:gap-3">
-                        <img src="{{ asset('images/connect_icon.png') }}" class="h-6 md:h-8 w-auto" alt="Icon">
-                        @yield('title', 'Dashboard')
-                    </h1>
-                    <p class="text-xs md:text-sm text-slate-500 mt-0.5">@yield('subtitle', 'Welcome back')</p>
+                <div class="flex items-center gap-3 md:gap-4">
+                    <img src="{{ asset('images/connect_icon.png') }}" class="h-10 md:h-12 w-auto" alt="Icon">
+                    <div>
+                        <h1 class="text-xl md:text-2xl font-display font-bold text-premium leading-tight">
+                            @yield('title', 'Dashboard')
+                        </h1>
+                        <p class="text-xs md:text-sm text-slate-500 mt-0.5">@yield('subtitle', 'Welcome back')</p>
+                    </div>
                 </div>
             </div>
 
