@@ -102,7 +102,7 @@
                         @php
                             $isMine = $msg->added_by == $adminId;
                         @endphp
-                        <div class="flex w-full {{ $isMine ? 'justify-end' : 'justify-start' }}">
+                        <div id="msg-{{ $msg->post_id }}" class="flex w-full {{ $isMine ? 'justify-end' : 'justify-start' }}">
                             <div class="flex max-w-[70%] {{ $isMine ? 'flex-row-reverse' : 'flex-row' }} gap-3">
                                 @if(!$isMine)
                                     <div class="w-8 h-8 rounded-full bg-brand/10 flex-shrink-0 flex items-center justify-center overflow-hidden self-end border border-brand/20">
@@ -116,7 +116,21 @@
                                 
                                 <div class="flex flex-col {{ $isMine ? 'items-end' : 'items-start' }}">
                                     <div class="px-5 py-3 rounded-2xl {{ $isMine ? 'bg-brand text-white rounded-br-none shadow-brand/10' : 'bg-white border border-slate-100 text-slate-700 rounded-bl-none shadow-sm' }} shadow-md">
-                                        <p class="text-sm leading-relaxed">{{ $msg->post_text }}</p>
+                                        @if($msg->post_type == 'text')
+                                            <p class="text-sm leading-relaxed">{{ $msg->post_text }}</p>
+                                        @elseif($msg->post_type == 'image')
+                                            <img src="{{ asset('uploads/'.$msg->post_text) }}" class="rounded-lg max-w-xs transition-opacity hover:opacity-90 cursor-pointer" onclick="window.open(this.src)">
+                                        @elseif($msg->post_type == 'document')
+                                            <a href="{{ asset('uploads/'.$msg->post_text) }}" target="_blank" class="flex items-center gap-3 p-2 rounded-xl {{ $isMine ? 'bg-white/10 text-white' : 'bg-slate-50 text-slate-700' }} no-underline hover:bg-white/20 transition-colors">
+                                                <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                                                    <i class="fa-solid fa-file-invoice text-lg"></i>
+                                                </div>
+                                                <div class="flex flex-col min-w-0">
+                                                    <span class="text-xs font-bold truncate max-w-[150px]">{{ $msg->post_text }}</span>
+                                                    <span class="text-[10px] opacity-70">Document</span>
+                                                </div>
+                                            </a>
+                                        @endif
                                     </div>
                                     <span class="text-[10px] text-slate-400 mt-1 font-medium px-1 uppercase tracking-tighter">
                                         {{ \Carbon\Carbon::parse($msg->added_date)->format('h:i A') }}
@@ -130,13 +144,15 @@
 
             <!-- Input Area -->
             <div class="p-4 bg-white border-t border-slate-100">
-                <form action="{{ route('admin.messages.store') }}" method="POST" class="flex items-end gap-3">
+                <div id="chat-attachment-preview" class="px-4 mb-2"></div>
+                <form action="{{ route('admin.messages.store') }}" method="POST" enctype="multipart/form-data" class="flex items-end gap-3" id="admin-message-form">
                     @csrf
                     <input type="hidden" name="chat_id" value="{{ $activeChat->chat_id }}">
                     
-                    <button type="button" class="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-400 transition-colors flex-shrink-0">
-                        <i class="fa-solid fa-paperclip"></i>
-                    </button>
+                    <label class="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-400 transition-colors flex-shrink-0 flex items-center justify-center cursor-pointer group">
+                        <i class="fa-solid fa-paperclip group-hover:text-slate-600 transition-colors" id="chat-paperclip-icon"></i>
+                        <input type="file" name="attachment" id="chat_attachment" class="hidden">
+                    </label>
                     
                     <div class="flex-1 bg-slate-50 rounded-xl border border-slate-200 transition-all">
                         <textarea name="message" rows="1" placeholder="Type your message..." class="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-sm text-slate-700 resize-none max-h-32" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
@@ -182,16 +198,48 @@
 
                 // Append new message to chat
                 function appendMessage(msg) {
+                    if (document.getElementById(`msg-${msg.post_id}`)) return;
+
                     const isMine = msg.added_by == currentUserId;
-                    const messageHtml = `
-                        <div class="flex w-full ${isMine ? 'justify-end' : 'justify-start'}">
-                            <div class="max-w-[70%] ${isMine ? 'order-1' : 'order-2'}">
-                                <div class="px-5 py-3 rounded-2xl shadow-sm text-sm leading-relaxed ${isMine ? 'bg-brand text-white rounded-br-none' : 'bg-white text-slate-700 rounded-bl-none border border-slate-100'}">
-                                    <p>${msg.post_text}</p>
+                    
+                    let contentHtml = '';
+                    if (msg.post_type === 'image') {
+                        contentHtml = `<img src="/uploads/${msg.post_text}" class="rounded-lg max-w-xs transition-opacity hover:opacity-90 cursor-pointer" onclick="window.open(this.src)">`;
+                    } else if (msg.post_type === 'document') {
+                         contentHtml = `
+                            <a href="/uploads/${msg.post_text}" target="_blank" class="flex items-center gap-3 p-2 rounded-xl ${isMine ? 'bg-white/10 text-white' : 'bg-slate-50 text-slate-700'} no-underline hover:bg-white/20 transition-colors">
+                                <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                                    <i class="fa-solid fa-file-invoice text-lg"></i>
                                 </div>
-                                <span class="text-[10px] text-slate-400 mt-1 block ${isMine ? 'text-right' : 'text-left'}">
-                                    ${new Date(msg.added_date).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}
-                                </span>
+                                <div class="flex flex-col min-w-0">
+                                    <span class="text-xs font-bold truncate max-w-[150px]">${msg.post_text}</span>
+                                    <span class="text-[10px] opacity-70">Document</span>
+                                </div>
+                            </a>`;
+                    } else {
+                        contentHtml = `<p class="text-sm leading-relaxed">${msg.post_text}</p>`;
+                    }
+
+                    const messageHtml = `
+                        <div id="msg-${msg.post_id}" class="flex w-full ${isMine ? 'justify-end' : 'justify-start'} animate-fade-in-up">
+                            <div class="flex max-w-[70%] ${isMine ? 'flex-row-reverse' : 'flex-row'} gap-3">
+                                ${!isMine ? `
+                                    <div class="w-8 h-8 rounded-full bg-brand/10 flex-shrink-0 flex items-center justify-center overflow-hidden self-end border border-brand/20">
+                                        ${msg.sender && msg.sender.employee_picture ? 
+                                            `<img src="/uploads/${msg.sender.employee_picture}" class="w-full h-full object-cover">` :
+                                            `<span class="text-[10px] font-bold text-brand">${msg.sender ? msg.sender.first_name.charAt(0) : '?'}</span>`
+                                        }
+                                    </div>
+                                ` : ''}
+                                
+                                <div class="flex flex-col ${isMine ? 'items-end' : 'items-start'}">
+                                    <div class="px-5 py-3 rounded-2xl ${isMine ? 'bg-brand text-white rounded-br-none shadow-brand/10' : 'bg-white border border-slate-100 text-slate-700 rounded-bl-none shadow-sm'} shadow-md">
+                                        ${contentHtml}
+                                    </div>
+                                    <span class="text-[10px] text-slate-400 mt-1 font-medium px-1 uppercase tracking-tighter">
+                                        ${new Date(msg.added_date).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     `;
@@ -209,33 +257,66 @@
                         
                         const formData = new FormData(this);
                         const messageText = formData.get('message');
+                        const fileInput = document.getElementById('chat_attachment');
+                        const hasFile = fileInput && fileInput.files.length > 0;
                         
-                        if (!messageText.trim()) return;
+                        if ((!messageText || !messageText.trim()) && !hasFile) return;
                         
                         // Disable submit button
                         const submitBtn = this.querySelector('button[type="submit"]');
-                        submitBtn.disabled = true;
+                        if(submitBtn) submitBtn.disabled = true;
                         
                         fetch(this.action, {
                             method: 'POST',
-                            body: formData
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            }
                         })
-                        .then(response => {
-                            if (response.redirected) {
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
                                 // Message sent successfully
-                                // Don't poll immediately - let the regular interval handle it
+                                appendMessage(data.message);
+                                lastMessageId = data.message.post_id;
+                                
+                                // Scroll to bottom
+                                container.scrollTop = container.scrollHeight;
                                 
                                 // Clear textarea
-                                this.querySelector('textarea[name="message"]').value = '';
-                                this.querySelector('textarea[name="message"]').style.height = '';
+                                const textArea = this.querySelector('textarea[name="message"]');
+                                if(textArea) {
+                                    textArea.value = '';
+                                    textArea.style.height = '';
+                                }
+
+                                if(fileInput) fileInput.value = '';
                                 
+                                // Reset preview
+                                const previewContainer = document.getElementById('chat-attachment-preview');
+                                if(previewContainer) previewContainer.innerHTML = '';
+                                
+                                const icon = document.getElementById('chat-paperclip-icon');
+                                if(icon) {
+                                    icon.classList.remove('text-brand');
+                                    icon.classList.add('text-slate-400');
+                                }
+                                
+                                if(window.attachmentPreviewInstance) {
+                                    window.attachmentPreviewInstance.clearPreview();
+                                }
+
                                 // Re-enable submit button
-                                submitBtn.disabled = false;
+                                if(submitBtn) submitBtn.disabled = false;
+                            } else {
+                                console.error('Error sending message:', data);
+                                if(submitBtn) submitBtn.disabled = false;
                             }
                         })
                         .catch(error => {
                             console.error('Error sending message:', error);
-                            submitBtn.disabled = false;
+                            if(submitBtn) submitBtn.disabled = false;
                         });
                     });
                 }
@@ -366,4 +447,44 @@
         </form>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+    <script src="{{ asset('js/attachment-preview.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Attachment Preview for Chat
+            window.attachmentPreviewInstance = window.initAttachmentPreview({
+                inputSelector: '#chat_attachment',
+                containerSelector: '#chat-attachment-preview',
+                onRemove: () => {
+                    const icon = document.getElementById('chat-paperclip-icon');
+                    if(icon) {
+                        icon.classList.remove('text-brand');
+                        icon.classList.add('text-slate-400');
+                    }
+                }
+            });
+
+            // Add listener to show indicator when file is selected
+            const fileInput = document.getElementById('chat_attachment');
+            if(fileInput) {
+                fileInput.addEventListener('change', function() {
+                    const icon = document.getElementById('chat-paperclip-icon');
+                    if(this.files && this.files.length > 0) {
+                        if(icon) {
+                            icon.classList.remove('text-slate-400');
+                            icon.classList.add('text-brand');
+                        }
+                    } else {
+                        if(icon) {
+                            icon.classList.remove('text-brand');
+                            icon.classList.add('text-slate-400');
+                        }
+                    }
+                });
+            }
+        });
+    </script>
 @endsection

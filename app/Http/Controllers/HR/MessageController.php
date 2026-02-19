@@ -132,7 +132,7 @@ class MessageController extends Controller
     {
         $request->validate([
             'post_text' => 'required_without:attachment|nullable|string',
-            'attachment' => 'nullable|file|max:10240'
+            'attachment' => 'nullable|file|max:10240' // Max 10MB
         ]);
 
         $employeeId = Auth::user()->employee->employee_id ?? 0;
@@ -147,20 +147,38 @@ class MessageController extends Controller
 
         if ($request->hasFile('attachment')) {
             $file = $request->file('attachment');
-            $fileName = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('uploads'), $fileName);
-            $msg->post_file_path = $fileName; // Saving to path
-            $msg->post_file_name = $file->getClientOriginalName();
 
-            $msg->post_type = 'document';
-            if (str_contains($file->getMimeType(), 'image')) {
+            if (!$file->isValid()) {
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['success' => false, 'error' => 'File upload failed.'], 422);
+                }
+                return redirect()->back()->withErrors(['attachment' => 'File upload failed.']);
+            }
+
+            $fileName = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
+            $file->move(public_path('uploads'), $fileName);
+
+            $msg->post_text = $fileName;
+            $msg->post_type = 'document'; // Default document
+
+            // Check if image
+            $extension = strtolower($file->getClientOriginalExtension());
+            if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
                 $msg->post_type = 'image';
             }
         }
 
         $msg->save();
 
-        return response()->json(['success' => true]);
+        if ($request->ajax() || $request->wantsJson()) {
+            $msg->load('sender');
+            return response()->json([
+                'success' => true,
+                'message' => $msg
+            ]);
+        }
+
+        return redirect()->back(); // Fallback for non-ajax
     }
 
     // Real-time messaging API endpoints
@@ -171,7 +189,7 @@ class MessageController extends Controller
 
         // Verify user has access to this chat
         $chat = Conversation::where('chat_id', $id)
-            ->where(function($q) use ($employeeId) {
+            ->where(function ($q) use ($employeeId) {
                 $q->where('a_id', $employeeId)->orWhere('b_id', $employeeId);
             })
             ->first();
@@ -205,9 +223,9 @@ class MessageController extends Controller
         $employeeId = optional(Auth::user()->employee)->employee_id ?? 0;
 
         // Count unread messages across all conversations
-        $unreadCount = Message::whereHas('conversation', function($q) use ($employeeId) {
-                $q->where('a_id', $employeeId)->orWhere('b_id', $employeeId);
-            })
+        $unreadCount = Message::whereHas('conversation', function ($q) use ($employeeId) {
+            $q->where('a_id', $employeeId)->orWhere('b_id', $employeeId);
+        })
             ->where('added_by', '!=', $employeeId)
             ->where('is_read', 0)
             ->count();
@@ -227,7 +245,7 @@ class MessageController extends Controller
             ->orWhere('b_id', $employeeId)
             ->with(['participantA.status', 'participantB.status'])
             ->get();
-            
+
         // Calculate unread counts for each conversation
         foreach ($conversations as $conv) {
             $conv->unread_count = Message::where('chat_id', $conv->chat_id)

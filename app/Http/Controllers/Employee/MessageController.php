@@ -21,7 +21,7 @@ class MessageController extends Controller
             ->orWhere('b_id', $employeeId)
             ->with(['participantA.status', 'participantB.status'])
             ->get();
-            
+
         // Calculate unread counts for each conversation
         foreach ($conversations as $conv) {
             $conv->unread_count = Message::where('chat_id', $conv->chat_id)
@@ -31,7 +31,7 @@ class MessageController extends Controller
         }
 
         // Sort by unread or latest message
-        $conversations = $conversations->sortByDesc(function($conv) {
+        $conversations = $conversations->sortByDesc(function ($conv) {
             return $conv->unread_count > 0 ? 1 : 0;
         });
 
@@ -70,7 +70,7 @@ class MessageController extends Controller
             ->orWhere('b_id', $employeeId)
             ->with(['participantA.status', 'participantB.status'])
             ->get();
-            
+
         foreach ($conversations as $conv) {
             $conv->unread_count = Message::where('chat_id', $conv->chat_id)
                 ->where('added_by', '!=', $employeeId)
@@ -123,7 +123,7 @@ class MessageController extends Controller
     {
         $request->validate([
             'post_text' => 'required_without:attachment|nullable|string',
-            'attachment' => 'nullable|file|max:10240'
+            'attachment' => 'nullable|file|max:10240' // Max 10MB
         ]);
 
         $employeeId = Auth::user()->employee->employee_id ?? 0;
@@ -138,17 +138,47 @@ class MessageController extends Controller
 
         if ($request->hasFile('attachment')) {
             $file = $request->file('attachment');
-            $fileName = time() . '_' . $file->getClientOriginalName();
+
+            // Check for upload errors
+            if (!$file->isValid()) {
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['success' => false, 'error' => 'File upload failed.'], 422);
+                }
+                return redirect()->back()->withErrors(['attachment' => 'File upload failed.']);
+            }
+
+            $fileName = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
+
+            // Move directly to public/uploads to bypass storage link issues on Windows/XAMPP sometimes
             $file->move(public_path('uploads'), $fileName);
-            $msg->post_text = $fileName; // Legacy sometimes stores filename in text or specific field
+
+            $msg->post_text = $fileName;
             $msg->post_type = 'document';
+
             // If it's an image
-            if (str_contains($file->getMimeType(), 'image')) {
+            // We use simple mime type check or extension check
+            $mime = $file->getClientMimeType(); // getClientMimeType() since file has moved? No, move() returns file object but original $file might be invalid now? 
+            // Actually $file->move() returns SplFileInfo of the new file.
+            // Let's use extension for safety or check mime before moving if possible, or check the new file.
+
+            // Re-check mime on the new file or trust the original check if we did one.
+            // The $file object after move() refers to the moved file.
+            $extension = strtolower($file->getClientOriginalExtension());
+            if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
                 $msg->post_type = 'image';
             }
         }
 
         $msg->save();
+
+        if ($request->ajax() || $request->wantsJson()) {
+            // Load sender relationship for frontend display
+            $msg->load('sender');
+            return response()->json([
+                'success' => true,
+                'message' => $msg
+            ]);
+        }
 
         return redirect()->back();
     }
@@ -161,7 +191,7 @@ class MessageController extends Controller
 
         // Verify user has access to this chat
         $chat = Conversation::where('chat_id', $id)
-            ->where(function($q) use ($employeeId) {
+            ->where(function ($q) use ($employeeId) {
                 $q->where('a_id', $employeeId)->orWhere('b_id', $employeeId);
             })
             ->first();
@@ -195,9 +225,9 @@ class MessageController extends Controller
         $employeeId = Auth::user()->employee->employee_id ?? 0;
 
         // Count unread messages across all conversations
-        $unreadCount = Message::whereHas('conversation', function($q) use ($employeeId) {
-                $q->where('a_id', $employeeId)->orWhere('b_id', $employeeId);
-            })
+        $unreadCount = Message::whereHas('conversation', function ($q) use ($employeeId) {
+            $q->where('a_id', $employeeId)->orWhere('b_id', $employeeId);
+        })
             ->where('added_by', '!=', $employeeId)
             ->where('is_read', 0)
             ->count();
@@ -217,7 +247,7 @@ class MessageController extends Controller
             ->orWhere('b_id', $employeeId)
             ->with(['participantA.status', 'participantB.status'])
             ->get();
-            
+
         // Calculate unread counts for each conversation
         foreach ($conversations as $conv) {
             $conv->unread_count = Message::where('chat_id', $conv->chat_id)

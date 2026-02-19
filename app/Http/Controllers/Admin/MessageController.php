@@ -19,7 +19,7 @@ class MessageController extends Controller
         // Fetch Conversations
         // Logic from serv_list.php: `a_id` = USER OR `b_id` = USER
         // Also fetch last message or similar for preview if needed, but legacy just lists them.
-        
+
         $conversations = Conversation::where('a_id', $adminId)
             ->orWhere('b_id', $adminId)
             ->with(['participantA.status', 'participantB.status'])
@@ -37,12 +37,12 @@ class MessageController extends Controller
         // Pass active conversation if ID provided
         $activeChat = null;
         $messages = [];
-        
+
         if ($request->has('chat_id')) {
             $chatId = $request->chat_id;
             $activeChat = Conversation::with(['participantA.status', 'participantB.status'])
                 ->where('chat_id', $chatId)
-                ->where(function($q) use ($adminId) {
+                ->where(function ($q) use ($adminId) {
                     $q->where('a_id', $adminId)->orWhere('b_id', $adminId);
                 })
                 ->first();
@@ -53,7 +53,7 @@ class MessageController extends Controller
                     ->with('sender')
                     ->orderBy('post_id', 'asc')
                     ->get();
-                
+
                 // Mark as read (optional, based on legacy logic)
                 Message::where('chat_id', $chatId)
                     ->where('added_by', '!=', $adminId)
@@ -74,10 +74,10 @@ class MessageController extends Controller
         $targetEmployeeId = $request->employee_id;
 
         // Check if conversation already exists
-        $existingChat = Conversation::where(function($q) use ($adminId, $targetEmployeeId) {
-                $q->where('a_id', $adminId)->where('b_id', $targetEmployeeId);
-            })
-            ->orWhere(function($q) use ($adminId, $targetEmployeeId) {
+        $existingChat = Conversation::where(function ($q) use ($adminId, $targetEmployeeId) {
+            $q->where('a_id', $adminId)->where('b_id', $targetEmployeeId);
+        })
+            ->orWhere(function ($q) use ($adminId, $targetEmployeeId) {
                 $q->where('a_id', $targetEmployeeId)->where('b_id', $adminId);
             })
             ->first();
@@ -102,19 +102,51 @@ class MessageController extends Controller
     {
         $request->validate([
             'chat_id' => 'required|exists:z_messages_list,chat_id',
-            'message' => 'required|string',
+            'message' => 'required_without:attachment|nullable|string',
+            'attachment' => 'nullable|file|max:10240' // Max 10MB
         ]);
 
         $adminId = Auth::id() ?? 550;
 
-        Message::create([
-            'chat_id' => $request->chat_id,
-            'added_by' => $adminId,
-            'post_text' => $request->message,
-            'post_type' => 'text', // Default to text
-            'added_date' => now(),
-            'is_read' => 0,
-        ]);
+        $msg = new Message();
+        $msg->chat_id = $request->chat_id;
+        $msg->added_by = $adminId;
+        $msg->post_text = $request->message ?? '';
+        $msg->added_date = now();
+        $msg->is_read = 0;
+        $msg->post_type = 'text';
+
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+
+            if (!$file->isValid()) {
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['success' => false, 'error' => 'File upload failed.'], 422);
+                }
+                return redirect()->back()->withErrors(['attachment' => 'File upload failed.']);
+            }
+
+            $fileName = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
+            $file->move(public_path('uploads'), $fileName);
+
+            $msg->post_text = $fileName;
+            $msg->post_type = 'document';
+
+            $extension = strtolower($file->getClientOriginalExtension());
+            if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+                $msg->post_type = 'image';
+            }
+        }
+
+        $msg->save();
+
+        if ($request->ajax() || $request->wantsJson()) {
+            $msg->load('sender');
+            return response()->json([
+                'success' => true,
+                'message' => $msg
+            ]);
+        }
 
         return redirect()->route('admin.messages.index', ['chat_id' => $request->chat_id]);
     }
@@ -127,7 +159,7 @@ class MessageController extends Controller
 
         // Verify user has access to this chat
         $chat = Conversation::where('chat_id', $chatId)
-            ->where(function($q) use ($adminId) {
+            ->where(function ($q) use ($adminId) {
                 $q->where('a_id', $adminId)->orWhere('b_id', $adminId);
             })
             ->first();
@@ -161,9 +193,9 @@ class MessageController extends Controller
         $adminId = Auth::id() ?? 550;
 
         // Count unread messages across all conversations
-        $unreadCount = Message::whereHas('conversation', function($q) use ($adminId) {
-                $q->where('a_id', $adminId)->orWhere('b_id', $adminId);
-            })
+        $unreadCount = Message::whereHas('conversation', function ($q) use ($adminId) {
+            $q->where('a_id', $adminId)->orWhere('b_id', $adminId);
+        })
             ->where('added_by', '!=', $adminId)
             ->where('is_read', 0)
             ->count();
@@ -183,7 +215,7 @@ class MessageController extends Controller
             ->orWhere('b_id', $adminId)
             ->with(['participantA.status', 'participantB.status'])
             ->get();
-            
+
         // Calculate unread counts for each conversation
         foreach ($conversations as $conv) {
             $conv->unread_count = Message::where('chat_id', $conv->chat_id)

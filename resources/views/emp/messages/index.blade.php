@@ -106,7 +106,7 @@
             <div class="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/30 scrollbar-hide" id="messagesContainer">
                 @foreach($messages as $msg)
                     @php $isMine = $msg->added_by == auth()->user()->employee->employee_id; @endphp
-                    <div class="flex w-full {{ $isMine ? 'justify-end' : 'justify-start' }}">
+                    <div id="msg-{{ $msg->post_id }}" class="flex w-full {{ $isMine ? 'justify-end' : 'justify-start' }}">
                         <div class="flex max-w-[70%] {{ $isMine ? 'flex-row-reverse' : 'flex-row' }} gap-3">
                              @if(!$isMine)
                                 <div class="w-8 h-8 rounded-full bg-brand/10 flex-shrink-0 flex items-center justify-center overflow-hidden self-end border border-brand/20">
@@ -123,11 +123,16 @@
                                     @if($msg->post_type == 'text')
                                         <p class="text-sm leading-relaxed">{{ $msg->post_text }}</p>
                                     @elseif($msg->post_type == 'image')
-                                        <img src="{{ asset('uploads/'.$msg->post_text) }}" class="rounded-lg max-w-xs transition-opacity hover:opacity-90 cursor-pointer">
+                                        <img src="{{ asset('uploads/'.$msg->post_text) }}" class="rounded-lg max-w-xs transition-opacity hover:opacity-90 cursor-pointer" onclick="window.open(this.src)">
                                     @elseif($msg->post_type == 'document')
-                                        <a href="{{ asset('uploads/'.$msg->post_text) }}" target="_blank" class="flex items-center gap-3 p-2 rounded-xl {{ $isMine ? 'bg-white/10 text-white' : 'bg-slate-50 text-slate-700' }} no-underline">
-                                            <i class="fa-solid fa-file-invoice text-xl opacity-60"></i>
-                                            <span class="text-xs font-bold truncate max-w-[120px]">{{ $msg->post_text }}</span>
+                                        <a href="{{ asset('uploads/'.$msg->post_text) }}" target="_blank" class="flex items-center gap-3 p-2 rounded-xl {{ $isMine ? 'bg-white/10 text-white' : 'bg-slate-50 text-slate-700' }} no-underline hover:bg-white/20 transition-colors">
+                                            <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                                                <i class="fa-solid fa-file-invoice text-lg"></i>
+                                            </div>
+                                            <div class="flex flex-col min-w-0">
+                                                <span class="text-xs font-bold truncate max-w-[150px]">{{ $msg->post_text }}</span>
+                                                <span class="text-[10px] opacity-70">Document</span>
+                                            </div>
                                         </a>
                                     @endif
                                 </div>
@@ -142,6 +147,7 @@
 
             <!-- Input Area -->
             <div class="p-4 bg-white border-t border-slate-100">
+                <div id="chat-attachment-preview" class="px-4 mb-2"></div>
                 <form action="{{ route('emp.messages.reply', $conversation->chat_id) }}" method="POST" enctype="multipart/form-data" class="flex items-end gap-3" x-data="{ hasFile: false }">
                     @csrf
                     <label class="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-400 transition-colors flex-shrink-0 flex items-center justify-center cursor-pointer">
@@ -157,7 +163,6 @@
                         <i class="fa-solid fa-paper-plane"></i>
                     </button>
                 </form>
-                <div id="chat-attachment-preview" class="px-4"></div>
             </div>
             
             <script>
@@ -194,9 +199,31 @@
 
                 // Append new message to chat
                 function appendMessage(msg) {
+                    // Prevent duplicates
+                    if (document.getElementById(`msg-${msg.post_id}`)) return;
+
                     const isMine = msg.added_by == currentUserId;
+                    
+                    let contentHtml = '';
+                    if (msg.post_type === 'image') {
+                        contentHtml = `<img src="/uploads/${msg.post_text}" class="rounded-lg max-w-xs transition-opacity hover:opacity-90 cursor-pointer" onclick="window.open(this.src)">`;
+                    } else if (msg.post_type === 'document') {
+                        contentHtml = `
+                            <a href="/uploads/${msg.post_text}" target="_blank" class="flex items-center gap-3 p-2 rounded-xl ${isMine ? 'bg-white/10 text-white' : 'bg-slate-50 text-slate-700'} no-underline hover:bg-white/20 transition-colors">
+                                <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                                    <i class="fa-solid fa-file-invoice text-lg"></i>
+                                </div>
+                                <div class="flex flex-col min-w-0">
+                                    <span class="text-xs font-bold truncate max-w-[150px]">${msg.post_text}</span>
+                                    <span class="text-[10px] opacity-70">Document</span>
+                                </div>
+                            </a>`;
+                    } else {
+                        contentHtml = `<p class="text-sm leading-relaxed">${msg.post_text}</p>`;
+                    }
+
                     const messageHtml = `
-                        <div class="flex w-full ${isMine ? 'justify-end' : 'justify-start'}">
+                        <div id="msg-${msg.post_id}" class="flex w-full ${isMine ? 'justify-end' : 'justify-start'} animate-fade-in-up">
                             <div class="flex max-w-[70%] ${isMine ? 'flex-row-reverse' : 'flex-row'} gap-3">
                                 ${!isMine ? `
                                     <div class="w-8 h-8 rounded-full bg-brand/10 flex-shrink-0 flex items-center justify-center overflow-hidden self-end border border-brand/20">
@@ -209,7 +236,7 @@
                                 
                                 <div class="flex flex-col ${isMine ? 'items-end' : 'items-start'}">
                                     <div class="px-5 py-3 rounded-2xl ${isMine ? 'bg-brand text-white rounded-br-none shadow-brand/10' : 'bg-white border border-slate-100 text-slate-700 rounded-bl-none shadow-sm'} shadow-md">
-                                        <p class="text-sm leading-relaxed">${msg.post_text}</p>
+                                        ${contentHtml}
                                     </div>
                                     <span class="text-[10px] text-slate-400 mt-1 font-medium px-1 uppercase tracking-tighter">
                                         ${new Date(msg.added_date).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}
@@ -231,34 +258,64 @@
                         e.preventDefault();
                         
                         const formData = new FormData(this);
+                        // Validate: Either text or file must exist
                         const messageText = formData.get('post_text');
+                        // Use the file input element to check
+                        const fileInput = this.querySelector('input[name="attachment"]');
+                        const hasFile = fileInput && fileInput.files.length > 0;
                         
-                        if (!messageText || !messageText.trim()) return;
+                        if ((!messageText || !messageText.trim()) && !hasFile) return;
                         
                         // Disable submit button
                         const submitBtn = this.querySelector('button[type="submit"]');
-                        submitBtn.disabled = true;
+                        if(submitBtn) submitBtn.disabled = true;
                         
                         fetch(this.action, {
                             method: 'POST',
-                            body: formData
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            }
                         })
-                        .then(response => {
-                            if (response.redirected || response.ok) {
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
                                 // Message sent successfully
-                                // Don't poll immediately - let the regular interval handle it
+                                appendMessage(data.message);
+                                lastMessageId = data.message.post_id;
                                 
-                                // Clear textarea
-                                this.querySelector('textarea[name="post_text"]').value = '';
-                                this.querySelector('textarea[name="post_text"]').style.height = '';
+                                // Scroll to bottom
+                                container.scrollTop = container.scrollHeight;
+
+                                // Clear inputs
+                                const textArea = this.querySelector('textarea[name="post_text"]');
+                                if(textArea) {
+                                    textArea.value = '';
+                                    textArea.style.height = '';
+                                }
+                                
+                                // Reset file input and Alpine state
+                                if(fileInput) fileInput.value = '';
+                                
+                                // Reset preview using the exposed method if available or manually
+                                const previewContainer = document.getElementById('chat-attachment-preview');
+                                if(previewContainer) previewContainer.innerHTML = '';
+                                
+                                // If using Alpine for "hasFile", try to reset it.
+                                // Since we are outside Alpine scope, we rely on the input change event or manual DOM update.
+                                // However, since we cleared value, future changes trigger event.
                                 
                                 // Re-enable submit button
-                                submitBtn.disabled = false;
+                                if(submitBtn) submitBtn.disabled = false;
+                            } else {
+                                console.error('Server returned error:', data);
+                                if(submitBtn) submitBtn.disabled = false;
                             }
                         })
                         .catch(error => {
                             console.error('Error sending message:', error);
-                            submitBtn.disabled = false;
+                            if(submitBtn) submitBtn.disabled = false;
                         });
                     });
                 }
