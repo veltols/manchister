@@ -135,6 +135,13 @@
                                             <i class="fa-solid fa-arrows-rotate text-sm"></i>
                                         </button>
 
+                                        <!-- Print -->
+                                        <a href="{{ route('admin.assets.print', $asset->asset_id) }}" target="_blank"
+                                           class="w-9 h-9 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-800 hover:text-white transition-all shadow-sm"
+                                           title="Print Barcode">
+                                            <i class="fa-solid fa-print text-sm"></i>
+                                        </a>
+
                                         <!-- View -->
                                         <a href="{{ route('admin.assets.show', $asset->asset_id) }}" 
                                            class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
@@ -404,6 +411,8 @@
                         </span>`;
                     };
 
+                    const printUrl = "{{ route('admin.assets.print', ':id') }}".replace(':id', asset.asset_id);
+
                     return `<tr>
                         <td><span class="font-mono text-sm font-semibold text-slate-600">${asset.asset_ref}</span></td>
                         <td>
@@ -434,6 +443,11 @@
                                         title="Update Status">
                                     <i class="fa-solid fa-arrows-rotate text-sm"></i>
                                 </button>
+                                <a href="${printUrl}" target="_blank"
+                                   class="w-9 h-9 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-800 hover:text-white transition-all shadow-sm"
+                                   title="Print Barcode">
+                                    <i class="fa-solid fa-print text-sm"></i>
+                                </a>
                                 <a href="${showUrl}" 
                                    class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
                                    title="View Details">

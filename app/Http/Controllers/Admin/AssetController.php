@@ -43,7 +43,7 @@ class AssetController extends Controller
         $request->validate([
             'asset_name' => 'required|string|max:255',
             'category_id' => 'required|exists:z_assets_list_cats,category_id',
-            'asset_serial' => 'required|string|max:100',
+            'asset_serial' => 'nullable|string|max:100',
             'status_id' => 'required|exists:z_assets_list_status,status_id',
             'description' => 'required|string',
             'purchase_date' => 'nullable|date',
@@ -56,7 +56,17 @@ class AssetController extends Controller
         $asset->asset_name = $request->asset_name;
         $asset->category_id = $request->category_id;
         $asset->asset_description = $request->description;
-        $asset->asset_serial = $request->asset_serial;
+        
+        // Auto-generate Serial if empty
+        if (empty($request->asset_serial)) {
+             // Example: SN-Timestamp-Random 
+             // Using basic PHP unique generation or Str helper if available.
+             // uniqid() is unique based on microtime.
+            $asset->asset_serial = 'SN-' . strtoupper(uniqid());
+        } else {
+            $asset->asset_serial = $request->asset_serial;
+        }
+
         $asset->purchase_date = $request->purchase_date;
         $asset->expiry_date = $request->expiry_date ?? now();
         $asset->status_id = $request->status_id;
@@ -94,6 +104,12 @@ class AssetController extends Controller
             ->get();
 
         return view('admin.assets.show', compact('asset', 'employees', 'logs', 'statuses'));
+    }
+
+    public function print($id)
+    {
+        $asset = Asset::with(['category', 'assignee', 'status'])->findOrFail($id);
+        return view('admin.assets.print', compact('asset'));
     }
 
     public function assign(Request $request, $id)

@@ -403,6 +403,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/assets', [App\Http\Controllers\Admin\AssetController::class, 'index'])->name('assets.index');
         Route::post('/assets', [App\Http\Controllers\Admin\AssetController::class, 'store'])->name('assets.store');
         Route::get('/assets/{id}', [App\Http\Controllers\Admin\AssetController::class, 'show'])->name('assets.show');
+        Route::get('/assets/{id}/print', [App\Http\Controllers\Admin\AssetController::class, 'print'])->name('assets.print');
         Route::post('/assets/{id}/assign', [App\Http\Controllers\Admin\AssetController::class, 'assign'])->name('assets.assign');
         Route::post('/assets/{id}/status', [App\Http\Controllers\Admin\AssetController::class, 'updateStatus'])->name('assets.update_status');
         Route::get('/assets/data', [App\Http\Controllers\Admin\AssetController::class, 'getData'])->name('assets.data');
