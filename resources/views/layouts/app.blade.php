@@ -513,7 +513,7 @@
 
         <!-- Header -->
         <header
-            class="h-20 bg-white/80 backdrop-blur-lg flex items-center justify-between px-4 md:px-8 border-b border-slate-200/50 z-10 shadow-sm shrink-0">
+            class="h-24 bg-white/80 backdrop-blur-lg flex items-center justify-between px-4 md:px-8 border-b border-slate-200/50 z-10 shadow-sm shrink-0">
             <div class="flex items-center gap-3">
                 <!-- Mobile Menu Toggle -->
                 <button @click="mobileSidebarOpen = true"

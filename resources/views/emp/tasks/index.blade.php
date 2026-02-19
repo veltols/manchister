@@ -424,7 +424,7 @@
         .tasks-layout {
             display: grid;
             grid-template-columns: 350px 1fr;
-            height: calc(100vh - 145px);
+            height: calc(100vh - 161px);
             background: white;
             border-radius: 20px;
             overflow: hidden;
@@ -480,7 +480,7 @@
 
         /* Activity Log scrollable panel */
         .logs-scroll-panel {
-            height: calc(100vh - 145px - 80px - 130px);
+            height: calc(100vh - 161px - 80px - 130px);
             overflow-y: auto;
             overflow-x: hidden;
         }

@@ -363,7 +363,7 @@
         .tasks-layout {
             display: grid;
             grid-template-columns: 350px 1fr;
-            height: calc(100vh - 145px);
+            height: calc(100vh - 161px);
             background: white;
             border-radius: 20px;
             overflow: hidden;
@@ -409,7 +409,7 @@
 
         /* Activity Log scrollable panel */
         .logs-scroll-panel {
-            height: calc(100vh - 145px - 80px - 130px);
+            height: calc(100vh - 161px - 80px - 130px);
             overflow-y: auto;
             overflow-x: hidden;
         }
@@ -425,13 +425,13 @@
                 const container = document.querySelector('#tasks-container');
                 if (tasks.length === 0) {
                     container.innerHTML = `
-                                                                            <div class="text-center py-10">
-                                                                                <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
-                                                                                    <i class="fa-solid fa-clipboard-check text-2xl"></i>
+                                                                                <div class="text-center py-10">
+                                                                                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                                                                                        <i class="fa-solid fa-clipboard-check text-2xl"></i>
+                                                                                    </div>
+                                                                                    <p class="text-slate-400 text-sm">No tasks found</p>
                                                                                 </div>
-                                                                                <p class="text-slate-400 text-sm">No tasks found</p>
-                                                                            </div>
-                                                                        `;
+                                                                            `;
                     return;
                 }
 
@@ -442,71 +442,71 @@
 
                     // Main Task
                     html += `
-                                    <div onclick="loadTask(${task.task_id})" id="task-item-${task.task_id}"
-                                        class="task-card p-4 rounded-2xl bg-white border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden ${activeTaskId == task.task_id ? 'active' : ''}">
+                                        <div onclick="loadTask(${task.task_id})" id="task-item-${task.task_id}"
+                                            class="task-card p-4 rounded-2xl bg-white border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden ${activeTaskId == task.task_id ? 'active' : ''}">
 
-                                        <div class="flex justify-between items-start mb-2">
-                                            <span class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider"
-                                                style="background: #${task.priority.priority_color}20; color: #${task.priority.priority_color}">
-                                                ${task.priority.priority_name}
-                                            </span>
-                                            <span class="text-[10px] text-slate-400 font-mono">#${task.task_id}</span>
-                                        </div>
-
-                                        <h3 class="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors mb-1 line-clamp-2">
-                                            ${task.task_title}
-                                        </h3>
-
-                                        <div class="flex items-center justify-between mt-3">
-                                            <div class="flex items-center gap-2">
-                                                <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
-                                                    ${initials}
-                                                </div>
-                                                <span class="text-xs text-slate-500">${createdAt}</span>
+                                            <div class="flex justify-between items-start mb-2">
+                                                <span class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider"
+                                                    style="background: #${task.priority.priority_color}20; color: #${task.priority.priority_color}">
+                                                    ${task.priority.priority_name}
+                                                </span>
+                                                <span class="text-[10px] text-slate-400 font-mono">#${task.task_id}</span>
                                             </div>
-                                            <span class="px-2 py-1 rounded-md text-[10px] font-bold"
-                                                style="background: #${task.status.status_color}20; color: #${task.status.status_color}">
-                                                ${task.status.status_name}
-                                            </span>
-                                        </div>
 
-                                        <div class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 ${activeTaskId == task.task_id ? 'opacity-100' : 'opacity-0'} transition-opacity">
+                                            <h3 class="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors mb-1 line-clamp-2">
+                                                ${task.task_title}
+                                            </h3>
+
+                                            <div class="flex items-center justify-between mt-3">
+                                                <div class="flex items-center gap-2">
+                                                    <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
+                                                        ${initials}
+                                                    </div>
+                                                    <span class="text-xs text-slate-500">${createdAt}</span>
+                                                </div>
+                                                <span class="px-2 py-1 rounded-md text-[10px] font-bold"
+                                                    style="background: #${task.status.status_color}20; color: #${task.status.status_color}">
+                                                    ${task.status.status_name}
+                                                </span>
+                                            </div>
+
+                                            <div class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 ${activeTaskId == task.task_id ? 'opacity-100' : 'opacity-0'} transition-opacity">
+                                            </div>
                                         </div>
-                                    </div>
-                                `;
+                                    `;
 
                     // Subtasks
                     if (task.subtasks && task.subtasks.length > 0) {
                         task.subtasks.forEach(sub => {
                             const subInitials = (sub.assigned_to ? sub.assigned_to.first_name : '?').charAt(0);
                             html += `
-                                            <div onclick="loadTask(${sub.task_id})" id="task-item-${sub.task_id}"
-                                                 class="task-card subtask-card ml-6 p-3 rounded-xl bg-slate-50 border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden mb-2 ${activeTaskId == sub.task_id ? 'active' : ''}">
-                                                 <div class="absolute -left-3 top-1/2 w-3 h-[2px] bg-slate-200"></div>
-                                                 <div class="flex justify-between items-start mb-1">
-                                                      <div class="flex items-center gap-1">
-                                                          <i class="fa-solid fa-turn-up rotate-90 text-[10px] text-slate-300"></i>
-                                                          <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-white border border-slate-200 text-slate-400">Sub</span>
-                                                      </div>
-                                                      <span class="text-[9px] text-slate-400 font-mono">#${sub.task_id}</span>
-                                                 </div>
-                                                 <h3 class="font-bold text-slate-700 text-xs group-hover:text-indigo-600 transition-colors mb-1 line-clamp-1">
-                                                     ${sub.task_title}
-                                                 </h3>
-                                                 <div class="flex items-center justify-between mt-2">
-                                                     <div class="flex items-center gap-2">
-                                                         <div class="w-5 h-5 rounded-full bg-white flex items-center justify-center text-[9px] font-bold text-slate-400 shadow-sm">
-                                                             ${subInitials}
-                                                         </div>
+                                                <div onclick="loadTask(${sub.task_id})" id="task-item-${sub.task_id}"
+                                                     class="task-card subtask-card ml-6 p-3 rounded-xl bg-slate-50 border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden mb-2 ${activeTaskId == sub.task_id ? 'active' : ''}">
+                                                     <div class="absolute -left-3 top-1/2 w-3 h-[2px] bg-slate-200"></div>
+                                                     <div class="flex justify-between items-start mb-1">
+                                                          <div class="flex items-center gap-1">
+                                                              <i class="fa-solid fa-turn-up rotate-90 text-[10px] text-slate-300"></i>
+                                                              <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-white border border-slate-200 text-slate-400">Sub</span>
+                                                          </div>
+                                                          <span class="text-[9px] text-slate-400 font-mono">#${sub.task_id}</span>
                                                      </div>
-                                                     <span class="px-1.5 py-0.5 rounded text-[9px] font-bold"
-                                                         style="background: #${sub.status.status_color}20; color: #${sub.status.status_color}">
-                                                         ${sub.status.status_name}
-                                                     </span>
-                                                 </div>
-                                                  <div class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 ${activeTaskId == sub.task_id ? 'opacity-100' : 'opacity-0'} transition-opacity"></div>
-                                            </div>
-                                         `;
+                                                     <h3 class="font-bold text-slate-700 text-xs group-hover:text-indigo-600 transition-colors mb-1 line-clamp-1">
+                                                         ${sub.task_title}
+                                                     </h3>
+                                                     <div class="flex items-center justify-between mt-2">
+                                                         <div class="flex items-center gap-2">
+                                                             <div class="w-5 h-5 rounded-full bg-white flex items-center justify-center text-[9px] font-bold text-slate-400 shadow-sm">
+                                                                 ${subInitials}
+                                                             </div>
+                                                         </div>
+                                                         <span class="px-1.5 py-0.5 rounded text-[9px] font-bold"
+                                                             style="background: #${sub.status.status_color}20; color: #${sub.status.status_color}">
+                                                             ${sub.status.status_name}
+                                                         </span>
+                                                     </div>
+                                                      <div class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 ${activeTaskId == sub.task_id ? 'opacity-100' : 'opacity-0'} transition-opacity"></div>
+                                                </div>
+                                             `;
                         });
                     }
                 });
@@ -522,7 +522,7 @@
                 from: {{ $tasks->firstItem() }},
                 to: {{ $tasks->lastItem() }},
                 total: {{ $tasks->total() }}
-                                                                                                                    });
+                                                                                                                            });
         @endif
 
         let activeTaskId = null;
@@ -632,18 +632,18 @@
             logs.forEach(log => {
                 const date = new Date(log.log_date).toLocaleString();
                 const html = `
-                                                                            <div class="relative">
-                                                                                <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-slate-200 border-2 border-white ring-1 ring-slate-100"></div>
-                                                                                <div class="space-y-1">
-                                                                                    <div class="flex justify-between items-center text-xs">
-                                                                                        <span class="font-bold text-slate-700">${log.log_action}</span>
-                                                                                        <span class="text-slate-400 font-mono">${date}</span>
+                                                                                <div class="relative">
+                                                                                    <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-slate-200 border-2 border-white ring-1 ring-slate-100"></div>
+                                                                                    <div class="space-y-1">
+                                                                                        <div class="flex justify-between items-center text-xs">
+                                                                                            <span class="font-bold text-slate-700">${log.log_action}</span>
+                                                                                            <span class="text-slate-400 font-mono">${date}</span>
+                                                                                        </div>
+                                                                                        <p class="text-sm text-slate-600 bg-white p-3 rounded-xl border border-slate-100 shadow-sm leading-relaxed">${log.log_remark}</p>
+                                                                                        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">By: ${log.logger ? log.logger.first_name : 'System'}</div>
                                                                                     </div>
-                                                                                    <p class="text-sm text-slate-600 bg-white p-3 rounded-xl border border-slate-100 shadow-sm leading-relaxed">${log.log_remark}</p>
-                                                                                    <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">By: ${log.logger ? log.logger.first_name : 'System'}</div>
                                                                                 </div>
-                                                                            </div>
-                                                                        `;
+                                                                            `;
                 container.innerHTML += html;
             });
         }
