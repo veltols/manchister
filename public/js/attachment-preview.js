@@ -88,22 +88,23 @@ class AttachmentPreview {
         const fileSize = this.formatBytes(file.size);
         const extension = fileName.split('.').pop().toLowerCase();
 
+        console.log('AttachmentPreview: File selected', fileName);
         this.container.innerHTML = `
-            <div class="mt-4 p-4 rounded-2xl bg-white border border-slate-100 shadow-sm animate-fade-in group hover:border-brand/30 transition-all">
+            <div class="mt-4 p-4 rounded-2xl bg-white border-2 border-brand/10 shadow-lg shadow-brand/5 animate-fade-in-up group hover:border-brand/30 transition-all">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-4">
-                        <div id="preview-thumbnail" class="w-12 h-12 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center overflow-hidden border border-slate-50 group-hover:bg-brand/5 group-hover:text-brand transition-colors">
+                        <div id="preview-thumbnail" class="w-12 h-12 rounded-xl bg-slate-50 text-brand flex items-center justify-center overflow-hidden border border-slate-100 group-hover:bg-brand/5 transition-colors">
                             <i class="fa-solid ${this.getIconForExtension(extension)} text-xl"></i>
                         </div>
                         <div>
                             <p class="text-sm font-bold text-slate-700 truncate max-w-[200px]" title="${fileName}">${fileName}</p>
                             <div class="flex items-center gap-2 mt-0.5">
                                 <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">${fileSize} • ${extension}</p>
-                                <button type="button" id="open-full-preview" class="text-[10px] text-indigo-600 font-bold hover:underline">Quick Look</button>
+                                <button type="button" id="open-full-preview" class="text-[10px] text-brand font-bold hover:underline">Quick Look</button>
                             </div>
                         </div>
                     </div>
-                    <button type="button" id="remove-preview-btn" class="w-8 h-8 rounded-lg hover:bg-red-50 hover:text-red-500 flex items-center justify-center text-slate-300 transition-all">
+                    <button type="button" id="remove-preview-btn" class="w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition-all">
                         <i class="fa-solid fa-trash-can text-sm"></i>
                     </button>
                 </div>

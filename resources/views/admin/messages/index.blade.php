@@ -163,6 +163,44 @@
                     </button>
                 </form>
             </div>
+
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+            <script src="{{ asset('js/attachment-preview.js') }}"></script>
+            <script>
+                // Initialize Attachment Preview for Chat
+                console.log('Admin: Initializing Attachment Preview');
+                window.attachmentPreviewInstance = window.initAttachmentPreview({
+                    inputSelector: '#chat_attachment',
+                    containerSelector: '#chat-attachment-preview',
+                    onRemove: () => {
+                        const icon = document.getElementById('chat-paperclip-icon');
+                        if(icon) {
+                            icon.classList.remove('text-brand');
+                            icon.classList.add('text-slate-400');
+                        }
+                    }
+                });
+
+                // Add listener to show indicator when file is selected
+                const fileInputInit = document.getElementById('chat_attachment');
+                if(fileInputInit) {
+                    fileInputInit.addEventListener('change', function() {
+                        console.log('Admin: File input changed', this.files.length);
+                        const icon = document.getElementById('chat-paperclip-icon');
+                        if(this.files && this.files.length > 0) {
+                            if(icon) {
+                                icon.classList.remove('text-slate-400');
+                                icon.classList.add('text-brand');
+                            }
+                        } else {
+                            if(icon) {
+                                icon.classList.remove('text-brand');
+                                icon.classList.add('text-slate-400');
+                            }
+                        }
+                    });
+                }
+            </script>
             
             <script>
                 // Auto-scroll to bottom on page load
@@ -447,44 +485,4 @@
         </form>
     </div>
 </div>
-@endsection
-
-@section('scripts')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
-    <script src="{{ asset('js/attachment-preview.js') }}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize Attachment Preview for Chat
-            window.attachmentPreviewInstance = window.initAttachmentPreview({
-                inputSelector: '#chat_attachment',
-                containerSelector: '#chat-attachment-preview',
-                onRemove: () => {
-                    const icon = document.getElementById('chat-paperclip-icon');
-                    if(icon) {
-                        icon.classList.remove('text-brand');
-                        icon.classList.add('text-slate-400');
-                    }
-                }
-            });
-
-            // Add listener to show indicator when file is selected
-            const fileInput = document.getElementById('chat_attachment');
-            if(fileInput) {
-                fileInput.addEventListener('change', function() {
-                    const icon = document.getElementById('chat-paperclip-icon');
-                    if(this.files && this.files.length > 0) {
-                        if(icon) {
-                            icon.classList.remove('text-slate-400');
-                            icon.classList.add('text-brand');
-                        }
-                    } else {
-                        if(icon) {
-                            icon.classList.remove('text-brand');
-                            icon.classList.add('text-slate-400');
-                        }
-                    }
-                });
-            }
-        });
-    </script>
 @endsection

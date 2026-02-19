@@ -210,6 +210,44 @@
                         </form>
                     </div>
 
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+                    <script src="{{ asset('js/attachment-preview.js') }}"></script>
+                    <script>
+                        // Initialize Attachment Preview for Chat
+                        console.log('HR: Initializing Attachment Preview');
+                        window.attachmentPreviewInstance = window.initAttachmentPreview({
+                            inputSelector: '#chat_attachment',
+                            containerSelector: '#chat-attachment-preview',
+                            onRemove: () => {
+                                const icon = document.getElementById('chat-paperclip-icon');
+                                if (icon) {
+                                    icon.classList.remove('text-brand');
+                                    icon.classList.add('text-slate-400');
+                                }
+                            }
+                        });
+
+                        // Add listener to show indicator when file is selected
+                        const fileInputInit = document.getElementById('chat_attachment');
+                        if (fileInputInit) {
+                            fileInputInit.addEventListener('change', function () {
+                                console.log('HR: File input changed', this.files.length);
+                                const icon = document.getElementById('chat-paperclip-icon');
+                                if (this.files && this.files.length > 0) {
+                                    if (icon) {
+                                        icon.classList.remove('text-slate-400');
+                                        icon.classList.add('text-brand');
+                                    }
+                                } else {
+                                    if (icon) {
+                                        icon.classList.remove('text-brand');
+                                        icon.classList.add('text-slate-400');
+                                    }
+                                }
+                            });
+                        }
+                    </script>
+
                     <script>
                         // Auto-scroll to bottom on page load
                         const container = document.getElementById('messagesContainer');
@@ -253,42 +291,42 @@
                                     contentHtml = `<img src="/uploads/${msg.post_text}" class="rounded-lg max-w-xs transition-opacity hover:opacity-90 cursor-pointer" onclick="window.open(this.src)">`;
                                 } else if (msg.post_type === 'document') {
                                     contentHtml = `
-                                                                                                                        <a href="/uploads/${msg.post_text}" target="_blank" class="flex items-center gap-3 p-2 rounded-xl ${isMe ? 'bg-white/10 text-white' : 'bg-slate-50 text-slate-700'} no-underline hover:bg-white/20 transition-colors">
-                                                                                                                            <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-                                                                                                                                <i class="fa-solid fa-file-invoice text-lg"></i>
-                                                                                                                            </div>
-                                                                                                                            <div class="flex flex-col min-w-0">
-                                                                                                                                <span class="text-xs font-bold truncate max-w-[150px]">${msg.post_text}</span>
-                                                                                                                                <span class="text-[10px] opacity-70">Document</span>
-                                                                                                                            </div>
-                                                                                                                        </a>`;
+                                                                                                                                                        <a href="/uploads/${msg.post_text}" target="_blank" class="flex items-center gap-3 p-2 rounded-xl ${isMe ? 'bg-white/10 text-white' : 'bg-slate-50 text-slate-700'} no-underline hover:bg-white/20 transition-colors">
+                                                                                                                                                            <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                                                                                                                                                                <i class="fa-solid fa-file-invoice text-lg"></i>
+                                                                                                                                                            </div>
+                                                                                                                                                            <div class="flex flex-col min-w-0">
+                                                                                                                                                                <span class="text-xs font-bold truncate max-w-[150px]">${msg.post_text}</span>
+                                                                                                                                                                <span class="text-[10px] opacity-70">Document</span>
+                                                                                                                                                            </div>
+                                                                                                                                                        </a>`;
                                 } else {
                                     contentHtml = `<p class="text-sm leading-relaxed">${msg.post_text}</p>`;
                                 }
 
                                 const messageHtml = `
-                                                                                                                    <div id="msg-${msg.post_id}" class="flex w-full ${isMe ? 'justify-end' : 'justify-start'} animate-fade-in-up">
-                                                                                                                        <div class="flex max-w-[70%] ${isMe ? 'flex-row-reverse' : 'flex-row'} gap-3">
-                                                                                                                            ${!isMe ? `
-                                                                                                                                <div class="w-8 h-8 rounded-full bg-brand/10 flex-shrink-0 flex items-center justify-center overflow-hidden self-end border border-brand/20">
-                                                                                                                                    ${msg.sender && msg.sender.employee_picture ?
+                                                                                                                                                    <div id="msg-${msg.post_id}" class="flex w-full ${isMe ? 'justify-end' : 'justify-start'} animate-fade-in-up">
+                                                                                                                                                        <div class="flex max-w-[70%] ${isMe ? 'flex-row-reverse' : 'flex-row'} gap-3">
+                                                                                                                                                            ${!isMe ? `
+                                                                                                                                                                <div class="w-8 h-8 rounded-full bg-brand/10 flex-shrink-0 flex items-center justify-center overflow-hidden self-end border border-brand/20">
+                                                                                                                                                                    ${msg.sender && msg.sender.employee_picture ?
                                             `<img src="/uploads/${msg.sender.employee_picture}" class="w-full h-full object-cover">` :
                                             `<span class="text-[10px] font-bold text-brand">${msg.sender ? msg.sender.first_name.charAt(0) : '?'}</span>`
                                         }
-                                                                                                                                </div>
-                                                                                                                            ` : ''}
+                                                                                                                                                                </div>
+                                                                                                                                                            ` : ''}
 
-                                                                                                                            <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
-                                                                                                                                <div class="px-5 py-3 rounded-2xl ${isMe ? 'bg-brand text-white rounded-br-none shadow-brand/10' : 'bg-white border border-slate-100 text-slate-700 rounded-bl-none shadow-sm'} shadow-md">
-                                                                                                                                    ${contentHtml}
-                                                                                                                                </div>
-                                                                                                                                <span class="text-[10px] text-slate-400 mt-1 font-medium px-1 uppercase tracking-tighter">
-                                                                                                                                    ${new Date(msg.added_date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                                                                                                                                </span>
-                                                                                                                            </div>
-                                                                                                                        </div>
-                                                                                                                    </div>
-                                                                                                                `;
+                                                                                                                                                            <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+                                                                                                                                                                <div class="px-5 py-3 rounded-2xl ${isMe ? 'bg-brand text-white rounded-br-none shadow-brand/10' : 'bg-white border border-slate-100 text-slate-700 rounded-bl-none shadow-sm'} shadow-md">
+                                                                                                                                                                    ${contentHtml}
+                                                                                                                                                                </div>
+                                                                                                                                                                <span class="text-[10px] text-slate-400 mt-1 font-medium px-1 uppercase tracking-tighter">
+                                                                                                                                                                    ${new Date(msg.added_date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                                                                                                                                                                </span>
+                                                                                                                                                            </div>
+                                                                                                                                                        </div>
+                                                                                                                                                    </div>
+                                                                                                                                                `;
                                 container.insertAdjacentHTML('beforeend', messageHtml);
                             }
 
@@ -491,44 +529,4 @@
             </form>
         </div>
     </div>
-@endsection
-
-@section('scripts')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
-    <script src="{{ asset('js/attachment-preview.js') }}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Initialize Attachment Preview for Chat
-            window.attachmentPreviewInstance = window.initAttachmentPreview({
-                inputSelector: '#chat_attachment',
-                containerSelector: '#chat-attachment-preview',
-                onRemove: () => {
-                    const icon = document.getElementById('chat-paperclip-icon');
-                    if (icon) {
-                        icon.classList.remove('text-brand');
-                        icon.classList.add('text-slate-400');
-                    }
-                }
-            });
-
-            // Add listener to show indicator when file is selected
-            const fileInput = document.getElementById('chat_attachment');
-            if (fileInput) {
-                fileInput.addEventListener('change', function () {
-                    const icon = document.getElementById('chat-paperclip-icon');
-                    if (this.files && this.files.length > 0) {
-                        if (icon) {
-                            icon.classList.remove('text-slate-400');
-                            icon.classList.add('text-brand');
-                        }
-                    } else {
-                        if (icon) {
-                            icon.classList.remove('text-brand');
-                            icon.classList.add('text-slate-400');
-                        }
-                    }
-                });
-            }
-        });
-    </script>
 @endsection
