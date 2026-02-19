@@ -3,7 +3,10 @@
 <head>
      @php
                 $favPath = \App\Models\AppSetting::where('key', 'favicon_path')->value('value');
-                $favUrl = $favPath ? asset('uploads/' . $favPath) : asset('favicon.ico');
+        $favUrl = $favPath ? asset('uploads/' . $favPath) : asset('favicon.ico');
+
+        $logoPath = \App\Models\AppSetting::where('key', 'logo_path')->value('value');
+        $logoUrl = $logoPath ? asset('uploads/' . $logoPath) : asset('images/logo.png');
             @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -66,7 +69,7 @@
         <div class="bg-gradient-to-r from-[#004F68] to-[#006a8a] p-4 text-center">
            
             <div class="flex flex-col items-center justify-center mb-2">
-                <img src="{{ $favUrl }}" class="h-10 w-10 object-contain drop-shadow-md bg-white/20 rounded p-1 mb-1">
+                <img src="{{ $logoUrl }}" class="h-10 w-10 object-contain drop-shadow-md bg-white/20 rounded p-1 mb-1">
             </div>
             <h1 class="text-white font-display font-bold text-xl tracking-wide uppercase">{{ config('app.name', 'IQC Sense') }}</h1>
             <p class="text-white/80 text-xs font-medium uppercase tracking-widest mt-0.5">Asset Management</p>

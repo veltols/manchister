@@ -73,16 +73,18 @@
                             </div>
                         </div>
 
-                        <div class="flex gap-8 border-l border-white/20 pl-8 hidden md:flex">
-                            <div class="text-center">
+                        <div class="flex items-center pl-8 hidden md:flex">
+                            <div class="text-center pr-8">
                                 <span class="block text-3xl font-bold">{{ $totalOpen }}</span>
                                 <span class="text-xs text-cyan-100 uppercase tracking-wider font-semibold">Open</span>
                             </div>
-                            <div class="text-center">
+                            <div class="w-px h-12 bg-white/20"></div>
+                            <div class="text-center px-8">
                                 <span class="block text-3xl font-bold">{{ $totalProgress }}</span>
                                 <span class="text-xs text-cyan-100 uppercase tracking-wider font-semibold">Processing</span>
                             </div>
-                            <div class="text-center">
+                            <div class="w-px h-12 bg-white/20"></div>
+                            <div class="text-center pl-8">
                                 <span class="block text-3xl font-bold">{{ $totalResolved }}</span>
                                 <span class="text-xs text-cyan-100 uppercase tracking-wider font-semibold">Resolved</span>
                             </div>
