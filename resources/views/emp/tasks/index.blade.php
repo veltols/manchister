@@ -24,7 +24,7 @@
                     </div>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="openModal('newTaskModal')"
+                    <button onclick="openCreateTaskModal()"
                         class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
                         <i class="fa-solid fa-plus"></i>
                     </button>
@@ -87,6 +87,41 @@
 
                             <div class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 opacity-0 transition-opacity"></div>
                         </div>
+
+                        <!-- Subtasks Loop -->
+                        @if($task->subtasks && $task->subtasks->count() > 0)
+                            @foreach($task->subtasks as $sub)
+                                <div onclick="loadTask({{ $sub->task_id }})" id="task-item-{{ $sub->task_id }}"
+                                     class="task-card subtask-card ml-6 p-3 rounded-xl bg-slate-50 border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden mb-2">
+                                     <div class="absolute -left-3 top-1/2 w-3 h-[2px] bg-slate-200"></div>
+                                     <div class="flex justify-between items-start mb-1">
+                                          <div class="flex items-center gap-1">
+                                              <i class="fa-solid fa-turn-up rotate-90 text-[10px] text-slate-300"></i>
+                                              <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-white border border-slate-200 text-slate-400">Sub</span>
+                                          </div>
+                                          <span class="text-[9px] text-slate-400 font-mono">#{{ $sub->task_id }}</span>
+                                     </div>
+                                     <h3 class="font-bold text-slate-700 text-xs group-hover:text-indigo-600 transition-colors mb-1 line-clamp-1">
+                                         {{ $sub->task_title }}
+                                     </h3>
+                                     <div class="flex items-center justify-between mt-2">
+                                         <div class="flex items-center gap-2">
+                                             @php 
+                                                 $subPerson = ($viewMode == 'my_tasks') ? $sub->assignedBy : $sub->assignedTo;
+                                             @endphp
+                                             <div class="w-5 h-5 rounded-full bg-white flex items-center justify-center text-[9px] font-bold text-slate-400 shadow-sm">
+                                                 {{ substr($subPerson->first_name ?? '?', 0, 1) }}
+                                             </div>
+                                         </div>
+                                         <span class="px-1.5 py-0.5 rounded text-[9px] font-bold"
+                                             style="background: #{{ $sub->status->status_color ?? 'ccc' }}20; color: #{{ $sub->status->status_color ?? 'ccc' }}">
+                                             {{ $sub->status->status_name ?? 'Unknown' }}
+                                         </span>
+                                     </div>
+                                      <div class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 opacity-0 transition-opacity"></div>
+                                </div>
+                            @endforeach
+                        @endif
                     @empty
                         <div class="text-center py-10">
                             <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
@@ -131,10 +166,17 @@
                             </div>
                             <h1 id="detail-title" class="text-2xl md:text-3xl font-display font-bold text-slate-800 leading-tight"></h1>
                         </div>
-                        <button onclick="openModal('updateStatusModal')" id="btn-update-status"
-                            class="premium-button from-indigo-600 to-purple-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md flex items-center gap-2 transition-transform hover:scale-105">
-                            <i class="fa-solid fa-pen text-sm"></i> Update Status
-                        </button>
+                        <div class="flex items-center gap-3">
+                            <button onclick="openSubtaskModal(activeTaskId)" 
+                                class="premium-button from-cyan-500 to-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md flex items-center gap-2 hover:scale-105 transition-all duration-200"
+                                title="Add Subtask">
+                                <i class="fa-solid fa-plus text-xs"></i> <span>Subtask</span>
+                            </button>
+                            <button onclick="openModal('updateStatusModal')" id="btn-update-status"
+                                class="premium-button from-indigo-600 to-purple-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md flex items-center gap-2 transition-transform hover:scale-105">
+                                <i class="fa-solid fa-pen text-sm"></i> Update Status
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Stats Grid -->
@@ -219,7 +261,7 @@
         <div class="modal-content max-w-xl p-6">
             <div class="flex justify-between items-center mb-6">
                 <div>
-                    <h2 class="text-2xl font-display font-bold text-premium">Create New Task</h2>
+                    <h2 class="text-2xl font-display font-bold text-premium" id="task-modal-title">Create New Task</h2>
                     <p class="text-slate-500 text-sm mt-1">Assign a new task to an employee</p>
                 </div>
                 <button onclick="closeModal('newTaskModal')" class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
@@ -229,6 +271,7 @@
 
             <form onsubmit="saveTask(event)" class="space-y-4" enctype="multipart/form-data" id="create-task-form">
                 @csrf
+                <input type="hidden" name="parent_task_id" id="task_parent_id">
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -638,6 +681,21 @@
                 }
             } catch (err) { console.error(err); }
         }
+
+        function openCreateTaskModal() {
+            document.getElementById('create-task-form').reset();
+            document.getElementById('task_parent_id').value = '';
+            document.getElementById('task-modal-title').innerText = 'Create New Task';
+            openModal('newTaskModal');
+        }
+
+        function openSubtaskModal(parentId) {
+            if(!parentId) return;
+            document.getElementById('create-task-form').reset();
+            document.getElementById('task_parent_id').value = parentId;
+            document.getElementById('task-modal-title').innerText = 'Create Subtask for #' + parentId;
+            openModal('newTaskModal');
+        }
     </script>
     <script src="{{ asset('js/ajax-pagination.js') }}"></script>
     <script>
@@ -692,7 +750,50 @@
                             <div class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 ${activeTaskId == task.task_id ? 'opacity-1' : 'opacity-0'} transition-opacity"></div>
                         </div>
                     `;
+
+                    // Subtasks
+                    if (task.subtasks && task.subtasks.length > 0) {
+                        task.subtasks.forEach(sub => {
+                             const subPriorityColor = sub.priority ? sub.priority.priority_color : 'ccc';
+                             const subStatusColor = sub.status ? sub.status.status_color : 'ccc';
+                             const subStatusName = sub.status ? sub.status.status_name : 'Unknown';
+                             
+                             const subPerson = (currentViewMode == 'my_tasks') ? sub.assigned_by : sub.assigned_to;
+                             const subPersonInitial = (subPerson && subPerson.first_name) ? subPerson.first_name[0].toUpperCase() : '?';
+
+                             html += `
+                                <div onclick="loadTask(${sub.task_id})" id="task-item-${sub.task_id}"
+                                     class="task-card subtask-card ml-6 p-3 rounded-xl bg-slate-50 border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden mb-2 ${activeTaskId == sub.task_id ? 'active' : ''}">
+                                     <div class="absolute -left-3 top-1/2 w-3 h-[2px] bg-slate-200"></div>
+                                     <div class="flex justify-between items-start mb-1">
+                                          <div class="flex items-center gap-1">
+                                              <i class="fa-solid fa-turn-up rotate-90 text-[10px] text-slate-300"></i>
+                                              <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-white border border-slate-200 text-slate-400">Sub</span>
+                                          </div>
+                                          <span class="text-[9px] text-slate-400 font-mono">#${sub.task_id}</span>
+                                     </div>
+                                     <h3 class="font-bold text-slate-700 text-xs group-hover:text-indigo-600 transition-colors mb-1 line-clamp-1">
+                                         ${sub.task_title}
+                                     </h3>
+                                     <div class="flex items-center justify-between mt-2">
+                                         <div class="flex items-center gap-2">
+                                             <div class="w-5 h-5 rounded-full bg-white flex items-center justify-center text-[9px] font-bold text-slate-400 shadow-sm">
+                                                 ${subPersonInitial}
+                                             </div>
+                                         </div>
+                                         <span class="px-1.5 py-0.5 rounded text-[9px] font-bold"
+                                             style="background: #${subStatusColor}20; color: #${subStatusColor}">
+                                             ${subStatusName}
+                                         </span>
+                                     </div>
+                                      <div class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 ${activeTaskId == sub.task_id ? 'opacity-1' : 'opacity-0'} transition-opacity"></div>
+                                </div>
+                             `;
+                        });
+                    }
                 });
+                const container = document.querySelector('#tasks-container');
+                if(container) container.innerHTML = html;
                 return html;
             }
         });

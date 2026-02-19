@@ -40,6 +40,16 @@ class Task extends Model
         return $this->belongsTo(Employee::class, 'assigned_to', 'employee_id');
     }
 
+    public function subtasks()
+    {
+        return $this->hasMany(Task::class, 'parent_task_id', 'task_id')->orderBy('task_id', 'asc');
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(Task::class, 'parent_task_id', 'task_id');
+    }
+
     public function logs()
     {
         return $this->hasMany(SystemLog::class, 'related_id', 'task_id')
@@ -84,7 +94,7 @@ class Task extends Model
         }
 
         $diff = $now->diff($due);
-        
+
         if ($diff->days > 0) {
             return $diff->days . 'd remaining';
         }

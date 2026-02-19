@@ -17,7 +17,10 @@ class TaskController extends Controller
 {
     public function index()
     {
-        $tasks = Task::with(['status', 'priority', 'assignedBy'])
+        $tasks = Task::with(['status', 'priority', 'assignedBy', 'subtasks.status', 'subtasks.priority', 'subtasks.assignedBy', 'subtasks.assignedTo'])
+            ->where(function ($q) {
+                $q->whereNull('parent_task_id')->orWhere('parent_task_id', 0);
+            })
             ->orderBy('task_id', 'desc')
             ->paginate(15);
 
@@ -31,7 +34,10 @@ class TaskController extends Controller
     public function getData(Request $request)
     {
         $perPage = $request->get('per_page', 15);
-        $tasks = Task::with(['status', 'priority', 'assignedBy'])
+        $tasks = Task::with(['status', 'priority', 'assignedBy', 'subtasks.status', 'subtasks.priority', 'subtasks.assignedBy', 'subtasks.assignedTo'])
+            ->where(function ($q) {
+                $q->whereNull('parent_task_id')->orWhere('parent_task_id', 0);
+            })
             ->orderBy('task_id', 'desc')
             ->paginate($perPage);
 
@@ -69,6 +75,7 @@ class TaskController extends Controller
             'priority_id' => 'required|exists:sys_list_priorities,priority_id',
             'task_due_date' => 'required|date',
             'task_attachment' => 'nullable|file|max:10240',
+            'parent_task_id' => 'nullable|exists:tasks_list,task_id'
         ]);
 
         $task = new Task();
@@ -76,6 +83,7 @@ class TaskController extends Controller
         $task->task_description = $request->task_description;
         $task->assigned_to = $request->assigned_to;
         $task->assigned_by = Auth::user()->employee ? Auth::user()->employee->employee_id : 1;
+        $task->parent_task_id = $request->parent_task_id ?? 0;
         $task->task_assigned_date = now();
         $task->task_due_date = $request->task_due_date;
         $task->priority_id = $request->priority_id;

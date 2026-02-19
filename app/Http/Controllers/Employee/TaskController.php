@@ -19,7 +19,7 @@ class TaskController extends Controller
         $user = Auth::user();
         $employeeId = $user->employee ? $user->employee->employee_id : 0;
 
-        $query = Task::with(['status', 'priority', 'assignedBy', 'assignedTo']);
+        $query = Task::with(['status', 'priority', 'assignedBy', 'assignedTo', 'subtasks.status', 'subtasks.priority', 'subtasks.assignedBy', 'subtasks.assignedTo']);
 
         if ($viewMode == 'others_tasks') {
             $query->where('assigned_by', $employeeId);
@@ -61,6 +61,7 @@ class TaskController extends Controller
             'task_due_date' => 'required|date|after_or_equal:task_assigned_date',
             'priority_id' => 'required|exists:sys_list_priorities,priority_id',
             'task_attachment' => 'nullable|file|max:10240',
+            'parent_task_id' => 'nullable|exists:tasks_list,task_id'
         ]);
 
         $user = Auth::user();
@@ -85,6 +86,7 @@ class TaskController extends Controller
         $task->assigned_by = $employeeId;
         $task->assigned_to = $request->assigned_to ?? $employeeId;
         $task->priority_id = $request->priority_id;
+        $task->parent_task_id = $request->parent_task_id ?? 0;
 
         // Handle attachment upload
         if ($request->hasFile('task_attachment')) {
@@ -171,7 +173,7 @@ class TaskController extends Controller
         $employeeId = $user->employee ? $user->employee->employee_id : 0;
         $perPage = $request->input('per_page', 15);
 
-        $query = Task::with(['status', 'priority', 'assignedBy', 'assignedTo']);
+        $query = Task::with(['status', 'priority', 'assignedBy', 'assignedTo', 'subtasks.status', 'subtasks.priority', 'subtasks.assignedBy', 'subtasks.assignedTo']);
 
         if ($viewMode == 'others_tasks') {
             $query->where('assigned_by', $employeeId);
