@@ -4,7 +4,11 @@
     <!-- Logo Area -->
     <div class="h-20 flex items-center justify-center border-b border-white/10 px-2 text-center">
         <a href="{{ route('dashboard') }}">
-            <img src="{{ asset('images/logo.png') }}" alt="IQC Logo" class="w-12 h-12 object-contain">
+            @php
+                $sLogoPath = \App\Models\AppSetting::where('key', 'logo_path')->value('value');
+                $sLogoUrl = $sLogoPath ? asset('uploads/' . $sLogoPath) : asset('images/logo.png');
+            @endphp
+            <img src="{{ $sLogoUrl }}" alt="IQC Logo" class="w-12 h-12 object-contain">
         </a>
     </div>
 

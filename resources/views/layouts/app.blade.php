@@ -5,7 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Dashboard') - IQC Sense</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
+    @php
+        $favPath = \App\Models\AppSetting::where('key', 'favicon_path')->value('value');
+        $favUrl = $favPath ? asset('uploads/' . $favPath) : asset('favicon.ico');
+
+        $logoPath = \App\Models\AppSetting::where('key', 'logo_path')->value('value');
+        $globalLogoUrl = $logoPath ? asset('uploads/' . $logoPath) : asset('images/logo.png');
+    @endphp
+    <link rel="icon" type="image/png" href="{{ $favUrl }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link
@@ -459,12 +466,8 @@
     @stack('styles')
     <style>
         :root {
-            --theme-color:
-                {{ $themeColor ?? '#004F68' }}
-            ;
-            --theme-secondary:
-                {{ $themeSecondary ?? '#00384a' }}
-            ;
+            --theme-color: #{{ str_replace('#', '', $themeColor ?? '004F68') }};
+            --theme-secondary: #{{ str_replace('#', '', $themeSecondary ?? '00384a') }};
         }
     </style>
 </head>
@@ -494,7 +497,7 @@
 
             <div class="h-20 flex items-center justify-between px-4 border-b border-white/10">
                 <a href="{{ route('dashboard') }}">
-                    <img src="{{ asset('images/logo.png') }}" alt="IQC Logo" class="h-10 w-auto">
+                    <img src="{{ $globalLogoUrl ?? asset('images/logo.png') }}" alt="IQC Logo" class="h-10 w-auto">
                 </a>
                 <button @click="mobileSidebarOpen = false" class="text-white hover:text-slate-300">
                     <i class="fa-solid fa-xmark text-2xl"></i>

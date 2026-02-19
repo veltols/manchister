@@ -5,7 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - IQC Sense</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
+    @php
+        $favPath = \App\Models\AppSetting::where('key', 'favicon_path')->value('value');
+        $favUrl = $favPath ? asset('uploads/' . $favPath) : asset('favicon.ico');
+
+        $logoPath = \App\Models\AppSetting::where('key', 'logo_path')->value('value');
+        $logoUrl = $logoPath ? asset('uploads/' . $logoPath) : asset('images/logo.png');
+    @endphp
+    <link rel="icon" type="image/png" href="{{ $favUrl }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap"
@@ -34,7 +41,7 @@
 
     <style>
         body {
-            background: #004F68;
+            background-color: #004F68; /* Fallback color */
             position: relative;
             overflow-x: hidden;
             overflow-y: auto;
@@ -231,7 +238,7 @@
             <div class="float mb-8">
                 <div
                     class="w-40 h-40 rounded-3xl bg-white/10 backdrop-blur-lg border border-white/20 flex items-center justify-center shadow-2xl p-6">
-                    <img src="{{ asset('images/logo.png') }}" alt="IQC Logo" class="w-full h-full object-contain">
+                    <img src="{{ $logoUrl }}" alt="IQC Logo" class="w-full h-full object-contain">
                 </div>
             </div>
 
@@ -272,7 +279,7 @@
             <div class="lg:hidden flex justify-center mb-8">
                 <div
                     class="w-32 h-32 rounded-3xl bg-white/10 backdrop-blur-lg border border-white/20 flex items-center justify-center shadow-2xl p-4">
-                    <img src="{{ asset('images/logo.png') }}" alt="IQC Logo" class="w-full h-full object-contain">
+                    <img src="{{ $logoUrl }}" alt="IQC Logo" class="w-full h-full object-contain">
                 </div>
             </div>
 

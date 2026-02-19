@@ -14,7 +14,7 @@ class SettingsController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $themes = UserTheme::all();
+        $themes = UserTheme::paginate(12);
         return view('emp.settings.index', compact('user', 'themes'));
     }
 

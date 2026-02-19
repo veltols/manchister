@@ -423,6 +423,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/settings/data', [App\Http\Controllers\Admin\SettingsController::class, 'getData'])->name('settings.data');
         Route::post('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'store'])->name('settings.store');
         Route::post('/settings/{id}', [App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('settings.update');
+        Route::post('/settings/branding/update', [App\Http\Controllers\Admin\SettingsController::class, 'updateBranding'])->name('settings.branding');
         // Incidents
         Route::get('/incidents', [App\Http\Controllers\Admin\IncidentController::class, 'index'])->name('incidents.index');
         Route::get('/incidents/data', [App\Http\Controllers\Admin\IncidentController::class, 'getData'])->name('incidents.data');

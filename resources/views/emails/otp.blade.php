@@ -213,9 +213,13 @@
 <body>
     <div class="email-container">
         <!-- Header with Logo -->
+        @php
+            $logoPath = \App\Models\AppSetting::where('key', 'logo_path')->value('value');
+            $logoUrl = $logoPath ? asset('uploads/' . $logoPath) : asset('images/logo.png');
+        @endphp
         <div class="header">
             <div class="logo-container">
-                <img src="https://limegreen-lemur-724209.hostingersite.com/images/logo.png" alt="Logo" class="logo">
+                <img src="{{ $logoUrl }}" alt="Logo" class="logo">
             </div>
             <h1 class="header-title">Two-Factor Authentication</h1>
         </div>

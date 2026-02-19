@@ -2,21 +2,28 @@
 <html>
 <head>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; margin: 0; padding: 0; }
-        .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0; }
-        .header { background: #0f172a; padding: 40px; text-align: center; }
-        .logo { color: white; font-size: 24px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
-        .content { padding: 40px; color: #334155; line-height: 1.6; }
-        .footer { background: #f1f5f9; padding: 20px; text-align: center; color: #64748b; font-size: 12px; }
-        .btn { display: inline-block; padding: 14px 28px; background: #4f46e5; color: white; text-decoration: none; border-radius: 12px; font-weight: bold; margin-top: 20px; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3); }
-        h1 { color: #0f172a; margin-bottom: 24px; font-weight: 900; font-size: 24px; }
-        p { margin-bottom: 16px; }
+        body { font-family: sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .logo { width: 150px; height: auto; }
+        .box { background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .footer { text-align: center; font-size: 12px; color: #666; margin-top: 30px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">IQC Sense</div>
+            <table>
+                <tr>
+                    <td style="text-align: center; padding-bottom: 20px;">
+                        @php
+                            $logoPath = \App\Models\AppSetting::where('key', 'logo_path')->value('value');
+                            $logoUrl = $logoPath ? asset('uploads/' . $logoPath) : asset('images/logo.png');
+                        @endphp
+                        <img src="{{ $logoUrl }}" alt="IQC Logo" style="width: 120px; height: auto;">
+                    </td>
+                </tr>
+            </table>
         </div>
         <div class="content">
             <h1>Welcome to the Network</h1>

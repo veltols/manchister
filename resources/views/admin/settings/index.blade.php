@@ -45,27 +45,95 @@
                    class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'ct' ? 'bg-brand/10 text-brand' : 'text-slate-600 hover:bg-slate-50' }}">
                     <i class="fa-solid fa-envelope-open-text w-5"></i> Comm. Types
                 </a>
+                 <div class="border-t border-slate-100 my-2 pt-2"></div>
+                <p class="px-4 py-2 text-xs font-bold text-slate-400 uppercase tracking-widest">Theming</p>
+                <a href="{{ route('admin.settings.index', ['type' => 'ult']) }}" 
+                   class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'ult' ? 'bg-brand/10 text-brand' : 'text-slate-600 hover:bg-slate-50' }}">
+                    <i class="fa-solid fa-palette w-5"></i> Themes
+                </a>
+                <a href="{{ route('admin.settings.index', ['type' => 'branding']) }}" 
+                   class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'branding' ? 'bg-brand/10 text-brand' : 'text-slate-600 hover:bg-slate-50' }}">
+                    <i class="fa-solid fa-copyright w-5"></i> Branding & Logo
+                </a>
             </div>
         </div>
 
         <!-- Content Area -->
-        <div class="flex-1 space-y-6">
+        <div class="flex-1 space-y-6 min-w-0">
             
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-2xl font-display font-bold text-premium">{{ $conf['title'] }}</h2>
-                    <p class="text-sm text-slate-500">Manage list items</p>
+                    <h2 class="text-2xl font-display font-bold text-premium">{{ $type === 'branding' ? 'Branding & Logo' : $conf['title'] }}</h2>
+                    <p class="text-sm text-slate-500">{{ $type === 'branding' ? 'Manage application branding and appearance' : 'Manage list items' }}</p>
                 </div>
+                @if($type !== 'branding')
                 <button onclick="openModal('addModal')" 
-                    class="premium-button bg-gradient-brand text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all">
+                    class="premium-button bg-gradient-brand text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all w-full md:w-auto">
                     <i class="fa-solid fa-plus mr-2"></i> Add New
                 </button>
+                @endif
             </div>
 
-            <!-- List Table -->
+             <!-- List Table (Responsive) -->
+            @if($type === 'branding')
+                <div class="premium-card p-6">
+                    <form action="{{ route('admin.settings.branding') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+                        @csrf
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Logo Section -->
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-800 mb-2">Application Logo</h3>
+                                <p class="text-sm text-slate-500 mb-4">Recommended size: 200x50px. Max size: 2MB.</p>
+                                
+                                <div class="relative group">
+                                    <div class="h-32 w-full bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden relative">
+                                        <img id="logo-preview" src="{{ isset($logo) && $logo ? asset('uploads/' . $logo) : '' }}" class="{{ isset($logo) && $logo ? '' : 'hidden' }} h-16 w-auto object-contain">
+                                        
+                                        <div id="logo-placeholder" class="{{ isset($logo) && $logo ? 'hidden' : '' }} text-slate-400">Default Logo</div>
+
+                                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <span class="text-white text-sm font-medium">Change Logo</span>
+                                        </div>
+                                    </div>
+                                    <input type="file" name="logo" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" onchange="previewImage(this, 'logo-preview', 'logo-placeholder')">
+                                </div>
+                            </div>
+
+                            <!-- Favicon Section -->
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-800 mb-2">Favicon</h3>
+                                <p class="text-sm text-slate-500 mb-4">Recommended size: 32x32px or 64x64px. Max size: 1MB.</p>
+                                
+                                    <div class="relative group">
+                                        <div class="h-32 w-full bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden relative">
+                                            <img id="favicon-preview" src="{{ isset($favicon) && $favicon ? asset('uploads/' . $favicon) : '' }}" class="{{ isset($favicon) && $favicon ? '' : 'hidden' }} h-16 w-16 object-contain">
+                                            
+                                            <div id="favicon-placeholder" class="{{ isset($favicon) && $favicon ? 'hidden' : '' }} w-16 h-16 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                                <i class="fa-solid fa-cube text-indigo-500 text-2xl"></i>
+                                            </div>
+
+                                            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <span class="text-white text-sm font-medium">Change Favicon</span>
+                                            </div>
+                                        </div>
+                                        <input type="file" name="favicon" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" onchange="previewImage(this, 'favicon-preview', 'favicon-placeholder')">
+                                    </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end pt-6">
+                            <button type="submit" class="premium-button bg-gradient-brand text-white px-8 py-3 rounded-xl shadow-lg shadow-brand/20 font-bold hover:scale-105 transition-all">
+                                <i class="fa-solid fa-save mr-2"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            @else
+             <!-- List Table (Responsive) -->
             <div class="premium-card overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="premium-table w-full">
+                    <table class="premium-table w-full whitespace-nowrap">
                         <thead>
                             <tr>
                                 <th class="text-left w-16">ID</th>
@@ -76,7 +144,7 @@
                                 <th class="text-center w-24">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="settings-container">
+                        <tbody id="settings-container-desktop">
                             @forelse($records as $record)
                                 <tr>
                                     <td class="text-slate-500 font-mono text-xs">{{ $record->{$conf['pk']} }}</td>
@@ -104,6 +172,11 @@
                                                 @endif
                                             @elseif($typeMeta == 'number')
                                                 <span class="font-mono text-slate-600">{{ $record->$key }}</span>
+                                            @elseif($typeMeta == 'color')
+                                                <div class="flex items-center gap-2">
+                                                    <div class="w-6 h-6 rounded-md shadow-sm border border-slate-200" style="background-color: #{{ str_replace('#', '', $record->$key) }}"></div>
+                                                    <span class="font-mono text-xs text-slate-500">#{{ str_replace('#', '', $record->$key) }}</span>
+                                                </div>
                                             @else
                                                 <span class="text-slate-800 font-medium">{{ $record->$key }}</span>
                                             @endif
@@ -128,8 +201,11 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+            @endif
 
-                <!-- AJAX Pagination Container -->
+            <!-- Shared Pagination -->
+            @if($type !== 'branding' && isset($records))
                 <div id="settings-pagination">
                     @if($records->hasPages())
                         <div class="p-4 border-t border-slate-100 bg-slate-50/30">
@@ -137,13 +213,14 @@
                         </div>
                     @endif
                 </div>
-            </div>
+            @endif
 
         </div>
 
     </div>
 
     <!-- Add Modal -->
+    @if($type !== 'branding')
     <div id="addModal" class="modal">
         <div class="modal-backdrop" onclick="closeModal('addModal')"></div>
         <div class="modal-content max-w-lg p-6">
@@ -176,7 +253,12 @@
                                     @endforeach
                                 </select>
                             @elseif($meta == 'number')
-                                <input type="number" name="{{ $key }}" class="premium-input w-full px-4 py-2.5 text-sm" required>
+                                                <input type="number" name="{{ $key }}" class="premium-input w-full px-4 py-2.5 text-sm" required>
+                            @elseif($meta == 'color')
+                                <div class="flex items-center gap-2">
+                                    <input type="color" name="{{ $key }}" class="h-10 w-20 p-1 rounded-lg border border-slate-200 cursor-pointer" required>
+                                    <input type="text" oninput="this.previousElementSibling.value = this.value" placeholder="#HEXCODE" class="premium-input w-32 px-4 py-2.5 text-sm uppercase">
+                                </div>
                             @else
                                 <input type="text" name="{{ $key }}" class="premium-input w-full px-4 py-2.5 text-sm" required>
                             @endif
@@ -217,14 +299,65 @@
             </form>
         </div>
     </div>
+    @endif
+
 
     @push('scripts')
     <script src="{{ asset('js/ajax-pagination.js') }}"></script>
     <script>
+        function previewImage(input, previewId, placeholderId) {
+            const preview = document.getElementById(previewId);
+            const placeholder = document.getElementById(placeholderId);
+            
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/x-icon', 'image/vnd.microsoft.icon'];
+                const maxSize = 2 * 1024 * 1024; // 2MB default
+
+                // Validate Type
+                if (!validTypes.includes(file.type)) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Invalid File Type',
+                        text: 'Please upload a valid image file (JPG, PNG, GIF, ICO).',
+                        confirmButtonColor: '#4f46e5'
+                    });
+                    input.value = '';
+                    return;
+                }
+
+                // Validate Size
+                if (file.size > maxSize) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'File Too Large',
+                        text: 'The image size must not exceed 2MB.',
+                        confirmButtonColor: '#4f46e5'
+                    });
+                    input.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    if(placeholder) placeholder.classList.add('hidden');
+                }
+                
+                reader.readAsDataURL(file);
+            }
+        }
         // Config passed from PHP for JS use
-        const fieldsConfig = @json($conf['fields']);
+        @if($type !== 'branding')
+            const fieldsConfig = @json($conf['fields']);
+            const pkName = @json($conf['pk']);
+        @else
+            const fieldsConfig = {};
+            const pkName = '';
+        @endif
         const employees = @json($employees);
-        const pkName = @json($conf['pk']);
         const settingType = "{{ $type }}";
 
         function openEditModal(record, pkName) {
@@ -255,6 +388,11 @@
                         fieldHtml += `<option value="${emp.employee_id}" ${selected}>${emp.first_name} ${emp.last_name}</option>`;
                     });
                     fieldHtml += `</select>`;
+                } else if (meta === 'color') {
+                    fieldHtml += `<div class="flex items-center gap-2">`;
+                    fieldHtml += `<input type="color" name="${key}" value="#${(value || '').replace('#', '')}" class="h-10 w-20 p-1 rounded-lg border border-slate-200 cursor-pointer" required>`;
+                    fieldHtml += `<input type="text" oninput="this.previousElementSibling.value = this.value" value="${value || ''}" class="premium-input w-32 px-4 py-2.5 text-sm uppercase">`;
+                    fieldHtml += `</div>`;
                 } else {
                     const inputType = meta === 'number' ? 'number' : 'text';
                     fieldHtml += `<input type="${inputType}" name="${key}" value="${value || ''}" class="premium-input w-full px-4 py-2.5 text-sm" required>`;
@@ -276,14 +414,14 @@
 
         window.ajaxPagination = new AjaxPagination({
             endpoint: "{{ route('admin.settings.data', ['type' => $type]) }}",
-            containerSelector: '#settings-container',
+            containerSelector: '#settings-container-desktop', // Primary container
             paginationSelector: '#settings-pagination',
             perPage: 15,
             renderCallback: function(records) {
-                const container = document.querySelector('#settings-container');
+                const desktopContainer = document.querySelector('#settings-container-desktop');
                 
                 if (records.length === 0) {
-                    container.innerHTML = `
+                    desktopContainer.innerHTML = `
                         <tr>
                             <td colspan="${Object.keys(fieldsConfig).length + 2}" class="text-center py-8 text-slate-500">
                                 No records found.
@@ -293,20 +431,24 @@
                     return;
                 }
                 
-                let html = '';
+                let desktopHtml = '';
+
                 records.forEach(record => {
-                    html += `<tr>`;
-                    html += `<td class="text-slate-500 font-mono text-xs">${record[pkName]}</td>`;
+                    const recordJson = JSON.stringify(record).replace(/"/g, '&quot;');
+
+                    // --- Desktop Row Construction ---
+                    desktopHtml += `<tr>`;
+                    desktopHtml += `<td class="text-slate-500 font-mono text-xs">${record[pkName]}</td>`;
                     
                     for (const [key, labelInfo] of Object.entries(fieldsConfig)) {
-                        const meta = labelInfo.split('|')[1] || 'text';
+                         const meta = labelInfo.split('|')[1] || 'text';
                         const value = record[key];
                         
-                        html += `<td class="px-4">`;
+                        desktopHtml += `<td class="px-4">`;
                         if (meta === 'employee') {
                             const emp = employees.find(e => e.employee_id == value);
                             if (emp) {
-                                html += `
+                                desktopHtml += `
                                     <div class="flex items-center gap-2">
                                         <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs text-slate-500 font-bold">
                                             ${emp.first_name.charAt(0)}
@@ -315,18 +457,24 @@
                                     </div>
                                 `;
                             } else {
-                                html += `<span class="text-slate-400 italic text-xs">Unassigned</span>`;
+                                desktopHtml += `<span class="text-slate-400 italic text-xs">Unassigned</span>`;
                             }
                         } else if (meta === 'number') {
-                            html += `<span class="font-mono text-slate-600">${value}</span>`;
+                             desktopHtml += `<span class="font-mono text-slate-600">${value}</span>`;
+                        } else if (meta === 'color') {
+                            desktopHtml += `
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded-md shadow-sm border border-slate-200" style="background-color: #${(value||'').replace('#','')}"></div>
+                                    <span class="font-mono text-xs text-slate-500">#${(value||'').replace('#','')}</span>
+                                </div>
+                            `;
                         } else {
-                            html += `<span class="text-slate-800 font-medium">${value || ''}</span>`;
+                             desktopHtml += `<span class="text-slate-800 font-medium">${value || ''}</span>`;
                         }
-                        html += `</td>`;
+                        desktopHtml += `</td>`;
                     }
                     
-                    const recordJson = JSON.stringify(record).replace(/"/g, '&quot;');
-                    html += `
+                    desktopHtml += `
                         <td class="text-center">
                             <button onclick="openEditModal(${recordJson}, '${pkName}')" 
                                 class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
@@ -335,15 +483,16 @@
                             </button>
                         </td>
                     `;
-                    html += `</tr>`;
+                    desktopHtml += `</tr>`;
                 });
                 
-                container.innerHTML = html;
+                desktopContainer.innerHTML = desktopHtml;
             }
+
         });
 
         // Initialize pagination helper with server-side data for first load
-        @if($records->hasPages())
+        @if($type !== 'branding' && isset($records) && $records->hasPages())
             window.ajaxPagination.renderPagination({
                 current_page: {{ $records->currentPage() }},
                 last_page: {{ $records->lastPage() }},

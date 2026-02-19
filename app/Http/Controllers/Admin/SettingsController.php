@@ -13,6 +13,7 @@ use App\Models\Priority;
 use App\Models\SupportServiceCategory;
 use App\Models\CommunicationType;
 use App\Models\Employee;
+use App\Models\UsersListTheme;
 
 class SettingsController extends Controller
 {
@@ -77,13 +78,40 @@ class SettingsController extends Controller
                     'approval_id_2' => 'Second Approval|employee'
                 ]
             ],
+            'ult' => [
+                'model' => UsersListTheme::class,
+                'title' => 'Users List Themes',
+                'pk' => 'user_theme_id',
+                'name_field' => 'theme_name',
+                'fields' => [
+                    'theme_name' => 'Theme Name',
+                    'color_primary' => 'Primary Color|color',
+                    'color_on_primary' => 'On Primary|color',
+                    'color_secondary' => 'Secondary Color|color',
+                    'color_on_secondary' => 'On Secondary|color',
+                    'color_third' => 'Third Color|color',
+                    'color_on_third' => 'On Third|color',
+                ]
+            ],
         ];
     }
 
     public function index(Request $request)
     {
         $type = $request->input('type', 'tc');
-        
+
+        // Employees for dropdowns (Used in Modals)
+        $employees = Employee::where('is_deleted', 0)->where('is_hidden', 0)->orderBy('first_name')->get();
+
+        // Branding Settings
+        $logo = \App\Models\AppSetting::where('key', 'logo_path')->value('value');
+        $favicon = \App\Models\AppSetting::where('key', 'favicon_path')->value('value');
+        $loginBackground = \App\Models\AppSetting::where('key', 'login_background_path')->value('value');
+
+        if ($type === 'branding') {
+             return view('admin.settings.index', compact('type', 'employees', 'logo', 'favicon', 'loginBackground'));
+        }
+
         if (!array_key_exists($type, $this->config)) {
             abort(404);
         }
@@ -93,10 +121,7 @@ class SettingsController extends Controller
         
         $records = $model->orderBy($conf['pk'], 'desc')->paginate(15);
         
-        // Employees for dropdowns
-        $employees = Employee::where('is_deleted', 0)->where('is_hidden', 0)->orderBy('first_name')->get();
-
-        return view('admin.settings.index', compact('records', 'type', 'conf', 'employees'));
+        return view('admin.settings.index', compact('records', 'type', 'conf', 'employees', 'logo', 'favicon', 'loginBackground'));
     }
 
     public function getData(Request $request)
@@ -167,5 +192,36 @@ class SettingsController extends Controller
         $item->save();
 
         return redirect()->route('admin.settings.index', ['type' => $type])->with('success', 'Record updated successfully.');
+    }
+
+    public function updateBranding(Request $request)
+    {
+        $request->validate([
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'favicon' => 'nullable|image|mimes:ico,png,jpg|max:1024',
+            'login_background' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
+        ]);
+
+        if ($request->hasFile('logo')) {
+            $file = $request->file('logo');
+            $fileName = 'logo_' . time() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads'), $fileName);
+            \App\Models\AppSetting::updateOrCreate(
+                ['key' => 'logo_path'],
+                ['value' => $fileName]
+            );
+        }
+
+        if ($request->hasFile('favicon')) {
+            $file = $request->file('favicon');
+            $fileName = 'favicon_' . time() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads'), $fileName);
+            \App\Models\AppSetting::updateOrCreate(
+                ['key' => 'favicon_path'],
+                ['value' => $fileName]
+            );
+        }
+
+        return redirect()->back()->with('success', 'Branding updated successfully.');
     }
 }
