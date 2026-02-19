@@ -68,23 +68,33 @@ class TaskController extends Controller
             'assigned_to' => 'required|exists:employees_list,employee_id',
             'priority_id' => 'required|exists:sys_list_priorities,priority_id',
             'task_due_date' => 'required|date',
+            'task_attachment' => 'nullable|file|max:10240',
         ]);
 
         $task = new Task();
         $task->task_title = $request->task_title;
         $task->task_description = $request->task_description;
         $task->assigned_to = $request->assigned_to;
-        $task->assigned_by = 1; // Default to 1 (admin) or Auth::id()
+        $task->assigned_by = Auth::user()->employee ? Auth::user()->employee->employee_id : 1;
         $task->task_assigned_date = now();
         $task->task_due_date = $request->task_due_date;
         $task->priority_id = $request->priority_id;
-        $task->status_id = 1; // Default 'Pending'
+        $task->status_id = 1;
+
+        // Handle attachment upload
+        if ($request->hasFile('task_attachment')) {
+            $file = $request->file('task_attachment');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('uploads/tasks'), $filename);
+            $task->task_attachment = 'uploads/tasks/' . $filename;
+        }
+
         $task->save();
 
         // Send Notification to assigned employee
         \App\Services\NotificationService::send(
             "You have been assigned a new task: " . $task->task_title,
-            "tasks/list", // Laravel-friendly route
+            "tasks/list",
             $task->assigned_to
         );
 
@@ -100,8 +110,9 @@ class TaskController extends Controller
             'log_type' => 'int'
         ]);
 
-        return redirect()->route('hr.tasks.index')->with('success', 'Task created successfully!');
+        return response()->json(['success' => true, 'message' => 'Task created successfully!']);
     }
+
 
     public function updateStatus(Request $request)
     {

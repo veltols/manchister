@@ -214,7 +214,7 @@ Route::middleware('auth')->group(function () {
         // Leaves
         Route::get('/leaves', [App\Http\Controllers\HR\LeaveController::class, 'index'])->name('leaves.index');
         Route::get('/leaves/data', [App\Http\Controllers\HR\LeaveController::class, 'getData'])->name('leaves.data');
-        Route::get('/leaves/create', [App\Http\Controllers\HR\LeaveController::class, 'create'])->name('leaves.create'); 
+        Route::get('/leaves/create', [App\Http\Controllers\HR\LeaveController::class, 'create'])->name('leaves.create');
         Route::post('/leaves', [App\Http\Controllers\HR\LeaveController::class, 'store'])->name('leaves.store');
         Route::post('/leaves/{id}/status', [App\Http\Controllers\HR\LeaveController::class, 'updateStatus'])->name('leaves.status');
 
@@ -423,6 +423,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/settings/data', [App\Http\Controllers\Admin\SettingsController::class, 'getData'])->name('settings.data');
         Route::post('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'store'])->name('settings.store');
         Route::post('/settings/{id}', [App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('settings.update');
+        // Incidents
+        Route::get('/incidents', [App\Http\Controllers\Admin\IncidentController::class, 'index'])->name('incidents.index');
+        Route::get('/incidents/data', [App\Http\Controllers\Admin\IncidentController::class, 'getData'])->name('incidents.data');
+        Route::post('/incidents', [App\Http\Controllers\Admin\IncidentController::class, 'store'])->name('incidents.store');
+        Route::get('/incidents/{id}', [App\Http\Controllers\Admin\IncidentController::class, 'show'])->name('incidents.show');
+
     });
 
     // EQA / Training Providers Routes
@@ -434,12 +440,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/atps-data', [App\Http\Controllers\EQA\ATPController::class, 'getData'])->name('atps.data');
         Route::post('/atps/{id}/send-email', [App\Http\Controllers\EQA\ATPController::class, 'sendRegistrationEmail'])->name('atps.send_email');
         Route::post('/atps/{id}/accredit', [App\Http\Controllers\EQA\ATPController::class, 'accredit'])->name('atps.accredit');
-    
-    // Info Requests
-    Route::get('/atps/{atp_id}/info-request/new', [App\Http\Controllers\EQA\ATPController::class, 'newInfoRequest'])->name('atps.new_info_request');
-    Route::post('/atps/{atp_id}/info-request/store', [App\Http\Controllers\EQA\ATPController::class, 'storeInfoRequest'])->name('atps.store_info_request');
-    Route::get('/atps/{atp_id}/info-request/{request_id}', [App\Http\Controllers\EQA\ATPController::class, 'viewInfoRequest'])->name('atps.view_info_request');
-    
+
+        // Info Requests
+        Route::get('/atps/{atp_id}/info-request/new', [App\Http\Controllers\EQA\ATPController::class, 'newInfoRequest'])->name('atps.new_info_request');
+        Route::post('/atps/{atp_id}/info-request/store', [App\Http\Controllers\EQA\ATPController::class, 'storeInfoRequest'])->name('atps.store_info_request');
+        Route::get('/atps/{atp_id}/info-request/{request_id}', [App\Http\Controllers\EQA\ATPController::class, 'viewInfoRequest'])->name('atps.view_info_request');
+
         // Form Actions
         Route::post('/forms/save-006', [App\Http\Controllers\EQA\FormController::class, 'save006'])->name('forms.save_006');
         Route::post('/forms/save-007', [App\Http\Controllers\EQA\FormController::class, 'save007'])->name('forms.save_007');
@@ -461,5 +467,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/register/step1', [App\Http\Controllers\RC\PortalController::class, 'submitStep1'])->name('wizard.submit1');
     });
 });
-Route::fallback(function () { return view('errors.404'); });
+Route::fallback(function () {
+    return view('errors.404');
+});
 Route::post('/emp/status/update', [App\Http\Controllers\Employee\SettingsController::class, 'updateStatus'])->name('emp.status.update');

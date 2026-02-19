@@ -172,11 +172,27 @@
 
                 <!-- Content Split -->
                 <div class="flex-1 flex flex-col md:flex-row" style="overflow: hidden; min-height: 0;">
-                    <!-- Description -->
+                    <!-- Description + Attachment -->
                     <div class="flex-1 border-b md:border-b-0 md:border-r border-slate-100 bg-white" style="overflow: hidden;">
                         <div style="overflow-y: auto !important; height: 100% !important; padding: 2rem; padding-right: 10px !important;">
                             <h3 class="text-lg font-bold text-premium mb-4">Task Description</h3>
                             <div id="detail-desc" class="prose prose-slate max-w-none text-slate-600 leading-relaxed"></div>
+                            <div id="detail-attachment-wrap" class="mt-8 pt-8 border-t border-slate-100 hidden">
+                                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
+                                    <i class="fa-solid fa-paperclip mr-2"></i>Attachment
+                                </h3>
+                                <a id="detail-attachment-link" href="#" target="_blank" class="group block">
+                                    <div class="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 group-hover:border-indigo-200 group-hover:bg-indigo-50/30 transition-all">
+                                        <div id="detail-attachment-icon-box" class="w-12 h-12 rounded-lg bg-white shadow-sm text-indigo-500 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                                            <i id="detail-attachment-icon" class="fa-solid fa-file"></i>
+                                        </div>
+                                        <div class="overflow-hidden">
+                                            <p id="detail-attachment-name" class="text-sm font-bold text-slate-700 truncate group-hover:text-indigo-700 transition-colors">File Name</p>
+                                            <p class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Click to View / Download</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
                         </div>
                     </div>
 
@@ -211,7 +227,7 @@
                 </button>
             </div>
 
-            <form onsubmit="saveTask(event)" class="space-y-4">
+            <form onsubmit="saveTask(event)" class="space-y-4" enctype="multipart/form-data" id="create-task-form">
                 @csrf
 
                 <div class="grid grid-cols-2 gap-4">
@@ -267,6 +283,14 @@
                             @endfor
                         </select>
                     </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                        <i class="fa-solid fa-paperclip text-indigo-500 mr-1"></i> Attachment <span class="text-slate-300">(Optional)</span>
+                    </label>
+                    <input type="file" name="task_attachment" id="task_attachment" class="premium-input w-full px-4 py-3 text-sm">
+                    <div id="task-attachment-preview"></div>
                 </div>
 
                 <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
@@ -422,6 +446,7 @@
     <script>
         let activeTaskId = null;
 
+
         // Auto-set progress to 100% when Done/Completed status is selected
         function onStatusChange(select) {
             const selectedOption = select.options[select.selectedIndex];
@@ -501,6 +526,37 @@
                         progressInput.value = prog;
                         // Trigger Alpine.js update by dispatching input event
                         progressInput.dispatchEvent(new Event('input'));
+                    }
+
+                    // Attachment
+                    const attachWrap = document.getElementById('detail-attachment-wrap');
+                    const attachLink = document.getElementById('detail-attachment-link');
+                    const attachName = document.getElementById('detail-attachment-name');
+                    const attachIcon = document.getElementById('detail-attachment-icon');
+
+                    if (task.task_attachment) {
+                        attachWrap.classList.remove('hidden');
+                        attachLink.href = `{{ url('/') }}/${task.task_attachment}`;
+                        
+                        // Parse Filename
+                        const parts = task.task_attachment.split('/');
+                        const filename = parts[parts.length - 1].replace(/^\d+_/, '');
+                        attachName.textContent = filename;
+
+                        // Set Icon
+                        const ext = filename.split('.').pop().toLowerCase();
+                        const icons = {
+                            'pdf': 'fa-file-pdf', 'doc': 'fa-file-word', 'docx': 'fa-file-word',
+                            'xls': 'fa-file-excel', 'xlsx': 'fa-file-excel',
+                            'ppt': 'fa-file-powerpoint', 'pptx': 'fa-file-powerpoint',
+                            'jpg': 'fa-file-image', 'jpeg': 'fa-file-image', 'png': 'fa-file-image', 'gif': 'fa-file-image',
+                            'zip': 'fa-file-archive', 'rar': 'fa-file-archive', 
+                            'txt': 'fa-file-lines', 'csv': 'fa-file-csv'
+                        };
+                        attachIcon.className = `fa-solid ${icons[ext] || 'fa-file'}`;
+
+                    } else {
+                        attachWrap.classList.add('hidden');
                     }
 
                     // Logs
@@ -640,5 +696,34 @@
                 return html;
             }
         });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+    <script src="{{ asset('js/attachment-preview.js') }}"></script>
+    <script>
+        // Initialize Attachment Preview for Create Task modal
+        window.initAttachmentPreview({
+            inputSelector: '#task_attachment',
+            containerSelector: '#task-attachment-preview'
+        });
+
+        // File Size Validation (Max 10MB)
+        const taskAttachmentInput = document.getElementById('task_attachment');
+        if (taskAttachmentInput) {
+            taskAttachmentInput.addEventListener('change', function () {
+                if (this.files && this.files[0]) {
+                    const maxSize = 10 * 1024 * 1024;
+                    if (this.files[0].size > maxSize) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'File Too Large',
+                            text: 'Attachment must not exceed 10MB.',
+                            confirmButtonColor: '#4f46e5'
+                        });
+                        this.value = '';
+                        document.getElementById('task-attachment-preview').innerHTML = '';
+                    }
+                }
+            });
+        }
     </script>
 @endsection

@@ -86,7 +86,7 @@ class UserController extends Controller
     public function show($id)
     {
         $user = Employee::with(['department', 'designation', 'passwordData', 'systemUser'])->findOrFail($id);
-        
+
         // Fetch assigned assets
         $assets = Asset::with(['category'])
             ->where('assigned_to', $id)
@@ -102,23 +102,43 @@ class UserController extends Controller
         $availableAssets = Asset::where('status_id', 1) // Assuming 1 is "Available"
             ->where('assigned_to', 0)
             ->get();
-        
+
         return view('admin.users.show', compact('user', 'assets', 'logs', 'availableAssets'));
     }
 
     public function updateStatus(Request $request, $id)
     {
-        $user = Employee::findOrFail($id);
-        
-        // Status is stored in users_list table, linked via systemUser relation
         $systemUser = \App\Models\User::where('user_id', $id)->first();
+
         if ($systemUser) {
-            $newStatus = $request->status;
+            $newStatus = $request->status; // 1 = Activate, 0 = Deactivate
+
+            $logRemark = "Status changed to " . ($newStatus ? 'Active' : 'Inactive');
+            $action = $newStatus ? 'User Activated' : 'User Deactivated';
+
+            // Specific logic for Deactivation
+            if ($newStatus == 0) {
+                $request->validate([
+                    'log_remark' => 'required|string',
+                    'log_attachment' => 'nullable|file|max:10240'
+                ]);
+                $logRemark = $request->log_remark;
+
+                // Handle Attachment
+                if ($request->hasFile('log_attachment')) {
+                    $file = $request->file('log_attachment');
+                    $filename = 'deactivate_' . time() . '_' . $id . '.' . $file->getClientOriginalExtension();
+                    $file->move(public_path('uploads/admin_logs'), $filename);
+
+                    // Append attachment link to remark
+                    $logRemark .= "\n[Attachment: uploads/admin_logs/$filename]";
+                }
+            }
+
             $systemUser->is_active = $newStatus;
             $systemUser->save();
 
-            $action = $newStatus ? 'User Activated' : 'User Deactivated';
-            $this->logAction($id, $action, "Status changed to " . ($newStatus ? 'Active' : 'Inactive'));
+            $this->logAction($id, $action, $logRemark);
 
             return redirect()->back()->with('success', "User status updated successfully.");
         }

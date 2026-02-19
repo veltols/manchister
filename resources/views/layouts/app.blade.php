@@ -12,6 +12,7 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         tailwind.config = {
@@ -103,8 +104,8 @@
             background-repeat: repeat;
             opacity: 0.12;
             pointer-events: none;
-            mask-image: linear-gradient(to top, rgba(0,0,0,1), rgba(0,0,0,0));
-            -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1), rgba(0,0,0,0));
+            mask-image: linear-gradient(to top, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+            -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
             z-index: 0;
         }
 
@@ -378,11 +379,27 @@
         }
 
         @keyframes bellShake {
-            0%, 100% { transform: rotate(0); }
-            20% { transform: rotate(15deg); }
-            40% { transform: rotate(-15deg); }
-            60% { transform: rotate(10deg); }
-            80% { transform: rotate(-10deg); }
+
+            0%,
+            100% {
+                transform: rotate(0);
+            }
+
+            20% {
+                transform: rotate(15deg);
+            }
+
+            40% {
+                transform: rotate(-15deg);
+            }
+
+            60% {
+                transform: rotate(10deg);
+            }
+
+            80% {
+                transform: rotate(-10deg);
+            }
         }
 
         .group-hover\:shake {
@@ -442,8 +459,12 @@
     @stack('styles')
     <style>
         :root {
-            --theme-color: {{ $themeColor ?? '#004F68' }};
-            --theme-secondary: {{ $themeSecondary ?? '#00384a' }};
+            --theme-color:
+                {{ $themeColor ?? '#004F68' }}
+            ;
+            --theme-secondary:
+                {{ $themeSecondary ?? '#00384a' }}
+            ;
         }
     </style>
 </head>
@@ -457,28 +478,20 @@
     <div x-data="{ mobileSidebarOpen: false }" class="flex-1 flex flex-col h-full relative min-w-0 overflow-hidden">
 
         <!-- Mobile Sidebar Overlay -->
-        <div x-show="mobileSidebarOpen" 
-            x-transition:enter="transition-opacity ease-linear duration-300"
-            x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100"
-            x-transition:leave="transition-opacity ease-linear duration-300"
-            x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0"
-            class="fixed inset-0 bg-slate-900/80 z-40 md:hidden"
-            @click="mobileSidebarOpen = false"
-            style="display: none;"></div>
+        <div x-show="mobileSidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300"
+            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+            x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0" class="fixed inset-0 bg-slate-900/80 z-40 md:hidden"
+            @click="mobileSidebarOpen = false" style="display: none;"></div>
 
         <!-- Mobile Sidebar -->
-        <div x-show="mobileSidebarOpen"
-            x-transition:enter="transition ease-in-out duration-300 transform"
-            x-transition:enter-start="-translate-x-full"
-            x-transition:enter-end="translate-x-0"
-            x-transition:leave="transition ease-in-out duration-300 transform"
-            x-transition:leave-start="translate-x-0"
+        <div x-show="mobileSidebarOpen" x-transition:enter="transition ease-in-out duration-300 transform"
+            x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
+            x-transition:leave="transition ease-in-out duration-300 transform" x-transition:leave-start="translate-x-0"
             x-transition:leave-end="-translate-x-full"
             class="fixed inset-y-0 left-0 w-64 bg-slate-900 sidebar-gradient z-50 md:hidden flex flex-col"
             style="display: none;">
-            
+
             <div class="h-20 flex items-center justify-between px-4 border-b border-white/10">
                 <a href="{{ route('dashboard') }}">
                     <img src="{{ asset('images/logo.png') }}" alt="IQC Logo" class="h-10 w-auto">
@@ -507,7 +520,7 @@
                     class="md:hidden w-10 h-10 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors text-slate-600">
                     <i class="fa-solid fa-bars text-xl"></i>
                 </button>
-                
+
                 <div class="flex items-center gap-3 md:gap-4">
                     <img src="{{ asset('images/connect_icon.png') }}" class="h-10 md:h-12 w-auto" alt="Icon">
                     <div>
@@ -554,8 +567,10 @@
                             <i class="fa-solid fa-comment-dots group-hover:scale-110"></i>
                             @if($unreadMessages > 0)
                                 <span class="absolute top-2 right-2 flex h-4 w-4">
-                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                                    <span class="relative inline-flex rounded-full h-4 w-4 bg-indigo-600 text-[9px] text-white font-bold items-center justify-center transition-transform duration-200 ease-out">
+                                    <span
+                                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                                    <span
+                                        class="relative inline-flex rounded-full h-4 w-4 bg-indigo-600 text-[9px] text-white font-bold items-center justify-center transition-transform duration-200 ease-out">
                                         {{ $unreadMessages > 9 ? '9+' : $unreadMessages }}
                                     </span>
                                 </span>
@@ -570,8 +585,10 @@
                             <i class="fa-solid fa-bell group-hover:scale-110"></i>
                             @if($unreadNotifs > 0)
                                 <span class="absolute top-2 right-2 flex h-4 w-4">
-                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                                    <span class="relative inline-flex rounded-full h-4 w-4 bg-rose-500 text-[9px] text-white font-bold items-center justify-center">
+                                    <span
+                                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                                    <span
+                                        class="relative inline-flex rounded-full h-4 w-4 bg-rose-500 text-[9px] text-white font-bold items-center justify-center">
                                         {{ $unreadNotifs > 9 ? '9+' : $unreadNotifs }}
                                     </span>
                                 </span>
@@ -580,57 +597,63 @@
                     </div>
 
                     @if($user && ($user->user_type == 'emp' || $user->user_type == 'eqa'))
-                    <div class="w-px h-6 bg-slate-200 mx-1"></div>
-                    <a href="{{ route('emp.settings.index') }}" 
-                       class="w-11 h-11 rounded-xl flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all duration-300 group relative"
-                       title="Settings">
-                        <i class="fa-solid fa-cog group-hover:rotate-90 transition-transform duration-500"></i>
-                    </a>
+                        <div class="w-px h-6 bg-slate-200 mx-1"></div>
+                        <a href="{{ route('emp.settings.index') }}"
+                            class="w-11 h-11 rounded-xl flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all duration-300 group relative"
+                            title="Settings">
+                            <i class="fa-solid fa-cog group-hover:rotate-90 transition-transform duration-500"></i>
+                        </a>
                     @endif
 
                     <div class="w-px h-6 bg-slate-200 mx-1"></div>
 
-                        <!-- User Profile Dropdown -->
-                        <div class="relative" x-data="{ open: false, showPasswordModal: false }" @click.away="open = false">
-                            <button @click="open = !open" 
-                                class="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-slate-50 transition-all group">
-                                <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-[#004F68] to-[#00384a] flex items-center justify-center shadow-lg group-hover:scale-105 transition-all">
-                                    <i class="fa-solid fa-user text-white text-xs"></i>
-                                </div>
-                                @if($user && $user->employee && $user->employee->status)
-                                    <div class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white"
-                                         style="background-color: {{ $user->employee->status->staus_color }};"></div>
-                                @endif
-                                <div class="hidden lg:block text-left mr-1">
-                                    <p class="text-[10px] font-bold text-slate-900 leading-none">Account</p>
-                                    <p class="text-[9px] text-slate-500 leading-none mt-1">{{ ucfirst($user->user_type ?? 'User') }}</p>
-                                </div>
-                                <i class="fa-solid fa-chevron-down text-[10px] text-slate-300 group-hover:text-indigo-500 transition-all" :class="{ 'rotate-180': open }"></i>
-                            </button>
+                    <!-- User Profile Dropdown -->
+                    <div class="relative" x-data="{ open: false, showPasswordModal: false }" @click.away="open = false">
+                        <button @click="open = !open"
+                            class="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-slate-50 transition-all group">
+                            <div
+                                class="w-9 h-9 rounded-lg bg-gradient-to-br from-[#004F68] to-[#00384a] flex items-center justify-center shadow-lg group-hover:scale-105 transition-all">
+                                <i class="fa-solid fa-user text-white text-xs"></i>
+                            </div>
+                            @if($user && $user->employee && $user->employee->status)
+                                <div class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white"
+                                    style="background-color: {{ $user->employee->status->staus_color }};"></div>
+                            @endif
+                            <div class="hidden lg:block text-left mr-1">
+                                <p class="text-[10px] font-bold text-slate-900 leading-none">Account</p>
+                                <p class="text-[9px] text-slate-500 leading-none mt-1">
+                                    {{ ucfirst($user->user_type ?? 'User') }}</p>
+                            </div>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-300 group-hover:text-indigo-500 transition-all"
+                                :class="{ 'rotate-180': open }"></i>
+                        </button>
 
-                            <!-- Dropdown Menu -->
-                            <div x-show="open"
-                                x-transition:enter="transition ease-out duration-200"
-                                x-transition:enter-start="opacity-0 scale-95 translate-y-2"
-                                x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                                class="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-50 overflow-hidden"
-                                style="display: none;">
-                                
-                                <div class="px-4 py-3 border-b border-slate-50 mb-1">
-                                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Logged in as</p>
-                                    <p class="text-sm font-bold text-slate-900 truncate">{{ $user->user_email }}</p>
-                                </div>
+                        <!-- Dropdown Menu -->
+                        <div x-show="open" x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 scale-95 translate-y-2"
+                            x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                            class="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-50 overflow-hidden"
+                            style="display: none;">
 
-                                @if(isset($userStatuses) && $user && $user->employee)
+                            <div class="px-4 py-3 border-b border-slate-50 mb-1">
+                                <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Logged in
+                                    as</p>
+                                <p class="text-sm font-bold text-slate-900 truncate">{{ $user->user_email }}</p>
+                            </div>
+
+                            @if(isset($userStatuses) && $user && $user->employee)
                                 <div class="px-2 py-2">
-                                    <p class="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Set Status</p>
+                                    <p class="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Set
+                                        Status</p>
                                     <div class="grid grid-cols-1 gap-1">
                                         @foreach($userStatuses as $status)
-                                            <button onclick="updateUserStatus({{ $status->staus_id }})" 
+                                            <button onclick="updateUserStatus({{ $status->staus_id }})"
                                                 class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-50 transition-all text-left w-full group
-                                                {{ $user->employee->emp_status_id == $status->staus_id ? 'bg-slate-50' : '' }}">
-                                                <div class="w-2 h-2 rounded-full" style="background-color: {{ $status->staus_color }}"></div>
-                                                <span class="text-xs font-medium text-slate-600 group-hover:text-slate-900">{{ $status->staus_name }}</span>
+                                                        {{ $user->employee->emp_status_id == $status->staus_id ? 'bg-slate-50' : '' }}">
+                                                <div class="w-2 h-2 rounded-full"
+                                                    style="background-color: {{ $status->staus_color }}"></div>
+                                                <span
+                                                    class="text-xs font-medium text-slate-600 group-hover:text-slate-900">{{ $status->staus_name }}</span>
                                                 @if($user->employee->emp_status_id == $status->staus_id)
                                                     <i class="fa-solid fa-check text-xs text-indigo-600 ml-auto"></i>
                                                 @endif
@@ -639,88 +662,99 @@
                                     </div>
                                 </div>
                                 <div class="h-px bg-slate-50 my-1"></div>
-                                @endif
+                            @endif
 
-                                <div class="px-2">
-                                    <button @click="showPasswordModal = true; open = false" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-all group text-left">
-                                        <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center group-hover:bg-indigo-50 transition-colors">
-                                            <i class="fa-solid fa-key text-sm"></i>
-                                        </div>
-                                        <span class="text-sm font-medium">Change Password</span>
-                                    </button>
+                            <div class="px-2">
+                                <button @click="showPasswordModal = true; open = false"
+                                    class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-all group text-left">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center group-hover:bg-indigo-50 transition-colors">
+                                        <i class="fa-solid fa-key text-sm"></i>
+                                    </div>
+                                    <span class="text-sm font-medium">Change Password</span>
+                                </button>
 
-                                    <div class="h-px bg-slate-50 my-1"></div>
+                                <div class="h-px bg-slate-50 my-1"></div>
 
-                                    <a href="{{ route('logout') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-rose-600 hover:bg-rose-50 transition-all group">
-                                        <div class="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center group-hover:bg-rose-100 transition-colors">
-                                            <i class="fa-solid fa-right-from-bracket text-sm"></i>
-                                        </div>
-                                        <span class="text-sm font-medium">Logout</span>
-                                    </a>
-                                </div>
+                                <a href="{{ route('logout') }}"
+                                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-rose-600 hover:bg-rose-50 transition-all group">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center group-hover:bg-rose-100 transition-colors">
+                                        <i class="fa-solid fa-right-from-bracket text-sm"></i>
+                                    </div>
+                                    <span class="text-sm font-medium">Logout</span>
+                                </a>
                             </div>
+                        </div>
 
-                            <!-- Change Password Modal -->
-                            <template x-teleport="body">
-                                <div x-show="showPasswordModal" 
-                                    class="fixed inset-0 z-[100] flex items-center justify-center px-4" 
-                                    style="display: none;"
+                        <!-- Change Password Modal -->
+                        <template x-teleport="body">
+                            <div x-show="showPasswordModal"
+                                class="fixed inset-0 z-[100] flex items-center justify-center px-4"
+                                style="display: none;" x-transition:enter="transition ease-out duration-300"
+                                x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+                                <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
+                                    @click="showPasswordModal = false"></div>
+                                <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md relative z-10 overflow-hidden transform"
                                     x-transition:enter="transition ease-out duration-300"
-                                    x-transition:enter-start="opacity-0"
-                                    x-transition:enter-end="opacity-100">
-                                    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showPasswordModal = false"></div>
-                                    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md relative z-10 overflow-hidden transform"
-                                        x-transition:enter="transition ease-out duration-300"
-                                        x-transition:enter-start="opacity-0 scale-95"
-                                        x-transition:enter-end="opacity-100 scale-100">
-                                        <div class="px-8 pt-8 pb-6">
-                                            <div class="flex items-center justify-between mb-6">
-                                                <h3 class="text-xl font-bold text-slate-900">Change Password</h3>
-                                                <button @click="showPasswordModal = false" class="text-slate-400 hover:text-slate-600">
-                                                    <i class="fa-solid fa-xmark text-xl"></i>
+                                    x-transition:enter-start="opacity-0 scale-95"
+                                    x-transition:enter-end="opacity-100 scale-100">
+                                    <div class="px-8 pt-8 pb-6">
+                                        <div class="flex items-center justify-between mb-6">
+                                            <h3 class="text-xl font-bold text-slate-900">Change Password</h3>
+                                            <button @click="showPasswordModal = false"
+                                                class="text-slate-400 hover:text-slate-600">
+                                                <i class="fa-solid fa-xmark text-xl"></i>
+                                            </button>
+                                        </div>
+                                        <form action="{{ route('profile.change-password') }}" method="POST">
+                                            @csrf
+                                            <div class="space-y-4">
+                                                <div>
+                                                    <label
+                                                        class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Current
+                                                        Password</label>
+                                                    <input type="password" name="current_password" required
+                                                        class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all">
+                                                </div>
+                                                <div>
+                                                    <label
+                                                        class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">New
+                                                        Password</label>
+                                                    <input type="password" name="new_password" required
+                                                        class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all">
+                                                </div>
+                                                <div>
+                                                    <label
+                                                        class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Confirm
+                                                        New Password</label>
+                                                    <input type="password" name="new_password_confirmation" required
+                                                        class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all">
+                                                </div>
+                                            </div>
+                                            <div class="mt-8 flex gap-3">
+                                                <button type="button" @click="showPasswordModal = false"
+                                                    class="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 transition-all">
+                                                    Cancel
+                                                </button>
+                                                <button type="submit"
+                                                    class="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-white bg-[#004F68] hover:bg-[#00384a] shadow-lg transition-all">
+                                                    Update Password
                                                 </button>
                                             </div>
-                                            <form action="{{ route('profile.change-password') }}" method="POST">
-                                                @csrf
-                                                <div class="space-y-4">
-                                                    <div>
-                                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Current Password</label>
-                                                        <input type="password" name="current_password" required
-                                                            class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all">
-                                                    </div>
-                                                    <div>
-                                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">New Password</label>
-                                                        <input type="password" name="new_password" required
-                                                            class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all">
-                                                    </div>
-                                                    <div>
-                                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Confirm New Password</label>
-                                                        <input type="password" name="new_password_confirmation" required
-                                                            class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all">
-                                                    </div>
-                                                </div>
-                                                <div class="mt-8 flex gap-3">
-                                                    <button type="button" @click="showPasswordModal = false"
-                                                        class="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 transition-all">
-                                                        Cancel
-                                                    </button>
-                                                    <button type="submit"
-                                                        class="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-white bg-[#004F68] hover:bg-[#00384a] shadow-lg transition-all">
-                                                        Update Password
-                                                    </button>
-                                                </div>
-                                            </form>
-                                        </div>
+                                        </form>
                                     </div>
                                 </div>
-                            </template>
+                            </div>
+                        </template>
                     </div>
                 </div>
             </div>
         </header>
 
         <!-- Content Area  max-w-7xl-->
-        <main class="flex-1 overflow-y-auto overflow-x-hidden p-8 bg-gradient-to-br from-slate-50 via-cyan-50/10 to-blue-50/10">
+        <main
+            class="flex-1 overflow-y-auto overflow-x-hidden p-8 bg-gradient-to-br from-slate-50 via-cyan-50/10 to-blue-50/10">
             <div class=" mx-auto w-full animate-fade-in-up">
                 @yield('content')
             </div>
@@ -730,71 +764,71 @@
     <script>
         // Global real-time header message count update
         @auth
-        (function() {
-            const messageLink = document.querySelector('a[href="{{ route($chatRoute) }}"]');
-            
-            console.log('Message count polling initialized');
-            console.log('Message link:', messageLink);
-            console.log('Chat route:', '{{ route($chatRoute) }}');
-            
-            if (!messageLink) {
-                console.error('Message link not found!');
-                return; // Exit if message link not found
-            }
-            
-            // Determine the correct route based on user type
-            let unreadCountRoute = '';
-            @if(auth()->user()->user_type === 'root' || auth()->user()->user_type === 'sys_admin')
-                unreadCountRoute = '/admin/messages-unread-count';
-            @elseif(in_array(auth()->user()->user_type, ['hr', 'admin_hr']))
-                unreadCountRoute = '/hr/messages-unread-count';
-            @else
-                unreadCountRoute = '/emp/messages-unread-count';
-            @endif
+            (function () {
+                const messageLink = document.querySelector('a[href="{{ route($chatRoute) }}"]');
 
-            console.log('Unread count route:', unreadCountRoute);
+                console.log('Message count polling initialized');
+                console.log('Message link:', messageLink);
+                console.log('Chat route:', '{{ route($chatRoute) }}');
 
-            function updateHeaderMessageCount() {
-                fetch(unreadCountRoute)
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log('Unread count response:', data);
-                        if (data.success) {
-                            const count = data.unread_count;
-                            console.log('Count:', count);
-                            
-                            // Remove any existing badge first
-                            const existingBadge = messageLink.querySelector('span.absolute.top-2.right-2');
-                            if (existingBadge) {
-                                existingBadge.remove();
-                                console.log('Removed existing badge');
+                if (!messageLink) {
+                    console.error('Message link not found!');
+                    return; // Exit if message link not found
+                }
+
+                // Determine the correct route based on user type
+                let unreadCountRoute = '';
+                @if(auth()->user()->user_type === 'root' || auth()->user()->user_type === 'sys_admin')
+                    unreadCountRoute = '/admin/messages-unread-count';
+                @elseif(in_array(auth()->user()->user_type, ['hr', 'admin_hr']))
+                    unreadCountRoute = '/hr/messages-unread-count';
+                @else
+                    unreadCountRoute = '/emp/messages-unread-count';
+                @endif
+
+                console.log('Unread count route:', unreadCountRoute);
+
+                function updateHeaderMessageCount() {
+                    fetch(unreadCountRoute)
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Unread count response:', data);
+                            if (data.success) {
+                                const count = data.unread_count;
+                                console.log('Count:', count);
+
+                                // Remove any existing badge first
+                                const existingBadge = messageLink.querySelector('span.absolute.top-2.right-2');
+                                if (existingBadge) {
+                                    existingBadge.remove();
+                                    console.log('Removed existing badge');
+                                }
+
+                                // Create new badge if count > 0
+                                if (count > 0) {
+                                    const displayCount = count > 9 ? '9+' : count;
+                                    const badgeContainer = document.createElement('span');
+                                    badgeContainer.className = 'absolute top-2 right-2 flex h-4 w-4';
+                                    badgeContainer.innerHTML = `
+                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-4 w-4 bg-indigo-600 text-[9px] text-white font-bold items-center justify-center transition-transform duration-200 ease-out">
+                                            ${displayCount}
+                                        </span>
+                                    `;
+                                    messageLink.appendChild(badgeContainer);
+                                    console.log('Created new badge with count:', displayCount);
+                                }
                             }
-                            
-                            // Create new badge if count > 0
-                            if (count > 0) {
-                                const displayCount = count > 9 ? '9+' : count;
-                                const badgeContainer = document.createElement('span');
-                                badgeContainer.className = 'absolute top-2 right-2 flex h-4 w-4';
-                                badgeContainer.innerHTML = `
-                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                                    <span class="relative inline-flex rounded-full h-4 w-4 bg-indigo-600 text-[9px] text-white font-bold items-center justify-center transition-transform duration-200 ease-out">
-                                        ${displayCount}
-                                    </span>
-                                `;
-                                messageLink.appendChild(badgeContainer);
-                                console.log('Created new badge with count:', displayCount);
-                            }
-                        }
-                    })
-                    .catch(error => console.error('Error fetching unread count:', error));
-            }
+                        })
+                        .catch(error => console.error('Error fetching unread count:', error));
+                }
 
-            // Poll every 5 seconds
-            setInterval(updateHeaderMessageCount, 5000);
-            
-            // Initial update
-            updateHeaderMessageCount();
-        })();
+                // Poll every 5 seconds
+                setInterval(updateHeaderMessageCount, 5000);
+
+                // Initial update
+                updateHeaderMessageCount();
+            })();
         @endauth
     </script>
 
@@ -808,18 +842,18 @@
                 },
                 body: JSON.stringify({ new_status: statusId })
             })
-            .then(response => response.json())
-            .then(data => {
-                if(data[0].success) {
-                    window.location.reload();
-                } else {
-                    alert('Failed to update status');
-                }
-            })
-            .catch(error => console.error('Error:', error));
+                .then(response => response.json())
+                .then(data => {
+                    if (data[0].success) {
+                        window.location.reload();
+                    } else {
+                        alert('Failed to update status');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
         }
     </script>
-    
+
     @stack('scripts')
 </body>
 

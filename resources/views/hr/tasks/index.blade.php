@@ -151,6 +151,27 @@
                             style="overflow-y: auto !important; height: 100% !important; padding: 2rem; padding-right: 10px !important;">
                             <h3 class="text-lg font-bold text-premium mb-4">Task Description</h3>
                             <div id="detail-desc" class="prose prose-slate max-w-none text-slate-600 leading-relaxed"></div>
+                            <div id="detail-attachment-wrap" class="mt-8 pt-8 border-t border-slate-100 hidden">
+                                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
+                                    <i class="fa-solid fa-paperclip mr-2"></i>Attachment
+                                </h3>
+                                <a id="detail-attachment-link" href="#" target="_blank" class="group block">
+                                    <div
+                                        class="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 group-hover:border-indigo-200 group-hover:bg-indigo-50/30 transition-all">
+                                        <div id="detail-attachment-icon-box"
+                                            class="w-12 h-12 rounded-lg bg-white shadow-sm text-indigo-500 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                                            <i id="detail-attachment-icon" class="fa-solid fa-file"></i>
+                                        </div>
+                                        <div class="overflow-hidden">
+                                            <p id="detail-attachment-name"
+                                                class="text-sm font-bold text-slate-700 truncate group-hover:text-indigo-700 transition-colors">
+                                                File Name</p>
+                                            <p class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Click
+                                                to View / Download</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
                         </div>
                     </div>
 
@@ -185,7 +206,7 @@
                 </button>
             </div>
 
-            <form onsubmit="saveTask(event)" class="space-y-4">
+            <form onsubmit="saveTask(event)" class="space-y-4" enctype="multipart/form-data" id="create-task-form">
                 @csrf
 
                 <div>
@@ -225,6 +246,16 @@
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description</label>
                     <textarea name="task_description" rows="3" class="premium-input w-full px-4 py-3 text-sm"
                         placeholder="Additional details..."></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                        <i class="fa-solid fa-paperclip text-indigo-500 mr-1"></i> Attachment <span
+                            class="text-slate-300">(Optional)</span>
+                    </label>
+                    <input type="file" name="task_attachment" id="task_attachment"
+                        class="premium-input w-full px-4 py-3 text-sm">
+                    <div id="task-attachment-preview"></div>
                 </div>
 
                 <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
@@ -347,13 +378,13 @@
                 const container = document.querySelector('#tasks-container');
                 if (tasks.length === 0) {
                     container.innerHTML = `
-                                                <div class="text-center py-10">
-                                                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
-                                                        <i class="fa-solid fa-clipboard-check text-2xl"></i>
-                                                    </div>
-                                                    <p class="text-slate-400 text-sm">No tasks found</p>
-                                                </div>
-                                            `;
+                                                                <div class="text-center py-10">
+                                                                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                                                                        <i class="fa-solid fa-clipboard-check text-2xl"></i>
+                                                                    </div>
+                                                                    <p class="text-slate-400 text-sm">No tasks found</p>
+                                                                </div>
+                                                            `;
                     return;
                 }
 
@@ -363,38 +394,38 @@
                     const createdAt = task.created_at ? new Date(task.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A';
 
                     html += `
-                                                <div onclick="loadTask(${task.task_id})" id="task-item-${task.task_id}"
-                                                    class="task-card p-4 rounded-2xl bg-white border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden ${activeTaskId == task.task_id ? 'active' : ''}">
+                                                                <div onclick="loadTask(${task.task_id})" id="task-item-${task.task_id}"
+                                                                    class="task-card p-4 rounded-2xl bg-white border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden ${activeTaskId == task.task_id ? 'active' : ''}">
 
-                                                    <div class="flex justify-between items-start mb-2">
-                                                        <span class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider"
-                                                            style="background: #${task.priority.priority_color}20; color: #${task.priority.priority_color}">
-                                                            ${task.priority.priority_name}
-                                                        </span>
-                                                        <span class="text-[10px] text-slate-400 font-mono">#${task.task_id}</span>
-                                                    </div>
+                                                                    <div class="flex justify-between items-start mb-2">
+                                                                        <span class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider"
+                                                                            style="background: #${task.priority.priority_color}20; color: #${task.priority.priority_color}">
+                                                                            ${task.priority.priority_name}
+                                                                        </span>
+                                                                        <span class="text-[10px] text-slate-400 font-mono">#${task.task_id}</span>
+                                                                    </div>
 
-                                                    <h3 class="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors mb-1 line-clamp-2">
-                                                        ${task.task_title}
-                                                    </h3>
+                                                                    <h3 class="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors mb-1 line-clamp-2">
+                                                                        ${task.task_title}
+                                                                    </h3>
 
-                                                    <div class="flex items-center justify-between mt-3">
-                                                        <div class="flex items-center gap-2">
-                                                            <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
-                                                                ${initials}
-                                                            </div>
-                                                            <span class="text-xs text-slate-500">${createdAt}</span>
-                                                        </div>
-                                                        <span class="px-2 py-1 rounded-md text-[10px] font-bold"
-                                                            style="background: #${task.status.status_color}20; color: #${task.status.status_color}">
-                                                            ${task.status.status_name}
-                                                        </span>
-                                                    </div>
+                                                                    <div class="flex items-center justify-between mt-3">
+                                                                        <div class="flex items-center gap-2">
+                                                                            <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
+                                                                                ${initials}
+                                                                            </div>
+                                                                            <span class="text-xs text-slate-500">${createdAt}</span>
+                                                                        </div>
+                                                                        <span class="px-2 py-1 rounded-md text-[10px] font-bold"
+                                                                            style="background: #${task.status.status_color}20; color: #${task.status.status_color}">
+                                                                            ${task.status.status_name}
+                                                                        </span>
+                                                                    </div>
 
-                                                    <div class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 ${activeTaskId == task.task_id ? 'opacity-100' : 'opacity-0'} transition-opacity">
-                                                    </div>
-                                                </div>
-                                            `;
+                                                                    <div class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 ${activeTaskId == task.task_id ? 'opacity-100' : 'opacity-0'} transition-opacity">
+                                                                    </div>
+                                                                </div>
+                                                            `;
                 });
                 container.innerHTML = html;
             }
@@ -408,10 +439,12 @@
                 from: {{ $tasks->firstItem() }},
                 to: {{ $tasks->lastItem() }},
                 total: {{ $tasks->total() }}
-                                                            });
+                                                                                            });
         @endif
 
         let activeTaskId = null;
+
+
 
         // Auto-set progress to 100% when Done/Completed status is selected
         function onStatusChange(select) {
@@ -465,6 +498,37 @@
                     // Update select
                     document.getElementById('update-status-id').value = task.status_id;
 
+                    // Attachment
+                    const attachWrap = document.getElementById('detail-attachment-wrap');
+                    const attachLink = document.getElementById('detail-attachment-link');
+                    const attachName = document.getElementById('detail-attachment-name');
+                    const attachIcon = document.getElementById('detail-attachment-icon');
+
+                    if (task.task_attachment) {
+                        attachWrap.classList.remove('hidden');
+                        attachLink.href = `{{ url('/') }}/${task.task_attachment}`;
+
+                        // Parse Filename
+                        const parts = task.task_attachment.split('/');
+                        const filename = parts[parts.length - 1].replace(/^\d+_/, '');
+                        attachName.textContent = filename;
+
+                        // Set Icon
+                        const ext = filename.split('.').pop().toLowerCase();
+                        const icons = {
+                            'pdf': 'fa-file-pdf', 'doc': 'fa-file-word', 'docx': 'fa-file-word',
+                            'xls': 'fa-file-excel', 'xlsx': 'fa-file-excel',
+                            'ppt': 'fa-file-powerpoint', 'pptx': 'fa-file-powerpoint',
+                            'jpg': 'fa-file-image', 'jpeg': 'fa-file-image', 'png': 'fa-file-image', 'gif': 'fa-file-image',
+                            'zip': 'fa-file-archive', 'rar': 'fa-file-archive',
+                            'txt': 'fa-file-lines', 'csv': 'fa-file-csv'
+                        };
+                        attachIcon.className = `fa-solid ${icons[ext] || 'fa-file'}`;
+
+                    } else {
+                        attachWrap.classList.add('hidden');
+                    }
+
                     // Logs
                     renderLogs(task.logs);
 
@@ -485,18 +549,18 @@
             logs.forEach(log => {
                 const date = new Date(log.log_date).toLocaleString();
                 const html = `
-                                                <div class="relative">
-                                                    <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-slate-200 border-2 border-white ring-1 ring-slate-100"></div>
-                                                    <div class="space-y-1">
-                                                        <div class="flex justify-between items-center text-xs">
-                                                            <span class="font-bold text-slate-700">${log.log_action}</span>
-                                                            <span class="text-slate-400 font-mono">${date}</span>
-                                                        </div>
-                                                        <p class="text-sm text-slate-600 bg-white p-3 rounded-xl border border-slate-100 shadow-sm leading-relaxed">${log.log_remark}</p>
-                                                        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">By: ${log.logger ? log.logger.first_name : 'System'}</div>
-                                                    </div>
-                                                </div>
-                                            `;
+                                                                <div class="relative">
+                                                                    <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-slate-200 border-2 border-white ring-1 ring-slate-100"></div>
+                                                                    <div class="space-y-1">
+                                                                        <div class="flex justify-between items-center text-xs">
+                                                                            <span class="font-bold text-slate-700">${log.log_action}</span>
+                                                                            <span class="text-slate-400 font-mono">${date}</span>
+                                                                        </div>
+                                                                        <p class="text-sm text-slate-600 bg-white p-3 rounded-xl border border-slate-100 shadow-sm leading-relaxed">${log.log_remark}</p>
+                                                                        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">By: ${log.logger ? log.logger.first_name : 'System'}</div>
+                                                                    </div>
+                                                                </div>
+                                                            `;
                 container.innerHTML += html;
             });
         }
@@ -536,6 +600,35 @@
                     window.location.reload();
                 }
             } catch (err) { console.error(err); }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+    <script src="{{ asset('js/attachment-preview.js') }}"></script>
+    <script>
+        // Initialize Attachment Preview for Create Task modal
+        window.initAttachmentPreview({
+            inputSelector: '#task_attachment',
+            containerSelector: '#task-attachment-preview'
+        });
+
+        // File Size Validation (Max 10MB)
+        const taskAttachmentInput = document.getElementById('task_attachment');
+        if (taskAttachmentInput) {
+            taskAttachmentInput.addEventListener('change', function () {
+                if (this.files && this.files[0]) {
+                    const maxSize = 10 * 1024 * 1024;
+                    if (this.files[0].size > maxSize) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'File Too Large',
+                            text: 'Attachment must not exceed 10MB.',
+                            confirmButtonColor: '#4f46e5'
+                        });
+                        this.value = '';
+                        document.getElementById('task-attachment-preview').innerHTML = '';
+                    }
+                }
+            });
         }
     </script>
 @endsection

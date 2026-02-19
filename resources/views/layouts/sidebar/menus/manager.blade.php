@@ -39,24 +39,22 @@
 
     <!-- Apps Drawer Trigger -->
     <div x-data="{ open: false }" @click.away="open = false" class="relative">
-        <button @click="open = !open" 
+        <button @click="open = !open"
             class="nav-item {{ request()->routeIs('hr.groups.*', 'hr.tasks.*', 'hr.calendar.*', 'hr.tickets.*', 'hr.messages.*') ? 'active' : '' }} w-full flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white transition-all">
             <i class="fa-solid fa-layer-group text-2xl"></i>
             <span class="text-[12px] font-bold uppercase tracking-wider opacity-60">Apps</span>
-            <i class="fa-solid fa-chevron-right text-[12px] absolute right-2 opacity-0 group-hover:opacity-50 transition-all" :class="open ? 'rotate-90' : ''"></i>
+            <i class="fa-solid fa-chevron-right text-[12px] absolute right-2 opacity-0 group-hover:opacity-50 transition-all"
+                :class="open ? 'rotate-90' : ''"></i>
         </button>
 
         <!-- Slide-Right Drawer -->
-        <div x-show="open" 
-            x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 -translate-x-4"
-            x-transition:enter-end="opacity-100 translate-x-0"
-            x-transition:leave="transition ease-in duration-200"
-            x-transition:leave-start="opacity-100 translate-x-0"
+        <div x-show="open" x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 -translate-x-4" x-transition:enter-end="opacity-100 translate-x-0"
+            x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-x-0"
             x-transition:leave-end="opacity-0 -translate-x-4"
             class="fixed left-40 top-0 h-full w-64 bg-white/95 backdrop-blur-xl border-r border-slate-200 shadow-2xl z-50 p-6 flex flex-col gap-2 overflow-y-auto"
             style="display: none;">
-            
+
             <div class="mb-6 pb-4 border-b border-slate-100">
                 <h3 class="text-lg font-bold text-premium flex items-center gap-2">
                     <i class="fa-solid fa-layer-group text-indigo-500"></i>
@@ -65,46 +63,51 @@
                 <p class="text-xs text-slate-400 mt-1">Productivity & Collaboration</p>
             </div>
 
-            <a href="{{ route('hr.groups.index') }}" 
-               class="group flex items-center gap-3 p-3 rounded-xl hover:bg-indigo-50 transition-all {{ request()->routeIs('hr.groups.*') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600' }}">
-                <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <a href="{{ route('hr.groups.index') }}"
+                class="group flex items-center gap-3 p-3 rounded-xl hover:bg-indigo-50 transition-all {{ request()->routeIs('hr.groups.*') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600' }}">
+                <div
+                    class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <i class="fa-solid fa-users"></i>
                 </div>
                 <span class="font-semibold text-sm">Groups</span>
             </a>
 
-            <a href="{{ route('hr.tasks.index') }}" 
-               class="group flex items-center gap-3 p-3 rounded-xl hover:bg-purple-50 transition-all {{ request()->routeIs('hr.tasks.*') ? 'bg-purple-50 text-purple-700' : 'text-slate-600' }}">
-                <div class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <a href="{{ route('hr.tasks.index') }}"
+                class="group flex items-center gap-3 p-3 rounded-xl hover:bg-purple-50 transition-all {{ request()->routeIs('hr.tasks.*') ? 'bg-purple-50 text-purple-700' : 'text-slate-600' }}">
+                <div
+                    class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <i class="fa-solid fa-list-check"></i>
                 </div>
                 <span class="font-semibold text-sm">Tasks</span>
             </a>
 
-            <a href="{{ route('hr.calendar.index') }}" 
-               class="group flex items-center gap-3 p-3 rounded-xl hover:bg-blue-50 transition-all {{ request()->routeIs('hr.calendar.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600' }}">
-                <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <a href="{{ route('hr.calendar.index') }}"
+                class="group flex items-center gap-3 p-3 rounded-xl hover:bg-blue-50 transition-all {{ request()->routeIs('hr.calendar.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600' }}">
+                <div
+                    class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <i class="fa-solid fa-calendar-days"></i>
                 </div>
                 <span class="font-semibold text-sm">Calendar</span>
             </a>
 
-            <a href="{{ route('hr.tickets.index') }}" 
-               class="group flex items-center gap-3 p-3 rounded-xl hover:bg-rose-50 transition-all {{ request()->routeIs('hr.tickets.*') ? 'bg-rose-50 text-rose-700' : 'text-slate-600' }}">
-                <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <a href="{{ route('hr.tickets.index') }}"
+                class="group flex items-center gap-3 p-3 rounded-xl hover:bg-rose-50 transition-all {{ request()->routeIs('hr.tickets.*') ? 'bg-rose-50 text-rose-700' : 'text-slate-600' }}">
+                <div
+                    class="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <i class="fa-solid fa-ticket"></i>
                 </div>
                 <span class="font-semibold text-sm">Tickets</span>
             </a>
 
-            <a href="{{ route('hr.messages.index') }}" 
-               class="group flex items-center gap-3 p-3 rounded-xl hover:bg-emerald-50 transition-all {{ request()->routeIs('hr.messages.*') ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600' }}">
-                <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <a href="{{ route('hr.messages.index') }}"
+                class="group flex items-center gap-3 p-3 rounded-xl hover:bg-emerald-50 transition-all {{ request()->routeIs('hr.messages.*') ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600' }}">
+                <div
+                    class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <i class="fa-solid fa-comments"></i>
                 </div>
                 <span class="font-semibold text-sm">Chats</span>
             </a>
-            
+
         </div>
     </div>
 
@@ -146,6 +149,13 @@
         class="nav-item {{ request()->routeIs('admin.settings.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
         <i class="fa-solid fa-cog text-2xl"></i>
         <span class="text-[12px] font-bold uppercase tracking-wider opacity-60">Settings</span>
+    </a>
+
+    <!-- Incidents -->
+    <a href="{{ route('admin.incidents.index') }}"
+        class="nav-item {{ request()->routeIs('admin.incidents.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white">
+        <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+        <span class="text-[12px] font-bold uppercase tracking-wider opacity-60">Incidents</span>
     </a>
 
     <!-- Feedback -->

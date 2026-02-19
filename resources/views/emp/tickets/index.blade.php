@@ -13,10 +13,12 @@
                 <p class="text-sm text-slate-500 mt-1">{{ $tickets->total() }} total tickets</p>
             </div>
             <div class="flex items-center gap-3">
-                <a href="{{ route('emp.requests.index') }}" class="px-4 py-2 rounded-lg font-medium text-sm text-slate-600 hover:bg-slate-100 transition-all">
+                <a href="{{ route('emp.requests.index') }}"
+                    class="px-4 py-2 rounded-lg font-medium text-sm text-slate-600 hover:bg-slate-100 transition-all">
                     <i class="fa-solid fa-hand-sparkles mr-1"></i> HR Requests
                 </a>
-                <a href="{{ route('emp.ss.index') }}" class="px-4 py-2 rounded-lg font-medium text-sm text-slate-600 hover:bg-slate-100 transition-all">
+                <a href="{{ route('emp.ss.index') }}"
+                    class="px-4 py-2 rounded-lg font-medium text-sm text-slate-600 hover:bg-slate-100 transition-all">
                     <i class="fa-solid fa-headset mr-1"></i> Support Services
                 </a>
                 <button onclick="openModal('newTicketModal')"
@@ -53,6 +55,37 @@
             </div>
         </div>
 
+        <!-- Monthly Resolved Filter -->
+        @if(isset($resolvedMonths) && count($resolvedMonths) > 0)
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 animate-fade-in-up">
+                <!-- All Time Box -->
+                <a href="{{ route('emp.tickets.index', ['stt' => 3]) }}"
+                    class="group relative overflow-hidden rounded-2xl p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg border {{ !request('month') ? 'bg-gradient-brand text-white shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-100 hover:border-indigo-200' }}">
+                    <div class="relative z-10 flex flex-col items-center justify-center h-full gap-1">
+                        <div
+                            class="w-8 h-8 rounded-full mb-1 flex items-center justify-center {{ !request('month') ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-500' }}">
+                            <i class="fa-solid fa-layer-group text-sm"></i>
+                        </div>
+                        <span class="text-xs font-bold uppercase tracking-widest opacity-80">All Time</span>
+                        <span class="text-sm font-bold">View All</span>
+                    </div>
+                </a>
+
+                @foreach($resolvedMonths as $month)
+                    <a href="{{ route('emp.tickets.index', ['stt' => 3, 'month' => $month->month_value]) }}"
+                        class="group relative overflow-hidden rounded-2xl p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg border {{ request('month') == $month->month_value ? 'bg-gradient-brand text-white shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-100 hover:border-indigo-200' }}">
+
+                        <div class="relative z-10 flex flex-col items-center justify-center gap-1">
+                            <span
+                                class="text-[10px] font-bold uppercase tracking-widest opacity-70">{{ $month->month_label }}</span>
+                            <span class="text-2xl font-display font-bold">{{ $month->total }}</span>
+                            <span class="text-[10px] opacity-60">Resolved</span>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        @endif
+
         <!-- Tickets Table Area -->
         <div class="space-y-4">
             <div class="overflow-x-auto px-1 pb-4">
@@ -72,64 +105,71 @@
                     </thead>
                     <tbody id="tickets-container">
                         @forelse($tickets as $ticket)
-                            <!-- Initial server-side render -->
-                            <tr>
-                                <td>
-                                    <span class="font-mono text-sm font-semibold text-slate-600">{{ $ticket->ticket_ref }}</span>
-                                </td>
-                                <td class="max-w-xs">
-                                    <span class="font-semibold text-slate-800 block truncate"
-                                        title="{{ $ticket->ticket_subject }}">{{ $ticket->ticket_subject }}</span>
-                                </td>
-                                <td>
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 text-indigo-800 text-sm font-medium">
-                                        <i class="fa-solid fa-tag text-xs"></i>
-                                        {{ $ticket->category->category_name ?? 'N/A' }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="text-sm text-slate-600">
-                                        {{ $ticket->last_updated_date ? \Carbon\Carbon::parse($ticket->last_updated_date)->diffForHumans() : '-' }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border border-slate-200">
-                                            {{ $ticket->latestLog && $ticket->latestLog->logger ? strtoupper(substr($ticket->latestLog->logger->first_name, 0, 1) . substr($ticket->latestLog->logger->last_name, 0, 1)) : '-' }}
-                                        </div>
-                                        <span class="text-sm text-slate-600 font-medium">
-                                            {{ $ticket->latestLog && $ticket->latestLog->logger ? $ticket->latestLog->logger->first_name . ' ' . $ticket->latestLog->logger->last_name : '-' }}
-                                        </span>
-                                    </div>
-                                </td>
-                                <td class="text-center">
-                                    @php
-                                        $priorityColor = $ticket->priority->priority_color ?? 'slate-500';
-                                        $priorityName = $ticket->priority->priority_name ?? 'Normal';
-                                    @endphp
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #{{ $priorityColor }}">
-                                        {{ $priorityName }}
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    @php
-                                        $statusColor = $ticket->status->status_color ?? 'slate-500';
-                                        $statusName = $ticket->status->status_name ?? 'Open';
-                                    @endphp
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #{{ $statusColor }}">
-                                        {{ $statusName }}
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <div class="flex items-center justify-center gap-2">
-                                        <a href="{{ route('emp.tickets.show', $ticket->ticket_id) }}"
-                                            class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
-                                            title="View Details">
-                                            <i class="fa-solid fa-eye text-sm"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
+                                            <!-- Initial server-side render -->
+                                            <tr>
+                                                <td>
+                                                    <span
+                                                        class="font-mono text-sm font-semibold text-slate-600">{{ $ticket->ticket_ref }}</span>
+                                                </td>
+                                                <td class="max-w-xs">
+                                                    <span class="font-semibold text-slate-800 block truncate"
+                                                        title="{{ $ticket->ticket_subject }}">{{ $ticket->ticket_subject }}</span>
+                                                </td>
+                                                <td>
+                                                    <span
+                                                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 text-indigo-800 text-sm font-medium">
+                                                        <i class="fa-solid fa-tag text-xs"></i>
+                                                        {{ $ticket->category->category_name ?? 'N/A' }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span class="text-sm text-slate-600">
+                                                        {{ $ticket->last_updated_date ? \Carbon\Carbon::parse($ticket->last_updated_date)->diffForHumans() : '-' }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="flex items-center gap-2">
+                                                        <div
+                                                            class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border border-slate-200">
+                                                            {{ $ticket->latestLog && $ticket->latestLog->logger ? strtoupper(substr($ticket->latestLog->logger->first_name, 0, 1) . substr($ticket->latestLog->logger->last_name, 0, 1)) : '-' }}
+                                                        </div>
+                                                        <span class="text-sm text-slate-600 font-medium">
+                                                            {{ $ticket->latestLog && $ticket->latestLog->logger ? $ticket->latestLog->logger->first_name . ' ' . $ticket->latestLog->logger->last_name : '-' }}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td class="text-center">
+                                                    @php
+                                                        $priorityColor = $ticket->priority->priority_color ?? 'slate-500';
+                                                        $priorityName = $ticket->priority->priority_name ?? 'Normal';
+                                                    @endphp
+                             <span
+                                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md"
+                                                        style="background: #{{ $priorityColor }}">
+                                                        {{ $priorityName }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-center">
+                                                    @php
+                                                        $statusColor = $ticket->status->status_color ?? 'slate-500';
+                                                        $statusName = $ticket->status->status_name ?? 'Open';
+                                                    @endphp
+                             <span
+                                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md"
+                                                        style="background: #{{ $statusColor }}">
+                                                        {{ $statusName }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <div class="flex items-center justify-center gap-2">
+                                                        <a href="{{ route('emp.tickets.show', $ticket->ticket_id) }}"
+                                                            class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
+                                                            title="View Details">
+                                                            <i class="fa-solid fa-eye text-sm"></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
                         @empty
                             <tr>
                                 <td colspan="8" class="text-center py-12">
@@ -157,159 +197,159 @@
     </div>
 
     @push('scripts')
-    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
-    <script src="{{ asset('js/attachment-preview.js') }}"></script>
-    <script>
-        function closeModal(id) {
-            document.getElementById(id).classList.remove('active');
-        }
-        function openModal(id) {
-            document.getElementById(id).classList.add('active');
-        }
-
-        // Initialize Attachment Preview
-        window.initAttachmentPreview({
-            inputSelector: '#ticket_attachment',
-            containerSelector: '#ticket-attachment-preview'
-        });
-
-        // File Size Validation (Max 8MB)
-        const attachmentInput = document.getElementById('ticket_attachment');
-        if (attachmentInput) {
-            attachmentInput.addEventListener('change', function() {
-                if (this.files && this.files[0]) {
-                    const fileSize = this.files[0].size; // in bytes
-                    const maxSize = 8 * 1024 * 1024; // 8MB
-
-                    if (fileSize > maxSize) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'File Too Large',
-                            text: 'The attachment size must not exceed 8MB.',
-                            confirmButtonColor: '#4f46e5'
-                        });
-                        this.value = ''; // Clear the input
-                        // Clear preview if exists
-                        const previewContainer = document.getElementById('ticket-attachment-preview');
-                        if (previewContainer) previewContainer.innerHTML = '';
-                    }
-                }
-            });
-        }
-
-        // Initialize AJAX Pagination
-        window.ajaxPagination = new AjaxPagination({
-            endpoint: "{{ route('emp.tickets.data', ['stt' => $stt]) }}", // Pass current filter
-            containerSelector: '#tickets-container',
-            paginationSelector: '#tickets-pagination',
-            perPage: 10,
-            renderCallback: function(tickets) {
-                const container = document.querySelector('#tickets-container');
-                
-                if (tickets.length === 0) {
-                    container.innerHTML = `
-                        <tr>
-                            <td colspan="8" class="text-center py-12">
-                                <div class="flex flex-col items-center gap-3">
-                                    <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
-                                        <i class="fa-solid fa-ticket text-2xl text-slate-400"></i>
-                                    </div>
-                                    <p class="text-slate-500 font-medium">No tickets found</p>
-                                    <button onclick="openModal('newTicketModal')"
-                                        class="text-brand-dark hover:text-brand-light font-bold text-sm">
-                                        Create your first ticket
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                    return;
-                }
-                
-                let html = '';
-                tickets.forEach(ticket => {
-                    const showUrl = `{{ route('emp.tickets.show', ':id') }}`.replace(':id', ticket.ticket_id);
-                    
-                    // Logger info
-                    let loggerInitial = '-';
-                    let loggerName = '-';
-                    if (ticket.latest_log && ticket.latest_log.logger) {
-                        loggerInitial = (ticket.latest_log.logger.first_name.charAt(0) + ticket.latest_log.logger.last_name.charAt(0)).toUpperCase();
-                        loggerName = ticket.latest_log.logger.first_name + ' ' + ticket.latest_log.logger.last_name;
-                    }
-
-                    // Date parsing
-                    const updatedDate = ticket.last_updated_date ? new Date(ticket.last_updated_date).toLocaleDateString() : '-';
-
-                    html += `
-                        <tr>
-                            <td>
-                                <span class="font-mono text-sm font-semibold text-slate-600">${ticket.ticket_ref}</span>
-                            </td>
-                            <td class="max-w-xs">
-                                <span class="font-semibold text-slate-800 block truncate"
-                                    title="${ticket.ticket_subject}">${ticket.ticket_subject}</span>
-                            </td>
-                            <td>
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 text-indigo-800 text-sm font-medium">
-                                    <i class="fa-solid fa-tag text-xs"></i>
-                                    ${ticket.category ? ticket.category.category_name : 'N/A'}
-                                </span>
-                            </td>
-                            <td>
-                                <span class="text-sm text-slate-600">
-                                    ${updatedDate}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border border-slate-200">
-                                        ${loggerInitial}
-                                    </div>
-                                    <span class="text-sm text-slate-600 font-medium">
-                                        ${loggerName}
-                                    </span>
-                                </div>
-                            </td>
-                            <td class="text-center">
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #${ticket.priority ? ticket.priority.priority_color : 'ccc'}">
-                                    ${ticket.priority ? ticket.priority.priority_name : 'Normal'}
-                                </span>
-                            </td>
-                            <td class="text-center">
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #${ticket.status ? ticket.status.status_color : 'ccc'}">
-                                    ${ticket.status ? ticket.status.status_name : 'Open'}
-                                </span>
-                            </td>
-                            <td class="text-center">
-                                <div class="flex items-center justify-center gap-2">
-                                    <a href="${showUrl}"
-                                        class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
-                                        title="View Details">
-                                        <i class="fa-solid fa-eye text-sm"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                });
-                
-                container.innerHTML = html;
+        <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+        <script src="{{ asset('js/attachment-preview.js') }}"></script>
+        <script>
+            function closeModal(id) {
+                document.getElementById(id).classList.remove('active');
             }
-        });
+            function openModal(id) {
+                document.getElementById(id).classList.add('active');
+            }
 
-        // Use server-side rendered data for initial page load
-        @if($tickets->hasPages())
-            window.ajaxPagination.renderPagination({
-                current_page: {{ $tickets->currentPage() }},
-                last_page: {{ $tickets->lastPage() }},
-                from: {{ $tickets->firstItem() ?? 0 }},
-                to: {{ $tickets->lastItem() ?? 0 }},
-                total: {{ $tickets->total() }}
+            // Initialize Attachment Preview
+            window.initAttachmentPreview({
+                inputSelector: '#ticket_attachment',
+                containerSelector: '#ticket-attachment-preview'
             });
-        @endif
-    </script>
+
+            // File Size Validation (Max 8MB)
+            const attachmentInput = document.getElementById('ticket_attachment');
+            if (attachmentInput) {
+                attachmentInput.addEventListener('change', function () {
+                    if (this.files && this.files[0]) {
+                        const fileSize = this.files[0].size; // in bytes
+                        const maxSize = 8 * 1024 * 1024; // 8MB
+
+                        if (fileSize > maxSize) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'File Too Large',
+                                text: 'The attachment size must not exceed 8MB.',
+                                confirmButtonColor: '#4f46e5'
+                            });
+                            this.value = ''; // Clear the input
+                            // Clear preview if exists
+                            const previewContainer = document.getElementById('ticket-attachment-preview');
+                            if (previewContainer) previewContainer.innerHTML = '';
+                        }
+                    }
+                });
+            }
+
+            // Initialize AJAX Pagination
+            window.ajaxPagination = new AjaxPagination({
+                endpoint: "{{ route('emp.tickets.data', ['stt' => $stt]) }}", // Pass current filter
+                containerSelector: '#tickets-container',
+                paginationSelector: '#tickets-pagination',
+                perPage: 10,
+                renderCallback: function (tickets) {
+                    const container = document.querySelector('#tickets-container');
+
+                    if (tickets.length === 0) {
+                        container.innerHTML = `
+                                <tr>
+                                    <td colspan="8" class="text-center py-12">
+                                        <div class="flex flex-col items-center gap-3">
+                                            <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+                                                <i class="fa-solid fa-ticket text-2xl text-slate-400"></i>
+                                            </div>
+                                            <p class="text-slate-500 font-medium">No tickets found</p>
+                                            <button onclick="openModal('newTicketModal')"
+                                                class="text-brand-dark hover:text-brand-light font-bold text-sm">
+                                                Create your first ticket
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        return;
+                    }
+
+                    let html = '';
+                    tickets.forEach(ticket => {
+                        const showUrl = `{{ route('emp.tickets.show', ':id') }}`.replace(':id', ticket.ticket_id);
+
+                        // Logger info
+                        let loggerInitial = '-';
+                        let loggerName = '-';
+                        if (ticket.latest_log && ticket.latest_log.logger) {
+                            loggerInitial = (ticket.latest_log.logger.first_name.charAt(0) + ticket.latest_log.logger.last_name.charAt(0)).toUpperCase();
+                            loggerName = ticket.latest_log.logger.first_name + ' ' + ticket.latest_log.logger.last_name;
+                        }
+
+                        // Date parsing
+                        const updatedDate = ticket.last_updated_date ? new Date(ticket.last_updated_date).toLocaleDateString() : '-';
+
+                        html += `
+                                <tr>
+                                    <td>
+                                        <span class="font-mono text-sm font-semibold text-slate-600">${ticket.ticket_ref}</span>
+                                    </td>
+                                    <td class="max-w-xs">
+                                        <span class="font-semibold text-slate-800 block truncate"
+                                            title="${ticket.ticket_subject}">${ticket.ticket_subject}</span>
+                                    </td>
+                                    <td>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 text-indigo-800 text-sm font-medium">
+                                            <i class="fa-solid fa-tag text-xs"></i>
+                                            ${ticket.category ? ticket.category.category_name : 'N/A'}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="text-sm text-slate-600">
+                                            ${updatedDate}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border border-slate-200">
+                                                ${loggerInitial}
+                                            </div>
+                                            <span class="text-sm text-slate-600 font-medium">
+                                                ${loggerName}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #${ticket.priority ? ticket.priority.priority_color : 'ccc'}">
+                                            ${ticket.priority ? ticket.priority.priority_name : 'Normal'}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #${ticket.status ? ticket.status.status_color : 'ccc'}">
+                                            ${ticket.status ? ticket.status.status_name : 'Open'}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <a href="${showUrl}"
+                                                class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
+                                                title="View Details">
+                                                <i class="fa-solid fa-eye text-sm"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                    });
+
+                    container.innerHTML = html;
+                }
+            });
+
+            // Use server-side rendered data for initial page load
+            @if($tickets->hasPages())
+                window.ajaxPagination.renderPagination({
+                    current_page: {{ $tickets->currentPage() }},
+                    last_page: {{ $tickets->lastPage() }},
+                    from: {{ $tickets->firstItem() ?? 0 }},
+                    to: {{ $tickets->lastItem() ?? 0 }},
+                    total: {{ $tickets->total() }}
+                        });
+            @endif
+        </script>
     @endpush
 
     <!-- New Ticket Modal -->
@@ -384,7 +424,8 @@
                         <label class="block text-sm font-semibold text-slate-700 mb-2">
                             <i class="fa-solid fa-paperclip text-indigo-600 mr-2"></i>Attachment (Optional)
                         </label>
-                        <input type="file" name="ticket_attachment" id="ticket_attachment" class="premium-input w-full px-4 py-3 text-sm">
+                        <input type="file" name="ticket_attachment" id="ticket_attachment"
+                            class="premium-input w-full px-4 py-3 text-sm">
                         <div id="ticket-attachment-preview"></div>
                     </div>
                 </div>

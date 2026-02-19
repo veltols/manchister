@@ -18,6 +18,20 @@ class SupportTicketController extends Controller
         $user = Auth::user();
         $stt = $request->input('stt', 0); // 0=All, 1=Open, 2=In Progress, 3=Resolved, 4=Unassigned
 
+        // Monthly Resolved Stats
+        $resolvedMonths = [];
+        if ($stt == 3) {
+            $resolvedMonths = SupportTicket::select(
+                DB::raw("DATE_FORMAT(ticket_added_date, '%Y-%m') as month_value"),
+                DB::raw("DATE_FORMAT(ticket_added_date, '%M %Y') as month_label"),
+                DB::raw('count(*) as total')
+            )
+                ->where('status_id', 3)
+                ->groupBy('month_value', 'month_label')
+                ->orderBy('month_value', 'desc')
+                ->get();
+        }
+
         $query = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'latestLog.logger']);
 
         // Filter by Status
@@ -27,10 +41,14 @@ class SupportTicketController extends Controller
             $query->where('status_id', 2);
         } elseif ($stt == 3) {
             $query->where('status_id', 3);
+            // Filter by Month if selected
+            if ($request->filled('month')) {
+                $query->where(DB::raw("DATE_FORMAT(ticket_added_date, '%Y-%m')"), $request->month);
+            }
         } elseif ($stt == 4) {
             // Unassigned (Open and assigned_to = 0)
             $query->where('status_id', 1)
-                  ->where('assigned_to', 0);
+                ->where('assigned_to', 0);
         }
 
         // Order by latest
@@ -47,7 +65,7 @@ class SupportTicketController extends Controller
             ->where('is_hidden', 0)
             ->get();
 
-        return view('emp.tickets.index', compact('tickets', 'stt', 'categories', 'priorities', 'deptEmployees'));
+        return view('emp.tickets.index', compact('tickets', 'stt', 'categories', 'priorities', 'deptEmployees', 'resolvedMonths'));
     }
 
     public function store(Request $request)
@@ -97,7 +115,7 @@ class SupportTicketController extends Controller
         $ticket->ticket_added_date = now();
 
         $ticket->status_id = 1; // Project default typically 1 for Open
-        $ticket->assigned_to = 0; 
+        $ticket->assigned_to = 0;
         $ticket->save();
 
         // Create Initial Log
@@ -115,14 +133,14 @@ class SupportTicketController extends Controller
         // Send Notifications
         \App\Services\NotificationService::send(
             "A new ticket has been added, REF: " . $ticket->ticket_ref,
-            "tickets/list", 
+            "tickets/list",
             $ticket->added_by
         );
 
         // Notify IT Admin (Always ID 1 in legacy logic)
         \App\Services\NotificationService::send(
             "A new ticket has been added, REF: " . $ticket->ticket_ref,
-            "tickets/list", 
+            "tickets/list",
             1
         );
 
@@ -157,7 +175,7 @@ class SupportTicketController extends Controller
         $log = new \App\Models\SystemLog();
         $log->related_table = 'support_tickets_list';
         $log->related_id = $id;
-        $log->log_action = 'Status Update'; 
+        $log->log_action = 'Status Update';
         $log->log_remark = $request->log_remark;
         $log->log_date = now();
         $log->logged_by = $employeeId;
@@ -182,7 +200,7 @@ class SupportTicketController extends Controller
         } elseif ($stt == 3) {
             $query->where('status_id', 3);
         } elseif ($stt == 4) {
-             $query->where('status_id', 1)->where('assigned_to', 0);
+            $query->where('status_id', 1)->where('assigned_to', 0);
         }
 
         $tickets = $query->orderBy('ticket_id', 'desc')->paginate($perPage);

@@ -60,6 +60,7 @@ class TaskController extends Controller
             'task_assigned_date' => 'required|date',
             'task_due_date' => 'required|date|after_or_equal:task_assigned_date',
             'priority_id' => 'required|exists:sys_list_priorities,priority_id',
+            'task_attachment' => 'nullable|file|max:10240',
         ]);
 
         $user = Auth::user();
@@ -85,6 +86,14 @@ class TaskController extends Controller
         $task->assigned_to = $request->assigned_to ?? $employeeId;
         $task->priority_id = $request->priority_id;
 
+        // Handle attachment upload
+        if ($request->hasFile('task_attachment')) {
+            $file = $request->file('task_attachment');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('uploads/tasks'), $filename);
+            $task->task_attachment = 'uploads/tasks/' . $filename;
+        }
+
         // Default Status (New/Open)
         $firstStatus = TaskStatus::orderBy('status_id')->first();
         $task->status_id = $firstStatus ? $firstStatus->status_id : 1;
@@ -105,6 +114,7 @@ class TaskController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Task created successfully!']);
     }
+
 
     public function updateStatus(Request $request, $id)
     {

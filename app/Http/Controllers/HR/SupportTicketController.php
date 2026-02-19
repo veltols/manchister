@@ -8,6 +8,7 @@ use App\Models\SupportTicket;
 use App\Models\SupportTicketCategory;
 use App\Models\Priority;
 use App\Models\SupportTicketStatus;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
 class SupportTicketController extends Controller
@@ -15,6 +16,20 @@ class SupportTicketController extends Controller
     public function index(Request $request)
     {
         $stt = $request->input('stt', 0); // 0=All, 1=Open, 2=In Progress, 3=Resolved, 4=Unassigned
+
+        // Monthly Resolved Stats
+        $resolvedMonths = [];
+        if ($stt == 3) {
+            $resolvedMonths = SupportTicket::select(
+                DB::raw("DATE_FORMAT(ticket_added_date, '%Y-%m') as month_value"),
+                DB::raw("DATE_FORMAT(ticket_added_date, '%M %Y') as month_label"),
+                DB::raw('count(*) as total')
+            )
+                ->where('status_id', 3)
+                ->groupBy('month_value', 'month_label')
+                ->orderBy('month_value', 'desc')
+                ->get();
+        }
 
         $query = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'latestLog.logger']);
 
@@ -25,10 +40,14 @@ class SupportTicketController extends Controller
             $query->where('status_id', 2);
         } elseif ($stt == 3) {
             $query->where('status_id', 3);
+            // Filter by Month if selected
+            if ($request->filled('month')) {
+                $query->where(DB::raw("DATE_FORMAT(ticket_added_date, '%Y-%m')"), $request->month);
+            }
         } elseif ($stt == 4) {
             // Unassigned (Open and assigned_to = 0)
             $query->where('status_id', 1)
-                  ->where('assigned_to', 0);
+                ->where('assigned_to', 0);
         }
 
         $tickets = $query->orderBy('ticket_id', 'desc')->paginate(10);
@@ -38,7 +57,7 @@ class SupportTicketController extends Controller
         $priorities = Priority::all();
         $employees = \App\Models\Employee::where('is_deleted', 0)->where('is_hidden', 0)->orderBy('first_name')->get();
 
-        return view('hr.tickets.index', compact('tickets', 'stt', 'categories', 'priorities', 'employees'));
+        return view('hr.tickets.index', compact('tickets', 'stt', 'categories', 'priorities', 'employees', 'resolvedMonths'));
     }
 
     public function create()
@@ -81,21 +100,21 @@ class SupportTicketController extends Controller
         $ticket->ticket_attachment = $attachmentName;
 
         $ticket->added_by = $request->added_by;
-        
+
         // Fetch Department of Added By User
         $addedByEmp = \App\Models\Employee::find($request->added_by);
         $ticket->department_id = $addedByEmp ? $addedByEmp->department_id : 0;
-        
+
         $ticket->ticket_added_date = now();
         $ticket->status_id = 1; // Open
-        $ticket->assigned_to = 0; 
+        $ticket->assigned_to = 0;
         $ticket->save();
 
         // Create Initial Log
         $log = new \App\Models\SystemLog();
         $log->related_table = 'support_tickets_list';
         $log->related_id = $ticket->ticket_id;
-        $log->log_action = 'Ticket Created'; 
+        $log->log_action = 'Ticket Created';
         $log->log_remark = 'Ticket created by HR for employee.';
         $log->log_date = now();
         $log->logged_by = Auth::user()->employee->employee_id ?? 0;
@@ -107,14 +126,14 @@ class SupportTicketController extends Controller
         // 1. Notify the employee who the ticket was added for
         \App\Services\NotificationService::send(
             "A new ticket has been created for you by HR, REF: " . $ticket->ticket_ref,
-            "tickets/list", 
+            "tickets/list",
             $ticket->added_by
         );
 
         // 2. Notify IT Admin (System Admin)
         \App\Services\NotificationService::send(
             "A new ticket has been added by HR, REF: " . $ticket->ticket_ref,
-            "tickets/list", 
+            "tickets/list",
             1
         );
 
@@ -125,9 +144,9 @@ class SupportTicketController extends Controller
     {
         $ticket = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'logs.logger', 'latestLog.logger'])
             ->findOrFail($id);
-            
+
         $statuses = \App\Models\SupportTicketStatus::all();
-            
+
         return view('hr.tickets.show', compact('ticket', 'statuses'));
     }
 
@@ -141,15 +160,16 @@ class SupportTicketController extends Controller
         $ticket = SupportTicket::findOrFail($id);
         $oldStatus = $ticket->status_id;
         $ticket->status_id = $request->status_id;
-        
+
         $logAction = "Status Updated";
-        if ($ticket->status_id == 2 && $oldStatus != 2) $logAction = "Ticket In Progress";
+        if ($ticket->status_id == 2 && $oldStatus != 2)
+            $logAction = "Ticket In Progress";
         if ($ticket->status_id == 3 && $oldStatus != 3) {
             $logAction = "Ticket Resolved";
-            $ticket->ticket_end_date = now(); 
+            $ticket->ticket_end_date = now();
         }
 
-        if($request->has('assigned_to') && $request->assigned_to != "" && $request->assigned_to != $ticket->assigned_to) {
+        if ($request->has('assigned_to') && $request->assigned_to != "" && $request->assigned_to != $ticket->assigned_to) {
             $ticket->assigned_to = $request->assigned_to;
             $ticket->assigned_date = now();
             $logAction = "Ticket Assigned";
@@ -161,7 +181,7 @@ class SupportTicketController extends Controller
         $log = new \App\Models\SystemLog();
         $log->related_table = 'support_tickets_list';
         $log->related_id = $id;
-        $log->log_action = $logAction; 
+        $log->log_action = $logAction;
         $log->log_remark = $request->ticket_remarks;
         $log->log_date = now();
         $log->logged_by = Auth::user()->employee->employee_id ?? 0;
@@ -172,16 +192,16 @@ class SupportTicketController extends Controller
         // Notifications
         // Notify Requester
         \App\Services\NotificationService::send(
-            "Your ticket status has been updated to " . $ticket->status->status_name . ", REF: " . $ticket->ticket_ref, 
-            "tickets/list", 
+            "Your ticket status has been updated to " . $ticket->status->status_name . ", REF: " . $ticket->ticket_ref,
+            "tickets/list",
             $ticket->added_by
         );
 
         // Notify Assignee if assigned
         if ($ticket->assigned_to && $ticket->assigned_to != 0) {
-             \App\Services\NotificationService::send(
-                "A ticket has been assigned to you, REF: " . $ticket->ticket_ref, 
-                "tickets/list", 
+            \App\Services\NotificationService::send(
+                "A ticket has been assigned to you, REF: " . $ticket->ticket_ref,
+                "tickets/list",
                 $ticket->assigned_to
             );
         }
@@ -202,7 +222,7 @@ class SupportTicketController extends Controller
         } elseif ($stt == 3) {
             $query->where('status_id', 3);
         } elseif ($stt == 4) {
-             $query->where('status_id', 1)->where('assigned_to', 0);
+            $query->where('status_id', 1)->where('assigned_to', 0);
         }
 
         $tickets = $query->orderBy('ticket_id', 'desc')->paginate($perPage);

@@ -82,17 +82,22 @@
                         <i class="fa-solid fa-key"></i> Reset Password
                     </button>
                     <!-- Toggle Status -->
-                    <form id="statusToggleForm" action="{{ route('admin.users.update-status', $user->employee_id) }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="status" value="{{ $user->is_active ? 0 : 1 }}">
-                        <button type="button" onclick="confirmStatusToggle()" class="w-full py-2.5 px-4 rounded-xl text-white font-semibold transition-colors text-sm flex items-center justify-center gap-2 {{ $user->is_active ? 'bg-rose-500 hover:bg-rose-600' : 'bg-emerald-500 hover:bg-emerald-600' }}">
-                            @if($user->is_active)
-                                <i class="fa-solid fa-ban"></i> Deactivate User
-                            @else
-                                <i class="fa-solid fa-check"></i> Activate User
-                            @endif
+                    <!-- Toggle Status -->
+                    @if($user->is_active)
+                        <!-- Deactivate Button (Opens Modal) -->
+                        <button onclick="openModal('deactivateUserModal')" class="w-full py-2.5 px-4 rounded-xl bg-rose-500 text-white font-semibold hover:bg-rose-600 transition-colors text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-rose-200">
+                            <i class="fa-solid fa-ban"></i> Deactivate User
                         </button>
-                    </form>
+                    @else
+                        <!-- Activate Form (Direct) -->
+                        <form id="activateUserForm" action="{{ route('admin.users.update-status', $user->employee_id) }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="status" value="1">
+                            <button type="button" onclick="confirmActivation()" class="w-full py-2.5 px-4 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-colors text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-emerald-200">
+                                <i class="fa-solid fa-check"></i> Activate User
+                            </button>
+                        </form>
+                    @endif
                 </div>
             </div>
         </div>
@@ -169,7 +174,7 @@
                     </div>
                 </div>
 
-                 <!-- Logs Tab -->
+                <!-- Logs Tab -->
                 <div x-show="activeTab === 'logs'" class="p-0 animate-fade-in-up" style="display: none;">
                     <div class="p-6">
                         <h3 class="text-lg font-bold text-slate-800 mb-6">Recent Activity</h3>
@@ -177,6 +182,15 @@
                         @if($logs->count() > 0)
                             <div class="space-y-4">
                                 @foreach($logs as $log)
+                                    @php
+                                        // Parse attachment from remark
+                                        $remark = $log->log_remark;
+                                        $attachment = null;
+                                        if (preg_match('/\[Attachment: (.*?)\]/', $remark, $matches)) {
+                                            $attachment = $matches[1];
+                                            $remark = str_replace($matches[0], '', $remark);
+                                        }
+                                    @endphp
                                     <div class="flex gap-4 p-4 rounded-xl bg-slate-50/50 border border-slate-100 hover:border-indigo-100 transition-colors">
                                         <div class="w-10 h-10 shrink-0 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shadow-sm">
                                             <i class="fa-solid fa-clock-rotate-left"></i>
@@ -186,8 +200,20 @@
                                                 <h4 class="font-bold text-slate-800">{{ $log->log_action }}</h4>
                                                 <span class="text-[10px] font-bold text-slate-400 uppercase">{{ \Carbon\Carbon::parse($log->log_date)->diffForHumans() }}</span>
                                             </div>
-                                            <p class="text-sm text-slate-600 truncate mb-1">{{ $log->log_remark }}</p>
-                                            <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                            <p class="text-sm text-slate-600 mb-1 break-words">{{ trim($remark) }}</p>
+                                            
+                                            @if($attachment)
+                                                <div class="mt-2">
+                                                    <a href="{{ asset(trim($attachment)) }}" target="_blank" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-indigo-600 text-xs font-bold hover:bg-indigo-50 hover:border-indigo-200 transition-all shadow-sm group">
+                                                        <span class="w-6 h-6 rounded bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
+                                                            <i class="fa-solid fa-paperclip"></i>
+                                                        </span>
+                                                        View Attachment
+                                                    </a>
+                                                </div>
+                                            @endif
+
+                                            <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2">
                                                 <i class="fa-solid fa-user text-[8px] opacity-70"></i>
                                                 {{ $log->logger->first_name ?? 'System' }}
                                             </div>
@@ -376,19 +402,101 @@
             </form>
         </div>
     </div>
+    <!-- Deactivate User Modal -->
+    <div id="deactivateUserModal" class="modal">
+        <div class="modal-backdrop" onclick="closeModal('deactivateUserModal')"></div>
+        <div class="modal-content max-w-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-display font-bold text-rose-600">Deactivate User</h2>
+                    <p class="text-slate-500 text-sm">Disable access for {{ $user->first_name }}</p>
+                </div>
+                <button onclick="closeModal('deactivateUserModal')" class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form action="{{ route('admin.users.update-status', $user->employee_id) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="status" value="0">
+                
+                <div class="space-y-4">
+                    <div class="p-4 rounded-xl bg-rose-50 border border-rose-100 flex gap-3 text-rose-700">
+                        <i class="fa-solid fa-triangle-exclamation mt-1"></i>
+                        <p class="text-sm">This action will prevent the user from logging in. You must provide a reason.</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Reason / Comment <span class="text-rose-500">*</span></label>
+                        <textarea name="log_remark" required rows="3" class="premium-input w-full px-4 py-3" placeholder="Reason for deactivation..."></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">
+                            <i class="fa-solid fa-paperclip text-indigo-500 mr-1"></i> Attachment <span class="text-slate-400 font-normal normal-case">(Optional)</span>
+                        </label>
+                        <input type="file" name="log_attachment" id="log_attachment" class="premium-input w-full px-4 py-3 text-sm">
+                        <div id="log-attachment-preview"></div>
+                        <p class="text-[10px] text-slate-400 mt-1">Files will be saved to system logs.</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('deactivateUserModal')" class="px-6 py-2.5 rounded-xl font-bold text-slate-400 hover:text-slate-600 transition-colors">Cancel</button>
+                    <button type="submit" class="px-6 py-2.5 bg-rose-600 text-white font-bold rounded-xl shadow-lg hover:bg-rose-700 hover:scale-105 transition-all">
+                        Confirm Deactivation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
 
     @push('scripts')
-        <script>
-            function confirmStatusToggle() {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+    <script src="{{ asset('js/attachment-preview.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.initAttachmentPreview) {
+                window.initAttachmentPreview({
+                    inputSelector: '#log_attachment',
+                    containerSelector: '#log-attachment-preview'
+                });
+            }
+
+            // File Size Validation
+            const attachmentInput = document.getElementById('log_attachment');
+            if (attachmentInput) {
+                attachmentInput.addEventListener('change', function() {
+                    if (this.files && this.files[0]) {
+                        const fileSize = this.files[0].size; 
+                        const maxSize = 8 * 1024 * 1024; // 8MB
+
+                        if (fileSize > maxSize) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'File Too Large',
+                                text: 'The attachment size must not exceed 8MB.',
+                                confirmButtonColor: '#f43f5e'
+                            });
+                            this.value = ''; 
+                            const previewContainer = document.getElementById('log-attachment-preview');
+                            if (previewContainer) previewContainer.innerHTML = '';
+                        }
+                    }
+                });
+            }
+        });
+
+        function confirmActivation() {
                 Swal.fire({
-                    title: 'Are you sure?',
-                    text: "You are about to {{ $user->is_active ? 'deactivate' : 'activate' }} this user account.",
+                    title: 'Activate User?',
+                    text: "You are about to reactivate this user account.",
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '{{ $user->is_active ? "#f43f5e" : "#10b981" }}',
+                    confirmButtonColor: '#10b981',
                     cancelButtonColor: '#94a3b8',
-                    confirmButtonText: 'Yes, {{ $user->is_active ? "deactivate" : "activate" }} it!',
+                    confirmButtonText: 'Yes, Activate it!',
                     cancelButtonText: 'Cancel',
                     padding: '2rem',
                     borderRadius: '1.5rem',
@@ -399,7 +507,7 @@
                     }
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        document.getElementById('statusToggleForm').submit();
+                        document.getElementById('activateUserForm').submit();
                     }
                 });
             }
