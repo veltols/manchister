@@ -211,15 +211,25 @@
                 @csrf
                 <input type="hidden" name="task_id" value="{{ $task->task_id }}">
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">New Status</label>
-                    <select name="status_id" class="premium-input w-full" required>
+                    <select name="status_id" id="update-status-id" class="premium-input w-full" required onchange="onStatusChange(this)">
                         <option value="">Select Status</option>
                         @foreach($statuses as $status)
-                            <option value="{{ $status->status_id }}" {{ $task->status_id == $status->status_id ? 'selected' : '' }}>
+                            <option value="{{ $status->status_id }}" {{ $task->status_id == $status->status_id ? 'selected' : '' }} data-name="{{ strtolower($status->status_name) }}">
                                 {{ $status->status_name }}
                             </option>
                         @endforeach
                     </select>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-sm font-semibold text-slate-700">Progress</label>
+                        <span id="update-progress-value" class="text-xs font-bold text-brand-dark bg-indigo-50 px-2 py-0.5 rounded-lg">{{ $task->task_progress }}%</span>
+                    </div>
+                    <input type="range" name="task_progress" id="update-task-progress" min="0" max="100" step="1"
+                        value="{{ $task->task_progress }}"
+                        class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-brand-dark"
+                        oninput="document.getElementById('update-progress-value').innerText = this.value + '%'">
                 </div>
 
                 <div>
@@ -244,5 +254,23 @@
 
     <!-- Alpine.js for Tabs -->
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+    <script>
+        function onStatusChange(select) {
+            const selectedOption = select.options[select.selectedIndex];
+            const statusName = (selectedOption.dataset.name || '').toLowerCase();
+            const statusId = parseInt(select.value);
+            const isDone = statusId === 4 || statusName.includes('done') || statusName.includes('complet');
+            
+            if (isDone) {
+                const progressSlider = document.getElementById('update-task-progress');
+                const progressValue = document.getElementById('update-progress-value');
+                if (progressSlider && progressValue) {
+                    progressSlider.value = 100;
+                    progressValue.innerText = '100%';
+                }
+            }
+        }
+    </script>
 
 @endsection

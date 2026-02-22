@@ -388,6 +388,15 @@
                     </select>
                 </div>
                 <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Progress</label>
+                        <span id="update-progress-value" class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg">0%</span>
+                    </div>
+                    <input type="range" name="task_progress" id="update-task-progress" min="0" max="100" step="1"
+                        class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                        oninput="document.getElementById('update-progress-value').innerText = this.value + '%'">
+                </div>
+                <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Remark /
                         Note</label>
                     <textarea name="log_remark" rows="3" class="premium-input w-full px-4 py-3"
@@ -589,7 +598,15 @@
             const statusName = (selectedOption.dataset.name || '').toLowerCase();
             const statusId = parseInt(select.value);
             const isDone = statusId === 4 || statusName.includes('done') || statusName.includes('complet');
-            // HR tasks view has no progress slider in the modal, so nothing to update here
+            
+            if (isDone) {
+                const progressSlider = document.getElementById('update-task-progress');
+                const progressValue = document.getElementById('update-progress-value');
+                if (progressSlider && progressValue) {
+                    progressSlider.value = 100;
+                    progressValue.innerText = '100%';
+                }
+            }
         }
 
 
@@ -615,6 +632,14 @@
 
                 if (result.success) {
                     const task = result.data;
+
+                    // Update Status Modal progress slider
+                    const progressSlider = document.getElementById('update-task-progress');
+                    const progressValue = document.getElementById('update-progress-value');
+                    if (progressSlider && progressValue) {
+                        progressSlider.value = task.task_progress || 0;
+                        progressValue.innerText = (task.task_progress || 0) + '%';
+                    }
 
                     // Populate Header
                     document.getElementById('detail-id').innerText = `TASK-${task.task_id}`;
@@ -720,7 +745,11 @@
             try {
                 const response = await fetch("{{ route('hr.tasks.store') }}", {
                     method: 'POST',
-                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    headers: { 
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
                     body: formData
                 });
                 const result = await response.json();
@@ -738,7 +767,11 @@
             try {
                 const response = await fetch("{{ route('hr.tasks.status.update') }}", {
                     method: 'POST',
-                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    headers: { 
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
                     body: formData
                 });
                 const result = await response.json();

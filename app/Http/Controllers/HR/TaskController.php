@@ -166,12 +166,19 @@ class TaskController extends Controller
                 'task_id' => 'required|exists:tasks_list,task_id',
                 'status_id' => 'required|exists:sys_list_status,status_id',
                 'log_remark' => 'required|string',
+                'task_progress' => 'nullable|integer|min:0|max:100',
             ]);
 
             $task = Task::findOrFail($request->task_id);
             $oldStatus = $task->status ? $task->status->status_name : 'Unknown';
 
             $task->status_id = $request->status_id;
+            
+            // Handle Progress Update
+            if ($request->has('task_progress')) {
+                $task->task_progress = $request->task_progress;
+            }
+
             if ($request->status_id == 4) { // Completed/Done
                 $task->task_end_date = now();
                 $task->task_progress = 100; // Auto-set progress to 100% when done
