@@ -8,23 +8,42 @@
         <!-- Sidebar: Tasks List -->
         <div class="tasks-sidebar">
             <div class="sidebar-header">
-                <h2 class="text-xl font-bold text-premium">All Tasks</h2>
-                <div class="flex gap-2">
-                    <div class="flex gap-2">
-                        <button onclick="openCreateTaskModal()"
-                            class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
-                            <i class="fa-solid fa-plus"></i>
-                        </button>
+                <div>
+                    <h2 class="text-xl font-bold text-premium">Tasks Management</h2>
+                    <div class="flex gap-2 mt-2">
+                        <a href="{{ route('hr.tasks.index', ['view_mode' => 'assigned_by']) }}" 
+                           class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded {{ $viewMode == 'assigned_by' ? 'bg-indigo-100 text-indigo-700' : 'text-slate-400 hover:text-indigo-600' }}">
+                            Assigned by Me
+                        </a>
+                        <a href="{{ route('hr.tasks.index', ['view_mode' => 'assigned_to']) }}" 
+                           class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded {{ $viewMode == 'assigned_to' ? 'bg-indigo-100 text-indigo-700' : 'text-slate-400 hover:text-indigo-600' }}">
+                            Assigned to Me
+                        </a>
                     </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="openCreateTaskModal()"
+                        class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
                 </div>
             </div>
 
             <div class="p-4 border-b border-slate-100 bg-slate-50/50">
-                <div class="relative">
-                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                    <input type="text" class="premium-input w-full pl-11 pr-4 py-2.5 text-sm bg-white"
-                        placeholder="Search tasks...">
-                </div>
+                <form action="{{ route('hr.tasks.index') }}" method="GET">
+                    <input type="hidden" name="view_mode" value="{{ $viewMode }}">
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <select name="status_id" onchange="this.form.submit()" class="premium-input w-full pl-11 pr-4 py-2.5 text-sm bg-white cursor-pointer">
+                            <option value="">All Statuses</option>
+                            @foreach($statuses as $status)
+                                <option value="{{ $status->status_id }}" {{ $statusId == $status->status_id ? 'selected' : '' }}>
+                                    {{ $status->status_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </form>
             </div>
 
             <div id="tasks-container-wrapper" class="flex-1"
@@ -49,12 +68,17 @@
 
                             <div class="flex items-center justify-between mt-3">
                                 <div class="flex items-center gap-2">
+                                    @php 
+                                        $person = ($viewMode == 'assigned_to') ? $task->assignedBy : $task->assignedTo;
+                                    @endphp
                                     <div
                                         class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
-                                        {{ substr($task->assignedBy->first_name ?? 'S', 0, 1) }}
+                                        {{ substr($person->first_name ?? 'S', 0, 1) }}
                                     </div>
                                     <span
-                                        class="text-xs text-slate-500">{{ $task->created_at ? $task->created_at->format('M d') : 'N/A' }}</span>
+                                        class="text-xs text-slate-500 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[80px]">
+                                        {{ $person->first_name ?? 'Unknown' }}
+                                    </span>
                                 </div>
                                 <span class="px-2 py-1 rounded-md text-[10px] font-bold"
                                     style="background: #{{ $task->status->status_color }}20; color: #{{ $task->status->status_color }}">
@@ -87,10 +111,16 @@
                                     </h3>
                                     <div class="flex items-center justify-between mt-2">
                                         <div class="flex items-center gap-2">
+                                            @php 
+                                                $subPerson = ($viewMode == 'assigned_to') ? $sub->assignedBy : $sub->assignedTo;
+                                            @endphp
                                             <div
                                                 class="w-5 h-5 rounded-full bg-white flex items-center justify-center text-[9px] font-bold text-slate-400 shadow-sm">
-                                                {{ substr($sub->assignedTo->first_name ?? '?', 0, 1) }}
+                                                {{ substr($subPerson->first_name ?? '?', 0, 1) }}
                                             </div>
+                                            <span class="text-[10px] text-slate-400 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[60px]">
+                                                {{ $subPerson->first_name ?? 'Unknown' }}
+                                            </span>
                                         </div>
                                         <span class="px-1.5 py-0.5 rounded text-[9px] font-bold"
                                             style="background: #{{ $sub->status->status_color }}20; color: #{{ $sub->status->status_color }}">
@@ -160,7 +190,7 @@
                     </div>
 
                     <!-- Stats Grid -->
-                    <div class="grid grid-cols-4 gap-4">
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                         <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
                             <span class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Assigned
                                 By</span>
@@ -174,6 +204,17 @@
                         </div>
                         <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
                             <span class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Assigned
+                                To</span>
+                            <div class="flex items-center gap-2">
+                                <div
+                                    class="w-6 h-6 rounded-full bg-cyan-100 text-cyan-600 flex items-center justify-center text-xs font-bold">
+                                    <i class="fa-solid fa-user-check"></i>
+                                </div>
+                                <span id="detail-assigned-to" class="font-bold text-slate-700 text-sm"></span>
+                            </div>
+                        </div>
+                        <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Assigned
                                 Date</span>
                             <span id="detail-assigned-date" class="font-bold text-slate-700 text-sm"></span>
                         </div>
@@ -183,9 +224,13 @@
                             <span id="detail-due-date" class="font-bold text-slate-700 text-sm"></span>
                         </div>
                         <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
-                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Time
-                                Remaining</span>
-                            <span id="detail-time-remaining" class="font-bold text-slate-700 text-sm"></span>
+                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Progress</span>
+                            <div class="flex items-center gap-2">
+                                <div class="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                                     <div id="detail-progress-bar" class="h-full bg-indigo-600 rounded-full transition-all duration-300" style="width: 0%"></div>
+                                </div>
+                                <span id="detail-progress-text" class="font-bold text-slate-700 text-sm">0%</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -418,95 +463,101 @@
     <script src="{{ asset('js/ajax-pagination.js') }}"></script>
     <script>
         window.ajaxPagination = new AjaxPagination({
-            endpoint: "{{ route('hr.tasks.data') }}",
+            endpoint: "{{ route('hr.tasks.data', ['view_mode' => $viewMode, 'status_id' => $statusId]) }}",
             containerSelector: '#tasks-container',
             paginationSelector: '#tasks-pagination',
             renderCallback: function (tasks) {
                 const container = document.querySelector('#tasks-container');
                 if (tasks.length === 0) {
                     container.innerHTML = `
-                                                                                <div class="text-center py-10">
-                                                                                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
-                                                                                        <i class="fa-solid fa-clipboard-check text-2xl"></i>
-                                                                                    </div>
-                                                                                    <p class="text-slate-400 text-sm">No tasks found</p>
-                                                                                </div>
-                                                                            `;
+                        <div class="text-center py-10">
+                            <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                                <i class="fa-solid fa-clipboard-check text-2xl"></i>
+                            </div>
+                            <p class="text-slate-400 text-sm">No tasks found</p>
+                        </div>
+                    `;
                     return;
                 }
 
                 let html = '';
+                const currentViewMode = "{{ $viewMode }}";
                 tasks.forEach(task => {
-                    const initials = (task.assigned_by ? task.assigned_by.first_name : 'S').charAt(0);
-                    const createdAt = task.created_at ? new Date(task.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A';
+                    const person = (currentViewMode == 'assigned_to') ? task.assigned_by : task.assigned_to;
+                    const initials = (person ? person.first_name : 'S').charAt(0);
+                    const personName = person ? person.first_name : 'Unknown';
 
                     // Main Task
                     html += `
-                                        <div onclick="loadTask(${task.task_id})" id="task-item-${task.task_id}"
-                                            class="task-card p-4 rounded-2xl bg-white border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden ${activeTaskId == task.task_id ? 'active' : ''}">
+                        <div onclick="loadTask(${task.task_id})" id="task-item-${task.task_id}"
+                            class="task-card p-4 rounded-2xl bg-white border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden ${activeTaskId == task.task_id ? 'active' : ''}">
 
-                                            <div class="flex justify-between items-start mb-2">
-                                                <span class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider"
-                                                    style="background: #${task.priority.priority_color}20; color: #${task.priority.priority_color}">
-                                                    ${task.priority.priority_name}
-                                                </span>
-                                                <span class="text-[10px] text-slate-400 font-mono">#${task.task_id}</span>
-                                            </div>
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider"
+                                    style="background: #${task.priority.priority_color}20; color: #${task.priority.priority_color}">
+                                    ${task.priority.priority_name}
+                                </span>
+                                <span class="text-[10px] text-slate-400 font-mono">#${task.task_id}</span>
+                            </div>
 
-                                            <h3 class="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors mb-1 line-clamp-2">
-                                                ${task.task_title}
-                                            </h3>
+                            <h3 class="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors mb-1 line-clamp-2">
+                                ${task.task_title}
+                            </h3>
 
-                                            <div class="flex items-center justify-between mt-3">
-                                                <div class="flex items-center gap-2">
-                                                    <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
-                                                        ${initials}
-                                                    </div>
-                                                    <span class="text-xs text-slate-500">${createdAt}</span>
-                                                </div>
-                                                <span class="px-2 py-1 rounded-md text-[10px] font-bold"
-                                                    style="background: #${task.status.status_color}20; color: #${task.status.status_color}">
-                                                    ${task.status.status_name}
-                                                </span>
-                                            </div>
+                            <div class="flex items-center justify-between mt-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
+                                        ${initials}
+                                    </div>
+                                    <span class="text-xs text-slate-500 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[80px]">${personName}</span>
+                                </div>
+                                <span class="px-2 py-1 rounded-md text-[10px] font-bold"
+                                    style="background: #${task.status.status_color}20; color: #${task.status.status_color}">
+                                    ${task.status.status_name}
+                                </span>
+                            </div>
 
-                                            <div class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 ${activeTaskId == task.task_id ? 'opacity-100' : 'opacity-0'} transition-opacity">
-                                            </div>
-                                        </div>
-                                    `;
+                            <div class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 ${activeTaskId == task.task_id ? 'opacity-100' : 'opacity-0'} transition-opacity">
+                            </div>
+                        </div>
+                    `;
 
                     // Subtasks
                     if (task.subtasks && task.subtasks.length > 0) {
                         task.subtasks.forEach(sub => {
-                            const subInitials = (sub.assigned_to ? sub.assigned_to.first_name : '?').charAt(0);
+                            const subPerson = (currentViewMode == 'assigned_to') ? sub.assigned_by : sub.assigned_to;
+                            const subInitials = (subPerson ? subPerson.first_name : '?').charAt(0);
+                            const subName = subPerson ? subPerson.first_name : 'Unknown';
+
                             html += `
-                                                <div onclick="loadTask(${sub.task_id})" id="task-item-${sub.task_id}"
-                                                     class="task-card subtask-card ml-6 p-3 rounded-xl bg-slate-50 border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden mb-2 ${activeTaskId == sub.task_id ? 'active' : ''}">
-                                                     <div class="absolute -left-3 top-1/2 w-3 h-[2px] bg-slate-200"></div>
-                                                     <div class="flex justify-between items-start mb-1">
-                                                          <div class="flex items-center gap-1">
-                                                              <i class="fa-solid fa-turn-up rotate-90 text-[10px] text-slate-300"></i>
-                                                              <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-white border border-slate-200 text-slate-400">Sub</span>
-                                                          </div>
-                                                          <span class="text-[9px] text-slate-400 font-mono">#${sub.task_id}</span>
-                                                     </div>
-                                                     <h3 class="font-bold text-slate-700 text-xs group-hover:text-indigo-600 transition-colors mb-1 line-clamp-1">
-                                                         ${sub.task_title}
-                                                     </h3>
-                                                     <div class="flex items-center justify-between mt-2">
-                                                         <div class="flex items-center gap-2">
-                                                             <div class="w-5 h-5 rounded-full bg-white flex items-center justify-center text-[9px] font-bold text-slate-400 shadow-sm">
-                                                                 ${subInitials}
-                                                             </div>
-                                                         </div>
-                                                         <span class="px-1.5 py-0.5 rounded text-[9px] font-bold"
-                                                             style="background: #${sub.status.status_color}20; color: #${sub.status.status_color}">
-                                                             ${sub.status.status_name}
-                                                         </span>
-                                                     </div>
-                                                      <div class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 ${activeTaskId == sub.task_id ? 'opacity-100' : 'opacity-0'} transition-opacity"></div>
-                                                </div>
-                                             `;
+                                <div onclick="loadTask(${sub.task_id})" id="task-item-${sub.task_id}"
+                                     class="task-card subtask-card ml-6 p-3 rounded-xl bg-slate-50 border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden mb-2 ${activeTaskId == sub.task_id ? 'active' : ''}">
+                                     <div class="absolute -left-3 top-1/2 w-3 h-[2px] bg-slate-200"></div>
+                                     <div class="flex justify-between items-start mb-1">
+                                          <div class="flex items-center gap-1">
+                                              <i class="fa-solid fa-turn-up rotate-90 text-[10px] text-slate-300"></i>
+                                              <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-white border border-slate-200 text-slate-400">Sub</span>
+                                          </div>
+                                          <span class="text-[9px] text-slate-400 font-mono">#${sub.task_id}</span>
+                                     </div>
+                                     <h3 class="font-bold text-slate-700 text-xs group-hover:text-indigo-600 transition-colors mb-1 line-clamp-1">
+                                         ${sub.task_title}
+                                     </h3>
+                                     <div class="flex items-center justify-between mt-2">
+                                         <div class="flex items-center gap-2">
+                                             <div class="w-5 h-5 rounded-full bg-white flex items-center justify-center text-[9px] font-bold text-slate-400 shadow-sm">
+                                                 ${subInitials}
+                                             </div>
+                                             <span class="text-[10px] text-slate-400 font-medium">${subName}</span>
+                                         </div>
+                                         <span class="px-1.5 py-0.5 rounded text-[9px] font-bold"
+                                             style="background: #${sub.status.status_color}20; color: #${sub.status.status_color}">
+                                             ${sub.status.status_name}
+                                         </span>
+                                     </div>
+                                      <div class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 ${activeTaskId == sub.task_id ? 'opacity-100' : 'opacity-0'} transition-opacity"></div>
+                                </div>
+                             `;
                         });
                     }
                 });
@@ -551,7 +602,12 @@
             document.getElementById('task-content').classList.remove('hidden');
 
             try {
-                const response = await fetch(`{{ url('hr/tasks') }}/${id}`);
+                const response = await fetch(`{{ url('hr/tasks') }}/${id}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
                 const result = await response.json();
 
                 if (result.success) {
@@ -575,8 +631,14 @@
 
                     // Stats
                     document.getElementById('detail-assigned-by').innerText = task.assigned_by ? `${task.assigned_by.first_name} ${task.assigned_by.last_name}` : 'N/A';
+                    document.getElementById('detail-assigned-to').innerText = task.assigned_to ? `${task.assigned_to.first_name} ${task.assigned_to.last_name}` : 'N/A';
                     document.getElementById('detail-assigned-date').innerText = new Date(task.task_assigned_date).toLocaleDateString();
                     document.getElementById('detail-due-date').innerText = new Date(task.task_due_date).toLocaleDateString();
+
+                    // Progress
+                    const prog = task.task_progress || 0;
+                    document.getElementById('detail-progress-bar').style.width = `${prog}%`;
+                    document.getElementById('detail-progress-text').innerText = `${prog}%`;
 
                     // Update select
                     document.getElementById('update-status-id').value = task.status_id;

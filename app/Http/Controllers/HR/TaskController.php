@@ -15,31 +15,61 @@ use Illuminate\Support\Facades\Log;
 
 class TaskController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $tasks = Task::with(['status', 'priority', 'assignedBy', 'subtasks.status', 'subtasks.priority', 'subtasks.assignedBy', 'subtasks.assignedTo'])
-            ->where(function ($q) {
-                $q->whereNull('parent_task_id')->orWhere('parent_task_id', 0);
-            })
-            ->orderBy('task_id', 'desc')
-            ->paginate(15);
+        $viewMode = $request->input('view_mode', 'assigned_by'); // Default for HR might be different, but let's follow Emp
+        $statusId = $request->input('status_id');
+        $employeeId = Auth::user()->employee ? Auth::user()->employee->employee_id : 0;
+
+        $query = Task::with(['status', 'priority', 'assignedBy', 'assignedTo', 'subtasks.status', 'subtasks.priority', 'subtasks.assignedBy', 'subtasks.assignedTo']);
+
+        if ($viewMode == 'assigned_to') {
+            $query->where('assigned_to', $employeeId);
+        } else {
+            $query->where('assigned_by', $employeeId);
+        }
+
+        if ($statusId) {
+            $query->where('status_id', $statusId);
+        }
+
+        $query->where(function ($q) {
+            $q->whereNull('parent_task_id')->orWhere('parent_task_id', 0);
+        });
+
+        $tasks = $query->orderBy('task_id', 'desc')->paginate(15);
 
         $statuses = TaskStatus::all();
         $priorities = TaskPriority::all();
         $employees = Employee::orderBy('first_name')->get();
 
-        return view('hr.tasks.index', compact('tasks', 'statuses', 'priorities', 'employees'));
+        return view('hr.tasks.index', compact('tasks', 'statuses', 'priorities', 'employees', 'viewMode', 'statusId'));
     }
 
     public function getData(Request $request)
     {
+        $viewMode = $request->input('view_mode', 'assigned_by');
+        $statusId = $request->input('status_id');
         $perPage = $request->get('per_page', 15);
-        $tasks = Task::with(['status', 'priority', 'assignedBy', 'subtasks.status', 'subtasks.priority', 'subtasks.assignedBy', 'subtasks.assignedTo'])
-            ->where(function ($q) {
-                $q->whereNull('parent_task_id')->orWhere('parent_task_id', 0);
-            })
-            ->orderBy('task_id', 'desc')
-            ->paginate($perPage);
+        $employeeId = Auth::user()->employee ? Auth::user()->employee->employee_id : 0;
+
+        $query = Task::with(['status', 'priority', 'assignedBy', 'assignedTo', 'subtasks.status', 'subtasks.priority', 'subtasks.assignedBy', 'subtasks.assignedTo']);
+
+        if ($viewMode == 'assigned_to') {
+            $query->where('assigned_to', $employeeId);
+        } else {
+            $query->where('assigned_by', $employeeId);
+        }
+
+        if ($statusId) {
+            $query->where('status_id', $statusId);
+        }
+
+        $query->where(function ($q) {
+            $q->whereNull('parent_task_id')->orWhere('parent_task_id', 0);
+        });
+
+        $tasks = $query->orderBy('task_id', 'desc')->paginate($perPage);
 
         return response()->json([
             'success' => true,
@@ -55,15 +85,20 @@ class TaskController extends Controller
         ]);
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        $task = Task::with(['status', 'priority', 'assignedBy', 'logs.logger'])
+        $task = Task::with(['status', 'priority', 'assignedBy', 'assignedTo', 'logs.logger'])
             ->findOrFail($id);
 
-        return response()->json([
-            'success' => true,
-            'data' => $task
-        ]);
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => $task
+            ]);
+        }
+
+        $statuses = TaskStatus::all();
+        return view('hr.tasks.show', compact('task', 'statuses'));
     }
 
     public function store(Request $request)
@@ -174,10 +209,14 @@ class TaskController extends Controller
 
             Log::info('System log created for task update', ['task_id' => $task->task_id]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Task status updated successfully!'
-            ]);
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Task status updated successfully!'
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'Task status updated successfully!');
 
         } catch (\Exception $e) {
             Log::error('Error updating task status', [

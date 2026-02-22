@@ -180,7 +180,7 @@
                     </div>
 
                     <!-- Stats Grid -->
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                         <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
                             <span class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Assigned By</span>
                             <div class="flex items-center gap-2">
@@ -195,6 +195,10 @@
                             <div class="flex items-center gap-2">
                                 <span id="detail-assigned-to" class="font-bold text-slate-700 text-sm"></span>
                             </div>
+                        </div>
+                        <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Assigned Date</span>
+                            <span id="detail-assigned-date" class="font-bold text-slate-700 text-sm"></span>
                         </div>
                         <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
                             <span class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Due Date</span>
@@ -527,7 +531,12 @@
             document.getElementById('task-content').classList.remove('hidden');
 
             try {
-                const response = await fetch(`{{ url('emp/tasks') }}/${id}`);
+                const response = await fetch(`{{ url('emp/tasks') }}/${id}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
                 const result = await response.json();
 
                 if (result.success) {
@@ -555,6 +564,7 @@
 
                     document.getElementById('detail-assigned-by').innerText = assignedBy ? `${assignedBy.first_name} ${assignedBy.last_name}` : 'N/A';
                     document.getElementById('detail-assigned-to').innerText = assignedTo ? `${assignedTo.first_name} ${assignedTo.last_name}` : 'N/A';
+                    document.getElementById('detail-assigned-date').innerText = task.task_assigned_date ? new Date(task.task_assigned_date).toLocaleDateString() : 'N/A';
                     document.getElementById('detail-due-date').innerText = task.task_due_date ? new Date(task.task_due_date).toLocaleDateString() : 'N/A';
 
                     // Progress
