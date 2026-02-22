@@ -10,7 +10,7 @@
             <div class="sidebar-header">
                 <div>
                     <h2 class="text-xl font-bold text-premium">Tasks Management</h2>
-                    <div class="flex gap-2 mt-2">
+                    <div class="flex flex-wrap gap-2 mt-2">
                         <a href="{{ route('hr.tasks.index', ['view_mode' => 'assigned_by']) }}" 
                            class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded {{ $viewMode == 'assigned_by' ? 'bg-indigo-100 text-indigo-700' : 'text-slate-400 hover:text-indigo-600' }}">
                             Assigned by Me
@@ -19,6 +19,31 @@
                            class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded {{ $viewMode == 'assigned_to' ? 'bg-indigo-100 text-indigo-700' : 'text-slate-400 hover:text-indigo-600' }}">
                             Assigned to Me
                         </a>
+                        @if(isset($submittedCount) && $submittedCount > 0 || $viewMode === 'submitted')
+                        <a href="{{ route('hr.tasks.index', ['view_mode' => 'submitted']) }}" 
+                           class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded flex items-center gap-1 {{ $viewMode == 'submitted' ? 'bg-orange-100 text-orange-700' : 'text-slate-400 hover:text-orange-600' }}">
+                             Submitted
+                             @if(isset($submittedCount) && $submittedCount > 0)
+                             <span class="bg-orange-400 text-white rounded-full w-4 h-4 flex items-center justify-center" style="font-size:9px;">{{ $submittedCount }}</span>
+                             @endif
+                        </a>
+                        @endif
+                        <a href="{{ route('hr.tasks.index', ['view_mode' => 'rejected']) }}"
+                           class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded flex items-center gap-1 {{ $viewMode == 'rejected' ? 'bg-red-100 text-red-700' : 'text-slate-400 hover:text-red-600' }}">
+                             Rejected
+                             @if(isset($rejectedCount) && $rejectedCount > 0)
+                             <span class="bg-red-400 text-white rounded-full w-4 h-4 flex items-center justify-center" style="font-size:9px;">{{ $rejectedCount }}</span>
+                             @endif
+                        </a>
+                        @if($isLineManager)
+                        <a href="{{ route('hr.tasks.index', ['view_mode' => 'rejected_by_me']) }}"
+                           class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded flex items-center gap-1 {{ $viewMode == 'rejected_by_me' ? 'bg-red-100 text-red-700' : 'text-slate-400 hover:text-red-600' }}">
+                             Rejected by Me
+                             @if(isset($rejectedByMeCount) && $rejectedByMeCount > 0)
+                             <span class="bg-red-400 text-white rounded-full w-4 h-4 flex items-center justify-center" style="font-size:9px;">{{ $rejectedByMeCount }}</span>
+                             @endif
+                        </a>
+                        @endif
                     </div>
                 </div>
                 <div class="flex gap-2">
@@ -86,6 +111,22 @@
                                 </span>
                             </div>
 
+                            @if($viewMode === 'rejected')
+                            <div class="mt-2 p-2 bg-red-50 rounded-lg border border-red-100">
+                                <p class="text-[10px] font-bold text-red-500 uppercase tracking-wider mb-0.5">Rejection Reason</p>
+                                <p class="text-xs text-red-700">{{ $task->rejection_reason }}</p>
+                            </div>
+                            <button onclick="event.stopPropagation(); openResubmitModal({{ $task->task_id }}, '{{ addslashes($task->task_title) }}', '{{ addslashes($task->task_description ?? '') }}')"
+                                class="mt-2 w-full inline-flex items-center justify-center gap-2 px-3 py-2 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition-colors">
+                                <i class="fa-solid fa-rotate-right"></i> Edit & Resubmit
+                            </button>
+                            @elseif($viewMode === 'rejected_by_me')
+                            <div class="mt-2 p-2 bg-red-50 rounded-lg border border-red-100">
+                                <p class="text-[10px] font-bold text-red-500 uppercase tracking-wider mb-0.5">You Rejected:</p>
+                                <p class="text-xs text-red-700">{{ $task->rejection_reason }}</p>
+                                <p class="text-[10px] text-slate-400 mt-1">Submitted by: {{ $task->assignedBy->first_name ?? '—' }}</p>
+                            </div>
+                            @endif
                             <div
                                 class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 opacity-0 transition-opacity">
                             </div>
@@ -177,6 +218,7 @@
                             <h1 id="detail-title" class="text-3xl font-display font-bold text-slate-800 leading-tight"></h1>
                         </div>
                         <div class="flex items-center gap-3">
+                        @if($viewMode !== 'submitted')
                             <button onclick="openSubtaskModal(activeTaskId)"
                                 class="premium-button from-cyan-500 to-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md flex items-center gap-2 hover:scale-105 transition-all duration-200"
                                 title="Add Subtask">
@@ -186,6 +228,11 @@
                                 class="premium-button from-indigo-600 to-purple-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md flex items-center gap-2 hover:scale-105 transition-all duration-200">
                                 <i class="fa-solid fa-pen text-sm"></i> Update Status
                             </button>
+                        @else
+                            <span class="text-xs font-semibold text-amber-600 bg-amber-50 px-3 py-2 rounded-xl border border-amber-200">
+                                <i class="fa-solid fa-clock-rotate-left mr-1"></i> Awaiting line manager approval
+                            </span>
+                        @endif
                         </div>
                     </div>
 
@@ -855,4 +902,71 @@
         }
     </script>
 @endpush
+
+{{-- Resubmit Modal (only needed in rejected view) --}}
+@if($viewMode === 'rejected')
+<div class="modal" id="resubmitModal">
+    <div class="modal-backdrop" onclick="closeModal('resubmitModal')"></div>
+    <div class="modal-content max-w-lg p-6">
+        <div class="flex items-center justify-between mb-5">
+            <div>
+                <h2 class="text-xl font-display font-bold text-premium">Edit & Resubmit Task</h2>
+                <p class="text-sm text-amber-600 mt-1"><i class="fa-solid fa-rotate-right mr-1"></i> Correct and send for line manager review</p>
+            </div>
+            <button onclick="closeModal('resubmitModal')" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+        <form onsubmit="submitResubmit(event)" class="space-y-4">
+            <input type="hidden" id="resubmit-task-id">
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Task Title</label>
+                <input type="text" id="resubmit-title" class="premium-input w-full px-4 py-3 text-sm" required>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description</label>
+                <textarea id="resubmit-desc" rows="4" class="premium-input w-full px-4 py-3 text-sm" placeholder="Describe the task..."></textarea>
+            </div>
+            <div class="pt-4 flex justify-end gap-3 border-t border-slate-100">
+                <button type="button" onclick="closeModal('resubmitModal')" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
+                <button type="submit" class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-200">
+                    <i class="fa-solid fa-rotate-right mr-2"></i>Resubmit for Approval
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    function openResubmitModal(taskId, title, description) {
+        document.getElementById('resubmit-task-id').value = taskId;
+        document.getElementById('resubmit-title').value = title;
+        document.getElementById('resubmit-desc').value = description;
+        openModal('resubmitModal');
+    }
+    async function submitResubmit(e) {
+        e.preventDefault();
+        const taskId = document.getElementById('resubmit-task-id').value;
+        const formData = new FormData();
+        formData.append('task_title', document.getElementById('resubmit-title').value);
+        formData.append('task_description', document.getElementById('resubmit-desc').value);
+        try {
+            const res = await fetch(`{{ url('hr/tasks') }}/${taskId}/resubmit`, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            });
+            const result = await res.json();
+            if (result.success) {
+                closeModal('resubmitModal');
+                Swal.fire({ icon: 'success', title: 'Resubmitted!', text: result.message, timer: 2000, showConfirmButton: false })
+                    .then(() => window.location.reload());
+            } else {
+                Swal.fire({ icon: 'error', title: 'Error', text: result.message });
+            }
+        } catch (err) {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to resubmit.' });
+        }
+    }
+</script>
+@endif
 @endsection

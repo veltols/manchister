@@ -166,6 +166,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/tasks', [App\Http\Controllers\Employee\TaskController::class, 'store'])->name('tasks.store');
         Route::post('/tasks/{id}/status', [App\Http\Controllers\Employee\TaskController::class, 'updateStatus'])->name('tasks.status');
         Route::post('/tasks/{id}/assign', [App\Http\Controllers\Employee\TaskController::class, 'assignTask'])->name('tasks.assign');
+        Route::post('/tasks/{id}/reject', [App\Http\Controllers\Employee\TaskController::class, 'rejectTask'])->name('tasks.reject');
+        Route::post('/tasks/{id}/resubmit', [App\Http\Controllers\Employee\TaskController::class, 'resubmitTask'])->name('tasks.resubmit');
 
         // Messages
         Route::get('/messages', [App\Http\Controllers\Employee\MessageController::class, 'index'])->name('messages.index');
@@ -264,6 +266,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/tasks', [App\Http\Controllers\HR\TaskController::class, 'store'])->name('tasks.store');
         Route::post('/tasks/status', [App\Http\Controllers\HR\TaskController::class, 'updateStatus'])->name('tasks.status.update');
         Route::post('/tasks/{id}/assign', [App\Http\Controllers\HR\TaskController::class, 'assignTask'])->name('tasks.assign');
+        Route::post('/tasks/{id}/reject', [App\Http\Controllers\HR\TaskController::class, 'rejectTask'])->name('tasks.reject');
+        Route::post('/tasks/{id}/resubmit', [App\Http\Controllers\HR\TaskController::class, 'resubmitTask'])->name('tasks.resubmit');
 
         // Calendar
         Route::get('/calendar', [App\Http\Controllers\HR\CalendarController::class, 'index'])->name('calendar.index');

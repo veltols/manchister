@@ -22,37 +22,80 @@ class TaskController extends Controller
         $statusId = $request->input('status_id');
         $employeeId = Auth::user()->employee ? Auth::user()->employee->employee_id : 0;
 
-        $query = Task::with(['status', 'priority', 'assignedBy', 'assignedTo', 'subtasks.status', 'subtasks.priority', 'subtasks.assignedBy', 'subtasks.assignedTo'])
-            ->whereNull('pending_line_manager_id')
-            ->orWhere('pending_line_manager_id', 0);
+        // Tasks pending line manager approval (submitted by this user)
+        if ($viewMode === 'submitted') {
+            $tasks = Task::with(['status', 'priority', 'assignedBy', 'assignedTo'])
+                ->where('assigned_by', $employeeId)
+                ->whereNotNull('pending_line_manager_id')
+                ->where('pending_line_manager_id', '!=', 0)
+                ->orderBy('task_id', 'desc')->paginate(15);
 
-        if ($viewMode == 'assigned_to') {
-            $query->where('assigned_to', $employeeId);
+        } elseif ($viewMode === 'rejected') {
+            // Tasks created by this user that were rejected
+            $tasks = Task::with(['status', 'priority', 'assignedBy', 'assignedTo'])
+                ->where('assigned_by', $employeeId)
+                ->where('is_rejected', 1)
+                ->orderBy('task_id', 'desc')->paginate(15);
+
+        } elseif ($viewMode === 'rejected_by_me') {
+            // Tasks this user rejected as line manager
+            $tasks = Task::with(['status', 'priority', 'assignedBy', 'assignedTo'])
+                ->where('is_rejected', 1)
+                ->whereHas('assignedBy', function ($q) use ($employeeId) {
+                    // tasks from dept managed by this line manager
+                    $deptIds = Department::where('line_manager_id', $employeeId)->pluck('department_id');
+                    $q->whereIn('department_id', $deptIds);
+                })
+                ->orderBy('task_id', 'desc')->paginate(15);
+
         } else {
-            $query->where('assigned_by', $employeeId);
+            $query = Task::with(['status', 'priority', 'assignedBy', 'assignedTo', 'subtasks.status', 'subtasks.priority', 'subtasks.assignedBy', 'subtasks.assignedTo'])
+                ->where(function ($q) {
+                    $q->whereNull('pending_line_manager_id')->orWhere('pending_line_manager_id', 0);
+                })
+                ->where('is_rejected', 0);
+
+            if ($viewMode == 'assigned_to') {
+                $query->where('assigned_to', $employeeId);
+            } else {
+                $query->where('assigned_by', $employeeId);
+            }
+
+            if ($statusId) {
+                $query->where('status_id', $statusId);
+            }
+
+            $query->where(function ($q) {
+                $q->whereNull('parent_task_id')->orWhere('parent_task_id', 0);
+            });
+
+            $tasks = $query->orderBy('task_id', 'desc')->paginate(15);
         }
-
-        if ($statusId) {
-            $query->where('status_id', $statusId);
-        }
-
-        $query->where(function ($q) {
-            $q->whereNull('parent_task_id')->orWhere('parent_task_id', 0);
-        });
-
-        $tasks = $query->orderBy('task_id', 'desc')->paginate(15);
 
         $statuses = TaskStatus::all();
         $priorities = TaskPriority::all();
-        $employees = Employee::orderBy('first_name')->get();
 
-        // Count pending tasks for line manager badge
+        $deptId = Auth::user()->employee ? Auth::user()->employee->department_id : null;
+        $employees = Employee::when($deptId, fn($q) => $q->where('department_id', $deptId))
+            ->orderBy('first_name')->get();
+
         $pendingCount = Task::where('pending_line_manager_id', $employeeId)->count();
 
-        // Check if current user is a line manager of any department
+        $submittedCount = Task::where('assigned_by', $employeeId)
+            ->whereNotNull('pending_line_manager_id')
+            ->where('pending_line_manager_id', '!=', 0)
+            ->count();
+
+        $rejectedCount = Task::where('assigned_by', $employeeId)->where('is_rejected', 1)->count();
+
+        $deptIds = Department::where('line_manager_id', $employeeId)->pluck('department_id');
+        $rejectedByMeCount = Task::where('is_rejected', 1)
+            ->whereHas('assignedBy', fn($q) => $q->whereIn('department_id', $deptIds))
+            ->count();
+
         $isLineManager = Department::where('line_manager_id', $employeeId)->exists();
 
-        return view('hr.tasks.index', compact('tasks', 'statuses', 'priorities', 'employees', 'viewMode', 'statusId', 'pendingCount', 'isLineManager'));
+        return view('hr.tasks.index', compact('tasks', 'statuses', 'priorities', 'employees', 'viewMode', 'statusId', 'pendingCount', 'submittedCount', 'rejectedCount', 'rejectedByMeCount', 'isLineManager'));
     }
 
     public function getData(Request $request)
@@ -270,6 +313,86 @@ class TaskController extends Controller
         ]);
 
         return response()->json(['success' => true, 'message' => 'Task assigned successfully!']);
+    }
+
+    /**
+     * Line manager rejects a pending task.
+     */
+    public function rejectTask(Request $request, $id)
+    {
+        $request->validate([
+            'rejection_reason' => 'required|string|max:500',
+        ]);
+
+        $employeeId = Auth::user()->employee ? Auth::user()->employee->employee_id : 0;
+
+        $task = Task::where('task_id', $id)
+            ->where('pending_line_manager_id', $employeeId)
+            ->firstOrFail();
+
+        $creatorId  = $task->assigned_by;
+        $taskTitle  = $task->task_title;
+        $reason     = $request->rejection_reason;
+
+        // Mark as rejected (keep in DB so creator can review and resubmit)
+        $task->is_rejected            = 1;
+        $task->rejection_reason       = $reason;
+        $task->pending_line_manager_id = null;
+        $task->save();
+
+        // Notify creator
+        \App\Services\NotificationService::send(
+            "Your task \"" . $taskTitle . "\" was rejected. Reason: " . $reason . ". Please review and resubmit.",
+            "hr/tasks",
+            $creatorId
+        );
+
+        return response()->json(['success' => true, 'message' => 'Task rejected. Creator has been notified to review and resubmit.']);
+    }
+
+    /**
+     * Creator resubmits a rejected task for line manager approval.
+     */
+    public function resubmitTask(Request $request, $id)
+    {
+        $request->validate([
+            'task_title'       => 'required|string|max:255',
+            'task_description' => 'nullable|string',
+        ]);
+
+        $employeeId = Auth::user()->employee ? Auth::user()->employee->employee_id : 0;
+
+        $task = Task::where('task_id', $id)
+            ->where('assigned_by', $employeeId)
+            ->where('is_rejected', 1)
+            ->firstOrFail();
+
+        // Get fresh line manager
+        $lineManagerId = null;
+        if (Auth::user()->employee && Auth::user()->employee->department_id) {
+            $lineManagerId = Department::where('department_id', Auth::user()->employee->department_id)->value('line_manager_id');
+        }
+        if (!$lineManagerId) {
+            $lineManagerId = Department::whereNotNull('line_manager_id')->orderBy('updated_at', 'desc')->value('line_manager_id');
+        }
+        if ($lineManagerId == $employeeId) $lineManagerId = null;
+
+        $task->task_title              = $request->task_title;
+        $task->task_description        = $request->task_description;
+        $task->is_rejected             = 0;
+        $task->rejection_reason        = null;
+        $task->pending_line_manager_id = $lineManagerId;
+        $task->save();
+
+        if ($lineManagerId) {
+            \App\Services\NotificationService::send(
+                "A resubmitted task requires your review: " . $task->task_title,
+                "hr/tasks/pending",
+                $lineManagerId
+            );
+        }
+
+        return response()->json(['success' => true, 'message' => 'Task resubmitted for approval!']);
     }
 
     public function updateStatus(Request $request)

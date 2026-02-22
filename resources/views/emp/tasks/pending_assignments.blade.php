@@ -67,6 +67,7 @@
                             <th class="text-left">Priority</th>
                             <th class="text-left">Created By</th>
                             <th class="text-left">Suggested For</th>
+                            <th class="text-left">Attachment</th>
                             <th class="text-left">Due Date</th>
                             <th class="text-left pr-6">Action</th>
                         </tr>
@@ -79,7 +80,10 @@
                             </td>
                             <td>
                                 <div>
-                                    <p class="font-bold text-slate-800">{{ $task->task_title }}</p>
+                                    <button onclick="openDetailModal({{ $task->task_id }})"
+                                        class="font-bold text-slate-800 hover:text-indigo-600 text-left transition-colors">
+                                        {{ $task->task_title }}
+                                    </button>
                                     @if($task->task_description)
                                     <p class="text-sm text-slate-500 mt-0.5 line-clamp-1">{{ $task->task_description }}</p>
                                     @endif
@@ -121,6 +125,16 @@
                                 @endif
                             </td>
                             <td>
+                                @if($task->task_attachment)
+                                    <a href="{{ asset($task->task_attachment) }}" target="_blank"
+                                        class="inline-flex items-center gap-1 px-2 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-colors">
+                                        <i class="fa-solid fa-paperclip"></i> View File
+                                    </a>
+                                @else
+                                    <span class="text-slate-300 text-sm">—</span>
+                                @endif
+                            </td>
+                            <td>
                                 <span class="text-sm font-medium {{ now()->gt($task->task_due_date) ? 'text-red-600' : 'text-slate-600' }}">
                                     {{ \Carbon\Carbon::parse($task->task_due_date)->format('Y-m-d') }}
                                     @if(now()->gt($task->task_due_date))
@@ -129,11 +143,16 @@
                                 </span>
                             </td>
                             <td class="pr-6">
-                                <button onclick="openAssignModal({{ $task->task_id }}, '{{ addslashes($task->task_title) }}', {{ $task->assigned_to ?? 0 }})"
-                                    class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-brand text-white text-sm font-bold rounded-xl shadow hover:scale-105 transition-all duration-200">
-                                    <i class="fa-solid fa-user-plus text-xs"></i>
-                                    Assign
-                                </button>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="openAssignModal({{ $task->task_id }}, '{{ addslashes($task->task_title) }}', {{ $task->assigned_to ?? 0 }})"
+                                        class="inline-flex items-center gap-1 px-3 py-2 bg-gradient-brand text-white text-sm font-bold rounded-xl shadow hover:scale-105 transition-all duration-200">
+                                        <i class="fa-solid fa-user-plus text-xs"></i> Assign
+                                    </button>
+                                    <button onclick="openRejectModal({{ $task->task_id }}, '{{ addslashes($task->task_title) }}')"
+                                        class="inline-flex items-center gap-1 px-3 py-2 bg-red-500 text-white text-sm font-bold rounded-xl shadow hover:scale-105 hover:bg-red-600 transition-all duration-200">
+                                        <i class="fa-solid fa-xmark text-xs"></i> Reject
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         @endforeach
@@ -141,6 +160,73 @@
                 </table>
             </div>
         @endif
+    </div>
+</div>
+
+{{-- Hidden task data for JS detail modal --}}
+<script>
+const taskData = {
+    @foreach($tasks as $task)
+    {{ $task->task_id }}: {
+        title: "{{ addslashes($task->task_title) }}",
+        description: "{{ addslashes($task->task_description ?? '') }}",
+        priority: "{{ $task->priority->priority_name ?? '—' }}",
+        priorityColor: "#{{ $task->priority->priority_color ?? '6366f1' }}",
+        createdBy: "{{ $task->assignedBy ? $task->assignedBy->first_name . ' ' . $task->assignedBy->last_name : '—' }}",
+        suggestedFor: "{{ $task->assignedTo ? $task->assignedTo->first_name . ' ' . $task->assignedTo->last_name : 'Not specified' }}",
+        dueDate: "{{ \Carbon\Carbon::parse($task->task_due_date)->format('d M Y') }}",
+        assignedDate: "{{ \Carbon\Carbon::parse($task->task_assigned_date)->format('d M Y') }}",
+        attachment: "{{ $task->task_attachment ? asset($task->task_attachment) : '' }}",
+    },
+    @endforeach
+};
+</script>
+
+<!-- Task Detail Modal -->
+<div class="modal" id="detailModal">
+    <div class="modal-backdrop" onclick="closeModal('detailModal')"></div>
+    <div class="modal-content max-w-lg p-6">
+        <div class="flex items-center justify-between mb-5">
+            <h2 class="text-xl font-display font-bold text-premium">Task Details</h2>
+            <button onclick="closeModal('detailModal')" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+        <div class="space-y-4">
+            <div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Task Title</p>
+                <p id="d-title" class="text-lg font-bold text-slate-800"></p>
+            </div>
+            <div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Description</p>
+                <p id="d-desc" class="text-sm text-slate-600 bg-slate-50 rounded-xl p-3 min-h-[48px]"></p>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-slate-50 rounded-xl p-3">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Priority</p>
+                    <span id="d-priority" class="px-2 py-0.5 rounded-full text-xs font-bold"></span>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-3">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Due Date</p>
+                    <p id="d-due" class="text-sm font-bold text-slate-700"></p>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-3">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Created By</p>
+                    <p id="d-created-by" class="text-sm font-bold text-slate-700"></p>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-3">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Suggested For</p>
+                    <p id="d-suggested" class="text-sm font-bold text-slate-700"></p>
+                </div>
+            </div>
+            <div id="d-attachment-wrap" class="hidden">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Attachment</p>
+                <a id="d-attachment" href="#" target="_blank"
+                    class="inline-flex items-center gap-2 px-3 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-colors">
+                    <i class="fa-solid fa-paperclip"></i> View Attachment
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -157,7 +243,6 @@
                 <i class="fa-solid fa-times"></i>
             </button>
         </div>
-
         <form onsubmit="submitAssignment(event)" class="space-y-4">
             <input type="hidden" id="assign-task-id">
             <div>
@@ -181,54 +266,124 @@
     </div>
 </div>
 
+<!-- Reject Modal -->
+<div class="modal" id="rejectModal">
+    <div class="modal-backdrop" onclick="closeModal('rejectModal')"></div>
+    <div class="modal-content max-w-md p-6">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h2 class="text-xl font-display font-bold text-red-600">Reject Task</h2>
+                <p id="reject-task-title" class="text-sm text-slate-500 mt-1 line-clamp-1"></p>
+            </div>
+            <button onclick="closeModal('rejectModal')" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+        <form onsubmit="submitRejection(event)" class="space-y-4">
+            <input type="hidden" id="reject-task-id">
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Rejection Reason <span class="text-red-400">*</span></label>
+                <textarea id="reject-reason" rows="4" class="premium-input w-full px-4 py-3 text-sm"
+                    placeholder="Explain why this task is being rejected..." required></textarea>
+            </div>
+            <div class="pt-4 flex justify-end gap-3 border-t border-slate-100">
+                <button type="button" onclick="closeModal('rejectModal')" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
+                <button type="submit" class="px-6 py-3 bg-red-500 text-white font-bold rounded-xl shadow-lg hover:bg-red-600 hover:scale-105 transition-all duration-200">
+                    <i class="fa-solid fa-xmark mr-2"></i>Reject Task
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @push('scripts')
 <script>
+    function openDetailModal(taskId) {
+        const t = taskData[taskId];
+        if (!t) return;
+        document.getElementById('d-title').innerText = t.title;
+        document.getElementById('d-desc').innerText = t.description || 'No description provided.';
+        const pEl = document.getElementById('d-priority');
+        pEl.innerText = t.priority;
+        pEl.style.background = t.priorityColor + '20';
+        pEl.style.color = t.priorityColor;
+        document.getElementById('d-due').innerText = t.dueDate;
+        document.getElementById('d-created-by').innerText = t.createdBy;
+        document.getElementById('d-suggested').innerText = t.suggestedFor;
+        const attachWrap = document.getElementById('d-attachment-wrap');
+        if (t.attachment) {
+            document.getElementById('d-attachment').href = t.attachment;
+            attachWrap.classList.remove('hidden');
+        } else {
+            attachWrap.classList.add('hidden');
+        }
+        openModal('detailModal');
+    }
+
     function openAssignModal(taskId, taskTitle, suggestedId) {
         document.getElementById('assign-task-id').value = taskId;
         document.getElementById('assign-task-title').innerText = taskTitle;
         const sel = document.getElementById('assign-employee');
-        // Pre-select the suggested employee if provided
         sel.value = suggestedId ? suggestedId : '';
         openModal('assignModal');
+    }
+
+    function openRejectModal(taskId, taskTitle) {
+        document.getElementById('reject-task-id').value = taskId;
+        document.getElementById('reject-task-title').innerText = taskTitle;
+        document.getElementById('reject-reason').value = '';
+        openModal('rejectModal');
     }
 
     async function submitAssignment(e) {
         e.preventDefault();
         const taskId = document.getElementById('assign-task-id').value;
         const assignedTo = document.getElementById('assign-employee').value;
-
         if (!assignedTo) return;
-
         const formData = new FormData();
         formData.append('assigned_to', assignedTo);
-
         try {
-            const response = await fetch(`{{ url('emp/tasks') }}/${taskId}/assign`, {
+            const res = await fetch(`{{ url('emp/tasks') }}/${taskId}/assign`, {
                 method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
+                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                 body: formData
             });
-            const result = await response.json();
+            const result = await res.json();
             if (result.success) {
                 closeModal('assignModal');
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Task Assigned!',
-                    text: result.message,
-                    confirmButtonColor: '#4f46e5',
-                    timer: 2000,
-                    showConfirmButton: false
-                }).then(() => window.location.reload());
+                Swal.fire({ icon: 'success', title: 'Task Assigned!', text: result.message, timer: 2000, showConfirmButton: false })
+                    .then(() => window.location.reload());
             } else {
                 Swal.fire({ icon: 'error', title: 'Error', text: result.message });
             }
         } catch (err) {
-            console.error(err);
             Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to assign task.' });
+        }
+    }
+
+    async function submitRejection(e) {
+        e.preventDefault();
+        const taskId = document.getElementById('reject-task-id').value;
+        const reason = document.getElementById('reject-reason').value;
+        if (!reason.trim()) return;
+        const formData = new FormData();
+        formData.append('rejection_reason', reason);
+        try {
+            const res = await fetch(`{{ url('emp/tasks') }}/${taskId}/reject`, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            });
+            const result = await res.json();
+            if (result.success) {
+                closeModal('rejectModal');
+                Swal.fire({ icon: 'info', title: 'Task Rejected', text: result.message, timer: 2500, showConfirmButton: false })
+                    .then(() => window.location.reload());
+            } else {
+                Swal.fire({ icon: 'error', title: 'Error', text: result.message });
+            }
+        } catch (err) {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to reject task.' });
         }
     }
 </script>
