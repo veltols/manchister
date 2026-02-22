@@ -59,6 +59,7 @@ class DepartmentController extends Controller
             'department_name' => 'required|string|max:255',
             'main_department_id' => 'nullable|integer',
             'line_manager_id' => 'nullable|exists:employees_list,employee_id',
+            'user_type' => 'required|in:emp,hr,eqa',
             'log_remark' => 'nullable|string',
         ]);
 
@@ -67,7 +68,7 @@ class DepartmentController extends Controller
         $dept->department_name = $request->department_name;
         $dept->main_department_id = $request->main_department_id == 0 ? 0 : $request->main_department_id;
         $dept->line_manager_id = $request->line_manager_id;
-        $dept->user_type = 'emp'; // Default from legacy logic
+        $dept->user_type = $request->user_type;
         $dept->save();
 
         $this->logAction($dept->department_id, 'Department_Added', $request->log_remark ?? '---');
@@ -84,6 +85,7 @@ class DepartmentController extends Controller
             'department_name' => 'required|string|max:255',
             'main_department_id' => 'nullable|integer',
             'line_manager_id' => 'nullable|exists:employees_list,employee_id',
+            'user_type' => 'required|in:emp,hr,eqa',
             'log_remark' => 'required|string',
         ]);
 
@@ -91,6 +93,7 @@ class DepartmentController extends Controller
         $dept->department_name = $request->department_name;
         $dept->main_department_id = $request->main_department_id == 0 ? 0 : $request->main_department_id;
         $dept->line_manager_id = $request->line_manager_id;
+        $dept->user_type = $request->user_type;
         $dept->save();
 
         $this->logAction($dept->department_id, 'Department_Updated', $request->log_remark);

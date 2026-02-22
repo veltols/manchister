@@ -31,6 +31,7 @@
                             <th class="text-left">Ref</th>
                             <th class="text-left">Code</th>
                             <th class="text-left">Name</th>
+                            <th class="text-left">User Type</th>
                             <th class="text-left">Main Department</th>
                             <th class="text-left">Line Manager</th>
                             <th class="text-center">Actions</th>
@@ -39,13 +40,16 @@
                     <tbody id="departments-container">
                         @forelse($departments as $dept)
                             <tr>
-                                <td><span
-                                        class="font-mono text-sm font-semibold text-slate-600">#{{ $dept->department_id }}</span>
-                                </td>
-                                <td><span
-                                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 text-indigo-800 text-sm font-bold">{{ $dept->department_code }}</span>
-                                </td>
+                                <td><span class="font-mono text-sm font-semibold text-slate-600">#{{ $dept->department_id }}</span></td>
+                                <td><span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 text-indigo-800 text-sm font-bold">{{ $dept->department_code }}</span></td>
                                 <td><span class="font-semibold text-slate-800">{{ $dept->department_name }}</span></td>
+                                <td>
+                                    @php
+                                        $typeLabels = ['emp' => ['label' => 'Employee', 'color' => 'bg-blue-50 text-blue-700'], 'hr' => ['label' => 'HR', 'color' => 'bg-purple-50 text-purple-700'], 'eqa' => ['label' => 'EQA', 'color' => 'bg-green-50 text-green-700']];
+                                        $typeInfo = $typeLabels[$dept->user_type] ?? ['label' => ucfirst($dept->user_type ?? 'emp'), 'color' => 'bg-slate-50 text-slate-600'];
+                                    @endphp
+                                    <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-bold {{ $typeInfo['color'] }}">{{ $typeInfo['label'] }}</span>
+                                </td>
                                 <td>
                                     @if($dept->main_department_id != 0 && $dept->mainDepartment)
                                         <span
@@ -74,7 +78,7 @@
                                 <td>
                                     <div class="flex items-center justify-center">
                                         <button
-                                            onclick="editDepartment({{ $dept->department_id }}, '{{ addslashes($dept->department_code) }}', '{{ addslashes($dept->department_name) }}', {{ $dept->main_department_id }}, {{ $dept->line_manager_id ?? 0 }})"
+                                            onclick="editDepartment({{ $dept->department_id }}, '{{ addslashes($dept->department_code) }}', '{{ addslashes($dept->department_name) }}', {{ $dept->main_department_id }}, {{ $dept->line_manager_id ?? 0 }}, '{{ $dept->user_type ?? 'emp' }}')"
                                             class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
                                             title="Edit">
                                             <i class="fa-solid fa-pen text-sm"></i>
@@ -147,6 +151,14 @@
                         </select>
                     </div>
                     <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">User Type</label>
+                        <select name="user_type" class="premium-input w-full px-4 py-3 text-sm" required>
+                            <option value="emp">Employee (emp)</option>
+                            <option value="hr">HR (hr)</option>
+                            <option value="eqa">EQA (eqa)</option>
+                        </select>
+                    </div>
+                    <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">Remarks</label>
                         <textarea name="log_remark" class="premium-input w-full px-4 py-3 text-sm" rows="3"
                             placeholder="Optional remarks..."></textarea>
@@ -207,8 +219,15 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">Remarks <span
-                                class="text-red-500">*</span></label>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">User Type</label>
+                        <select name="user_type" id="edit_user_type" class="premium-input w-full px-4 py-3 text-sm" required>
+                            <option value="emp">Employee (emp)</option>
+                            <option value="hr">HR (hr)</option>
+                            <option value="eqa">EQA (eqa)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Remarks <span class="text-red-500">*</span></label>
                         <textarea name="log_remark" id="edit_remark" class="premium-input w-full px-4 py-3 text-sm" rows="3"
                             required placeholder="Reason for update..."></textarea>
                     </div>
@@ -227,11 +246,12 @@
     @push('scripts')
         <script src="{{ asset('js/ajax-pagination.js') }}"></script>
         <script>
-            function editDepartment(id, code, name, mainId, managerId) {
+            function editDepartment(id, code, name, mainId, managerId, userType) {
                 document.getElementById('edit_code').value = code;
                 document.getElementById('edit_name').value = name;
                 document.getElementById('edit_main').value = mainId;
                 document.getElementById('edit_manager').value = managerId || "";
+                document.getElementById('edit_user_type').value = userType || 'emp';
                 document.getElementById('edit_remark').value = "";
 
                 let prefix = window.location.pathname.startsWith('/admin') ? '/admin' : '/hr';
@@ -295,7 +315,7 @@
                                 </td>
                                 <td>
                                     <div class="flex items-center justify-center">
-                                        <button onclick="editDepartment(${dept.department_id}, '${dept.department_code.replace(/'/g, "\\'")}', '${dept.department_name.replace(/'/g, "\\'")}', ${dept.main_department_id}, ${dept.line_manager_id || 0})"
+                                        <button onclick="editDepartment(${dept.department_id}, '${dept.department_code.replace(/'/g, "\\'")}', '${dept.department_name.replace(/'/g, "\\'")}', ${dept.main_department_id}, ${dept.line_manager_id || 0}, '${dept.user_type || 'emp'}')"
                                                 class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
                                                 title="Edit">
                                             <i class="fa-solid fa-pen text-sm"></i>
