@@ -289,7 +289,13 @@
             <div class="flex justify-between items-center mb-6">
                 <div>
                     <h2 class="text-2xl font-display font-bold text-premium" id="task-modal-title">Create New Task</h2>
-                    <p class="text-slate-500 text-sm mt-1">Assign a new task to an employee</p>
+                    <p class="text-slate-500 text-sm mt-1">
+                        @if($isLineManager)
+                            Assign a new task to an employee.
+                        @else
+                            Task will be sent to your <strong class="text-amber-600">line manager</strong> for review &amp; assignment.
+                        @endif
+                    </p>
                 </div>
                 <button onclick="closeModal('newTaskModal')"
                     class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
@@ -301,18 +307,11 @@
                 @csrf
                 <input type="hidden" name="parent_task_id" id="task_parent_id">
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Task Title</label>
-                    <input type="text" name="task_title" class="premium-input w-full px-4 py-3 text-sm" required
-                        placeholder="What needs to be done?">
-                </div>
-
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Assign
-                            To</label>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Assign To</label>
                         <select name="assigned_to" class="premium-input w-full px-4 py-3 text-sm">
-                            <option value="">Select Employee...</option>
+                            <option value="">Not specified</option>
                             @foreach($employees as $emp)
                                 <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
                             @endforeach
@@ -329,9 +328,9 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Due Date</label>
-                    <input type="datetime-local" name="task_due_date" required
-                        class="premium-input w-full px-4 py-3 text-sm">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Task Title</label>
+                    <input type="text" name="task_title" class="premium-input w-full px-4 py-3 text-sm" required
+                        placeholder="What needs to be done?">
                 </div>
 
                 <div>
@@ -340,13 +339,36 @@
                         placeholder="Additional details..."></textarea>
                 </div>
 
+                <div class="grid grid-cols-2 gap-6 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div class="space-y-3">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">Start Schedule</label>
+                        <input type="date" name="task_assigned_date" class="premium-input w-full text-sm" value="{{ date('Y-m-d') }}" required>
+                        <select name="start_time" class="premium-input w-full text-sm">
+                            <option value="">Start Time (Optional)</option>
+                            @for($i = 6; $i <= 22; $i++)
+                                @php $h = str_pad($i, 2, '0', STR_PAD_LEFT); @endphp
+                                <option value="{{ $h }}:00:00">{{ $h }}:00</option>
+                            @endfor
+                        </select>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">Due Deadline</label>
+                        <input type="date" name="task_due_date" class="premium-input w-full text-sm" required>
+                        <select name="end_time" class="premium-input w-full text-sm">
+                            <option value="">End Time (Optional)</option>
+                            @for($i = 6; $i <= 22; $i++)
+                                @php $h = str_pad($i, 2, '0', STR_PAD_LEFT); @endphp
+                                <option value="{{ $h }}:00:00" {{ $i == 14 ? 'selected' : '' }}>{{ $h }}:00</option>
+                            @endfor
+                        </select>
+                    </div>
+                </div>
+
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                        <i class="fa-solid fa-paperclip text-indigo-500 mr-1"></i> Attachment <span
-                            class="text-slate-300">(Optional)</span>
+                        <i class="fa-solid fa-paperclip text-indigo-500 mr-1"></i> Attachment <span class="text-slate-300">(Optional)</span>
                     </label>
-                    <input type="file" name="task_attachment" id="task_attachment"
-                        class="premium-input w-full px-4 py-3 text-sm">
+                    <input type="file" name="task_attachment" id="task_attachment" class="premium-input w-full px-4 py-3 text-sm">
                     <div id="task-attachment-preview"></div>
                 </div>
 
@@ -354,8 +376,7 @@
                     <button type="button" onclick="closeModal('newTaskModal')"
                         class="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">Cancel</button>
                     <button type="submit"
-                        class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">Create
-                        Task</button>
+                        class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">Create Task</button>
                 </div>
             </form>
         </div>

@@ -81,6 +81,23 @@
                 <span class="font-semibold text-sm">Tasks</span>
             </a>
 
+            @php
+                $hrPendingCount = 0;
+                if(Auth::user() && Auth::user()->employee) {
+                    $hrPendingCount = \App\Models\Task::where('pending_line_manager_id', Auth::user()->employee->employee_id)->count();
+                }
+            @endphp
+            @if($hrPendingCount > 0)
+            <a href="{{ route('hr.tasks.pending') }}"
+                class="group flex items-center gap-3 p-3 rounded-xl hover:bg-amber-50 transition-all {{ request()->routeIs('hr.tasks.pending') ? 'bg-amber-50 text-amber-700' : 'text-slate-600' }}">
+                <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform relative">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span class="absolute -top-1.5 -right-1.5 bg-amber-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">{{ $hrPendingCount }}</span>
+                </div>
+                <span class="font-semibold text-sm">Pending Tasks</span>
+            </a>
+            @endif
+
             <a href="{{ route('hr.calendar.index') }}"
                 class="group flex items-center gap-3 p-3 rounded-xl hover:bg-blue-50 transition-all {{ request()->routeIs('hr.calendar.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600' }}">
                 <div

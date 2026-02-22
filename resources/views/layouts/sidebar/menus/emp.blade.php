@@ -7,10 +7,25 @@
     </a>
 
     <a href="{{ route('emp.tasks.index') }}"
-        class="nav-item {{ request()->routeIs('emp.tasks.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white mb-2">
+        class="nav-item {{ request()->routeIs('emp.tasks.*') && !request()->routeIs('emp.tasks.pending') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white mb-2">
         <i class="fa-solid fa-list-check text-2xl"></i>
         <span class="text-[12px] font-bold uppercase tracking-wider opacity-60">My Tasks</span>
     </a>
+
+    @php
+        $empPendingCount = 0;
+        if(Auth::user() && Auth::user()->employee) {
+            $empPendingCount = \App\Models\Task::where('pending_line_manager_id', Auth::user()->employee->employee_id)->count();
+        }
+    @endphp
+    @if($empPendingCount > 0)
+    <a href="{{ route('emp.tasks.pending') }}"
+        class="nav-item {{ request()->routeIs('emp.tasks.pending') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl hover:text-white mb-2 relative" style="background: rgba(251,191,36,0.15); color: #fbbf24;">
+        <i class="fa-solid fa-clock-rotate-left text-2xl"></i>
+        <span class="text-[12px] font-bold uppercase tracking-wider opacity-80">Pending</span>
+        <span class="absolute top-2 right-2 bg-amber-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">{{ $empPendingCount }}</span>
+    </a>
+    @endif
 
     <a href="{{ route('emp.tickets.index') }}"
         class="nav-item {{ request()->routeIs('emp.tickets.*') ? 'active' : '' }} flex flex-col items-center justify-center gap-1 px-2 py-4 rounded-xl text-white hover:text-white mb-2">

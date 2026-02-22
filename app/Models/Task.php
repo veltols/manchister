@@ -57,6 +57,11 @@ class Task extends Model
             ->orderBy('log_id', 'desc');
     }
 
+    public function pendingLineManager()
+    {
+        return $this->belongsTo(Employee::class, 'pending_line_manager_id', 'employee_id');
+    }
+
     public function getTimeProgress()
     {
         if (!$this->task_assigned_date || !$this->task_due_date) {

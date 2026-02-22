@@ -266,7 +266,14 @@
             <div class="flex justify-between items-center mb-6">
                 <div>
                     <h2 class="text-2xl font-display font-bold text-premium" id="task-modal-title">Create New Task</h2>
-                    <p class="text-slate-500 text-sm mt-1">Assign a new task to an employee</p>
+                    <p class="text-slate-500 text-sm mt-1">
+                        @if($isLineManager)
+                            Assign a new task to an employee.
+                        @else
+                            Task will be sent to your <strong class="text-amber-600">line manager</strong> for review &amp; assignment.
+                        @endif
+                    </p>
+
                 </div>
                 <button onclick="closeModal('newTaskModal')" class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
                     <i class="fa-solid fa-times text-xl"></i>
@@ -281,7 +288,7 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Assign To</label>
                         <select name="assigned_to" class="premium-input w-full px-4 py-3 text-sm">
-                            <option value="{{ auth()->user()->employee->employee_id }}">Me (Self)</option>
+                            <option value="">Not specified</option>
                             @foreach($employees as $emp)
                                 <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
                             @endforeach

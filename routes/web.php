@@ -161,9 +161,11 @@ Route::middleware('auth')->group(function () {
         // My Tasks
         Route::get('/tasks', [App\Http\Controllers\Employee\TaskController::class, 'index'])->name('tasks.index');
         Route::get('/tasks/data', [App\Http\Controllers\Employee\TaskController::class, 'getData'])->name('tasks.data');
+        Route::get('/tasks/pending', [App\Http\Controllers\Employee\TaskController::class, 'pendingTasks'])->name('tasks.pending');
         Route::get('/tasks/{id}', [App\Http\Controllers\Employee\TaskController::class, 'show'])->name('tasks.show');
         Route::post('/tasks', [App\Http\Controllers\Employee\TaskController::class, 'store'])->name('tasks.store');
         Route::post('/tasks/{id}/status', [App\Http\Controllers\Employee\TaskController::class, 'updateStatus'])->name('tasks.status');
+        Route::post('/tasks/{id}/assign', [App\Http\Controllers\Employee\TaskController::class, 'assignTask'])->name('tasks.assign');
 
         // Messages
         Route::get('/messages', [App\Http\Controllers\Employee\MessageController::class, 'index'])->name('messages.index');
@@ -257,9 +259,11 @@ Route::middleware('auth')->group(function () {
         // Tasks
         Route::get('/tasks', [App\Http\Controllers\HR\TaskController::class, 'index'])->name('tasks.index');
         Route::get('/tasks/data', [App\Http\Controllers\HR\TaskController::class, 'getData'])->name('tasks.data');
+        Route::get('/tasks/pending', [App\Http\Controllers\HR\TaskController::class, 'pendingTasks'])->name('tasks.pending');
         Route::get('/tasks/{id}', [App\Http\Controllers\HR\TaskController::class, 'show'])->name('tasks.show');
         Route::post('/tasks', [App\Http\Controllers\HR\TaskController::class, 'store'])->name('tasks.store');
         Route::post('/tasks/status', [App\Http\Controllers\HR\TaskController::class, 'updateStatus'])->name('tasks.status.update');
+        Route::post('/tasks/{id}/assign', [App\Http\Controllers\HR\TaskController::class, 'assignTask'])->name('tasks.assign');
 
         // Calendar
         Route::get('/calendar', [App\Http\Controllers\HR\CalendarController::class, 'index'])->name('calendar.index');
