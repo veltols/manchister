@@ -57,6 +57,14 @@ class Task extends Model
             ->orderBy('log_id', 'desc');
     }
 
+    public function comments()
+    {
+        return $this->hasMany(TaskComment::class, 'task_id', 'task_id')
+            ->with('commenter')
+            ->orderBy('created_at', 'asc');
+    }
+
+
     public function pendingLineManager()
     {
         return $this->belongsTo(Employee::class, 'pending_line_manager_id', 'employee_id');

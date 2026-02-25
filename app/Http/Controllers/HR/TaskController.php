@@ -5,6 +5,7 @@ namespace App\Http\Controllers\HR;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Task;
+use App\Models\TaskComment;
 use App\Models\TaskStatus;
 use App\Models\TaskPriority;
 use App\Models\Employee;
@@ -142,7 +143,7 @@ class TaskController extends Controller
 
     public function show(Request $request, $id)
     {
-        $task = Task::with(['status', 'priority', 'assignedBy', 'assignedTo', 'logs.logger'])
+        $task = Task::with(['status', 'priority', 'assignedBy', 'assignedTo', 'logs.logger', 'comments.commenter'])
             ->findOrFail($id);
 
         if ($request->ajax() || $request->wantsJson()) {
@@ -156,16 +157,40 @@ class TaskController extends Controller
         return view('hr.tasks.show', compact('task', 'statuses'));
     }
 
+    public function storeComment(Request $request, $id)
+    {
+        $request->validate([
+            'comment_body' => 'required|string|max:2000',
+        ]);
+
+        $employeeId = Auth::user()->employee ? Auth::user()->employee->employee_id : 0;
+
+        $task = Task::findOrFail($id);
+
+        $comment = TaskComment::create([
+            'task_id' => $task->task_id,
+            'employee_id' => $employeeId,
+            'comment_body' => $request->comment_body,
+        ]);
+
+        $comment->load('commenter');
+
+        return response()->json([
+            'success' => true,
+            'comment' => $comment,
+        ]);
+    }
+
     public function store(Request $request)
     {
         $request->validate([
-            'task_title'        => 'required|string|max:255',
-            'task_description'  => 'nullable|string',
-            'priority_id'       => 'required|exists:sys_list_priorities,priority_id',
-            'task_assigned_date'=> 'required|date',
-            'task_due_date'     => 'required|date',
-            'task_attachment'   => 'nullable|file|max:10240',
-            'parent_task_id'    => 'nullable|exists:tasks_list,task_id',
+            'task_title' => 'required|string|max:255',
+            'task_description' => 'nullable|string',
+            'priority_id' => 'required|exists:sys_list_priorities,priority_id',
+            'task_assigned_date' => 'required|date',
+            'task_due_date' => 'required|date',
+            'task_attachment' => 'nullable|file|max:10240',
+            'parent_task_id' => 'nullable|exists:tasks_list,task_id',
         ]);
 
         $employee = Auth::user()->employee;
@@ -191,13 +216,13 @@ class TaskController extends Controller
         }
 
         $task = new Task();
-        $task->task_title       = $request->task_title;
+        $task->task_title = $request->task_title;
         $task->task_description = $request->task_description;
-        $task->assigned_by      = $employeeId;
+        $task->assigned_by = $employeeId;
         // Store suggested assignee; line manager can confirm or change (or direct if creator is LM)
-        $task->assigned_to      = $request->filled('assigned_to') ? $request->assigned_to : null;
+        $task->assigned_to = $request->filled('assigned_to') ? $request->assigned_to : null;
         $task->pending_line_manager_id = $lineManagerId; // null means no approval needed
-        $task->parent_task_id   = $request->parent_task_id ?? 0;
+        $task->parent_task_id = $request->parent_task_id ?? 0;
 
         // Build assigned date with optional time
         $assignedDate = $request->task_assigned_date;
@@ -211,10 +236,10 @@ class TaskController extends Controller
         if ($request->filled('end_time')) {
             $dueDate .= ' ' . $request->end_time;
         }
-        $task->task_due_date    = $dueDate;
+        $task->task_due_date = $dueDate;
 
-        $task->priority_id      = $request->priority_id;
-        $task->status_id        = 1; // Open/Pending
+        $task->priority_id = $request->priority_id;
+        $task->status_id = 1; // Open/Pending
 
         if ($request->hasFile('task_attachment')) {
             $file = $request->file('task_attachment');
@@ -236,14 +261,14 @@ class TaskController extends Controller
 
         // Log creation
         SystemLog::create([
-            'log_action'    => 'Task Created',
-            'log_remark'    => 'Task created — pending line manager assignment',
+            'log_action' => 'Task Created',
+            'log_remark' => 'Task created — pending line manager assignment',
             'related_table' => 'tasks_list',
-            'related_id'    => $task->task_id,
-            'log_date'      => now(),
-            'logged_by'     => Auth::id(),
-            'logger_type'   => 'employees_list',
-            'log_type'      => 'int'
+            'related_id' => $task->task_id,
+            'log_date' => now(),
+            'logged_by' => Auth::id(),
+            'logger_type' => 'employees_list',
+            'log_type' => 'int'
         ]);
 
         return response()->json(['success' => true, 'message' => 'Task submitted to your line manager for assignment!']);
@@ -302,14 +327,14 @@ class TaskController extends Controller
 
         // Log the assignment
         SystemLog::create([
-            'log_action'    => 'Task Assigned',
-            'log_remark'    => 'Task assigned by line manager to employee #' . $request->assigned_to,
+            'log_action' => 'Task Assigned',
+            'log_remark' => 'Task assigned by line manager to employee #' . $request->assigned_to,
             'related_table' => 'tasks_list',
-            'related_id'    => $task->task_id,
-            'log_date'      => now(),
-            'logged_by'     => Auth::id(),
-            'logger_type'   => 'employees_list',
-            'log_type'      => 'int'
+            'related_id' => $task->task_id,
+            'log_date' => now(),
+            'logged_by' => Auth::id(),
+            'logger_type' => 'employees_list',
+            'log_type' => 'int'
         ]);
 
         return response()->json(['success' => true, 'message' => 'Task assigned successfully!']);
@@ -330,13 +355,13 @@ class TaskController extends Controller
             ->where('pending_line_manager_id', $employeeId)
             ->firstOrFail();
 
-        $creatorId  = $task->assigned_by;
-        $taskTitle  = $task->task_title;
-        $reason     = $request->rejection_reason;
+        $creatorId = $task->assigned_by;
+        $taskTitle = $task->task_title;
+        $reason = $request->rejection_reason;
 
         // Mark as rejected (keep in DB so creator can review and resubmit)
-        $task->is_rejected            = 1;
-        $task->rejection_reason       = $reason;
+        $task->is_rejected = 1;
+        $task->rejection_reason = $reason;
         $task->pending_line_manager_id = null;
         $task->save();
 
@@ -356,7 +381,7 @@ class TaskController extends Controller
     public function resubmitTask(Request $request, $id)
     {
         $request->validate([
-            'task_title'       => 'required|string|max:255',
+            'task_title' => 'required|string|max:255',
             'task_description' => 'nullable|string',
         ]);
 
@@ -375,12 +400,13 @@ class TaskController extends Controller
         if (!$lineManagerId) {
             $lineManagerId = Department::whereNotNull('line_manager_id')->orderBy('updated_at', 'desc')->value('line_manager_id');
         }
-        if ($lineManagerId == $employeeId) $lineManagerId = null;
+        if ($lineManagerId == $employeeId)
+            $lineManagerId = null;
 
-        $task->task_title              = $request->task_title;
-        $task->task_description        = $request->task_description;
-        $task->is_rejected             = 0;
-        $task->rejection_reason        = null;
+        $task->task_title = $request->task_title;
+        $task->task_description = $request->task_description;
+        $task->is_rejected = 0;
+        $task->rejection_reason = null;
         $task->pending_line_manager_id = $lineManagerId;
         $task->save();
 
@@ -401,9 +427,9 @@ class TaskController extends Controller
 
         try {
             $request->validate([
-                'task_id'       => 'required|exists:tasks_list,task_id',
-                'status_id'     => 'required|exists:sys_list_status,status_id',
-                'log_remark'    => 'required|string',
+                'task_id' => 'required|exists:tasks_list,task_id',
+                'status_id' => 'required|exists:sys_list_status,status_id',
+                'log_remark' => 'required|string',
                 'task_progress' => 'nullable|integer|min:0|max:100',
             ]);
 
@@ -433,14 +459,14 @@ class TaskController extends Controller
             }
 
             SystemLog::create([
-                'log_action'    => 'Status Update',
-                'log_remark'    => "Status changed from $oldStatus to $newStatus. Remark: " . $request->log_remark,
+                'log_action' => 'Status Update',
+                'log_remark' => "Status changed from $oldStatus to $newStatus. Remark: " . $request->log_remark,
                 'related_table' => 'tasks_list',
-                'related_id'    => $task->task_id,
-                'log_date'      => now(),
-                'logged_by'     => Auth::id(),
-                'logger_type'   => 'employees_list',
-                'log_type'      => 'int'
+                'related_id' => $task->task_id,
+                'log_date' => now(),
+                'logged_by' => Auth::id(),
+                'logger_type' => 'employees_list',
+                'log_type' => 'int'
             ]);
 
             if (request()->ajax() || request()->wantsJson()) {
@@ -452,7 +478,7 @@ class TaskController extends Controller
         } catch (\Exception $e) {
             Log::error('Error updating task status', [
                 'task_id' => $request->task_id,
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json(['success' => false, 'message' => 'Failed to update task status: ' . $e->getMessage()], 500);

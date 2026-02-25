@@ -4,62 +4,62 @@
 @section('subtitle', 'Track assignments, deadlines, and progress.')
 
 @section('content')
-    <div class="tasks-layout">
-        <!-- Sidebar: Tasks List -->
-        <div class="tasks-sidebar">
-            <div class="sidebar-header">
-                <div>
-                    <h2 class="text-xl font-bold text-premium">Tasks Management</h2>
-                    <div class="flex flex-wrap gap-2 mt-2">
-                        <a href="{{ route('hr.tasks.index', ['view_mode' => 'assigned_by']) }}" 
-                           class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded {{ $viewMode == 'assigned_by' ? 'bg-indigo-100 text-indigo-700' : 'text-slate-400 hover:text-indigo-600' }}">
-                            Assigned by Me
-                        </a>
-                        <a href="{{ route('hr.tasks.index', ['view_mode' => 'assigned_to']) }}" 
-                           class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded {{ $viewMode == 'assigned_to' ? 'bg-indigo-100 text-indigo-700' : 'text-slate-400 hover:text-indigo-600' }}">
-                            Assigned to Me
-                        </a>
-                        @if(isset($submittedCount) && $submittedCount > 0 || $viewMode === 'submitted')
-                        <a href="{{ route('hr.tasks.index', ['view_mode' => 'submitted']) }}" 
-                           class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded flex items-center gap-1 {{ $viewMode == 'submitted' ? 'bg-orange-100 text-orange-700' : 'text-slate-400 hover:text-orange-600' }}">
-                             Submitted
-                             @if(isset($submittedCount) && $submittedCount > 0)
-                             <span class="bg-orange-400 text-white rounded-full w-4 h-4 flex items-center justify-center" style="font-size:9px;">{{ $submittedCount }}</span>
-                             @endif
-                        </a>
-                        @endif
-                        <a href="{{ route('hr.tasks.index', ['view_mode' => 'rejected']) }}"
-                           class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded flex items-center gap-1 {{ $viewMode == 'rejected' ? 'bg-red-100 text-red-700' : 'text-slate-400 hover:text-red-600' }}">
-                             Rejected
-                             @if(isset($rejectedCount) && $rejectedCount > 0)
-                             <span class="bg-red-400 text-white rounded-full w-4 h-4 flex items-center justify-center" style="font-size:9px;">{{ $rejectedCount }}</span>
-                             @endif
-                        </a>
-                        @if($isLineManager)
-                        <a href="{{ route('hr.tasks.index', ['view_mode' => 'rejected_by_me']) }}"
-                           class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded flex items-center gap-1 {{ $viewMode == 'rejected_by_me' ? 'bg-red-100 text-red-700' : 'text-slate-400 hover:text-red-600' }}">
-                             Rejected by Me
-                             @if(isset($rejectedByMeCount) && $rejectedByMeCount > 0)
-                             <span class="bg-red-400 text-white rounded-full w-4 h-4 flex items-center justify-center" style="font-size:9px;">{{ $rejectedByMeCount }}</span>
-                             @endif
-                        </a>
-                        @endif
-                    </div>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="openCreateTaskModal()"
-                        class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
-                        <i class="fa-solid fa-plus"></i>
-                    </button>
-                </div>
-            </div>
 
-            <div class="p-4 border-b border-slate-100 bg-slate-50/50">
-                <form action="{{ route('hr.tasks.index') }}" method="GET">
+    {{-- ═══════════════════════════════════════════════════════════
+    ASANA-STYLE TASKS PAGE
+    Full-width list + right-slide detail drawer
+    ═══════════════════════════════════════════════════════════ --}}
+
+    <div class="asana-page">
+
+        {{-- ── Top Bar ──────────────────────────────────────────── --}}
+        <div class="asana-topbar">
+            <div class="flex items-center gap-3 flex-1">
+                {{-- View Tabs --}}
+                <div class="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
+                    <a href="{{ route('hr.tasks.index', ['view_mode' => 'assigned_by']) }}"
+                        class="tab-btn {{ $viewMode == 'assigned_by' ? 'tab-active' : '' }}">
+                        Assigned by Me
+                    </a>
+                    <a href="{{ route('hr.tasks.index', ['view_mode' => 'assigned_to']) }}"
+                        class="tab-btn {{ $viewMode == 'assigned_to' ? 'tab-active' : '' }}">
+                        Assigned to Me
+                    </a>
+                    @if(isset($submittedCount) && $submittedCount > 0 || $viewMode === 'submitted')
+                        <a href="{{ route('hr.tasks.index', ['view_mode' => 'submitted']) }}"
+                            class="tab-btn {{ $viewMode == 'submitted' ? 'tab-active' : '' }} flex items-center gap-1.5">
+                            Submitted
+                            @if(isset($submittedCount) && $submittedCount > 0)
+                                <span class="badge-count bg-amber-500">{{ $submittedCount }}</span>
+                            @endif
+                        </a>
+                    @endif
+                    <a href="{{ route('hr.tasks.index', ['view_mode' => 'rejected']) }}"
+                        class="tab-btn {{ $viewMode == 'rejected' ? 'tab-active' : '' }} flex items-center gap-1.5">
+                        Rejected
+                        @if(isset($rejectedCount) && $rejectedCount > 0)
+                            <span class="badge-count bg-red-500">{{ $rejectedCount }}</span>
+                        @endif
+                    </a>
+                    @if($isLineManager)
+                        <a href="{{ route('hr.tasks.index', ['view_mode' => 'rejected_by_me']) }}"
+                            class="tab-btn {{ $viewMode == 'rejected_by_me' ? 'tab-active' : '' }} flex items-center gap-1.5">
+                            Rejected by Me
+                            @if(isset($rejectedByMeCount) && $rejectedByMeCount > 0)
+                                <span class="badge-count bg-red-500">{{ $rejectedByMeCount }}</span>
+                            @endif
+                        </a>
+                    @endif
+                </div>
+
+                {{-- Status Filter --}}
+                <form action="{{ route('hr.tasks.index') }}" method="GET" class="flex items-center">
                     <input type="hidden" name="view_mode" value="{{ $viewMode }}">
                     <div class="relative">
-                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <select name="status_id" onchange="this.form.submit()" class="premium-input w-full pl-11 pr-4 py-2.5 text-sm bg-white cursor-pointer">
+                        <i
+                            class="fa-solid fa-filter absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                        <select name="status_id" onchange="this.form.submit()"
+                            class="pl-8 pr-8 py-2 text-sm bg-white border border-slate-200 rounded-xl text-slate-600 font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand/30 appearance-none">
                             <option value="">All Statuses</option>
                             @foreach($statuses as $status)
                                 <option value="{{ $status->status_id }}" {{ $statusId == $status->status_id ? 'selected' : '' }}>
@@ -71,265 +71,397 @@
                 </form>
             </div>
 
-            <div id="tasks-container-wrapper" class="flex-1"
-                style="overflow-y: auto !important; height: 100% !important; padding: 1rem; padding-right: 10px !important;">
-                <div id="tasks-container" class="space-y-3">
-                    @forelse($tasks as $task)
-                        <div onclick="loadTask({{ $task->task_id }})" id="task-item-{{ $task->task_id }}"
-                            class="task-card p-4 rounded-2xl bg-white border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden">
+            {{-- Add Task Button --}}
+            <button onclick="openCreateTaskModal()"
+                class="flex items-center gap-2 px-4 py-2.5 bg-[#004F68] hover:bg-[#00384a] text-white text-sm font-bold rounded-xl shadow-sm transition-all hover:scale-105 active:scale-95">
+                <i class="fa-solid fa-plus text-xs"></i>
+                Add Task
+            </button>
+        </div>
 
-                            <div class="flex justify-between items-start mb-2">
-                                <span class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider"
-                                    style="background: #{{ $task->priority->priority_color }}20; color: #{{ $task->priority->priority_color }}">
-                                    {{ $task->priority->priority_name }}
+        {{-- ── Task List ─────────────────────────────────────────── --}}
+        <div class="asana-list-area" id="tasks-list-area">
+
+            {{-- Column Headers --}}
+            <div class="asana-list-header">
+                <div class="col-name">Task Name</div>
+                <div class="col-assignee">Assignee</div>
+                <div class="col-due">Due Date</div>
+                <div class="col-priority">Priority</div>
+                <div class="col-status">Status</div>
+                <div class="col-progress">Progress</div>
+            </div>
+
+            {{-- Tasks --}}
+            <div id="tasks-container">
+                @forelse($tasks as $task)
+                    @php
+                        $person = ($viewMode == 'assigned_to') ? $task->assignedBy : $task->assignedTo;
+                        $dueDate = $task->task_due_date ? \Carbon\Carbon::parse($task->task_due_date) : null;
+                        $isOverdue = $dueDate && $dueDate->isPast() && !in_array(strtolower($task->status->status_name ?? ''), ['done', 'completed', 'closed']);
+                    @endphp
+                    <div onclick="loadTask({{ $task->task_id }})" id="task-item-{{ $task->task_id }}"
+                        class="asana-task-row group" data-task-id="{{ $task->task_id }}">
+
+                        {{-- Checkbox + Title --}}
+                        <div class="col-name">
+                            <div class="flex items-center gap-3">
+                                <button onclick="event.stopPropagation()"
+                                    class="task-check flex-shrink-0 w-5 h-5 rounded-full border-2 border-slate-300 hover:border-[#004F68] transition-colors flex items-center justify-center group/cb">
+                                    <i
+                                        class="fa-solid fa-check text-[9px] text-transparent group-hover/cb:text-[#004F68] transition-colors"></i>
+                                </button>
+                                <span
+                                    class="task-title-text font-medium text-slate-800 group-hover:text-[#004F68] transition-colors line-clamp-1">
+                                    {{ $task->task_title }}
                                 </span>
-                                <span class="text-[10px] text-slate-400 font-mono">#{{ $task->task_id }}</span>
-                            </div>
-
-                            <h3
-                                class="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors mb-1 line-clamp-2">
-                                {{ $task->task_title }}
-                            </h3>
-
-                            <div class="flex items-center justify-between mt-3">
-                                <div class="flex items-center gap-2">
-                                    @php 
-                                        $person = ($viewMode == 'assigned_to') ? $task->assignedBy : $task->assignedTo;
-                                    @endphp
-                                    <div
-                                        class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
-                                        {{ substr($person->first_name ?? 'S', 0, 1) }}
-                                    </div>
+                                @if($viewMode === 'rejected')
                                     <span
-                                        class="text-xs text-slate-500 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[80px]">
-                                        {{ $person->first_name ?? 'Unknown' }}
+                                        class="flex-shrink-0 text-[10px] font-bold px-1.5 py-0.5 bg-red-100 text-red-600 rounded">Rejected</span>
+                                @endif
+                            </div>
+                        </div>
+
+                        {{-- Assignee --}}
+                        <div class="col-assignee">
+                            <div class="flex items-center gap-2">
+                                <div
+                                    class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                                    {{ strtoupper(substr($person->first_name ?? 'U', 0, 1)) }}
+                                </div>
+                                <span
+                                    class="text-sm text-slate-600 truncate max-w-[100px]">{{ $person->first_name ?? '—' }}</span>
+                            </div>
+                        </div>
+
+                        {{-- Due Date --}}
+                        <div class="col-due">
+                            @if($dueDate)
+                                <span
+                                    class="text-sm font-medium {{ $isOverdue ? 'text-red-500' : 'text-slate-500' }} flex items-center gap-1">
+                                    @if($isOverdue)<i class="fa-solid fa-circle-exclamation text-xs"></i>@endif
+                                    {{ $dueDate->format('M d, Y') }}
+                                </span>
+                            @else
+                                <span class="text-slate-300 text-sm">—</span>
+                            @endif
+                        </div>
+
+                        {{-- Priority --}}
+                        <div class="col-priority">
+                            <span class="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg"
+                                style="background: #{{ $task->priority->priority_color ?? 'ccc' }}18; color: #{{ $task->priority->priority_color ?? '999' }}">
+                                <span class="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                    style="background: #{{ $task->priority->priority_color ?? 'ccc' }}"></span>
+                                {{ $task->priority->priority_name ?? '—' }}
+                            </span>
+                        </div>
+
+                        {{-- Status --}}
+                        <div class="col-status">
+                            <span class="text-[11px] font-bold px-2 py-1 rounded-lg"
+                                style="background: #{{ $task->status->status_color ?? 'ccc' }}18; color: #{{ $task->status->status_color ?? '999' }}">
+                                {{ $task->status->status_name ?? '—' }}
+                            </span>
+                        </div>
+
+                        {{-- Progress --}}
+                        <div class="col-progress">
+                            <div class="flex items-center gap-2">
+                                <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-[#004F68] rounded-full"
+                                        style="width: {{ $task->task_progress ?? 0 }}%"></div>
+                                </div>
+                                <span
+                                    class="text-xs text-slate-500 font-medium w-8 text-right">{{ $task->task_progress ?? 0 }}%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Rejected inline note --}}
+                    @if($viewMode === 'rejected' && $task->rejection_reason)
+                        <div class="asana-task-row-note">
+                            <div class="flex items-start gap-2 px-4 py-2 bg-red-50 border-b border-red-100">
+                                <i class="fa-solid fa-circle-xmark text-red-400 mt-0.5 text-xs"></i>
+                                <span class="text-xs text-red-700">{{ $task->rejection_reason }}</span>
+                                <button
+                                    onclick="event.stopPropagation(); openResubmitModal({{ $task->task_id }}, '{{ addslashes($task->task_title) }}', '{{ addslashes($task->task_description ?? '') }}')"
+                                    class="ml-auto flex-shrink-0 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-0.5 rounded transition-colors">
+                                    <i class="fa-solid fa-rotate-right mr-1"></i>Resubmit
+                                </button>
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Subtasks --}}
+                    @if($task->subtasks && $task->subtasks->count() > 0)
+                        @foreach($task->subtasks as $sub)
+                            @php
+                                $subPerson = ($viewMode == 'assigned_to') ? $sub->assignedBy : $sub->assignedTo;
+                                $subDue = $sub->task_due_date ? \Carbon\Carbon::parse($sub->task_due_date) : null;
+                                $subOverdue = $subDue && $subDue->isPast() && !in_array(strtolower($sub->status->status_name ?? ''), ['done', 'completed', 'closed']);
+                            @endphp
+                            <div onclick="loadTask({{ $sub->task_id }})" id="task-item-{{ $sub->task_id }}"
+                                class="asana-task-row asana-subtask-row group" data-task-id="{{ $sub->task_id }}">
+                                <div class="col-name">
+                                    <div class="flex items-center gap-3 pl-8">
+                                        <div class="sub-connector"></div>
+                                        <button onclick="event.stopPropagation()"
+                                            class="task-check flex-shrink-0 w-4 h-4 rounded-full border-2 border-slate-200 hover:border-[#004F68] transition-colors flex items-center justify-center">
+                                            <i
+                                                class="fa-solid fa-check text-[8px] text-transparent hover:text-[#004F68] transition-colors"></i>
+                                        </button>
+                                        <span
+                                            class="font-medium text-slate-600 group-hover:text-[#004F68] transition-colors text-sm line-clamp-1">
+                                            {{ $sub->task_title }}
+                                        </span>
+                                        <span
+                                            class="text-[9px] font-bold px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded uppercase tracking-wider">Sub</span>
+                                    </div>
+                                </div>
+                                <div class="col-assignee">
+                                    <span class="text-xs text-slate-500">{{ $subPerson->first_name ?? '—' }}</span>
+                                </div>
+                                <div class="col-due">
+                                    @if($subDue)
+                                        <span
+                                            class="text-xs {{ $subOverdue ? 'text-red-500' : 'text-slate-400' }}">{{ $subDue->format('M d, Y') }}</span>
+                                    @endif
+                                </div>
+                                <div class="col-priority">
+                                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                                        style="background: #{{ $sub->priority->priority_color ?? 'ccc' }}18; color: #{{ $sub->priority->priority_color ?? '999' }}">
+                                        {{ $sub->priority->priority_name ?? '—' }}
                                     </span>
                                 </div>
-                                <span class="px-2 py-1 rounded-md text-[10px] font-bold"
-                                    style="background: #{{ $task->status->status_color }}20; color: #{{ $task->status->status_color }}">
-                                    {{ $task->status->status_name }}
-                                </span>
-                            </div>
-
-                            @if($viewMode === 'rejected')
-                            <div class="mt-2 p-2 bg-red-50 rounded-lg border border-red-100">
-                                <p class="text-[10px] font-bold text-red-500 uppercase tracking-wider mb-0.5">Rejection Reason</p>
-                                <p class="text-xs text-red-700">{{ $task->rejection_reason }}</p>
-                            </div>
-                            <button onclick="event.stopPropagation(); openResubmitModal({{ $task->task_id }}, '{{ addslashes($task->task_title) }}', '{{ addslashes($task->task_description ?? '') }}')"
-                                class="mt-2 w-full inline-flex items-center justify-center gap-2 px-3 py-2 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition-colors">
-                                <i class="fa-solid fa-rotate-right"></i> Edit & Resubmit
-                            </button>
-                            @elseif($viewMode === 'rejected_by_me')
-                            <div class="mt-2 p-2 bg-red-50 rounded-lg border border-red-100">
-                                <p class="text-[10px] font-bold text-red-500 uppercase tracking-wider mb-0.5">You Rejected:</p>
-                                <p class="text-xs text-red-700">{{ $task->rejection_reason }}</p>
-                                <p class="text-[10px] text-slate-400 mt-1">Submitted by: {{ $task->assignedBy->first_name ?? '—' }}</p>
-                            </div>
-                            @endif
-                            <div
-                                class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 opacity-0 transition-opacity">
-                            </div>
-                        </div>
-
-                        <!-- Subtasks Loop -->
-                        @if($task->subtasks && $task->subtasks->count() > 0)
-                            @foreach($task->subtasks as $sub)
-                                <div onclick="loadTask({{ $sub->task_id }})" id="task-item-{{ $sub->task_id }}"
-                                    class="task-card subtask-card ml-6 p-3 rounded-xl bg-slate-50 border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden mb-2">
-                                    <div class="absolute -left-3 top-1/2 w-3 h-[2px] bg-slate-200"></div>
-                                    <div class="flex justify-between items-start mb-1">
-                                        <div class="flex items-center gap-1">
-                                            <i class="fa-solid fa-turn-up rotate-90 text-[10px] text-slate-300"></i>
-                                            <span
-                                                class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-white border border-slate-200 text-slate-400">Sub</span>
-                                        </div>
-                                        <span class="text-[9px] text-slate-400 font-mono">#{{ $sub->task_id }}</span>
-                                    </div>
-                                    <h3
-                                        class="font-bold text-slate-700 text-xs group-hover:text-indigo-600 transition-colors mb-1 line-clamp-1">
-                                        {{ $sub->task_title }}
-                                    </h3>
-                                    <div class="flex items-center justify-between mt-2">
-                                        <div class="flex items-center gap-2">
-                                            @php 
-                                                $subPerson = ($viewMode == 'assigned_to') ? $sub->assignedBy : $sub->assignedTo;
-                                            @endphp
-                                            <div
-                                                class="w-5 h-5 rounded-full bg-white flex items-center justify-center text-[9px] font-bold text-slate-400 shadow-sm">
-                                                {{ substr($subPerson->first_name ?? '?', 0, 1) }}
-                                            </div>
-                                            <span class="text-[10px] text-slate-400 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[60px]">
-                                                {{ $subPerson->first_name ?? 'Unknown' }}
-                                            </span>
-                                        </div>
-                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold"
-                                            style="background: #{{ $sub->status->status_color }}20; color: #{{ $sub->status->status_color }}">
-                                            {{ $sub->status->status_name }}
-                                        </span>
-                                    </div>
-                                    <div
-                                        class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 opacity-0 transition-opacity">
-                                    </div>
+                                <div class="col-status">
+                                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                                        style="background: #{{ $sub->status->status_color ?? 'ccc' }}18; color: #{{ $sub->status->status_color ?? '999' }}">
+                                        {{ $sub->status->status_name ?? '—' }}
+                                    </span>
                                 </div>
-                            @endforeach
-                        @endif
-                    @empty
-                        <div class="text-center py-10">
-                            <div
-                                class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
-                                <i class="fa-solid fa-clipboard-check text-2xl"></i>
+                                <div class="col-progress">
+                                    <span class="text-xs text-slate-400">{{ $sub->task_progress ?? 0 }}%</span>
+                                </div>
                             </div>
-                            <p class="text-slate-400 text-sm">No tasks found</p>
-                        </div>
-                    @endforelse
-                </div>
+                        @endforeach
+                    @endif
 
-                <!-- AJAX Pagination -->
-                <div id="tasks-pagination" class="mt-4"></div>
+                @empty
+                    <div class="py-20 text-center">
+                        <div
+                            class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                            <i class="fa-solid fa-clipboard-check text-2xl"></i>
+                        </div>
+                        <p class="text-slate-400 font-medium">No tasks found</p>
+                        <p class="text-slate-300 text-sm mt-1">Create a new task to get started</p>
+                    </div>
+                @endforelse
+            </div>
+
+            {{-- AJAX Pagination --}}
+            <div id="tasks-pagination" class="px-4 py-3 border-t border-slate-100"></div>
+        </div>
+    </div>
+
+    {{-- ═══════════════════════════════════════════════════════════
+    RIGHT-SIDE DETAIL DRAWER (Asana style)
+    ═══════════════════════════════════════════════════════════ --}}
+
+    {{-- Backdrop --}}
+    <div id="drawer-backdrop" onclick="closeDrawer()"
+        class="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-40 hidden transition-opacity duration-300 opacity-0"></div>
+
+    {{-- Drawer Panel --}}
+    <div id="task-drawer"
+        class="fixed top-0 right-0 h-full w-full max-w-2xl bg-white shadow-2xl z-50 flex flex-col transform translate-x-full transition-transform duration-300 ease-out">
+
+        {{-- Drawer Top Bar --}}
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 flex-shrink-0 bg-white">
+            <div class="flex items-center gap-3">
+                @if($viewMode !== 'submitted')
+                    <button onclick="openModal('updateStatusModal')" id="btn-update-status"
+                        class="flex items-center gap-2 px-4 py-2 bg-[#004F68] hover:bg-[#00384a] text-white text-sm font-bold rounded-xl transition-all hover:scale-105 active:scale-95">
+                        <i class="fa-solid fa-check text-xs"></i>
+                        Update Status
+                    </button>
+                    <button onclick="openSubtaskModal(activeTaskId)"
+                        class="flex items-center gap-2 px-3 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-semibold rounded-xl transition-all">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                        Subtask
+                    </button>
+                @else
+                    <span class="text-xs font-semibold text-amber-600 bg-amber-50 px-3 py-2 rounded-xl border border-amber-200">
+                        <i class="fa-solid fa-clock-rotate-left mr-1"></i> Awaiting line manager approval
+                    </span>
+                @endif
+            </div>
+            <div class="flex items-center gap-2">
+                <span id="drawer-task-id" class="text-xs font-mono text-slate-400"></span>
+                <button onclick="closeDrawer()"
+                    class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
         </div>
 
-        <!-- Main Content: Task Details -->
-        <div class="tasks-main">
-            <div id="selection-placeholder"
-                class="h-full flex flex-col items-center justify-center p-12 text-center animate-fade-in">
-                <div
-                    class="w-32 h-32 bg-indigo-50 rounded-full flex items-center justify-center mb-8 text-indigo-500 shadow-inner">
-                    <i class="fa-solid fa-list-check text-5xl"></i>
+        {{-- Drawer Content (scrollable) --}}
+        <div class="flex-1 overflow-y-auto">
+
+            {{-- Task Title + Badges --}}
+            <div class="px-6 pt-6 pb-4 border-b border-slate-100">
+                <div class="flex items-center gap-2 mb-3">
+                    <span id="drawer-priority" class="text-[11px] font-bold px-2.5 py-1 rounded-lg"></span>
+                    <span id="drawer-status" class="text-[11px] font-bold px-2.5 py-1 rounded-lg"></span>
                 </div>
-                <h2 class="text-2xl font-display font-bold text-premium mb-4">Select a Task</h2>
-                <p class="text-slate-500 max-w-sm">Choose a task from the sidebar to view its details, progress, and
-                    activity logs.</p>
+                <h1 id="drawer-title" class="text-2xl font-bold text-slate-900 leading-snug mb-4"></h1>
+
+                {{-- Meta Fields Row --}}
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="drawer-meta-card">
+                        <span class="drawer-meta-label">Assigned By</span>
+                        <span id="drawer-assigned-by" class="drawer-meta-value"></span>
+                    </div>
+                    <div class="drawer-meta-card">
+                        <span class="drawer-meta-label">Assigned To</span>
+                        <span id="drawer-assigned-to" class="drawer-meta-value"></span>
+                    </div>
+                    <div class="drawer-meta-card">
+                        <span class="drawer-meta-label">Due Date</span>
+                        <span id="drawer-due-date" class="drawer-meta-value"></span>
+                    </div>
+                    <div class="drawer-meta-card">
+                        <span class="drawer-meta-label">Progress</span>
+                        <div class="flex items-center gap-2 mt-1">
+                            <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                <div id="drawer-progress-bar"
+                                    class="h-full bg-[#004F68] rounded-full transition-all duration-500" style="width:0%">
+                                </div>
+                            </div>
+                            <span id="drawer-progress-text" class="text-xs font-bold text-slate-700">0%</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div id="task-content" class="hidden h-full flex flex-col animate-fade-in relative">
-                <!-- Header -->
-                <div class="p-8 border-b border-slate-100 bg-white">
-                    <div class="flex justify-between items-start mb-6">
-                        <div>
-                            <div class="flex items-center gap-3 mb-3">
-                                <span id="detail-id" class="font-mono text-slate-400 text-sm"></span>
-                                <span id="detail-priority"
-                                    class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"></span>
-                                <span id="detail-status"
-                                    class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"></span>
-                            </div>
-                            <h1 id="detail-title" class="text-3xl font-display font-bold text-slate-800 leading-tight"></h1>
+            {{-- Description --}}
+            <div class="px-6 py-5 border-b border-slate-100">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Description</h3>
+                <div id="drawer-desc" class="text-slate-700 text-sm leading-relaxed prose prose-slate max-w-none"></div>
+            </div>
+
+            {{-- Attachment --}}
+            <div id="drawer-attachment-wrap" class="px-6 py-5 border-b border-slate-100 hidden">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
+                    <i class="fa-solid fa-paperclip mr-1"></i> Attachment
+                </h3>
+                <a id="drawer-attachment-link" href="#" target="_blank" class="group block">
+                    <div
+                        class="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 group-hover:border-[#004F68]/20 group-hover:bg-[#004F68]/5 transition-all">
+                        <div id="drawer-attachment-icon-box"
+                            class="w-10 h-10 rounded-lg bg-white shadow-sm text-[#004F68] flex items-center justify-center text-lg flex-shrink-0 group-hover:scale-110 transition-transform">
+                            <i id="drawer-attachment-icon" class="fa-solid fa-file"></i>
                         </div>
-                        <div class="flex items-center gap-3">
-                        @if($viewMode !== 'submitted')
-                            <button onclick="openSubtaskModal(activeTaskId)"
-                                class="premium-button from-cyan-500 to-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md flex items-center gap-2 hover:scale-105 transition-all duration-200"
-                                title="Add Subtask">
-                                <i class="fa-solid fa-plus text-xs"></i> <span>Subtask</span>
-                            </button>
-                            <button onclick="openModal('updateStatusModal')" id="btn-update-status"
-                                class="premium-button from-indigo-600 to-purple-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md flex items-center gap-2 hover:scale-105 transition-all duration-200">
-                                <i class="fa-solid fa-pen text-sm"></i> Update Status
-                            </button>
-                        @else
-                            <span class="text-xs font-semibold text-amber-600 bg-amber-50 px-3 py-2 rounded-xl border border-amber-200">
-                                <i class="fa-solid fa-clock-rotate-left mr-1"></i> Awaiting line manager approval
-                            </span>
-                        @endif
+                        <div class="overflow-hidden">
+                            <p id="drawer-attachment-name"
+                                class="text-sm font-bold text-slate-700 truncate group-hover:text-[#004F68]">File</p>
+                            <p class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Click to View /
+                                Download</p>
                         </div>
                     </div>
+                </a>
+            </div>
 
-                    <!-- Stats Grid -->
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
-                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Assigned
-                                By</span>
-                            <div class="flex items-center gap-2">
-                                <div
-                                    class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">
-                                    <i class="fa-solid fa-user"></i>
+            {{-- ── Comments + Activity Tabs ────────────────────────────── --}}
+            <div class="px-6 py-5 border-t border-slate-100">
+
+                {{-- Tab Headers --}}
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
+                        <button onclick="switchTab('comments')" id="tab-comments"
+                            class="drawer-tab tab-active px-3 py-1.5 rounded-lg text-xs font-bold transition-all">
+                            <i class="fa-solid fa-comment-dots mr-1"></i> Comments
+                        </button>
+                        <button onclick="switchTab('activity')" id="tab-activity"
+                            class="drawer-tab px-3 py-1.5 rounded-lg text-xs font-bold transition-all">
+                            <i class="fa-solid fa-clock-rotate-left mr-1"></i> All Activity
+                        </button>
+                    </div>
+                    <span id="comments-count"
+                        class="text-[11px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-lg">0</span>
+                </div>
+
+                {{-- Comments Panel --}}
+                <div id="panel-comments">
+                    <div id="drawer-comments" class="space-y-4 mb-5 max-h-72 overflow-y-auto">
+                        <p class="text-sm text-slate-400 italic text-center py-4">No comments yet. Be the first!</p>
+                    </div>
+
+                    {{-- Compose Box --}}
+                    <div class="flex gap-3 items-start">
+                        {{-- Current user avatar --}}
+                        <div
+                            class="w-8 h-8 rounded-full bg-[#004F68] text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-1">
+                            {{ strtoupper(substr(Auth::user()->employee->first_name ?? Auth::user()->name ?? 'U', 0, 1)) }}
+                        </div>
+                        <div class="flex-1">
+                            <div
+                                class="border border-slate-200 rounded-xl overflow-hidden focus-within:border-[#004F68]/40 focus-within:ring-2 focus-within:ring-[#004F68]/10 transition-all">
+                                <textarea id="comment-input" placeholder="Write a comment…" rows="2"
+                                    class="w-full px-4 pt-3 pb-2 text-sm text-slate-700 placeholder-slate-300 resize-none outline-none border-0 bg-white"
+                                    oninput="autoResize(this)"></textarea>
+                                {{-- Toolbar --}}
+                                <div class="flex items-center justify-between px-3 pb-2 bg-white">
+                                    <div class="flex items-center gap-2 text-slate-400">
+                                        <button type="button" title="Emoji"
+                                            class="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center transition-colors text-sm">
+                                            <i class="fa-regular fa-face-smile"></i>
+                                        </button>
+                                        <button type="button" title="Mention"
+                                            class="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center transition-colors text-sm font-bold">
+                                            @
+                                        </button>
+                                        <button type="button" title="Bold"
+                                            class="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center transition-colors text-sm font-bold">
+                                            B
+                                        </button>
+                                    </div>
+                                    <button onclick="submitComment()" id="btn-comment-submit"
+                                        class="flex items-center gap-1.5 px-4 py-1.5 bg-[#004F68] hover:bg-[#00384a] text-white text-xs font-bold rounded-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50">
+                                        <i class="fa-solid fa-paper-plane text-[10px]"></i>
+                                        Comment
+                                    </button>
                                 </div>
-                                <span id="detail-assigned-by" class="font-bold text-slate-700 text-sm"></span>
-                            </div>
-                        </div>
-                        <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
-                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Assigned
-                                To</span>
-                            <div class="flex items-center gap-2">
-                                <div
-                                    class="w-6 h-6 rounded-full bg-cyan-100 text-cyan-600 flex items-center justify-center text-xs font-bold">
-                                    <i class="fa-solid fa-user-check"></i>
-                                </div>
-                                <span id="detail-assigned-to" class="font-bold text-slate-700 text-sm"></span>
-                            </div>
-                        </div>
-                        <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
-                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Assigned
-                                Date</span>
-                            <span id="detail-assigned-date" class="font-bold text-slate-700 text-sm"></span>
-                        </div>
-                        <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
-                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Due
-                                Date</span>
-                            <span id="detail-due-date" class="font-bold text-slate-700 text-sm"></span>
-                        </div>
-                        <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
-                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Progress</span>
-                            <div class="flex items-center gap-2">
-                                <div class="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
-                                     <div id="detail-progress-bar" class="h-full bg-indigo-600 rounded-full transition-all duration-300" style="width: 0%"></div>
-                                </div>
-                                <span id="detail-progress-text" class="font-bold text-slate-700 text-sm">0%</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Content Split -->
-                <div class="flex-1 flex" style="overflow: hidden; min-height: 0;">
-                    <div class="flex-1 border-r border-slate-100 bg-white" style="overflow: hidden;">
-                        <div
-                            style="overflow-y: auto !important; height: 100% !important; padding: 2rem; padding-right: 10px !important;">
-                            <h3 class="text-lg font-bold text-premium mb-4">Task Description</h3>
-                            <div id="detail-desc" class="prose prose-slate max-w-none text-slate-600 leading-relaxed"></div>
-                            <div id="detail-attachment-wrap" class="mt-8 pt-8 border-t border-slate-100 hidden">
-                                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
-                                    <i class="fa-solid fa-paperclip mr-2"></i>Attachment
-                                </h3>
-                                <a id="detail-attachment-link" href="#" target="_blank" class="group block">
-                                    <div
-                                        class="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 group-hover:border-indigo-200 group-hover:bg-indigo-50/30 transition-all">
-                                        <div id="detail-attachment-icon-box"
-                                            class="w-12 h-12 rounded-lg bg-white shadow-sm text-indigo-500 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
-                                            <i id="detail-attachment-icon" class="fa-solid fa-file"></i>
-                                        </div>
-                                        <div class="overflow-hidden">
-                                            <p id="detail-attachment-name"
-                                                class="text-sm font-bold text-slate-700 truncate group-hover:text-indigo-700 transition-colors">
-                                                File Name</p>
-                                            <p class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Click
-                                                to View / Download</p>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                        </div>
+                {{-- Activity Panel (hidden by default) --}}
+                <div id="panel-activity" class="hidden">
+                    <div id="drawer-logs"
+                        class="space-y-4 border-l-2 border-slate-100 ml-2 pl-5 relative max-h-96 overflow-y-auto">
+                        <p class="text-sm text-slate-400 italic">Select a task to view activity.</p>
                     </div>
+                </div>
+            </div>
 
-                    <!-- Logs -->
-                    <div class="w-96 bg-slate-50/50 flex flex-col">
-                        <div class="px-6 pt-6 pb-3 flex-shrink-0">
-                            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest">Activity Log</h3>
-                        </div>
-                        <div class="logs-scroll-panel px-6 pb-6">
-                            <div id="logs-timeline" class="space-y-6 border-l-2 border-slate-200 ml-3 pl-6 relative">
-                                <!-- Dynamic Logs -->
-                            </div>
-                        </div>
-                    </div>
+            {{-- ── Collaborators Footer ──────────────────────────────── --}}
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center gap-3 flex-shrink-0">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Collaborators</span>
+                <div id="drawer-collaborators" class="flex items-center gap-1">
+                    {{-- JS fills this in --}}
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Create Task Modal -->
+
+    {{-- ═══════════════════════════════════════════════════════════
+    MODALS
+    ═══════════════════════════════════════════════════════════ --}}
+
+    {{-- Create Task Modal --}}
     <div class="modal" id="newTaskModal">
         <div class="modal-backdrop" onclick="closeModal('newTaskModal')"></div>
         <div class="modal-content max-w-xl p-6">
@@ -340,7 +472,8 @@
                         @if($isLineManager)
                             Assign a new task to an employee.
                         @else
-                            Task will be sent to your <strong class="text-amber-600">line manager</strong> for review &amp; assignment.
+                            Task will be sent to your <strong class="text-amber-600">line manager</strong> for review &amp;
+                            assignment.
                         @endif
                     </p>
                 </div>
@@ -349,14 +482,13 @@
                     <i class="fa-solid fa-times text-xl"></i>
                 </button>
             </div>
-
             <form onsubmit="saveTask(event)" class="space-y-4" enctype="multipart/form-data" id="create-task-form">
                 @csrf
                 <input type="hidden" name="parent_task_id" id="task_parent_id">
-
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Assign To</label>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Assign
+                            To</label>
                         <select name="assigned_to" class="premium-input w-full px-4 py-3 text-sm">
                             <option value="">Not specified</option>
                             @foreach($employees as $emp)
@@ -373,23 +505,22 @@
                         </select>
                     </div>
                 </div>
-
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Task Title</label>
                     <input type="text" name="task_title" class="premium-input w-full px-4 py-3 text-sm" required
                         placeholder="What needs to be done?">
                 </div>
-
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description</label>
                     <textarea name="task_description" rows="3" class="premium-input w-full px-4 py-3 text-sm"
                         placeholder="Additional details..."></textarea>
                 </div>
-
                 <div class="grid grid-cols-2 gap-6 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                     <div class="space-y-3">
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">Start Schedule</label>
-                        <input type="date" name="task_assigned_date" class="premium-input w-full text-sm" value="{{ date('Y-m-d') }}" required>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">Start
+                            Schedule</label>
+                        <input type="date" name="task_assigned_date" class="premium-input w-full text-sm"
+                            value="{{ date('Y-m-d') }}" required>
                         <select name="start_time" class="premium-input w-full text-sm">
                             <option value="">Start Time (Optional)</option>
                             @for($i = 6; $i <= 22; $i++)
@@ -399,7 +530,8 @@
                         </select>
                     </div>
                     <div class="space-y-3">
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">Due Deadline</label>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">Due
+                            Deadline</label>
                         <input type="date" name="task_due_date" class="premium-input w-full text-sm" required>
                         <select name="end_time" class="premium-input w-full text-sm">
                             <option value="">End Time (Optional)</option>
@@ -410,26 +542,27 @@
                         </select>
                     </div>
                 </div>
-
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                        <i class="fa-solid fa-paperclip text-indigo-500 mr-1"></i> Attachment <span class="text-slate-300">(Optional)</span>
+                        <i class="fa-solid fa-paperclip text-indigo-500 mr-1"></i> Attachment <span
+                            class="text-slate-300">(Optional)</span>
                     </label>
-                    <input type="file" name="task_attachment" id="task_attachment" class="premium-input w-full px-4 py-3 text-sm">
+                    <input type="file" name="task_attachment" id="task_attachment"
+                        class="premium-input w-full px-4 py-3 text-sm">
                     <div id="task-attachment-preview"></div>
                 </div>
-
                 <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
                     <button type="button" onclick="closeModal('newTaskModal')"
                         class="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">Cancel</button>
                     <button type="submit"
-                        class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">Create Task</button>
+                        class="px-6 py-3 bg-[#004F68] hover:bg-[#00384a] text-white font-bold rounded-xl shadow-lg transition-all hover:scale-105">Create
+                        Task</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Update Status Modal -->
+    {{-- Update Status Modal --}}
     <div class="modal" id="updateStatusModal">
         <div class="modal-backdrop" onclick="closeModal('updateStatusModal')"></div>
         <div class="modal-content max-w-lg p-6">
@@ -440,7 +573,6 @@
                     <i class="fa-solid fa-times"></i>
                 </button>
             </div>
-
             <form onsubmit="updateTaskStatus(event)" class="space-y-4">
                 @csrf
                 <input type="hidden" id="update-task-id" name="task_id">
@@ -458,10 +590,11 @@
                 <div>
                     <div class="flex justify-between items-center mb-2">
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Progress</label>
-                        <span id="update-progress-value" class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg">0%</span>
+                        <span id="update-progress-value"
+                            class="text-xs font-bold text-[#004F68] bg-[#004F68]/10 px-2 py-0.5 rounded-lg">0%</span>
                     </div>
                     <input type="range" name="task_progress" id="update-task-progress" min="0" max="100" step="1"
-                        class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                        class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-[#004F68]"
                         oninput="document.getElementById('update-progress-value').innerText = this.value + '%'">
                 </div>
                 <div>
@@ -474,298 +607,335 @@
                     <button type="button" onclick="closeModal('updateStatusModal')"
                         class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
                     <button type="submit"
-                        class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">Update
+                        class="px-6 py-3 bg-[#004F68] hover:bg-[#00384a] text-white font-bold rounded-xl transition-all hover:scale-105">Update
                         Status</button>
                 </div>
             </form>
         </div>
     </div>
 
+    {{-- ── Styles ───────────────────────────────────────────────────── --}}
     <style>
-        .tasks-layout {
-            display: grid;
-            grid-template-columns: 350px 1fr;
-            height: calc(100vh - 161px);
+        .asana-page {
+            display: flex;
+            flex-direction: column;
             background: white;
-            border-radius: 20px;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
             overflow: hidden;
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            min-height: calc(100vh - 170px);
         }
 
-        .tasks-sidebar {
-            border-right: 1px solid #f1f5f9;
-            background: #fbfcfd;
+        /* Top Bar */
+        .asana-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 12px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            background: white;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+
+        /* Tabs */
+        .tab-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            background: white;
+            color: #334155;
+        }
+
+        .tab-active {
+            background: white !important;
+            color: #004F68 !important;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        .badge-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            font-size: 9px;
+            font-weight: 800;
+            color: white;
+        }
+
+        /* List Area */
+        .asana-list-area {
+            flex: 1;
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
 
-        .sidebar-header {
-            padding: 20px;
-            background: white;
+        /* List Header */
+        .asana-list-header {
+            display: grid;
+            grid-template-columns: 1fr 150px 130px 110px 110px 110px;
+            padding: 8px 20px;
+            background: #f8fafc;
             border-bottom: 1px solid #f1f5f9;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
         }
 
-        .tasks-list {
+        .asana-list-header>div {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+        }
+
+        /* Task Row */
+        .asana-task-row {
+            display: grid;
+            grid-template-columns: 1fr 150px 130px 110px 110px 110px;
+            align-items: center;
+            padding: 10px 20px;
+            border-bottom: 1px solid #f8fafc;
+            gap: 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+            position: relative;
+        }
+
+        .asana-task-row:hover {
+            background: #f8fafc;
+        }
+
+        .asana-task-row.active-row {
+            background: #f0f9ff;
+            border-left: 3px solid #004F68;
+        }
+
+        .asana-subtask-row {
+            background: #fafafa;
+        }
+
+        .asana-subtask-row:hover {
+            background: #f0f4f8;
+        }
+
+        .sub-connector {
+            position: absolute;
+            left: 24px;
+            width: 16px;
+            height: 1px;
+            background: #e2e8f0;
+        }
+
+        /* Columns */
+        .col-name {
+            min-width: 0;
+        }
+
+        .col-assignee,
+        .col-due,
+        .col-priority,
+        .col-status,
+        .col-progress {
+            min-width: 0;
+        }
+
+        /* Drawer Meta Cards */
+        .drawer-meta-card {
+            background: #f8fafc;
+            border: 1px solid #f1f5f9;
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+
+        .drawer-meta-label {
+            display: block;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        .drawer-meta-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        /* Overflow scroll */
+        #tasks-container {
             overflow-y: auto;
             flex: 1;
         }
 
-        .task-card.active {
-            background-color: white;
-            border-color: #e0e7ff;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .task-card.active .active-indicator {
-            opacity: 1;
-        }
-
-        .task-card.active h3 {
-            color: #4f46e5;
-        }
-
-        /* Activity Log scrollable panel */
-        .logs-scroll-panel {
-            height: calc(100vh - 161px - 80px - 130px);
+        .asana-list-area {
             overflow-y: auto;
-            overflow-x: hidden;
         }
-    </style>
 
-@push('scripts')
-    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
-    <script>
-        let activeTaskId = null;
+        @media (max-width: 768px) {
+            .asana-list-header {
+                display: none;
+            }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            window.ajaxPagination = new AjaxPagination({
-                endpoint: "{{ route('hr.tasks.data', ['view_mode' => $viewMode, 'status_id' => $statusId]) }}",
-                containerSelector: '#tasks-container',
-                paginationSelector: '#tasks-pagination',
-                renderCallback: function (tasks) {
-                    const container = document.querySelector('#tasks-container');
-                    if (tasks.length === 0) {
-                        container.innerHTML = `
-                            <div class="text-center py-10">
-                                <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
-                                    <i class="fa-solid fa-clipboard-check text-2xl"></i>
-                                </div>
-                                <p class="text-slate-400 text-sm">No tasks found</p>
-                            </div>
-                        `;
-                        return;
-                    }
+            .asana-task-row {
+                grid-template-columns: 1fr;
+                gap: 4px;
+            }
 
-                    let html = '';
-                    const currentViewMode = "{{ $viewMode }}";
-                    tasks.forEach(task => {
-                        const person = (currentViewMode == 'assigned_to') ? task.assigned_by : task.assigned_to;
-                        const initials = (person ? person.first_name : 'S').charAt(0);
-                        const personName = person ? person.first_name : 'Unknown';
+            .col-assignee,
+            .col-due,
+            .col-priority,
+            .col-status,
+            .col-progress {
+                display: none;
+            }
 
-                        // Main Task
-                        html += `
-                            <div onclick="loadTask(${task.task_id})" id="task-item-${task.task_id}"
-                                class="task-card p-4 rounded-2xl bg-white border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden ${activeTaskId == task.task_id ? 'active' : ''}">
-
-                                <div class="flex justify-between items-start mb-2">
-                                    <span class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider"
-                                        style="background: #${task.priority.priority_color}20; color: #${task.priority.priority_color}">
-                                        ${task.priority.priority_name}
-                                    </span>
-                                    <span class="text-[10px] text-slate-400 font-mono">#${task.task_id}</span>
-                                </div>
-
-                                <h3 class="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors mb-1 line-clamp-2">
-                                    ${task.task_title}
-                                </h3>
-
-                                <div class="flex items-center justify-between mt-3">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
-                                            ${initials}
-                                        </div>
-                                        <span class="text-xs text-slate-500 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[80px]">${personName}</span>
-                                    </div>
-                                    <span class="px-2 py-1 rounded-md text-[10px] font-bold"
-                                        style="background: #${task.status.status_color}20; color: #${task.status.status_color}">
-                                        ${task.status.status_name}
-                                    </span>
-                                </div>
-
-                                <div class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 ${activeTaskId == task.task_id ? 'opacity-100' : 'opacity-0'} transition-opacity">
-                                </div>
-                            </div>
-                        `;
-
-                        // Subtasks
-                        if (task.subtasks && task.subtasks.length > 0) {
-                            task.subtasks.forEach(sub => {
-                                const subPerson = (currentViewMode == 'assigned_to') ? sub.assigned_by : sub.assigned_to;
-                                const subInitials = (subPerson ? subPerson.first_name : '?').charAt(0);
-                                const subName = subPerson ? subPerson.first_name : 'Unknown';
-
-                                html += `
-                                    <div onclick="loadTask(${sub.task_id})" id="task-item-${sub.task_id}"
-                                         class="task-card subtask-card ml-6 p-3 rounded-xl bg-slate-50 border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden mb-2 ${activeTaskId == sub.task_id ? 'active' : ''}">
-                                         <div class="absolute -left-3 top-1/2 w-3 h-[2px] bg-slate-200"></div>
-                                         <div class="flex justify-between items-start mb-1">
-                                              <div class="flex items-center gap-1">
-                                                  <i class="fa-solid fa-turn-up rotate-90 text-[10px] text-slate-300"></i>
-                                                  <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-white border border-slate-200 text-slate-400">Sub</span>
-                                              </div>
-                                              <span class="text-[9px] text-slate-400 font-mono">#${sub.task_id}</span>
-                                         </div>
-                                         <h3 class="font-bold text-slate-700 text-xs group-hover:text-indigo-600 transition-colors mb-1 line-clamp-1">
-                                             ${sub.task_title}
-                                         </h3>
-                                         <div class="flex items-center justify-between mt-2">
-                                             <div class="flex items-center gap-2">
-                                                 <div class="w-5 h-5 rounded-full bg-white flex items-center justify-center text-[9px] font-bold text-slate-400 shadow-sm">
-                                                     ${subInitials}
-                                                 </div>
-                                                 <span class="text-[10px] text-slate-400 font-medium">${subName}</span>
-                                             </div>
-                                             <span class="px-1.5 py-0.5 rounded text-[9px] font-bold"
-                                                 style="background: #${sub.status.status_color}20; color: #${sub.status.status_color}">
-                                                 ${sub.status.status_name}
-                                             </span>
-                                         </div>
-                                          <div class="active-indicator w-1 h-full absolute left-0 top-0 bg-indigo-600 ${activeTaskId == sub.task_id ? 'opacity-100' : 'opacity-0'} transition-opacity"></div>
-                                    </div>
-                                 `;
-                            });
-                        }
-                    });
-                    container.innerHTML = html;
-                }
-            });
-
-            // Initial pagination setup
-            @if($tasks->hasPages())
-                window.ajaxPagination.renderPagination({
-                    current_page: {{ $tasks->currentPage() }},
-                    last_page: {{ $tasks->lastPage() }},
-                    from: {{ $tasks->firstItem() }},
-                    to: {{ $tasks->lastItem() }},
-                    total: {{ $tasks->total() }}
-                });
-            @endif
-        });
-
-
-
-        // Auto-set progress to 100% when Done/Completed status is selected
-        function onStatusChange(select) {
-            const selectedOption = select.options[select.selectedIndex];
-            const statusName = (selectedOption.dataset.name || '').toLowerCase();
-            const statusId = parseInt(select.value);
-            const isDone = statusId === 4 || statusName.includes('done') || statusName.includes('complet');
-            
-            if (isDone) {
-                const progressSlider = document.getElementById('update-task-progress');
-                const progressValue = document.getElementById('update-progress-value');
-                if (progressSlider && progressValue) {
-                    progressSlider.value = 100;
-                    progressValue.innerText = '100%';
-                }
+            #task-drawer {
+                max-width: 100%;
             }
         }
 
+        /* Drawer tabs */
+        .drawer-tab {
+            color: #64748b;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+        }
 
-        async function loadTask(id) {
-            activeTaskId = id;
-            document.getElementById('update-task-id').value = id;
+        .drawer-tab:hover {
+            color: #334155;
+            background: white;
+        }
 
-            // UI Updates
-            document.querySelectorAll('.task-card').forEach(c => c.classList.remove('active'));
-            document.getElementById(`task-item-${id}`).classList.add('active');
+        .drawer-tab.tab-active {
+            background: white;
+            color: #004F68;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+        }
+    </style>
 
-            document.getElementById('selection-placeholder').classList.add('hidden');
-            document.getElementById('task-content').classList.remove('hidden');
+    @push('scripts')
+        <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+        <script>
+            let activeTaskId = null;
 
-            try {
-                const response = await fetch(`{{ url('hr/tasks') }}/${id}`, {
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
-                const result = await response.json();
+            // ── Drawer Controls ──────────────────────────────────────────
+            function openDrawer() {
+                const drawer = document.getElementById('task-drawer');
+                const backdrop = document.getElementById('drawer-backdrop');
+                backdrop.classList.remove('hidden');
+                setTimeout(() => {
+                    backdrop.classList.remove('opacity-0');
+                    drawer.classList.remove('translate-x-full');
+                }, 10);
+                document.body.style.overflow = 'hidden';
+            }
 
-                if (result.success) {
+            function closeDrawer() {
+                const drawer = document.getElementById('task-drawer');
+                const backdrop = document.getElementById('drawer-backdrop');
+                drawer.classList.add('translate-x-full');
+                backdrop.classList.add('opacity-0');
+                setTimeout(() => backdrop.classList.add('hidden'), 300);
+                document.body.style.overflow = '';
+                document.querySelectorAll('.asana-task-row').forEach(r => r.classList.remove('active-row'));
+                activeTaskId = null;
+            }
+
+            // ── Load Task ────────────────────────────────────────────────
+            async function loadTask(id) {
+                activeTaskId = id;
+                document.getElementById('update-task-id').value = id;
+
+                // Highlight row
+                document.querySelectorAll('.asana-task-row').forEach(r => r.classList.remove('active-row'));
+                const row = document.getElementById(`task-item-${id}`);
+                if (row) row.classList.add('active-row');
+
+                openDrawer();
+
+                // Show loading state
+                document.getElementById('drawer-title').innerText = 'Loading…';
+                document.getElementById('drawer-desc').innerHTML = '<p class="text-slate-300 animate-pulse">Fetching task details…</p>';
+                document.getElementById('drawer-logs').innerHTML = '';
+
+                try {
+                    const resp = await fetch(`{{ url('hr/tasks') }}/${id}`, {
+                        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    const result = await resp.json();
+
+                    if (!result.success) return;
                     const task = result.data;
 
-                    // Update Status Modal progress slider
-                    const progressSlider = document.getElementById('update-task-progress');
-                    const progressValue = document.getElementById('update-progress-value');
-                    if (progressSlider && progressValue) {
-                        progressSlider.value = task.task_progress || 0;
-                        progressValue.innerText = (task.task_progress || 0) + '%';
-                    }
+                    // ID
+                    document.getElementById('drawer-task-id').innerText = `TASK-${task.task_id}`;
 
-                    // Populate Header
-                    document.getElementById('detail-id').innerText = `TASK-${task.task_id}`;
-                    document.getElementById('detail-title').innerText = task.task_title;
-                    document.getElementById('detail-desc').innerHTML = task.task_description || '<em>No description provided.</em>';
+                    // Title
+                    document.getElementById('drawer-title').innerText = task.task_title;
 
-                    // Badges
-                    const pEl = document.getElementById('detail-priority');
-                    pEl.innerText = task.priority.priority_name;
-                    pEl.style.backgroundColor = `#${task.priority.priority_color}20`;
-                    pEl.style.color = `#${task.priority.priority_color}`;
+                    // Description
+                    document.getElementById('drawer-desc').innerHTML = task.task_description || '<em class="text-slate-400">No description provided.</em>';
 
-                    const sEl = document.getElementById('detail-status');
-                    sEl.innerText = task.status.status_name;
-                    sEl.style.backgroundColor = `#${task.status.status_color}20`;
-                    sEl.style.color = `#${task.status.status_color}`;
+                    // Priority badge
+                    const pEl = document.getElementById('drawer-priority');
+                    pEl.innerText = task.priority?.priority_name ?? '—';
+                    pEl.style.background = `#${task.priority?.priority_color ?? 'ccc'}18`;
+                    pEl.style.color = `#${task.priority?.priority_color ?? '999'}`;
 
-                    // Stats
-                    document.getElementById('detail-assigned-by').innerText = task.assigned_by ? `${task.assigned_by.first_name} ${task.assigned_by.last_name}` : 'N/A';
-                    document.getElementById('detail-assigned-to').innerText = task.assigned_to ? `${task.assigned_to.first_name} ${task.assigned_to.last_name}` : 'N/A';
-                    document.getElementById('detail-assigned-date').innerText = new Date(task.task_assigned_date).toLocaleDateString();
-                    document.getElementById('detail-due-date').innerText = new Date(task.task_due_date).toLocaleDateString();
+                    // Status badge
+                    const sEl = document.getElementById('drawer-status');
+                    sEl.innerText = task.status?.status_name ?? '—';
+                    sEl.style.background = `#${task.status?.status_color ?? 'ccc'}18`;
+                    sEl.style.color = `#${task.status?.status_color ?? '999'}`;
+
+                    // Meta
+                    document.getElementById('drawer-assigned-by').innerText = task.assigned_by ? `${task.assigned_by.first_name} ${task.assigned_by.last_name}` : '—';
+                    document.getElementById('drawer-assigned-to').innerText = task.assigned_to ? `${task.assigned_to.first_name} ${task.assigned_to.last_name}` : '—';
+                    document.getElementById('drawer-due-date').innerText = task.task_due_date ? new Date(task.task_due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 
                     // Progress
                     const prog = task.task_progress || 0;
-                    document.getElementById('detail-progress-bar').style.width = `${prog}%`;
-                    document.getElementById('detail-progress-text').innerText = `${prog}%`;
+                    document.getElementById('drawer-progress-bar').style.width = `${prog}%`;
+                    document.getElementById('drawer-progress-text').innerText = `${prog}%`;
 
-                    // Update select
+                    // Status modal defaults
                     document.getElementById('update-status-id').value = task.status_id;
+                    const slider = document.getElementById('update-task-progress');
+                    if (slider) {
+                        slider.value = prog;
+                        document.getElementById('update-progress-value').innerText = prog + '%';
+                    }
 
                     // Attachment
-                    const attachWrap = document.getElementById('detail-attachment-wrap');
-                    const attachLink = document.getElementById('detail-attachment-link');
-                    const attachName = document.getElementById('detail-attachment-name');
-                    const attachIcon = document.getElementById('detail-attachment-icon');
-
+                    const attachWrap = document.getElementById('drawer-attachment-wrap');
                     if (task.task_attachment) {
                         attachWrap.classList.remove('hidden');
-                        attachLink.href = `{{ url('/') }}/${task.task_attachment}`;
-
-                        // Parse Filename
+                        document.getElementById('drawer-attachment-link').href = `{{ url('/') }}/${task.task_attachment}`;
                         const parts = task.task_attachment.split('/');
-                        const filename = parts[parts.length - 1].replace(/^\d+_/, '');
-                        attachName.textContent = filename;
-
-                        // Set Icon
-                        const ext = filename.split('.').pop().toLowerCase();
-                        const icons = {
-                            'pdf': 'fa-file-pdf', 'doc': 'fa-file-word', 'docx': 'fa-file-word',
-                            'xls': 'fa-file-excel', 'xlsx': 'fa-file-excel',
-                            'ppt': 'fa-file-powerpoint', 'pptx': 'fa-file-powerpoint',
-                            'jpg': 'fa-file-image', 'jpeg': 'fa-file-image', 'png': 'fa-file-image', 'gif': 'fa-file-image',
-                            'zip': 'fa-file-archive', 'rar': 'fa-file-archive',
-                            'txt': 'fa-file-lines', 'csv': 'fa-file-csv'
-                        };
-                        attachIcon.className = `fa-solid ${icons[ext] || 'fa-file'}`;
-
+                        const fname = parts[parts.length - 1].replace(/^\d+_/, '');
+                        document.getElementById('drawer-attachment-name').textContent = fname;
+                        const ext = fname.split('.').pop().toLowerCase();
+                        const icons = { pdf: 'fa-file-pdf', doc: 'fa-file-word', docx: 'fa-file-word', xls: 'fa-file-excel', xlsx: 'fa-file-excel', jpg: 'fa-file-image', jpeg: 'fa-file-image', png: 'fa-file-image', zip: 'fa-file-archive' };
+                        document.getElementById('drawer-attachment-icon').className = `fa-solid ${icons[ext] || 'fa-file'}`;
                     } else {
                         attachWrap.classList.add('hidden');
                     }
@@ -773,200 +943,384 @@
                     // Logs
                     renderLogs(task.logs);
 
+                    // Comments
+                    renderComments(task.comments || []);
 
-                }
-            } catch (e) { console.error('Error loading task:', e); }
-        }
+                    // Collaborators
+                    renderCollaborators(task.assigned_by, task.assigned_to);
 
-        function renderLogs(logs) {
-            const container = document.getElementById('logs-timeline');
-            container.innerHTML = '';
-
-            if (!logs || logs.length === 0) {
-                container.innerHTML = '<p class="text-sm text-slate-400 italic">No activity logs found.</p>';
-                return;
+                } catch (e) { console.error(e); }
             }
 
-            logs.forEach(log => {
-                const date = new Date(log.log_date).toLocaleString();
-                const html = `
-                                                                                <div class="relative">
-                                                                                    <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-slate-200 border-2 border-white ring-1 ring-slate-100"></div>
-                                                                                    <div class="space-y-1">
-                                                                                        <div class="flex justify-between items-center text-xs">
-                                                                                            <span class="font-bold text-slate-700">${log.log_action}</span>
-                                                                                            <span class="text-slate-400 font-mono">${date}</span>
-                                                                                        </div>
-                                                                                        <p class="text-sm text-slate-600 bg-white p-3 rounded-xl border border-slate-100 shadow-sm leading-relaxed">${log.log_remark}</p>
-                                                                                        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">By: ${log.logger ? log.logger.first_name : 'System'}</div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            `;
-                container.innerHTML += html;
+            function renderLogs(logs) {
+                const container = document.getElementById('drawer-logs');
+                if (!logs || !logs.length) {
+                    container.innerHTML = '<p class="text-sm text-slate-400 italic">No activity logs yet.</p>';
+                    return;
+                }
+                container.innerHTML = logs.map(log => {
+                    const date = new Date(log.log_date).toLocaleString();
+                    return `
+                                                <div class="relative">
+                                                    <div class="absolute -left-[21px] top-1.5 w-3 h-3 rounded-full bg-[#004F68]/20 border-2 border-white ring-1 ring-[#004F68]/20"></div>
+                                                    <div class="space-y-1">
+                                                        <div class="flex justify-between items-center text-xs">
+                                                            <span class="font-bold text-slate-700">${log.log_action}</span>
+                                                            <span class="text-slate-400 font-mono text-[10px]">${date}</span>
+                                                        </div>
+                                                        <p class="text-sm text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 leading-relaxed">${log.log_remark}</p>
+                                                        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">By: ${log.logger ? log.logger.first_name : 'System'}</div>
+                                                    </div>
+                                                </div>
+                                            `;
+                }).join('');
+            }
+
+            // ── Comments ──────────────────────────────────────────────
+            function renderComments(comments) {
+                const container = document.getElementById('drawer-comments');
+                const countEl = document.getElementById('comments-count');
+                if (countEl) countEl.innerText = comments.length;
+
+                if (!comments || !comments.length) {
+                    container.innerHTML = '<p class="text-sm text-slate-400 italic text-center py-4">No comments yet. Be the first!</p>';
+                    return;
+                }
+
+                container.innerHTML = comments.map(c => {
+                    const name = c.commenter ? `${c.commenter.first_name} ${c.commenter.last_name}` : 'Unknown';
+                    const initials = name.charAt(0).toUpperCase();
+                    const date = new Date(c.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+                    return `
+                                            <div class="flex gap-3 items-start group/comment">
+                                                <div class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">${initials}</div>
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="flex items-baseline gap-2 mb-1">
+                                                        <span class="text-xs font-bold text-slate-700">${name}</span>
+                                                        <span class="text-[10px] text-slate-400">${date}</span>
+                                                    </div>
+                                                    <div class="text-sm text-slate-700 bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 leading-relaxed">${c.comment_body}</div>
+                                                </div>
+                                            </div>`;
+                }).join('');
+
+                // Scroll to bottom of comments
+                container.scrollTop = container.scrollHeight;
+            }
+
+            function renderCollaborators(assignedBy, assignedTo) {
+                const el = document.getElementById('drawer-collaborators');
+                if (!el) return;
+                const people = [];
+                if (assignedBy) people.push(assignedBy);
+                if (assignedTo && assignedTo.employee_id !== assignedBy?.employee_id) people.push(assignedTo);
+
+                el.innerHTML = people.map(p => {
+                    const name = `${p.first_name} ${p.last_name}`;
+                    const init = name.charAt(0).toUpperCase();
+                    return `<div class="w-7 h-7 rounded-full bg-[#004F68]/20 text-[#004F68] flex items-center justify-center text-[10px] font-bold ring-2 ring-white" title="${name}">${init}</div>`;
+                }).join('');
+            }
+
+            // ── Tab Switch ────────────────────────────────────────────
+            function switchTab(tab) {
+                document.getElementById('panel-comments').classList.toggle('hidden', tab !== 'comments');
+                document.getElementById('panel-activity').classList.toggle('hidden', tab !== 'activity');
+                document.getElementById('tab-comments').classList.toggle('tab-active', tab === 'comments');
+                document.getElementById('tab-activity').classList.toggle('tab-active', tab === 'activity');
+                // Set correct bg/text for tabs
+                [['tab-comments', 'comments'], ['tab-activity', 'activity']].forEach(([id, t]) => {
+                    const el = document.getElementById(id);
+                    if (tab === t) {
+                        el.style.background = 'white';
+                        el.style.color = '#004F68';
+                        el.style.boxShadow = '0 1px 4px rgba(0,0,0,0.08)';
+                    } else {
+                        el.style.background = '';
+                        el.style.color = '#64748b';
+                        el.style.boxShadow = '';
+                    }
+                });
+            }
+
+            // ── Submit Comment ────────────────────────────────────────
+            async function submitComment() {
+                const input = document.getElementById('comment-input');
+                const body = input.value.trim();
+                if (!body || !activeTaskId) return;
+
+                const btn = document.getElementById('btn-comment-submit');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-[10px]"></i> Sending…';
+
+                try {
+                    const fd = new FormData();
+                    fd.append('comment_body', body);
+                    const res = await fetch(`{{ url('hr/tasks') }}/${activeTaskId}/comment`, {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                        body: fd
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                        input.value = '';
+                        input.style.height = '';
+                        // Append new comment
+                        const container = document.getElementById('drawer-comments');
+                        const c = result.comment;
+                        const name = c.commenter ? `${c.commenter.first_name} ${c.commenter.last_name}` : 'You';
+                        const init = name.charAt(0).toUpperCase();
+                        const date = new Date(c.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+                        // Remove the 'no comments' placeholder if present
+                        const placeholder = container.querySelector('p.italic');
+                        if (placeholder) placeholder.remove();
+
+                        const div = document.createElement('div');
+                        div.className = 'flex gap-3 items-start';
+                        div.innerHTML = `
+                                                <div class="w-7 h-7 rounded-full bg-[#004F68] text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">${init}</div>
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="flex items-baseline gap-2 mb-1">
+                                                        <span class="text-xs font-bold text-slate-700">${name}</span>
+                                                        <span class="text-[10px] text-slate-400">${date}</span>
+                                                    </div>
+                                                    <div class="text-sm text-slate-700 bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5 leading-relaxed">${c.comment_body}</div>
+                                                </div>`;
+                        container.appendChild(div);
+                        container.scrollTop = container.scrollHeight;
+
+                        // Update count
+                        const countEl = document.getElementById('comments-count');
+                        if (countEl) countEl.innerText = parseInt(countEl.innerText || 0) + 1;
+                    }
+                } catch (e) { console.error(e); }
+
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane text-[10px]"></i> Comment';
+            }
+
+            // ── Ctrl+Enter to submit ──────────────────────────────────
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && document.getElementById('comment-input') === document.activeElement) {
+                    submitComment();
+                }
             });
-        }
 
-        async function saveTask(e) {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-
-            try {
-                const response = await fetch("{{ route('hr.tasks.store') }}", {
-                    method: 'POST',
-                    headers: { 
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: formData
-                });
-                const result = await response.json();
-                if (result.success) {
-                    closeModal('newTaskModal');
-                    window.location.reload();
-                }
-            } catch (err) { console.error(err); }
-        }
-
-        async function updateTaskStatus(e) {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-
-            try {
-                const response = await fetch("{{ route('hr.tasks.status.update') }}", {
-                    method: 'POST',
-                    headers: { 
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: formData
-                });
-                const result = await response.json();
-                if (result.success) {
-                    closeModal('updateStatusModal');
-                    // Refresh the entire page to update sidebar status and logs
-                    window.location.reload();
-                }
-            } catch (err) { console.error(err); }
-        }
-
-        function openCreateTaskModal() {
-            document.getElementById('create-task-form').reset();
-            document.getElementById('task_parent_id').value = '';
-            document.getElementById('task-modal-title').innerText = 'Create New Task';
-            openModal('newTaskModal');
-        }
-
-        function openSubtaskModal(parentId) {
-            if (!parentId) return;
-            document.getElementById('create-task-form').reset();
-            document.getElementById('task_parent_id').value = parentId;
-            document.getElementById('task-modal-title').innerText = 'Create Subtask for #' + parentId;
-            openModal('newTaskModal');
-        }
-    </script>
-@endpush
-@push('scripts')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
-    <script src="{{ asset('js/attachment-preview.js') }}"></script>
-    <script>
-        // Initialize Attachment Preview for Create Task modal
-        window.addEventListener('load', () => {
-            if (window.initAttachmentPreview) {
-                window.initAttachmentPreview({
-                    inputSelector: '#task_attachment',
-                    containerSelector: '#task-attachment-preview'
-                });
+            function autoResize(el) {
+                el.style.height = 'auto';
+                el.style.height = Math.min(el.scrollHeight, 160) + 'px';
             }
-        });
 
-        // File Size Validation (Max 10MB)
-        const taskAttachmentInput = document.getElementById('task_attachment');
-        if (taskAttachmentInput) {
-            taskAttachmentInput.addEventListener('change', function () {
-                if (this.files && this.files[0]) {
-                    const maxSize = 10 * 1024 * 1024;
-                    if (this.files[0].size > maxSize) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'File Too Large',
-                            text: 'Attachment must not exceed 10MB.',
-                            confirmButtonColor: '#4f46e5'
+            // ── Ajax Pagination ──────────────────────────────────────────
+            window.addEventListener('DOMContentLoaded', () => {
+                window.ajaxPagination = new AjaxPagination({
+                    endpoint: "{{ route('hr.tasks.data', ['view_mode' => $viewMode, 'status_id' => $statusId]) }}",
+                    containerSelector: '#tasks-container',
+                    paginationSelector: '#tasks-pagination',
+                    renderCallback: function (tasks) {
+                        const container = document.querySelector('#tasks-container');
+                        if (!tasks.length) {
+                            container.innerHTML = `<div class="py-20 text-center"><div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300"><i class="fa-solid fa-clipboard-check text-2xl"></i></div><p class="text-slate-400 font-medium">No tasks found</p></div>`;
+                            return;
+                        }
+                        const vm = "{{ $viewMode }}";
+                        let html = '';
+                        tasks.forEach(task => {
+                            const person = vm == 'assigned_to' ? task.assigned_by : task.assigned_to;
+                            const initials = (person?.first_name ?? 'U').charAt(0).toUpperCase();
+                            const dueDate = task.task_due_date ? new Date(task.task_due_date) : null;
+                            const isOverdue = dueDate && dueDate < new Date();
+                            html += `
+                                                    <div onclick="loadTask(${task.task_id})" id="task-item-${task.task_id}"
+                                                        class="asana-task-row group ${activeTaskId == task.task_id ? 'active-row' : ''}" data-task-id="${task.task_id}">
+                                                        <div class="col-name">
+                                                            <div class="flex items-center gap-3">
+                                                                <button onclick="event.stopPropagation()" class="task-check flex-shrink-0 w-5 h-5 rounded-full border-2 border-slate-300 hover:border-[#004F68] transition-colors flex items-center justify-center">
+                                                                    <i class="fa-solid fa-check text-[9px] text-transparent hover:text-[#004F68] transition-colors"></i>
+                                                                </button>
+                                                                <span class="font-medium text-slate-800 group-hover:text-[#004F68] transition-colors line-clamp-1">${task.task_title}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-assignee">
+                                                            <div class="flex items-center gap-2">
+                                                                <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold">${initials}</div>
+                                                                <span class="text-sm text-slate-600 truncate">${person?.first_name ?? '—'}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-due">
+                                                            ${dueDate ? `<span class="text-sm font-medium ${isOverdue ? 'text-red-500' : 'text-slate-500'}">${dueDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>` : '<span class="text-slate-300">—</span>'}
+                                                        </div>
+                                                        <div class="col-priority">
+                                                            <span class="text-[11px] font-bold px-2 py-1 rounded-lg" style="background:#${task.priority?.priority_color ?? 'ccc'}18;color:#${task.priority?.priority_color ?? '999'}">${task.priority?.priority_name ?? '—'}</span>
+                                                        </div>
+                                                        <div class="col-status">
+                                                            <span class="text-[11px] font-bold px-2 py-1 rounded-lg" style="background:#${task.status?.status_color ?? 'ccc'}18;color:#${task.status?.status_color ?? '999'}">${task.status?.status_name ?? '—'}</span>
+                                                        </div>
+                                                        <div class="col-progress">
+                                                            <div class="flex items-center gap-2">
+                                                                <div class="flex-1 h-1.5 bg-slate-100 rounded-full"><div class="h-full bg-[#004F68] rounded-full" style="width:${task.task_progress ?? 0}%"></div></div>
+                                                                <span class="text-xs text-slate-500 w-8 text-right">${task.task_progress ?? 0}%</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>`;
                         });
+                        container.innerHTML = html;
+                    }
+                });
+
+                @if($tasks->hasPages())
+                    window.ajaxPagination.renderPagination({
+                        current_page: {{ $tasks->currentPage() }},
+                        last_page: {{ $tasks->lastPage() }},
+                        from: {{ $tasks->firstItem() }},
+                        to: {{ $tasks->lastItem() }},
+                        total: {{ $tasks->total() }}
+                                                        });
+                @endif
+                                    });
+
+            // ── Status change auto-fill ─────────────────────────────────
+            function onStatusChange(select) {
+                const name = (select.options[select.selectedIndex].dataset.name || '').toLowerCase();
+                const id = parseInt(select.value);
+                if (id === 4 || name.includes('done') || name.includes('complet')) {
+                    const s = document.getElementById('update-task-progress');
+                    if (s) { s.value = 100; document.getElementById('update-progress-value').innerText = '100%'; }
+                }
+            }
+
+            // ── Save Task ────────────────────────────────────────────────
+            async function saveTask(e) {
+                e.preventDefault();
+                try {
+                    const res = await fetch("{{ route('hr.tasks.store') }}", {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                        body: new FormData(e.target)
+                    });
+                    const result = await res.json();
+                    if (result.success) { closeModal('newTaskModal'); window.location.reload(); }
+                } catch (err) { console.error(err); }
+            }
+
+            // ── Update Status ────────────────────────────────────────────
+            async function updateTaskStatus(e) {
+                e.preventDefault();
+                try {
+                    const res = await fetch("{{ route('hr.tasks.status.update') }}", {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                        body: new FormData(e.target)
+                    });
+                    const result = await res.json();
+                    if (result.success) { closeModal('updateStatusModal'); window.location.reload(); }
+                } catch (err) { console.error(err); }
+            }
+
+            // ── Modal Helpers ────────────────────────────────────────────
+            function openCreateTaskModal() {
+                document.getElementById('create-task-form').reset();
+                document.getElementById('task_parent_id').value = '';
+                document.getElementById('task-modal-title').innerText = 'Create New Task';
+                openModal('newTaskModal');
+            }
+            function openSubtaskModal(parentId) {
+                if (!parentId) return;
+                document.getElementById('create-task-form').reset();
+                document.getElementById('task_parent_id').value = parentId;
+                document.getElementById('task-modal-title').innerText = 'Create Subtask for #' + parentId;
+                openModal('newTaskModal');
+            }
+        </script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+        <script src="{{ asset('js/attachment-preview.js') }}"></script>
+        <script>
+            window.addEventListener('load', () => {
+                if (window.initAttachmentPreview) {
+                    window.initAttachmentPreview({ inputSelector: '#task_attachment', containerSelector: '#task-attachment-preview' });
+                }
+            });
+            const _attachInput = document.getElementById('task_attachment');
+            if (_attachInput) {
+                _attachInput.addEventListener('change', function () {
+                    if (this.files?.[0]?.size > 10 * 1024 * 1024) {
+                        Swal.fire({ icon: 'error', title: 'File Too Large', text: 'Max 10MB.', confirmButtonColor: '#004F68' });
                         this.value = '';
                         document.getElementById('task-attachment-preview').innerHTML = '';
                     }
-                }
-            });
-        }
-    </script>
-@endpush
-
-{{-- Resubmit Modal (only needed in rejected view) --}}
-@if($viewMode === 'rejected')
-<div class="modal" id="resubmitModal">
-    <div class="modal-backdrop" onclick="closeModal('resubmitModal')"></div>
-    <div class="modal-content max-w-lg p-6">
-        <div class="flex items-center justify-between mb-5">
-            <div>
-                <h2 class="text-xl font-display font-bold text-premium">Edit & Resubmit Task</h2>
-                <p class="text-sm text-amber-600 mt-1"><i class="fa-solid fa-rotate-right mr-1"></i> Correct and send for line manager review</p>
-            </div>
-            <button onclick="closeModal('resubmitModal')" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors">
-                <i class="fa-solid fa-times"></i>
-            </button>
-        </div>
-        <form onsubmit="submitResubmit(event)" class="space-y-4">
-            <input type="hidden" id="resubmit-task-id">
-            <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Task Title</label>
-                <input type="text" id="resubmit-title" class="premium-input w-full px-4 py-3 text-sm" required>
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description</label>
-                <textarea id="resubmit-desc" rows="4" class="premium-input w-full px-4 py-3 text-sm" placeholder="Describe the task..."></textarea>
-            </div>
-            <div class="pt-4 flex justify-end gap-3 border-t border-slate-100">
-                <button type="button" onclick="closeModal('resubmitModal')" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
-                <button type="submit" class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-200">
-                    <i class="fa-solid fa-rotate-right mr-2"></i>Resubmit for Approval
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-<script>
-    function openResubmitModal(taskId, title, description) {
-        document.getElementById('resubmit-task-id').value = taskId;
-        document.getElementById('resubmit-title').value = title;
-        document.getElementById('resubmit-desc').value = description;
-        openModal('resubmitModal');
-    }
-    async function submitResubmit(e) {
-        e.preventDefault();
-        const taskId = document.getElementById('resubmit-task-id').value;
-        const formData = new FormData();
-        formData.append('task_title', document.getElementById('resubmit-title').value);
-        formData.append('task_description', document.getElementById('resubmit-desc').value);
-        try {
-            const res = await fetch(`{{ url('hr/tasks') }}/${taskId}/resubmit`, {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                body: formData
-            });
-            const result = await res.json();
-            if (result.success) {
-                closeModal('resubmitModal');
-                Swal.fire({ icon: 'success', title: 'Resubmitted!', text: result.message, timer: 2000, showConfirmButton: false })
-                    .then(() => window.location.reload());
-            } else {
-                Swal.fire({ icon: 'error', title: 'Error', text: result.message });
+                });
             }
-        } catch (err) {
-            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to resubmit.' });
-        }
-    }
-</script>
-@endif
+        </script>
+    @endpush
+
+    {{-- Resubmit Modal --}}
+    @if($viewMode === 'rejected')
+        <div class="modal" id="resubmitModal">
+            <div class="modal-backdrop" onclick="closeModal('resubmitModal')"></div>
+            <div class="modal-content max-w-lg p-6">
+                <div class="flex items-center justify-between mb-5">
+                    <div>
+                        <h2 class="text-xl font-display font-bold text-premium">Edit &amp; Resubmit Task</h2>
+                        <p class="text-sm text-amber-600 mt-1"><i class="fa-solid fa-rotate-right mr-1"></i> Correct and send
+                            for line manager review</p>
+                    </div>
+                    <button onclick="closeModal('resubmitModal')"
+                        class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+                <form onsubmit="submitResubmit(event)" class="space-y-4">
+                    <input type="hidden" id="resubmit-task-id">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Task Title</label>
+                        <input type="text" id="resubmit-title" class="premium-input w-full px-4 py-3 text-sm" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description</label>
+                        <textarea id="resubmit-desc" rows="4" class="premium-input w-full px-4 py-3 text-sm"
+                            placeholder="Describe the task..."></textarea>
+                    </div>
+                    <div class="pt-4 flex justify-end gap-3 border-t border-slate-100">
+                        <button type="button" onclick="closeModal('resubmitModal')"
+                            class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
+                        <button type="submit"
+                            class="px-6 py-3 bg-[#004F68] text-white font-bold rounded-xl hover:scale-105 transition-all">
+                            <i class="fa-solid fa-rotate-right mr-2"></i>Resubmit for Approval
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <script>
+            function openResubmitModal(taskId, title, description) {
+                document.getElementById('resubmit-task-id').value = taskId;
+                document.getElementById('resubmit-title').value = title;
+                document.getElementById('resubmit-desc').value = description;
+                openModal('resubmitModal');
+            }
+            async function submitResubmit(e) {
+                e.preventDefault();
+                const taskId = document.getElementById('resubmit-task-id').value;
+                const formData = new FormData();
+                formData.append('task_title', document.getElementById('resubmit-title').value);
+                formData.append('task_description', document.getElementById('resubmit-desc').value);
+                try {
+                    const res = await fetch(`{{ url('hr/tasks') }}/${taskId}/resubmit`, {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                        body: formData
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                        closeModal('resubmitModal');
+                        Swal.fire({ icon: 'success', title: 'Resubmitted!', text: result.message, timer: 2000, showConfirmButton: false }).then(() => window.location.reload());
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: result.message });
+                    }
+                } catch (err) { Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to resubmit.' }); }
+            }
+        </script>
+    @endif
+
 @endsection
