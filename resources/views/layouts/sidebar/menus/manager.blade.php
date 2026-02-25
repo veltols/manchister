@@ -12,7 +12,6 @@
 </a>
 
 @if($isHR)
-    <!-- Legacy HR Structure Alignment -->
 
     <a href="{{ route('hr.departments.index') }}"
         class="nav-item {{ request()->routeIs('hr.departments.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
@@ -46,7 +45,7 @@
         <span class="text-sm font-semibold">HR Documents</span>
     </a>
 
-    <!-- Apps Drawer Trigger -->
+    {{-- Apps Drawer Trigger --}}
     <div x-data="{ open: false }" @click.away="open = false" class="relative">
         <button @click="open = !open"
             class="nav-item {{ request()->routeIs('hr.groups.*', 'hr.tasks.*', 'hr.calendar.*', 'hr.tickets.*', 'hr.messages.*') ? 'active' : '' }} w-full flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
@@ -54,42 +53,61 @@
                 <i class="fa-solid fa-layer-group text-base"></i>
             </div>
             <span class="text-sm font-semibold">Apps</span>
-            <i class="fa-solid fa-chevron-right text-[11px] ml-auto text-slate-400 transition-transform duration-200"
-                :class="open ? 'rotate-90' : ''"></i>
+            <i class="fa-solid fa-chevron-right text-[11px] ml-auto transition-transform duration-200"
+                :class="open ? 'rotate-90' : ''" style="color:rgba(255,255,255,0.5);"></i>
         </button>
 
-        <!-- Slide-Right Drawer -->
-        <div x-show="open" x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 -translate-x-4" x-transition:enter-end="opacity-100 translate-x-0"
-            x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-x-0"
+        {{-- Slide-Right Drawer --}}
+        <div x-show="open"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 -translate-x-4"
+            x-transition:enter-end="opacity-100 translate-x-0"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 translate-x-0"
             x-transition:leave-end="opacity-0 -translate-x-4"
             class="fixed left-64 top-0 h-full w-64 bg-white/95 backdrop-blur-xl border-r border-slate-200 shadow-2xl z-50 p-6 flex flex-col gap-2 overflow-y-auto"
             style="display: none;">
 
-            <div class="mb-6 pb-4 border-b border-slate-100">
-                <h3 class="text-lg font-bold text-premium flex items-center gap-2">
-                    <i class="fa-solid fa-layer-group text-indigo-500"></i>
-                    Apps
-                </h3>
-                <p class="text-xs text-slate-400 mt-1">Productivity &amp; Collaboration</p>
+            {{-- Drawer header --}}
+            <div class="mb-5 pb-4 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center relative overflow-hidden"
+                         style="background:linear-gradient(145deg,#004F68,#1a8aaa);
+                                box-shadow:0 6px 16px rgba(0,79,104,0.3),inset 0 1px 0 rgba(255,255,255,0.3);">
+                        <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl" style="background:rgba(255,255,255,0.3);"></div>
+                        <i class="fa-solid fa-layer-group text-white text-sm relative z-10"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-premium">Apps</h3>
+                        <p class="text-[10px] text-slate-400">Productivity &amp; Collaboration</p>
+                    </div>
+                </div>
             </div>
 
+            {{-- Groups --}}
             <a href="{{ route('hr.groups.index') }}"
-                class="group flex items-center gap-3 p-3 rounded-xl hover:bg-indigo-50 transition-all {{ request()->routeIs('hr.groups.*') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600' }}">
-                <div
-                    class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <i class="fa-solid fa-users"></i>
+                class="group flex items-center gap-3 p-3 rounded-xl transition-all hover:-translate-y-0.5 {{ request()->routeIs('hr.groups.*') ? 'bg-teal-50' : 'hover:bg-slate-50' }}"
+                style="{{ request()->routeIs('hr.groups.*') ? 'box-shadow:0 4px 12px rgba(0,79,104,0.12);' : '' }}">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center relative overflow-hidden flex-shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-5deg]"
+                     style="background:linear-gradient(145deg,#3b82f6,#2563eb);
+                            box-shadow:0 4px 12px rgba(37,99,235,0.35),inset 0 1px 0 rgba(255,255,255,0.35);">
+                    <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl" style="background:rgba(255,255,255,0.3);"></div>
+                    <i class="fa-solid fa-users text-white text-sm relative z-10"></i>
                 </div>
-                <span class="font-semibold text-sm">Groups</span>
+                <span class="font-semibold text-sm {{ request()->routeIs('hr.groups.*') ? 'text-teal-800' : 'text-slate-700' }}">Groups</span>
             </a>
 
+            {{-- Tasks --}}
             <a href="{{ route('hr.tasks.index') }}"
-                class="group flex items-center gap-3 p-3 rounded-xl hover:bg-purple-50 transition-all {{ request()->routeIs('hr.tasks.*') ? 'bg-purple-50 text-purple-700' : 'text-slate-600' }}">
-                <div
-                    class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <i class="fa-solid fa-list-check"></i>
+                class="group flex items-center gap-3 p-3 rounded-xl transition-all hover:-translate-y-0.5 {{ request()->routeIs('hr.tasks.*') && !request()->routeIs('hr.tasks.pending') ? 'bg-purple-50' : 'hover:bg-slate-50' }}"
+                style="{{ request()->routeIs('hr.tasks.*') && !request()->routeIs('hr.tasks.pending') ? 'box-shadow:0 4px 12px rgba(139,92,246,0.12);' : '' }}">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center relative overflow-hidden flex-shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-5deg]"
+                     style="background:linear-gradient(145deg,#8b5cf6,#7c3aed);
+                            box-shadow:0 4px 12px rgba(139,92,246,0.35),inset 0 1px 0 rgba(255,255,255,0.35);">
+                    <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl" style="background:rgba(255,255,255,0.3);"></div>
+                    <i class="fa-solid fa-list-check text-white text-sm relative z-10"></i>
                 </div>
-                <span class="font-semibold text-sm">Tasks</span>
+                <span class="font-semibold text-sm {{ request()->routeIs('hr.tasks.*') && !request()->routeIs('hr.tasks.pending') ? 'text-purple-800' : 'text-slate-700' }}">Tasks</span>
             </a>
 
             @php
@@ -99,41 +117,58 @@
                 }
             @endphp
             @if($hrPendingCount > 0)
+            {{-- Pending Tasks --}}
             <a href="{{ route('hr.tasks.pending') }}"
-                class="group flex items-center gap-3 p-3 rounded-xl hover:bg-amber-50 transition-all {{ request()->routeIs('hr.tasks.pending') ? 'bg-amber-50 text-amber-700' : 'text-slate-600' }}">
-                <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform relative">
-                    <i class="fa-solid fa-clock-rotate-left"></i>
-                    <span class="absolute -top-1.5 -right-1.5 bg-amber-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">{{ $hrPendingCount }}</span>
+                class="group flex items-center gap-3 p-3 rounded-xl transition-all hover:-translate-y-0.5 {{ request()->routeIs('hr.tasks.pending') ? 'bg-amber-50' : 'hover:bg-slate-50' }}"
+                style="{{ request()->routeIs('hr.tasks.pending') ? 'box-shadow:0 4px 12px rgba(245,158,11,0.12);' : '' }}">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center relative overflow-hidden flex-shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-5deg]"
+                     style="background:linear-gradient(145deg,#f59e0b,#d97706);
+                            box-shadow:0 4px 12px rgba(245,158,11,0.35),inset 0 1px 0 rgba(255,255,255,0.35);">
+                    <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl" style="background:rgba(255,255,255,0.3);"></div>
+                    <i class="fa-solid fa-clock-rotate-left text-white text-sm relative z-10"></i>
+                    <span class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center z-20">{{ $hrPendingCount }}</span>
                 </div>
-                <span class="font-semibold text-sm">Pending Tasks</span>
+                <span class="font-semibold text-sm {{ request()->routeIs('hr.tasks.pending') ? 'text-amber-800' : 'text-slate-700' }}">Pending Tasks</span>
             </a>
             @endif
 
+            {{-- Calendar --}}
             <a href="{{ route('hr.calendar.index') }}"
-                class="group flex items-center gap-3 p-3 rounded-xl hover:bg-blue-50 transition-all {{ request()->routeIs('hr.calendar.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600' }}">
-                <div
-                    class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <i class="fa-solid fa-calendar-days"></i>
+                class="group flex items-center gap-3 p-3 rounded-xl transition-all hover:-translate-y-0.5 {{ request()->routeIs('hr.calendar.*') ? 'bg-sky-50' : 'hover:bg-slate-50' }}"
+                style="{{ request()->routeIs('hr.calendar.*') ? 'box-shadow:0 4px 12px rgba(14,165,233,0.12);' : '' }}">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center relative overflow-hidden flex-shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-5deg]"
+                     style="background:linear-gradient(145deg,#0ea5e9,#0284c7);
+                            box-shadow:0 4px 12px rgba(14,165,233,0.35),inset 0 1px 0 rgba(255,255,255,0.35);">
+                    <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl" style="background:rgba(255,255,255,0.3);"></div>
+                    <i class="fa-solid fa-calendar-days text-white text-sm relative z-10"></i>
                 </div>
-                <span class="font-semibold text-sm">Calendar</span>
+                <span class="font-semibold text-sm {{ request()->routeIs('hr.calendar.*') ? 'text-sky-800' : 'text-slate-700' }}">Calendar</span>
             </a>
 
+            {{-- Tickets --}}
             <a href="{{ route('hr.tickets.index') }}"
-                class="group flex items-center gap-3 p-3 rounded-xl hover:bg-rose-50 transition-all {{ request()->routeIs('hr.tickets.*') ? 'bg-rose-50 text-rose-700' : 'text-slate-600' }}">
-                <div
-                    class="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <i class="fa-solid fa-ticket"></i>
+                class="group flex items-center gap-3 p-3 rounded-xl transition-all hover:-translate-y-0.5 {{ request()->routeIs('hr.tickets.*') ? 'bg-rose-50' : 'hover:bg-slate-50' }}"
+                style="{{ request()->routeIs('hr.tickets.*') ? 'box-shadow:0 4px 12px rgba(244,63,94,0.12);' : '' }}">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center relative overflow-hidden flex-shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-5deg]"
+                     style="background:linear-gradient(145deg,#f43f5e,#e11d48);
+                            box-shadow:0 4px 12px rgba(244,63,94,0.35),inset 0 1px 0 rgba(255,255,255,0.35);">
+                    <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl" style="background:rgba(255,255,255,0.3);"></div>
+                    <i class="fa-solid fa-ticket text-white text-sm relative z-10"></i>
                 </div>
-                <span class="font-semibold text-sm">Tickets</span>
+                <span class="font-semibold text-sm {{ request()->routeIs('hr.tickets.*') ? 'text-rose-800' : 'text-slate-700' }}">Tickets</span>
             </a>
 
+            {{-- Chats --}}
             <a href="{{ route('hr.messages.index') }}"
-                class="group flex items-center gap-3 p-3 rounded-xl hover:bg-emerald-50 transition-all {{ request()->routeIs('hr.messages.*') ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600' }}">
-                <div
-                    class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <i class="fa-solid fa-comments"></i>
+                class="group flex items-center gap-3 p-3 rounded-xl transition-all hover:-translate-y-0.5 {{ request()->routeIs('hr.messages.*') ? 'bg-emerald-50' : 'hover:bg-slate-50' }}"
+                style="{{ request()->routeIs('hr.messages.*') ? 'box-shadow:0 4px 12px rgba(16,185,129,0.12);' : '' }}">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center relative overflow-hidden flex-shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-5deg]"
+                     style="background:linear-gradient(145deg,#10b981,#059669);
+                            box-shadow:0 4px 12px rgba(16,185,129,0.35),inset 0 1px 0 rgba(255,255,255,0.35);">
+                    <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl" style="background:rgba(255,255,255,0.3);"></div>
+                    <i class="fa-solid fa-comments text-white text-sm relative z-10"></i>
                 </div>
-                <span class="font-semibold text-sm">Chats</span>
+                <span class="font-semibold text-sm {{ request()->routeIs('hr.messages.*') ? 'text-emerald-800' : 'text-slate-700' }}">Chats</span>
             </a>
 
         </div>
@@ -143,7 +178,7 @@
 
 
 @if($isAdmin)
-    <!-- Organization Chart (Departments) -->
+    {{-- Organization Chart --}}
     <a href="{{ route('admin.departments.index') }}"
         class="nav-item {{ request()->routeIs('admin.departments.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
         <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -152,7 +187,7 @@
         <span class="text-sm font-semibold">Org Chart</span>
     </a>
 
-    <!-- Tickets -->
+    {{-- Tickets --}}
     <a href="{{ route('admin.tickets.index') }}"
         class="nav-item {{ request()->routeIs('admin.tickets.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
         <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -161,7 +196,7 @@
         <span class="text-sm font-semibold">Tickets</span>
     </a>
 
-    <!-- Assets -->
+    {{-- Assets --}}
     <a href="{{ route('admin.assets.index') }}"
         class="nav-item {{ request()->routeIs('admin.assets.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
         <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -170,7 +205,7 @@
         <span class="text-sm font-semibold">Assets</span>
     </a>
 
-    <!-- Users -->
+    {{-- Users --}}
     <a href="{{ route('admin.users.index') }}"
         class="nav-item {{ request()->routeIs('admin.users.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
         <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -179,7 +214,7 @@
         <span class="text-sm font-semibold">Users</span>
     </a>
 
-    <!-- Settings -->
+    {{-- Settings --}}
     <a href="{{ route('admin.settings.index') }}"
         class="nav-item {{ request()->routeIs('admin.settings.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
         <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -188,7 +223,7 @@
         <span class="text-sm font-semibold">Settings</span>
     </a>
 
-    <!-- Incidents -->
+    {{-- Incidents --}}
     <a href="{{ route('admin.incidents.index') }}"
         class="nav-item {{ request()->routeIs('admin.incidents.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
         <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -197,7 +232,7 @@
         <span class="text-sm font-semibold">Incidents</span>
     </a>
 
-    <!-- Feedback -->
+    {{-- Feedback --}}
     <a href="{{ route('admin.feedback.index') }}"
         class="nav-item {{ request()->routeIs('admin.feedback.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
         <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
