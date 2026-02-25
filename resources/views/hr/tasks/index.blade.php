@@ -25,6 +25,15 @@
                         class="tab-btn {{ $viewMode == 'assigned_to' ? 'tab-active' : '' }}">
                         Assigned to Me
                     </a>
+                    @if($isLineManager)
+                        <a href="{{ route('hr.tasks.index', ['view_mode' => 'pending']) }}"
+                            class="tab-btn {{ $viewMode == 'pending' ? 'tab-active' : '' }} flex items-center gap-1.5">
+                            Pending Approval
+                            @if(isset($pendingCount) && $pendingCount > 0)
+                                <span class="badge-count bg-[#004F68]">{{ $pendingCount }}</span>
+                            @endif
+                        </a>
+                    @endif
                     @if(isset($submittedCount) && $submittedCount > 0 || $viewMode === 'submitted')
                         <a href="{{ route('hr.tasks.index', ['view_mode' => 'submitted']) }}"
                             class="tab-btn {{ $viewMode == 'submitted' ? 'tab-active' : '' }} flex items-center gap-1.5">
@@ -279,7 +288,9 @@
         {{-- Drawer Top Bar --}}
         <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 flex-shrink-0 bg-white">
             <div class="flex items-center gap-3">
-                @if($viewMode !== 'submitted')
+                {{-- Normal Task Actions --}}
+                <div id="task-normal-actions"
+                    class="flex items-center gap-3 @if($viewMode === 'submitted' || $viewMode === 'pending') hidden @endif">
                     <button onclick="openModal('updateStatusModal')" id="btn-update-status"
                         class="flex items-center gap-2 px-4 py-2 bg-[#004F68] hover:bg-[#00384a] text-white text-sm font-bold rounded-xl transition-all hover:scale-105 active:scale-95">
                         <i class="fa-solid fa-check text-xs"></i>
@@ -290,11 +301,34 @@
                         <i class="fa-solid fa-plus text-xs"></i>
                         Subtask
                     </button>
-                @else
-                    <span class="text-xs font-semibold text-amber-600 bg-amber-50 px-3 py-2 rounded-xl border border-amber-200">
+                    <button onclick="markComplete()" id="btn-mark-complete"
+                        class="flex items-center gap-2 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 hover:text-emerald-800 text-sm font-semibold rounded-xl transition-all hover:scale-105 active:scale-95">
+                        <i class="fa-solid fa-circle-check text-xs"></i>
+                        Mark Complete
+                    </button>
+                </div>
+
+                {{-- Approval Actions (Visible to Line Manager) --}}
+                <div id="task-approval-actions" class="hidden flex items-center gap-3">
+                    <button onclick="openAssignModal()"
+                        class="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-all hover:scale-105 active:scale-95">
+                        <i class="fa-solid fa-check-double text-xs"></i>
+                        Approve & Assign
+                    </button>
+                    <button onclick="openRejectModal()"
+                        class="flex items-center gap-2 px-4 py-2 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 text-sm font-bold rounded-xl transition-all">
+                        <i class="fa-solid fa-xmark text-xs"></i>
+                        Reject
+                    </button>
+                </div>
+
+                {{-- Status for Submitter --}}
+                <div id="task-submitted-status" class="@if($viewMode !== 'submitted') hidden @endif">
+                    <span
+                        class="text-xs font-semibold text-amber-600 bg-amber-50 px-3 py-2 rounded-xl border border-amber-200">
                         <i class="fa-solid fa-clock-rotate-left mr-1"></i> Awaiting line manager approval
                     </span>
-                @endif
+                </div>
             </div>
             <div class="flex items-center gap-2">
                 <span id="drawer-task-id" class="text-xs font-mono text-slate-400"></span>
@@ -907,6 +941,21 @@
                     sEl.style.background = `#${task.status?.status_color ?? 'ccc'}18`;
                     sEl.style.color = `#${task.status?.status_color ?? '999'}`;
 
+                    // Reset Mark Complete button based on current status
+                    const btnMc = document.getElementById('btn-mark-complete');
+                    if (btnMc) {
+                        const isDone = task.status_id == 4 || task.task_progress >= 100;
+                        if (isDone) {
+                            btnMc.innerHTML = '<i class="fa-solid fa-circle-check text-xs"></i> Completed!';
+                            btnMc.className = 'flex items-center gap-2 px-3 py-2 bg-emerald-500 text-white text-sm font-semibold rounded-xl cursor-default';
+                            btnMc.disabled = true;
+                        } else {
+                            btnMc.innerHTML = '<i class="fa-solid fa-circle-check text-xs"></i> Mark Complete';
+                            btnMc.className = 'flex items-center gap-2 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 hover:text-emerald-800 text-sm font-semibold rounded-xl transition-all hover:scale-105 active:scale-95';
+                            btnMc.disabled = false;
+                        }
+                    }
+
                     // Meta
                     document.getElementById('drawer-assigned-by').innerText = task.assigned_by ? `${task.assigned_by.first_name} ${task.assigned_by.last_name}` : '—';
                     document.getElementById('drawer-assigned-to').innerText = task.assigned_to ? `${task.assigned_to.first_name} ${task.assigned_to.last_name}` : '—';
@@ -916,6 +965,16 @@
                     const prog = task.task_progress || 0;
                     document.getElementById('drawer-progress-bar').style.width = `${prog}%`;
                     document.getElementById('drawer-progress-text').innerText = `${prog}%`;
+
+                    // ── Approval Logic Toggles ──────────────────────────
+                    const currentEmpId = {{ Auth::user()->employee ? Auth::user()->employee->employee_id : 0 }};
+                    const isPending = task.pending_line_manager_id && task.pending_line_manager_id != 0;
+                    const canApprove = isPending && task.pending_line_manager_id == currentEmpId;
+                    const isSubmitter = isPending && task.assigned_by == currentEmpId;
+
+                    document.getElementById('task-approval-actions').classList.toggle('hidden', !canApprove);
+                    document.getElementById('task-submitted-status').classList.toggle('hidden', !isSubmitter);
+                    document.getElementById('task-normal-actions').classList.toggle('hidden', isPending);
 
                     // Status modal defaults
                     document.getElementById('update-status-id').value = task.status_id;
@@ -961,18 +1020,18 @@
                 container.innerHTML = logs.map(log => {
                     const date = new Date(log.log_date).toLocaleString();
                     return `
-                                                <div class="relative">
-                                                    <div class="absolute -left-[21px] top-1.5 w-3 h-3 rounded-full bg-[#004F68]/20 border-2 border-white ring-1 ring-[#004F68]/20"></div>
-                                                    <div class="space-y-1">
-                                                        <div class="flex justify-between items-center text-xs">
-                                                            <span class="font-bold text-slate-700">${log.log_action}</span>
-                                                            <span class="text-slate-400 font-mono text-[10px]">${date}</span>
-                                                        </div>
-                                                        <p class="text-sm text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 leading-relaxed">${log.log_remark}</p>
-                                                        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">By: ${log.logger ? log.logger.first_name : 'System'}</div>
-                                                    </div>
-                                                </div>
-                                            `;
+                                                                                                    <div class="relative">
+                                                                                                        <div class="absolute -left-[21px] top-1.5 w-3 h-3 rounded-full bg-[#004F68]/20 border-2 border-white ring-1 ring-[#004F68]/20"></div>
+                                                                                                        <div class="space-y-1">
+                                                                                                            <div class="flex justify-between items-center text-xs">
+                                                                                                                <span class="font-bold text-slate-700">${log.log_action}</span>
+                                                                                                                <span class="text-slate-400 font-mono text-[10px]">${date}</span>
+                                                                                                            </div>
+                                                                                                            <p class="text-sm text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 leading-relaxed">${log.log_remark}</p>
+                                                                                                            <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">By: ${log.logger ? log.logger.first_name : 'System'}</div>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                `;
                 }).join('');
             }
 
@@ -992,16 +1051,16 @@
                     const initials = name.charAt(0).toUpperCase();
                     const date = new Date(c.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
                     return `
-                                            <div class="flex gap-3 items-start group/comment">
-                                                <div class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">${initials}</div>
-                                                <div class="flex-1 min-w-0">
-                                                    <div class="flex items-baseline gap-2 mb-1">
-                                                        <span class="text-xs font-bold text-slate-700">${name}</span>
-                                                        <span class="text-[10px] text-slate-400">${date}</span>
-                                                    </div>
-                                                    <div class="text-sm text-slate-700 bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 leading-relaxed">${c.comment_body}</div>
-                                                </div>
-                                            </div>`;
+                                                                                                <div class="flex gap-3 items-start group/comment">
+                                                                                                    <div class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">${initials}</div>
+                                                                                                    <div class="flex-1 min-w-0">
+                                                                                                        <div class="flex items-baseline gap-2 mb-1">
+                                                                                                            <span class="text-xs font-bold text-slate-700">${name}</span>
+                                                                                                            <span class="text-[10px] text-slate-400">${date}</span>
+                                                                                                        </div>
+                                                                                                        <div class="text-sm text-slate-700 bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 leading-relaxed">${c.comment_body}</div>
+                                                                                                    </div>
+                                                                                                </div>`;
                 }).join('');
 
                 // Scroll to bottom of comments
@@ -1079,14 +1138,14 @@
                         const div = document.createElement('div');
                         div.className = 'flex gap-3 items-start';
                         div.innerHTML = `
-                                                <div class="w-7 h-7 rounded-full bg-[#004F68] text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">${init}</div>
-                                                <div class="flex-1 min-w-0">
-                                                    <div class="flex items-baseline gap-2 mb-1">
-                                                        <span class="text-xs font-bold text-slate-700">${name}</span>
-                                                        <span class="text-[10px] text-slate-400">${date}</span>
-                                                    </div>
-                                                    <div class="text-sm text-slate-700 bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5 leading-relaxed">${c.comment_body}</div>
-                                                </div>`;
+                                                                                                    <div class="w-7 h-7 rounded-full bg-[#004F68] text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">${init}</div>
+                                                                                                    <div class="flex-1 min-w-0">
+                                                                                                        <div class="flex items-baseline gap-2 mb-1">
+                                                                                                            <span class="text-xs font-bold text-slate-700">${name}</span>
+                                                                                                            <span class="text-[10px] text-slate-400">${date}</span>
+                                                                                                        </div>
+                                                                                                        <div class="text-sm text-slate-700 bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5 leading-relaxed">${c.comment_body}</div>
+                                                                                                    </div>`;
                         container.appendChild(div);
                         container.scrollTop = container.scrollHeight;
 
@@ -1112,6 +1171,63 @@
                 el.style.height = Math.min(el.scrollHeight, 160) + 'px';
             }
 
+            // ── Mark as Complete ──────────────────────────────────────
+            async function markComplete() {
+                if (!activeTaskId) return;
+
+                const btn = document.getElementById('btn-mark-complete');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-xs"></i> Completing…';
+
+                try {
+                    const fd = new FormData();
+                    fd.append('task_id', activeTaskId);
+                    fd.append('status_id', 4);           // Done / Completed
+                    fd.append('task_progress', 100);
+                    fd.append('log_remark', 'Task marked as complete.');
+
+                    const res = await fetch("{{ route('hr.tasks.status.update') }}", {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: fd
+                    });
+                    const result = await res.json();
+
+                    if (result.success) {
+                        // Update progress bar in drawer
+                        document.getElementById('drawer-progress-bar').style.width = '100%';
+                        document.getElementById('drawer-progress-text').innerText = '100%';
+
+                        // Update status badge
+                        const sEl = document.getElementById('drawer-status');
+                        sEl.innerText = 'Done';
+                        sEl.style.background = '#22c55e18';
+                        sEl.style.color = '#16a34a';
+
+                        // Change button to "Completed" state
+                        btn.innerHTML = '<i class="fa-solid fa-circle-check text-xs"></i> Completed!';
+                        btn.className = 'flex items-center gap-2 px-3 py-2 bg-emerald-500 text-white text-sm font-semibold rounded-xl cursor-default';
+                        btn.disabled = true;
+
+                        // Show a subtle toast
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({ icon: 'success', title: 'Task Completed!', text: 'Progress set to 100% and status updated to Done.', timer: 2000, showConfirmButton: false, confirmButtonColor: '#004F68' });
+                        }
+                    } else {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fa-solid fa-circle-check text-xs"></i> Mark Complete';
+                    }
+                } catch (e) {
+                    console.error(e);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-circle-check text-xs"></i> Mark Complete';
+                }
+            }
+
             // ── Ajax Pagination ──────────────────────────────────────────
             window.addEventListener('DOMContentLoaded', () => {
                 window.ajaxPagination = new AjaxPagination({
@@ -1132,38 +1248,38 @@
                             const dueDate = task.task_due_date ? new Date(task.task_due_date) : null;
                             const isOverdue = dueDate && dueDate < new Date();
                             html += `
-                                                    <div onclick="loadTask(${task.task_id})" id="task-item-${task.task_id}"
-                                                        class="asana-task-row group ${activeTaskId == task.task_id ? 'active-row' : ''}" data-task-id="${task.task_id}">
-                                                        <div class="col-name">
-                                                            <div class="flex items-center gap-3">
-                                                                <button onclick="event.stopPropagation()" class="task-check flex-shrink-0 w-5 h-5 rounded-full border-2 border-slate-300 hover:border-[#004F68] transition-colors flex items-center justify-center">
-                                                                    <i class="fa-solid fa-check text-[9px] text-transparent hover:text-[#004F68] transition-colors"></i>
-                                                                </button>
-                                                                <span class="font-medium text-slate-800 group-hover:text-[#004F68] transition-colors line-clamp-1">${task.task_title}</span>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-assignee">
-                                                            <div class="flex items-center gap-2">
-                                                                <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold">${initials}</div>
-                                                                <span class="text-sm text-slate-600 truncate">${person?.first_name ?? '—'}</span>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-due">
-                                                            ${dueDate ? `<span class="text-sm font-medium ${isOverdue ? 'text-red-500' : 'text-slate-500'}">${dueDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>` : '<span class="text-slate-300">—</span>'}
-                                                        </div>
-                                                        <div class="col-priority">
-                                                            <span class="text-[11px] font-bold px-2 py-1 rounded-lg" style="background:#${task.priority?.priority_color ?? 'ccc'}18;color:#${task.priority?.priority_color ?? '999'}">${task.priority?.priority_name ?? '—'}</span>
-                                                        </div>
-                                                        <div class="col-status">
-                                                            <span class="text-[11px] font-bold px-2 py-1 rounded-lg" style="background:#${task.status?.status_color ?? 'ccc'}18;color:#${task.status?.status_color ?? '999'}">${task.status?.status_name ?? '—'}</span>
-                                                        </div>
-                                                        <div class="col-progress">
-                                                            <div class="flex items-center gap-2">
-                                                                <div class="flex-1 h-1.5 bg-slate-100 rounded-full"><div class="h-full bg-[#004F68] rounded-full" style="width:${task.task_progress ?? 0}%"></div></div>
-                                                                <span class="text-xs text-slate-500 w-8 text-right">${task.task_progress ?? 0}%</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>`;
+                                                                                                        <div onclick="loadTask(${task.task_id})" id="task-item-${task.task_id}"
+                                                                                                            class="asana-task-row group ${activeTaskId == task.task_id ? 'active-row' : ''}" data-task-id="${task.task_id}">
+                                                                                                            <div class="col-name">
+                                                                                                                <div class="flex items-center gap-3">
+                                                                                                                    <button onclick="event.stopPropagation()" class="task-check flex-shrink-0 w-5 h-5 rounded-full border-2 border-slate-300 hover:border-[#004F68] transition-colors flex items-center justify-center">
+                                                                                                                        <i class="fa-solid fa-check text-[9px] text-transparent hover:text-[#004F68] transition-colors"></i>
+                                                                                                                    </button>
+                                                                                                                    <span class="font-medium text-slate-800 group-hover:text-[#004F68] transition-colors line-clamp-1">${task.task_title}</span>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div class="col-assignee">
+                                                                                                                <div class="flex items-center gap-2">
+                                                                                                                    <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold">${initials}</div>
+                                                                                                                    <span class="text-sm text-slate-600 truncate">${person?.first_name ?? '—'}</span>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div class="col-due">
+                                                                                                                ${dueDate ? `<span class="text-sm font-medium ${isOverdue ? 'text-red-500' : 'text-slate-500'}">${dueDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>` : '<span class="text-slate-300">—</span>'}
+                                                                                                            </div>
+                                                                                                            <div class="col-priority">
+                                                                                                                <span class="text-[11px] font-bold px-2 py-1 rounded-lg" style="background:#${task.priority?.priority_color ?? 'ccc'}18;color:#${task.priority?.priority_color ?? '999'}">${task.priority?.priority_name ?? '—'}</span>
+                                                                                                            </div>
+                                                                                                            <div class="col-status">
+                                                                                                                <span class="text-[11px] font-bold px-2 py-1 rounded-lg" style="background:#${task.status?.status_color ?? 'ccc'}18;color:#${task.status?.status_color ?? '999'}">${task.status?.status_name ?? '—'}</span>
+                                                                                                            </div>
+                                                                                                            <div class="col-progress">
+                                                                                                                <div class="flex items-center gap-2">
+                                                                                                                    <div class="flex-1 h-1.5 bg-slate-100 rounded-full"><div class="h-full bg-[#004F68] rounded-full" style="width:${task.task_progress ?? 0}%"></div></div>
+                                                                                                                    <span class="text-xs text-slate-500 w-8 text-right">${task.task_progress ?? 0}%</span>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </div>`;
                         });
                         container.innerHTML = html;
                     }
@@ -1176,9 +1292,9 @@
                         from: {{ $tasks->firstItem() }},
                         to: {{ $tasks->lastItem() }},
                         total: {{ $tasks->total() }}
-                                                        });
+                                                                                                                            });
                 @endif
-                                    });
+                                                                                        });
 
             // ── Status change auto-fill ─────────────────────────────────
             function onStatusChange(select) {
@@ -1323,4 +1439,120 @@
         </script>
     @endif
 
+    {{-- Approve & Assign Modal --}}
+        <div class="modal" id="assignModal">
+            <div class="modal-backdrop" onclick="closeModal('assignModal')"></div>
+            <div class="modal-content max-w-lg p-6">
+                <div class="flex items-center justify-between mb-5">
+                    <div>
+                        <h2 class="text-xl font-display font-bold text-premium">Approve & Assign Task</h2>
+                        <p class="text-sm text-slate-500 mt-1">Review the task details and assign it to an employee to activate it.</p>
+                    </div>
+                    <button onclick="closeModal('assignModal')" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+                <form onsubmit="submitAssign(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Assign To Employee</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                            <select id="assign-to-id" class="premium-input w-full pl-8 pr-4 py-3 text-sm appearance-none" required>
+                                <option value="">Select Employee...</option>
+                                @foreach($employees as $emp)
+                                    <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="pt-4 flex justify-end gap-3 border-t border-slate-100">
+                        <button type="button" onclick="closeModal('assignModal')" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
+                        <button type="submit" class="px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:scale-105 transition-all shadow-lg shadow-emerald-200">
+                            <i class="fa-solid fa-check-double mr-2"></i>Approve & Activate
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {{-- Rejection Modal --}}
+        <div class="modal" id="rejectModal">
+            <div class="modal-backdrop" onclick="closeModal('rejectModal')"></div>
+            <div class="modal-content max-w-lg p-6">
+                <div class="flex items-center justify-between mb-5">
+                    <div>
+                        <h2 class="text-xl font-display font-bold text-premium">Reject Task</h2>
+                        <p class="text-sm text-rose-600 mt-1">Provide a reason for rejection so the creator can correct it.</p>
+                    </div>
+                    <button onclick="closeModal('rejectModal')" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+                <form onsubmit="submitReject(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Rejection Reason</label>
+                        <textarea id="reject-reason" rows="4" class="premium-input w-full px-4 py-3 text-sm" placeholder="Why is this task being rejected?" required></textarea>
+                    </div>
+                    <div class="pt-4 flex justify-end gap-3 border-t border-slate-100">
+                        <button type="button" onclick="closeModal('rejectModal')" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
+                        <button type="submit" class="px-6 py-3 bg-rose-600 text-white font-bold rounded-xl hover:scale-105 transition-all shadow-lg shadow-rose-200">
+                            <i class="fa-solid fa-xmark mr-2"></i>Confirm Rejection
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            function openAssignModal() {
+                if (!activeTaskId) return;
+                openModal('assignModal');
+            }
+            function openRejectModal() {
+                if (!activeTaskId) return;
+                openModal('rejectModal');
+            }
+
+            async function submitAssign(e) {
+                e.preventDefault();
+                const employeeId = document.getElementById('assign-to-id').value;
+                const formData = new FormData();
+                formData.append('assigned_to', employeeId);
+                try {
+                    const res = await fetch(`{{ url('hr/tasks') }}/${activeTaskId}/assign`, {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                        body: formData
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                        closeModal('assignModal');
+                        Swal.fire({ icon: 'success', title: 'Task Approved!', text: result.message, timer: 2000, showConfirmButton: false }).then(() => window.location.reload());
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: result.message });
+                    }
+                } catch (err) { Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to assign task.' }); }
+            }
+
+            async function submitReject(e) {
+                e.preventDefault();
+                const reason = document.getElementById('reject-reason').value;
+                const formData = new FormData();
+                formData.append('rejection_reason', reason);
+                try {
+                    const res = await fetch(`{{ url('hr/tasks') }}/${activeTaskId}/reject`, {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                        body: formData
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                        closeModal('rejectModal');
+                        Swal.fire({ icon: 'success', title: 'Task Rejected', text: result.message, timer: 2000, showConfirmButton: false }).then(() => window.location.reload());
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: result.message });
+                    }
+                } catch (err) { Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to reject task.' }); }
+            }
+        </script>
 @endsection

@@ -24,6 +24,15 @@
                         class="tab-btn {{ $viewMode == 'others_tasks' ? 'tab-active' : '' }}">
                         Assigned by Me
                     </a>
+                    @if($isLineManager)
+                        <a href="{{ route('emp.tasks.index', ['view_mode' => 'pending']) }}"
+                            class="tab-btn {{ $viewMode == 'pending' ? 'tab-active' : '' }} flex items-center gap-1.5">
+                            Pending Approval
+                            @if(isset($pendingCount) && $pendingCount > 0)
+                                <span class="badge-count bg-[#004F68]">{{ $pendingCount }}</span>
+                            @endif
+                        </a>
+                    @endif
                     @if(isset($submittedCount) && $submittedCount > 0 || $viewMode === 'submitted')
                         <a href="{{ route('emp.tasks.index', ['view_mode' => 'submitted']) }}"
                             class="tab-btn {{ $viewMode == 'submitted' ? 'tab-active' : '' }} flex items-center gap-1.5">
@@ -270,7 +279,9 @@
         {{-- Drawer Top Bar --}}
         <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 flex-shrink-0 bg-white">
             <div class="flex items-center gap-3">
-                @if($viewMode !== 'submitted')
+                {{-- Normal Task Actions --}}
+                <div id="task-normal-actions"
+                    class="flex items-center gap-3 @if($viewMode === 'submitted' || $viewMode === 'pending') hidden @endif">
                     <button onclick="openModal('updateStatusModal')" id="btn-update-status"
                         class="flex items-center gap-2 px-4 py-2 bg-[#004F68] hover:bg-[#00384a] text-white text-sm font-bold rounded-xl transition-all hover:scale-105 active:scale-95">
                         <i class="fa-solid fa-check text-xs"></i>
@@ -281,11 +292,34 @@
                         <i class="fa-solid fa-plus text-xs"></i>
                         Subtask
                     </button>
-                @else
-                    <span class="text-xs font-semibold text-amber-600 bg-amber-50 px-3 py-2 rounded-xl border border-amber-200">
+                    <button onclick="markComplete()" id="btn-mark-complete"
+                        class="flex items-center gap-2 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 hover:text-emerald-800 text-sm font-semibold rounded-xl transition-all hover:scale-105 active:scale-95">
+                        <i class="fa-solid fa-circle-check text-xs"></i>
+                        Mark Complete
+                    </button>
+                </div>
+
+                {{-- Approval Actions (Visible to Line Manager) --}}
+                <div id="task-approval-actions" class="hidden flex items-center gap-3">
+                    <button onclick="openAssignModal()"
+                        class="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-all hover:scale-105 active:scale-95">
+                        <i class="fa-solid fa-check-double text-xs"></i>
+                        Approve & Assign
+                    </button>
+                    <button onclick="openRejectModal()"
+                        class="flex items-center gap-2 px-4 py-2 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 text-sm font-bold rounded-xl transition-all">
+                        <i class="fa-solid fa-xmark text-xs"></i>
+                        Reject
+                    </button>
+                </div>
+
+                {{-- Status for Submitter --}}
+                <div id="task-submitted-status" class="@if($viewMode !== 'submitted') hidden @endif">
+                    <span
+                        class="text-xs font-semibold text-amber-600 bg-amber-50 px-3 py-2 rounded-xl border border-amber-200">
                         <i class="fa-solid fa-clock-rotate-left mr-1"></i> Awaiting line manager approval
                     </span>
-                @endif
+                </div>
             </div>
             <div class="flex items-center gap-2">
                 <span id="drawer-task-id" class="text-xs font-mono text-slate-400"></span>
@@ -771,11 +805,16 @@
             background: transparent;
             border: none;
         }
-        .drawer-tab:hover { color: #334155; background: white; }
+
+        .drawer-tab:hover {
+            color: #334155;
+            background: white;
+        }
+
         .drawer-tab.tab-active {
             background: white;
             color: #004F68;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
         }
     </style>
 
@@ -834,6 +873,21 @@
                 sEl.style.background = `#${task.status?.status_color ?? 'ccc'}18`;
                 sEl.style.color = `#${task.status?.status_color ?? '999'}`;
 
+                // Reset Mark Complete button
+                const btnMc = document.getElementById('btn-mark-complete');
+                if (btnMc) {
+                    const isDone = task.status_id == 4 || task.task_progress >= 100;
+                    if (isDone) {
+                        btnMc.innerHTML = '<i class="fa-solid fa-circle-check text-xs"></i> Completed!';
+                        btnMc.className = 'flex items-center gap-2 px-3 py-2 bg-emerald-500 text-white text-sm font-semibold rounded-xl cursor-default';
+                        btnMc.disabled = true;
+                    } else {
+                        btnMc.innerHTML = '<i class="fa-solid fa-circle-check text-xs"></i> Mark Complete';
+                        btnMc.className = 'flex items-center gap-2 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 hover:text-emerald-800 text-sm font-semibold rounded-xl transition-all hover:scale-105 active:scale-95';
+                        btnMc.disabled = false;
+                    }
+                }
+
                 const assignedBy = task.assignedBy || task.assigned_by;
                 const assignedTo = task.assignedTo || task.assigned_to;
                 document.getElementById('drawer-assigned-by').innerText = assignedBy ? `${assignedBy.first_name} ${assignedBy.last_name}` : '—';
@@ -843,6 +897,16 @@
                 const prog = task.task_progress || 0;
                 document.getElementById('drawer-progress-bar').style.width = `${prog}%`;
                 document.getElementById('drawer-progress-text').innerText = `${prog}%`;
+
+                // ── Approval Logic Toggles ──────────────────────────
+                const currentEmpId = {{ Auth::user()->employee ? Auth::user()->employee->employee_id : 0 }};
+                const isPending = task.pending_line_manager_id && task.pending_line_manager_id != 0;
+                const canApprove = isPending && task.pending_line_manager_id == currentEmpId;
+                const isSubmitter = isPending && task.assigned_by == currentEmpId;
+
+                document.getElementById('task-approval-actions').classList.toggle('hidden', !canApprove);
+                document.getElementById('task-submitted-status').classList.toggle('hidden', !isSubmitter);
+                document.getElementById('task-normal-actions').classList.toggle('hidden', isPending);
 
                 document.getElementById('update-status-id').value = task.status_id;
                 const slider = document.getElementById('update-task-progress');
@@ -863,343 +927,516 @@
                 }
 
                 renderLogs(task.logs);
-            renderComments(task.comments || []);
-                    renderCollaborators(task.assigned_by, task.assigned_to);
-                } catch (e) { console.error(e); }
+                renderComments(task.comments || []);
+                renderCollaborators(task.assigned_by, task.assigned_to);
+            } catch (e) { console.error(e); }
+        }
+
+        function renderLogs(logs) {
+            const container = document.getElementById('drawer-logs');
+            if (!logs || !logs.length) {
+                container.innerHTML = '<p class="text-sm text-slate-400 italic">No activity logs yet.</p>';
+                return;
             }
+            container.innerHTML = logs.map(log => {
+                const date = new Date(log.log_date).toLocaleString();
+                return `<div class="relative">
+                                        <div class="absolute -left-[21px] top-1.5 w-3 h-3 rounded-full bg-[#004F68]/20 border-2 border-white ring-1 ring-[#004F68]/20"></div>
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between items-center text-xs">
+                                                <span class="font-bold text-slate-700">${log.log_action}</span>
+                                                <span class="text-slate-400 font-mono text-[10px]">${date}</span>
+                                            </div>
+                                            <p class="text-sm text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 leading-relaxed">${log.log_remark}</p>
+                                            <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">By: ${log.logger ? log.logger.first_name : 'System'}</div>
+                                        </div>
+                                    </div>`;
+            }).join('');
+        }
 
-            function renderLogs(logs) {
-                const container = document.getElementById('drawer-logs');
-                if (!logs || !logs.length) {
-                    container.innerHTML = '<p class="text-sm text-slate-400 italic">No activity logs yet.</p>';
-                    return;
-                }
-                container.innerHTML = logs.map(log => {
-                    const date = new Date(log.log_date).toLocaleString();
-                    return `<div class="relative">
-                        <div class="absolute -left-[21px] top-1.5 w-3 h-3 rounded-full bg-[#004F68]/20 border-2 border-white ring-1 ring-[#004F68]/20"></div>
-                        <div class="space-y-1">
-                            <div class="flex justify-between items-center text-xs">
-                                <span class="font-bold text-slate-700">${log.log_action}</span>
-                                <span class="text-slate-400 font-mono text-[10px]">${date}</span>
-                            </div>
-                            <p class="text-sm text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 leading-relaxed">${log.log_remark}</p>
-                            <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">By: ${log.logger ? log.logger.first_name : 'System'}</div>
-                        </div>
-                    </div>`;
-                }).join('');
+        // ── Comments ──────────────────────────────────────────────
+        function renderComments(comments) {
+            const container = document.getElementById('drawer-comments');
+            const countEl = document.getElementById('comments-count');
+            if (countEl) countEl.innerText = comments.length;
+
+            if (!comments || !comments.length) {
+                container.innerHTML = '<p class="text-sm text-slate-400 italic text-center py-4">No comments yet. Be the first!</p>';
+                return;
             }
+            container.innerHTML = comments.map(c => {
+                const name = c.commenter ? `${c.commenter.first_name} ${c.commenter.last_name}` : 'Unknown';
+                const initials = name.charAt(0).toUpperCase();
+                const date = new Date(c.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+                return `
+                                        <div class="flex gap-3 items-start">
+                                            <div class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">${initials}</div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-baseline gap-2 mb-1">
+                                                    <span class="text-xs font-bold text-slate-700">${name}</span>
+                                                    <span class="text-[10px] text-slate-400">${date}</span>
+                                                </div>
+                                                <div class="text-sm text-slate-700 bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 leading-relaxed">${c.comment_body}</div>
+                                            </div>
+                                        </div>`;
+            }).join('');
+            container.scrollTop = container.scrollHeight;
+        }
 
-            // ── Comments ──────────────────────────────────────────────
-            function renderComments(comments) {
-                const container = document.getElementById('drawer-comments');
-                const countEl  = document.getElementById('comments-count');
-                if (countEl) countEl.innerText = comments.length;
+        function renderCollaborators(assignedBy, assignedTo) {
+            const el = document.getElementById('drawer-collaborators');
+            if (!el) return;
+            const people = [];
+            if (assignedBy) people.push(assignedBy);
+            if (assignedTo && assignedTo.employee_id !== assignedBy?.employee_id) people.push(assignedTo);
+            el.innerHTML = people.map(p => {
+                const name = `${p.first_name} ${p.last_name}`;
+                const init = name.charAt(0).toUpperCase();
+                return `<div class="w-7 h-7 rounded-full bg-[#004F68]/20 text-[#004F68] flex items-center justify-center text-[10px] font-bold ring-2 ring-white" title="${name}">${init}</div>`;
+            }).join('');
+        }
 
-                if (!comments || !comments.length) {
-                    container.innerHTML = '<p class="text-sm text-slate-400 italic text-center py-4">No comments yet. Be the first!</p>';
-                    return;
-                }
-                container.innerHTML = comments.map(c => {
-                    const name     = c.commenter ? `${c.commenter.first_name} ${c.commenter.last_name}` : 'Unknown';
-                    const initials = name.charAt(0).toUpperCase();
-                    const date     = new Date(c.created_at).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
-                    return `
-                        <div class="flex gap-3 items-start">
-                            <div class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">${initials}</div>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-baseline gap-2 mb-1">
-                                    <span class="text-xs font-bold text-slate-700">${name}</span>
-                                    <span class="text-[10px] text-slate-400">${date}</span>
-                                </div>
-                                <div class="text-sm text-slate-700 bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 leading-relaxed">${c.comment_body}</div>
-                            </div>
-                        </div>`;
-                }).join('');
-                container.scrollTop = container.scrollHeight;
-            }
+        function switchTab(tab) {
+            document.getElementById('panel-comments').classList.toggle('hidden', tab !== 'comments');
+            document.getElementById('panel-activity').classList.toggle('hidden', tab !== 'activity');
+            [['tab-comments', 'comments'], ['tab-activity', 'activity']].forEach(([id, t]) => {
+                const el = document.getElementById(id);
+                el.style.background = tab === t ? 'white' : '';
+                el.style.color = tab === t ? '#004F68' : '#64748b';
+                el.style.boxShadow = tab === t ? '0 1px 4px rgba(0,0,0,0.08)' : '';
+            });
+        }
 
-            function renderCollaborators(assignedBy, assignedTo) {
-                const el = document.getElementById('drawer-collaborators');
-                if (!el) return;
-                const people = [];
-                if (assignedBy) people.push(assignedBy);
-                if (assignedTo && assignedTo.employee_id !== assignedBy?.employee_id) people.push(assignedTo);
-                el.innerHTML = people.map(p => {
-                    const name = `${p.first_name} ${p.last_name}`;
-                    const init = name.charAt(0).toUpperCase();
-                    return `<div class="w-7 h-7 rounded-full bg-[#004F68]/20 text-[#004F68] flex items-center justify-center text-[10px] font-bold ring-2 ring-white" title="${name}">${init}</div>`;
-                }).join('');
-            }
+        async function submitComment() {
+            const input = document.getElementById('comment-input');
+            const body = input.value.trim();
+            if (!body || !activeTaskId) return;
 
-            function switchTab(tab) {
-                document.getElementById('panel-comments').classList.toggle('hidden', tab !== 'comments');
-                document.getElementById('panel-activity').classList.toggle('hidden', tab !== 'activity');
-                [['tab-comments','comments'],['tab-activity','activity']].forEach(([id, t]) => {
-                    const el = document.getElementById(id);
-                    el.style.background = tab === t ? 'white' : '';
-                    el.style.color      = tab === t ? '#004F68' : '#64748b';
-                    el.style.boxShadow  = tab === t ? '0 1px 4px rgba(0,0,0,0.08)' : '';
+            const btn = document.getElementById('btn-comment-submit');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-[10px]"></i> Sending…';
+
+            try {
+                const fd = new FormData();
+                fd.append('comment_body', body);
+                const res = await fetch(`{{ url('emp/tasks') }}/${activeTaskId}/comment`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: fd
                 });
+                const result = await res.json();
+                if (result.success) {
+                    input.value = '';
+                    input.style.height = '';
+                    const container = document.getElementById('drawer-comments');
+                    const c = result.comment;
+                    const name = c.commenter ? `${c.commenter.first_name} ${c.commenter.last_name}` : 'You';
+                    const init = name.charAt(0).toUpperCase();
+                    const date = new Date(c.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+                    const placeholder = container.querySelector('p.italic');
+                    if (placeholder) placeholder.remove();
+
+                    const div = document.createElement('div');
+                    div.className = 'flex gap-3 items-start';
+                    div.innerHTML = `
+                                            <div class="w-7 h-7 rounded-full bg-[#004F68] text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">${init}</div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-baseline gap-2 mb-1">
+                                                    <span class="text-xs font-bold text-slate-700">${name}</span>
+                                                    <span class="text-[10px] text-slate-400">${date}</span>
+                                                </div>
+                                                <div class="text-sm text-slate-700 bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5 leading-relaxed">${c.comment_body}</div>
+                                            </div>`;
+                    container.appendChild(div);
+                    container.scrollTop = container.scrollHeight;
+                    const countEl = document.getElementById('comments-count');
+                    if (countEl) countEl.innerText = parseInt(countEl.innerText || 0) + 1;
+                }
+            } catch (e) { console.error(e); }
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane text-[10px]"></i> Comment';
+        }
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && document.getElementById('comment-input') === document.activeElement) {
+                submitComment();
             }
+        });
 
-            async function submitComment() {
-                const input = document.getElementById('comment-input');
-                const body  = input.value.trim();
-                if (!body || !activeTaskId) return;
+        function autoResize(el) {
+            el.style.height = 'auto';
+            el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+        }
 
-                const btn = document.getElementById('btn-comment-submit');
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-[10px]"></i> Sending…';
+        function onStatusChange(select) {
+            const name = (select.options[select.selectedIndex].dataset.name || '').toLowerCase();
+            const id = parseInt(select.value);
+            if (id === 4 || name.includes('done') || name.includes('complet')) {
+                const s = document.getElementById('update-task-progress');
+                if (s) { s.value = 100; document.getElementById('update-progress-value').innerText = '100%'; }
+            }
+        }
 
+        async function saveTask(e) {
+            e.preventDefault();
+            try {
+                const res = await fetch("{{ route('emp.tasks.store') }}", {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: new FormData(e.target)
+                });
+                const result = await res.json();
+                if (result.success) { closeModal('newTaskModal'); window.location.reload(); }
+                else alert('Error saving task');
+            } catch (err) { console.error(err); }
+        }
+
+        async function updateTaskStatus(e) {
+            e.preventDefault();
+            const id = document.getElementById('update-task-id').value;
+            try {
+                const res = await fetch(`{{ url('emp/tasks') }}/${id}/status`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: new FormData(e.target)
+                });
+                const result = await res.json();
+                if (result.success) { closeModal('updateStatusModal'); window.location.reload(); }
+                else alert('Error updating status');
+            } catch (err) { console.error(err); }
+        }
+
+        function openCreateTaskModal() {
+            document.getElementById('create-task-form').reset();
+            document.getElementById('task_parent_id').value = '';
+            document.getElementById('task-modal-title').innerText = 'Create New Task';
+            openModal('newTaskModal');
+        }
+        function openSubtaskModal(parentId) {
+            if (!parentId) return;
+            document.getElementById('create-task-form').reset();
+            document.getElementById('task_parent_id').value = parentId;
+            document.getElementById('task-modal-title').innerText = 'Create Subtask for #' + parentId;
+            openModal('newTaskModal');
+        }
+
+        // ── Mark as Complete ──────────────────────────────────────────
+        async function markComplete() {
+            if (!activeTaskId) return;
+
+            const btn = document.getElementById('btn-mark-complete');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-xs"></i> Completing…';
+
+            try {
+                const fd = new FormData();
+                fd.append('status_id', 4);
+                fd.append('task_progress', 100);
+                fd.append('log_remark', 'Task marked as complete.');
+
+                const res = await fetch(`{{ url('emp/tasks') }}/${activeTaskId}/status`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: fd
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    // Update progress bar
+                    document.getElementById('drawer-progress-bar').style.width = '100%';
+                    document.getElementById('drawer-progress-text').innerText = '100%';
+
+                    // Update status badge
+                    const sEl = document.getElementById('drawer-status');
+                    sEl.innerText = 'Done';
+                    sEl.style.background = '#22c55e18';
+                    sEl.style.color = '#16a34a';
+
+                    // Lock button as completed
+                    btn.innerHTML = '<i class="fa-solid fa-circle-check text-xs"></i> Completed!';
+                    btn.className = 'flex items-center gap-2 px-3 py-2 bg-emerald-500 text-white text-sm font-semibold rounded-xl cursor-default';
+                    btn.disabled = true;
+
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({ icon: 'success', title: 'Task Completed!', text: 'Progress set to 100% and status updated to Done.', timer: 2000, showConfirmButton: false, confirmButtonColor: '#004F68' });
+                    }
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-circle-check text-xs"></i> Mark Complete';
+                }
+            } catch (e) {
+                console.error(e);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-circle-check text-xs"></i> Mark Complete';
+            }
+        }
+    </script>
+
+
+    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+    <script>
+        window.ajaxPagination = new AjaxPagination({
+            endpoint: "{{ route('emp.tasks.data', ['view_mode' => $viewMode, 'status_id' => $statusId]) }}",
+            containerSelector: '#tasks-container',
+            paginationSelector: '#tasks-pagination',
+            renderCallback: function (tasks) {
+                const container = document.querySelector('#tasks-container');
+                if (!tasks.length) {
+                    container.innerHTML = `<div class="py-20 text-center"><div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300"><i class="fa-solid fa-clipboard-check text-2xl"></i></div><p class="text-slate-400 font-medium">No tasks found</p></div>`;
+                    return;
+                }
+                const vm = "{{ $viewMode }}";
+                let html = '';
+                tasks.forEach(task => {
+                    const person = vm == 'my_tasks' ? task.assigned_by : task.assigned_to;
+                    const initials = (person?.first_name ?? 'U').charAt(0).toUpperCase();
+                    const dueDate = task.task_due_date ? new Date(task.task_due_date) : null;
+                    const isOverdue = dueDate && dueDate < new Date();
+                    html += `
+                                        <div onclick="loadTask(${task.task_id})" id="task-item-${task.task_id}"
+                                            class="asana-task-row group ${activeTaskId == task.task_id ? 'active-row' : ''}" data-task-id="${task.task_id}">
+                                            <div class="col-name">
+                                                <div class="flex items-center gap-3">
+                                                    <button onclick="event.stopPropagation()" class="flex-shrink-0 w-5 h-5 rounded-full border-2 border-slate-300 hover:border-[#004F68] transition-colors flex items-center justify-center">
+                                                        <i class="fa-solid fa-check text-[9px] text-transparent transition-colors"></i>
+                                                    </button>
+                                                    <span class="font-medium text-slate-800 group-hover:text-[#004F68] transition-colors line-clamp-1">${task.task_title}</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-assignee">
+                                                <div class="flex items-center gap-2">
+                                                    <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold">${initials}</div>
+                                                    <span class="text-sm text-slate-600 truncate">${person?.first_name ?? '—'}</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-due">
+                                                ${dueDate ? `<span class="text-sm font-medium ${isOverdue ? 'text-red-500' : 'text-slate-500'}">${dueDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>` : '<span class="text-slate-300">—</span>'}
+                                            </div>
+                                            <div class="col-priority">
+                                                <span class="text-[11px] font-bold px-2 py-1 rounded-lg" style="background:#${task.priority?.priority_color ?? 'ccc'}18;color:#${task.priority?.priority_color ?? '999'}">${task.priority?.priority_name ?? '—'}</span>
+                                            </div>
+                                            <div class="col-status">
+                                                <span class="text-[11px] font-bold px-2 py-1 rounded-lg" style="background:#${task.status?.status_color ?? 'ccc'}18;color:#${task.status?.status_color ?? '999'}">${task.status?.status_name ?? '—'}</span>
+                                            </div>
+                                            <div class="col-progress">
+                                                <div class="flex items-center gap-2">
+                                                    <div class="flex-1 h-1.5 bg-slate-100 rounded-full"><div class="h-full bg-[#004F68] rounded-full" style="width:${task.task_progress ?? 0}%"></div></div>
+                                                    <span class="text-xs text-slate-500 w-8 text-right">${task.task_progress ?? 0}%</span>
+                                                </div>
+                                            </div>
+                                        </div>`;
+                });
+                container.innerHTML = html;
+            }
+        });
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+    <script src="{{ asset('js/attachment-preview.js') }}"></script>
+    <script>
+        window.addEventListener('load', () => {
+            if (window.initAttachmentPreview) {
+                window.initAttachmentPreview({ inputSelector: '#task_attachment', containerSelector: '#task-attachment-preview' });
+            }
+        });
+        const _tAttach = document.getElementById('task_attachment');
+        if (_tAttach) {
+            _tAttach.addEventListener('change', function () {
+                if (this.files?.[0]?.size > 10 * 1024 * 1024) {
+                    Swal.fire({ icon: 'error', title: 'File Too Large', text: 'Max 10MB.', confirmButtonColor: '#004F68' });
+                    this.value = ''; document.getElementById('task-attachment-preview').innerHTML = '';
+                }
+            });
+        }
+    </script>
+
+    @if($viewMode === 'rejected')
+        <div class="modal" id="resubmitModal">
+            <div class="modal-backdrop" onclick="closeModal('resubmitModal')"></div>
+            <div class="modal-content max-w-lg p-6">
+                <div class="flex items-center justify-between mb-5">
+                    <div>
+                        <h2 class="text-xl font-display font-bold text-premium">Edit &amp; Resubmit Task</h2>
+                        <p class="text-sm text-amber-600 mt-1"><i class="fa-solid fa-rotate-right mr-1"></i> Correct and send
+                            for line manager review</p>
+                    </div>
+                    <button onclick="closeModal('resubmitModal')"
+                        class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors"><i
+                            class="fa-solid fa-times"></i></button>
+                </div>
+                <form onsubmit="submitResubmit(event)" class="space-y-4">
+                    <input type="hidden" id="resubmit-task-id">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Task Title</label>
+                        <input type="text" id="resubmit-title" class="premium-input w-full px-4 py-3 text-sm" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description</label>
+                        <textarea id="resubmit-desc" rows="4" class="premium-input w-full px-4 py-3 text-sm"
+                            placeholder="Describe the task..."></textarea>
+                    </div>
+                    <div class="pt-4 flex justify-end gap-3 border-t border-slate-100">
+                        <button type="button" onclick="closeModal('resubmitModal')"
+                            class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
+                        <button type="submit"
+                            class="px-6 py-3 bg-[#004F68] text-white font-bold rounded-xl hover:scale-105 transition-all"><i
+                                class="fa-solid fa-rotate-right mr-2"></i>Resubmit for Approval</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <script>
+            function openResubmitModal(taskId, title, description) {
+                document.getElementById('resubmit-task-id').value = taskId;
+                document.getElementById('resubmit-title').value = title;
+                document.getElementById('resubmit-desc').value = description;
+                openModal('resubmitModal');
+            }
+            async function submitResubmit(e) {
+                e.preventDefault();
+                const taskId = document.getElementById('resubmit-task-id').value;
+                const formData = new FormData();
+                formData.append('task_title', document.getElementById('resubmit-title').value);
+                formData.append('task_description', document.getElementById('resubmit-desc').value);
                 try {
-                    const fd = new FormData();
-                    fd.append('comment_body', body);
-                    const res = await fetch(`{{ url('emp/tasks') }}/${activeTaskId}/comment`, {
+                    const res = await fetch(`{{ url('emp/tasks') }}/${taskId}/resubmit`, {
                         method: 'POST',
                         headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                        body: fd
+                        body: formData
                     });
                     const result = await res.json();
                     if (result.success) {
-                        input.value = '';
-                        input.style.height = '';
-                        const container = document.getElementById('drawer-comments');
-                        const c = result.comment;
-                        const name = c.commenter ? `${c.commenter.first_name} ${c.commenter.last_name}` : 'You';
-                        const init = name.charAt(0).toUpperCase();
-                        const date = new Date(c.created_at).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
-
-                        const placeholder = container.querySelector('p.italic');
-                        if (placeholder) placeholder.remove();
-
-                        const div = document.createElement('div');
-                        div.className = 'flex gap-3 items-start';
-                        div.innerHTML = `
-                            <div class="w-7 h-7 rounded-full bg-[#004F68] text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">${init}</div>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-baseline gap-2 mb-1">
-                                    <span class="text-xs font-bold text-slate-700">${name}</span>
-                                    <span class="text-[10px] text-slate-400">${date}</span>
-                                </div>
-                                <div class="text-sm text-slate-700 bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5 leading-relaxed">${c.comment_body}</div>
-                            </div>`;
-                        container.appendChild(div);
-                        container.scrollTop = container.scrollHeight;
-                        const countEl = document.getElementById('comments-count');
-                        if (countEl) countEl.innerText = parseInt(countEl.innerText || 0) + 1;
+                        closeModal('resubmitModal');
+                        Swal.fire({ icon: 'success', title: 'Resubmitted!', text: result.message, timer: 2000, showConfirmButton: false }).then(() => window.location.reload());
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: result.message });
                     }
-                } catch(e) { console.error(e); }
-
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-paper-plane text-[10px]"></i> Comment';
-            }
-
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && document.getElementById('comment-input') === document.activeElement) {
-                    submitComment();
-                }
-            });
-
-            function autoResize(el) {
-                el.style.height = 'auto';
-                el.style.height = Math.min(el.scrollHeight, 160) + 'px';
-            }
-
-            function onStatusChange(select) {
-                const name = (select.options[select.selectedIndex].dataset.name || '').toLowerCase();
-                const id = parseInt(select.value);
-                if (id === 4 || name.includes('done') || name.includes('complet')) {
-                    const s = document.getElementById('update-task-progress');
-                    if (s) { s.value = 100; document.getElementById('update-progress-value').innerText = '100%'; }
-                }
-            }
-
-            async function saveTask(e) {
-                e.preventDefault();
-                try {
-                    const res = await fetch("{{ route('emp.tasks.store') }}", {
-                        method: 'POST',
-                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                        body: new FormData(e.target)
-                    });
-                    const result = await res.json();
-                    if (result.success) { closeModal('newTaskModal'); window.location.reload(); }
-                    else alert('Error saving task');
-                } catch (err) { console.error(err); }
-            }
-
-            async function updateTaskStatus(e) {
-                e.preventDefault();
-                const id = document.getElementById('update-task-id').value;
-                try {
-                    const res = await fetch(`{{ url('emp/tasks') }}/${id}/status`, {
-                        method: 'POST',
-                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                        body: new FormData(e.target)
-                    });
-                    const result = await res.json();
-                    if (result.success) { closeModal('updateStatusModal'); window.location.reload(); }
-                    else alert('Error updating status');
-                } catch (err) { console.error(err); }
-            }
-
-            function openCreateTaskModal() {
-                document.getElementById('create-task-form').reset();
-                document.getElementById('task_parent_id').value = '';
-                document.getElementById('task-modal-title').innerText = 'Create New Task';
-                openModal('newTaskModal');
-            }
-            function openSubtaskModal(parentId) {
-                if (!parentId) return;
-                document.getElementById('create-task-form').reset();
-                document.getElementById('task_parent_id').value = parentId;
-                document.getElementById('task-modal-title').innerText = 'Create Subtask for #' + parentId;
-                openModal('newTaskModal');
+                } catch (err) { Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to resubmit.' }); }
             }
         </script>
+    @endif
 
-        <script src="{{ asset('js/ajax-pagination.js') }}"></script>
-        <script>
-            window.ajaxPagination = new AjaxPagination({
-                endpoint: "{{ route('emp.tasks.data', ['view_mode' => $viewMode, 'status_id' => $statusId]) }}",
-                containerSelector: '#tasks-container',
-                paginationSelector: '#tasks-pagination',
-                renderCallback: function (tasks) {
-                    const container = document.querySelector('#tasks-container');
-                    if (!tasks.length) {
-                        container.innerHTML = `<div class="py-20 text-center"><div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300"><i class="fa-solid fa-clipboard-check text-2xl"></i></div><p class="text-slate-400 font-medium">No tasks found</p></div>`;
-                        return;
-                    }
-                    const vm = "{{ $viewMode }}";
-                    let html = '';
-                    tasks.forEach(task => {
-                        const person = vm == 'my_tasks' ? task.assigned_by : task.assigned_to;
-                        const initials = (person?.first_name ?? 'U').charAt(0).toUpperCase();
-                        const dueDate = task.task_due_date ? new Date(task.task_due_date) : null;
-                        const isOverdue = dueDate && dueDate < new Date();
-                        html += `
-                        <div onclick="loadTask(${task.task_id})" id="task-item-${task.task_id}"
-                            class="asana-task-row group ${activeTaskId == task.task_id ? 'active-row' : ''}" data-task-id="${task.task_id}">
-                            <div class="col-name">
-                                <div class="flex items-center gap-3">
-                                    <button onclick="event.stopPropagation()" class="flex-shrink-0 w-5 h-5 rounded-full border-2 border-slate-300 hover:border-[#004F68] transition-colors flex items-center justify-center">
-                                        <i class="fa-solid fa-check text-[9px] text-transparent transition-colors"></i>
-                                    </button>
-                                    <span class="font-medium text-slate-800 group-hover:text-[#004F68] transition-colors line-clamp-1">${task.task_title}</span>
-                                </div>
-                            </div>
-                            <div class="col-assignee">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold">${initials}</div>
-                                    <span class="text-sm text-slate-600 truncate">${person?.first_name ?? '—'}</span>
-                                </div>
-                            </div>
-                            <div class="col-due">
-                                ${dueDate ? `<span class="text-sm font-medium ${isOverdue ? 'text-red-500' : 'text-slate-500'}">${dueDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>` : '<span class="text-slate-300">—</span>'}
-                            </div>
-                            <div class="col-priority">
-                                <span class="text-[11px] font-bold px-2 py-1 rounded-lg" style="background:#${task.priority?.priority_color ?? 'ccc'}18;color:#${task.priority?.priority_color ?? '999'}">${task.priority?.priority_name ?? '—'}</span>
-                            </div>
-                            <div class="col-status">
-                                <span class="text-[11px] font-bold px-2 py-1 rounded-lg" style="background:#${task.status?.status_color ?? 'ccc'}18;color:#${task.status?.status_color ?? '999'}">${task.status?.status_name ?? '—'}</span>
-                            </div>
-                            <div class="col-progress">
-                                <div class="flex items-center gap-2">
-                                    <div class="flex-1 h-1.5 bg-slate-100 rounded-full"><div class="h-full bg-[#004F68] rounded-full" style="width:${task.task_progress ?? 0}%"></div></div>
-                                    <span class="text-xs text-slate-500 w-8 text-right">${task.task_progress ?? 0}%</span>
-                                </div>
-                            </div>
-                        </div>`;
-                    });
-                    container.innerHTML = html;
-                }
-            });
-        </script>
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
-        <script src="{{ asset('js/attachment-preview.js') }}"></script>
-        <script>
-            window.addEventListener('load', () => {
-                if (window.initAttachmentPreview) {
-                    window.initAttachmentPreview({ inputSelector: '#task_attachment', containerSelector: '#task-attachment-preview' });
-                }
-            });
-            const _tAttach = document.getElementById('task_attachment');
-            if (_tAttach) {
-                _tAttach.addEventListener('change', function () {
-                    if (this.files?.[0]?.size > 10 * 1024 * 1024) {
-                        Swal.fire({ icon: 'error', title: 'File Too Large', text: 'Max 10MB.', confirmButtonColor: '#004F68' });
-                        this.value = ''; document.getElementById('task-attachment-preview').innerHTML = '';
-                    }
-                });
-            }
-        </script>
-
-        @if($viewMode === 'rejected')
-            <div class="modal" id="resubmitModal">
-                <div class="modal-backdrop" onclick="closeModal('resubmitModal')"></div>
-                <div class="modal-content max-w-lg p-6">
-                    <div class="flex items-center justify-between mb-5">
-                        <div>
-                            <h2 class="text-xl font-display font-bold text-premium">Edit &amp; Resubmit Task</h2>
-                            <p class="text-sm text-amber-600 mt-1"><i class="fa-solid fa-rotate-right mr-1"></i> Correct and send
-                                for line manager review</p>
-                        </div>
-                        <button onclick="closeModal('resubmitModal')"
-                            class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors"><i
-                                class="fa-solid fa-times"></i></button>
-                    </div>
-                    <form onsubmit="submitResubmit(event)" class="space-y-4">
-                        <input type="hidden" id="resubmit-task-id">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Task Title</label>
-                            <input type="text" id="resubmit-title" class="premium-input w-full px-4 py-3 text-sm" required>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description</label>
-                            <textarea id="resubmit-desc" rows="4" class="premium-input w-full px-4 py-3 text-sm"
-                                placeholder="Describe the task..."></textarea>
-                        </div>
-                        <div class="pt-4 flex justify-end gap-3 border-t border-slate-100">
-                            <button type="button" onclick="closeModal('resubmitModal')"
-                                class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
-                            <button type="submit"
-                                class="px-6 py-3 bg-[#004F68] text-white font-bold rounded-xl hover:scale-105 transition-all"><i
-                                    class="fa-solid fa-rotate-right mr-2"></i>Resubmit for Approval</button>
-                        </div>
-                    </form>
+    {{-- Approve & Assign Modal --}}
+    <div class="modal" id="assignModal">
+        <div class="modal-backdrop" onclick="closeModal('assignModal')"></div>
+        <div class="modal-content max-w-lg p-6">
+            <div class="flex items-center justify-between mb-5">
+                <div>
+                    <h2 class="text-xl font-display font-bold text-premium">Approve & Assign Task</h2>
+                    <p class="text-sm text-slate-500 mt-1">Review and assign the task to an employee to activate it.</p>
                 </div>
+                <button onclick="closeModal('assignModal')" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors">
+                    <i class="fa-solid fa-times"></i>
+                </button>
             </div>
-            <script>
-                function openResubmitModal(taskId, title, description) {
-                    document.getElementById('resubmit-task-id').value = taskId;
-                    document.getElementById('resubmit-title').value = title;
-                    document.getElementById('resubmit-desc').value = description;
-                    openModal('resubmitModal');
-                }
-                async function submitResubmit(e) {
-                    e.preventDefault();
-                    const taskId = document.getElementById('resubmit-task-id').value;
-                    const formData = new FormData();
-                    formData.append('task_title', document.getElementById('resubmit-title').value);
-                    formData.append('task_description', document.getElementById('resubmit-desc').value);
-                    try {
-                        const res = await fetch(`{{ url('emp/tasks') }}/${taskId}/resubmit`, {
-                            method: 'POST',
-                            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                            body: formData
-                        });
-                        const result = await res.json();
-                        if (result.success) {
-                            closeModal('resubmitModal');
-                            Swal.fire({ icon: 'success', title: 'Resubmitted!', text: result.message, timer: 2000, showConfirmButton: false }).then(() => window.location.reload());
-                        } else {
-                            Swal.fire({ icon: 'error', title: 'Error', text: result.message });
-                        }
-                    } catch (err) { Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to resubmit.' }); }
-                }
-            </script>
-        @endif
+            <form onsubmit="submitAssign(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Assign To Employee</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                        <select id="assign-to-id" class="premium-input w-full pl-8 pr-4 py-3 text-sm appearance-none" required>
+                            <option value="">Select Employee...</option>
+                            @foreach($employees as $emp)
+                                <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="pt-4 flex justify-end gap-3 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('assignModal')" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
+                    <button type="submit" class="px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:scale-105 transition-all shadow-lg shadow-emerald-200">
+                        <i class="fa-solid fa-check-double mr-2"></i>Approve & Activate
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
+    {{-- Rejection Modal --}}
+    <div class="modal" id="rejectModal">
+        <div class="modal-backdrop" onclick="closeModal('rejectModal')"></div>
+        <div class="modal-content max-w-lg p-6">
+            <div class="flex items-center justify-between mb-5">
+                <div>
+                    <h2 class="text-xl font-display font-bold text-premium">Reject Task</h2>
+                    <p class="text-sm text-rose-600 mt-1">Provide a reason for rejection.</p>
+                </div>
+                <button onclick="closeModal('rejectModal')" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <form onsubmit="submitReject(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Rejection Reason</label>
+                    <textarea id="reject-reason" rows="4" class="premium-input w-full px-4 py-3 text-sm" placeholder="Why is this task being rejected?" required></textarea>
+                </div>
+                <div class="pt-4 flex justify-end gap-3 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('rejectModal')" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
+                    <button type="submit" class="px-6 py-3 bg-rose-600 text-white font-bold rounded-xl hover:scale-105 transition-all shadow-lg shadow-rose-200">
+                        <i class="fa-solid fa-xmark mr-2"></i>Confirm Rejection
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openAssignModal() {
+            if (!activeTaskId) return;
+            openModal('assignModal');
+        }
+        function openRejectModal() {
+            if (!activeTaskId) return;
+            openModal('rejectModal');
+        }
+
+        async function submitAssign(e) {
+            e.preventDefault();
+            const employeeId = document.getElementById('assign-to-id').value;
+            const formData = new FormData();
+            formData.append('assigned_to', employeeId);
+            try {
+                const res = await fetch(`{{ url('emp/tasks') }}/${activeTaskId}/assign`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                });
+                const result = await res.json();
+                if (result.success) {
+                    closeModal('assignModal');
+                    Swal.fire({ icon: 'success', title: 'Task Approved!', text: result.message, timer: 2000, showConfirmButton: false }).then(() => window.location.reload());
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: result.message });
+                }
+            } catch (err) { Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to assign task.' }); }
+        }
+
+        async function submitReject(e) {
+            e.preventDefault();
+            const reason = document.getElementById('reject-reason').value;
+            const formData = new FormData();
+            formData.append('rejection_reason', reason);
+            try {
+                const res = await fetch(`{{ url('emp/tasks') }}/${activeTaskId}/reject`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                });
+                const result = await res.json();
+                if (result.success) {
+                    closeModal('rejectModal');
+                    Swal.fire({ icon: 'success', title: 'Task Rejected', text: result.message, timer: 2000, showConfirmButton: false }).then(() => window.location.reload());
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: result.message });
+                }
+            } catch (err) { Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to reject task.' }); }
+        }
+    </script>
 @endsection

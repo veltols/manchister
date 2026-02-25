@@ -30,6 +30,12 @@ class TaskController extends Controller
                 ->where('pending_line_manager_id', '!=', 0)
                 ->orderBy('task_id', 'desc')->paginate(15);
 
+        } elseif ($viewMode === 'pending') {
+            // Tasks pending THIS user's LM approval
+            $tasks = Task::with(['status', 'priority', 'assignedBy', 'assignedTo'])
+                ->where('pending_line_manager_id', $employeeId)
+                ->orderBy('task_id', 'desc')->paginate(15);
+
         } elseif ($viewMode === 'rejected') {
             $tasks = Task::with(['status', 'priority', 'assignedBy', 'assignedTo'])
                 ->where('assigned_by', $employeeId)
@@ -46,7 +52,23 @@ class TaskController extends Controller
                 ->orderBy('task_id', 'desc')->paginate(15);
 
         } else {
-            $query = Task::with(['status', 'priority', 'assignedBy', 'assignedTo', 'subtasks.status', 'subtasks.priority', 'subtasks.assignedBy', 'subtasks.assignedTo'])
+            // MAIN ACTIVE LISTS (My Tasks / Others' Tasks)
+            // MUST ONLY SHOW APPROVED TASKS
+            $query = Task::with([
+                'status',
+                'priority',
+                'assignedBy',
+                'assignedTo',
+                'subtasks' => function ($q) {
+                    $q->where(function ($sq) {
+                        $sq->whereNull('pending_line_manager_id')->orWhere('pending_line_manager_id', 0);
+                    })->where('is_rejected', 0);
+                },
+                'subtasks.status',
+                'subtasks.priority',
+                'subtasks.assignedBy',
+                'subtasks.assignedTo'
+            ])
                 ->where(function ($q) {
                     $q->whereNull('pending_line_manager_id')->orWhere('pending_line_manager_id', 0);
                 })
@@ -55,12 +77,18 @@ class TaskController extends Controller
             if ($viewMode == 'others_tasks') {
                 $query->where('assigned_by', $employeeId);
             } else {
+                // Default: My Tasks (Assigned to Me)
                 $query->where('assigned_to', $employeeId);
             }
 
             if ($statusId) {
                 $query->where('status_id', $statusId);
             }
+
+            // Only top-level tasks for main list
+            $query->where(function ($q) {
+                $q->whereNull('parent_task_id')->orWhere('parent_task_id', 0);
+            });
 
             $tasks = $query->orderBy('task_id', 'desc')->paginate(15);
         }
@@ -149,6 +177,7 @@ class TaskController extends Controller
             $lineManagerId = Department::where('department_id', $employee->department_id)
                 ->value('line_manager_id');
         }
+        // dd($lineManagerId);
         // Fallback: if this department has no line manager, get the most recently updated dept that has one
         if (!$lineManagerId) {
             $lineManagerId = Department::whereNotNull('line_manager_id')
@@ -420,16 +449,91 @@ class TaskController extends Controller
         $employeeId = $user->employee ? $user->employee->employee_id : 0;
         $perPage = $request->input('per_page', 15);
 
-        $query = Task::with(['status', 'priority', 'assignedBy', 'assignedTo', 'subtasks.status', 'subtasks.priority', 'subtasks.assignedBy', 'subtasks.assignedTo'])
-            ->where(function ($q) {
-                $q->whereNull('pending_line_manager_id')->orWhere('pending_line_manager_id', 0);
-            });
+        $query = Task::with([
+            'status',
+            'priority',
+            'assignedBy',
+            'assignedTo',
+            'subtasks.status',
+            'subtasks.priority',
+            'subtasks.assignedBy',
+            'subtasks.assignedTo'
+        ]);
 
-        if ($viewMode == 'others_tasks') {
-            $query->where('assigned_by', $employeeId);
-        } else {
-            $query->where('assigned_to', $employeeId);
+        // ── Apply view-mode specific filters ─────────────────────────
+        $query = Task::with([
+            'status',
+            'priority',
+            'assignedBy',
+            'assignedTo',
+            'subtasks' => function ($q) {
+                $q->where(function ($sq) {
+                    $sq->whereNull('pending_line_manager_id')->orWhere('pending_line_manager_id', 0);
+                })->where('is_rejected', 0);
+            },
+            'subtasks.status',
+            'subtasks.priority',
+            'subtasks.assignedBy',
+            'subtasks.assignedTo'
+        ]);
+
+        // ── Apply view-mode specific filters ─────────────────────────
+        switch ($viewMode) {
+
+            case 'submitted':
+                // Tasks created by this user that are pending LM approval
+                $query->where('assigned_by', $employeeId)
+                    ->whereNotNull('pending_line_manager_id')
+                    ->where('pending_line_manager_id', '!=', 0)
+                    ->where('is_rejected', 0);
+                break;
+
+            case 'rejected':
+                // Tasks created or received by this user that were rejected
+                $query->where(function ($q) use ($employeeId) {
+                    $q->where('assigned_by', $employeeId)
+                        ->orWhere('assigned_to', $employeeId);
+                })
+                    ->where('is_rejected', 1);
+                break;
+
+            case 'rejected_by_me':
+                // Tasks this user (as line manager) rejected
+                $deptIds = Department::where('line_manager_id', $employeeId)->pluck('department_id');
+                $query->where('is_rejected', 1)
+                    ->whereHas('assignedBy', fn($q) => $q->whereIn('department_id', $deptIds));
+                break;
+
+            case 'pending':
+                // Tasks pending THIS user's LM approval
+                $query->where('pending_line_manager_id', $employeeId)
+                    ->where('is_rejected', 0);
+                break;
+
+            case 'others_tasks':
+                // Tasks assigned BY this user (approved, not pending)
+                $query->where('assigned_by', $employeeId)
+                    ->where(function ($q) {
+                        $q->whereNull('pending_line_manager_id')
+                            ->orWhere('pending_line_manager_id', 0);
+                    })
+                    ->where('is_rejected', 0);
+                break;
+
+            default: // 'my_tasks'
+                $query->where('assigned_to', $employeeId)
+                    ->where(function ($q) {
+                        $q->whereNull('pending_line_manager_id')
+                            ->orWhere('pending_line_manager_id', 0);
+                    })
+                    ->where('is_rejected', 0);
+                break;
         }
+
+        // Parent task filter
+        $query->where(function ($q) {
+            $q->whereNull('parent_task_id')->orWhere('parent_task_id', 0);
+        });
 
         if ($statusId) {
             $query->where('status_id', $statusId);
