@@ -116,39 +116,40 @@
             z-index: 0;
         }
 
-        /* Nav Items */
+        /* Nav Items — White Sidebar Theme */
         .nav-item {
             position: relative;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-left: 0 solid transparent;
-        }
-
-        .nav-item::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 3px;
-            height: 0;
-            background: linear-gradient(180deg, #06b6d4, #3b82f6);
-            border-radius: 0 4px 4px 0;
-            transition: height 0.3s ease;
-        }
-
-        .nav-item:hover::before,
-        .nav-item.active::before {
-            height: 60%;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            color: #475569;
+            text-decoration: none;
         }
 
         .nav-item:hover {
-            background: rgba(255, 255, 255, 0.08);
-            scale: 1.02;
+            background: #f1f5f9;
+            color: #004F68;
         }
 
         .nav-item.active {
-            background: rgba(255, 255, 255, 0.12);
-            border-left: 3px solid #06b6d4;
+            background: linear-gradient(135deg, rgba(0, 79, 104, 0.08) 0%, rgba(0, 106, 138, 0.06) 100%);
+            color: #004F68;
+            border-left: 3px solid #004F68;
+        }
+
+        .nav-item.active .nav-icon-wrap {
+            background: linear-gradient(135deg, #004F68, #006a8a);
+            color: #fff;
+        }
+
+        /* Nav Icon Wrapper */
+        .nav-icon-wrap {
+            background: #f1f5f9;
+            color: #64748b;
+            transition: all 0.25s ease;
+        }
+
+        .nav-item:hover .nav-icon-wrap {
+            background: linear-gradient(135deg, #004F68, #006a8a);
+            color: #fff;
         }
 
         /* Cards with Hover Effect */
@@ -492,14 +493,13 @@
             x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
             x-transition:leave="transition ease-in-out duration-300 transform" x-transition:leave-start="translate-x-0"
             x-transition:leave-end="-translate-x-full"
-            class="fixed inset-y-0 left-0 w-64 bg-slate-900 sidebar-gradient z-50 md:hidden flex flex-col"
-            style="display: none;">
+            class="fixed inset-y-0 left-0 w-64 bg-white shadow-2xl z-50 md:hidden flex flex-col" style="display: none;">
 
-            <div class="h-20 flex items-center justify-between px-4 border-b border-white/10">
+            <div class="h-20 flex items-center justify-between px-4 border-b border-slate-100">
                 <a href="{{ route('dashboard') }}">
                     <img src="{{ $globalLogoUrl ?? asset('images/logo.png') }}" alt="IQC Logo" class="h-10 w-auto">
                 </a>
-                <button @click="mobileSidebarOpen = false" class="text-white hover:text-slate-300">
+                <button @click="mobileSidebarOpen = false" class="text-slate-500 hover:text-slate-800">
                     <i class="fa-solid fa-xmark text-2xl"></i>
                 </button>
             </div>
@@ -625,7 +625,8 @@
                             <div class="hidden lg:block text-left mr-1">
                                 <p class="text-[10px] font-bold text-slate-900 leading-none">Account</p>
                                 <p class="text-[9px] text-slate-500 leading-none mt-1">
-                                    {{ ucfirst($user->user_type ?? 'User') }}</p>
+                                    {{ ucfirst($user->user_type ?? 'User') }}
+                                </p>
                             </div>
                             <i class="fa-solid fa-chevron-down text-[10px] text-slate-300 group-hover:text-indigo-500 transition-all"
                                 :class="{ 'rotate-180': open }"></i>
@@ -652,7 +653,7 @@
                                         @foreach($userStatuses as $status)
                                             <button onclick="updateUserStatus({{ $status->staus_id }})"
                                                 class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-50 transition-all text-left w-full group
-                                                        {{ $user->employee->emp_status_id == $status->staus_id ? 'bg-slate-50' : '' }}">
+                                                                {{ $user->employee->emp_status_id == $status->staus_id ? 'bg-slate-50' : '' }}">
                                                 <div class="w-2 h-2 rounded-full"
                                                     style="background-color: {{ $status->staus_color }}"></div>
                                                 <span
@@ -813,11 +814,11 @@
                                     const badgeContainer = document.createElement('span');
                                     badgeContainer.className = 'absolute top-2 right-2 flex h-4 w-4';
                                     badgeContainer.innerHTML = `
-                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                                        <span class="relative inline-flex rounded-full h-4 w-4 bg-indigo-600 text-[9px] text-white font-bold items-center justify-center transition-transform duration-200 ease-out">
-                                            ${displayCount}
-                                        </span>
-                                    `;
+                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                                            <span class="relative inline-flex rounded-full h-4 w-4 bg-indigo-600 text-[9px] text-white font-bold items-center justify-center transition-transform duration-200 ease-out">
+                                                ${displayCount}
+                                            </span>
+                                        `;
                                     messageLink.appendChild(badgeContainer);
                                     console.log('Created new badge with count:', displayCount);
                                 }
