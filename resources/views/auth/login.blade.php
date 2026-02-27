@@ -41,88 +41,88 @@
 
     <style>
         body {
-            background-color: #004F68; /* Fallback color */
+            background: linear-gradient(135deg, #004F68 0%, #006a8a 45%, #1a8aaa 80%, #0ea5e9 100%);
+            min-height: 100vh;
             position: relative;
             overflow-x: hidden;
-            overflow-y: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* Animated Background Blobs */
-        .blob {
+        /* SVG Pattern Overlay */
+        body::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Decorative Orbs */
+        .orb {
             position: absolute;
             border-radius: 50%;
-            filter: blur(70px);
-            opacity: 0.7;
-            animation: blob 20s infinite;
+            pointer-events: none;
+            z-index: 1;
         }
 
-        .blob-1 {
+        .orb-1 {
+            top: -100px;
+            right: -100px;
             width: 500px;
             height: 500px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            top: -10%;
-            left: -10%;
-            animation-delay: 0s;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: float-slow 15s infinite alternate;
         }
 
-        .blob-2 {
-            width: 400px;
-            height: 400px;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            top: 50%;
-            right: -5%;
-            animation-delay: 4s;
+        .orb-2 {
+            bottom: -150px;
+            left: -150px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 70%);
+            animation: float-slow 20s infinite alternate-reverse;
         }
 
-        .blob-3 {
-            width: 450px;
-            height: 450px;
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            bottom: -10%;
-            left: 30%;
-            animation-delay: 8s;
+        .orb-3 {
+            top: 20%;
+            left: 10%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+            animation: float-slow 12s infinite alternate;
+        }
+
+        @keyframes float-slow {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            100% {
+                transform: translate(50px, 50px) scale(1.1);
+            }
         }
 
         /* Mobile Adjustments */
         @media (max-width: 640px) {
-            .blob {
+            .orb-1 {
                 width: 300px;
                 height: 300px;
+                top: -50px;
+                right: -50px;
             }
 
-            .blob-1 {
-                top: -20%;
-                left: -20%;
+            .orb-2 {
+                width: 400px;
+                height: 400px;
+                bottom: -100px;
+                left: -100px;
             }
 
-            .blob-2 {
-                top: auto;
-                bottom: -10%;
-                right: -10%;
-            }
-
-            .blob-3 {
+            .orb-3 {
                 display: none;
-            }
-        }
-
-        @keyframes blob {
-
-            0%,
-            100% {
-                transform: translate(0, 0) scale(1);
-            }
-
-            25% {
-                transform: translate(30px, -50px) scale(1.1);
-            }
-
-            50% {
-                transform: translate(-20px, 30px) scale(0.9);
-            }
-
-            75% {
-                transform: translate(40px, 20px) scale(1.05);
             }
         }
 
@@ -208,27 +208,42 @@
             animation: fadeInUp 0.8s ease-out;
         }
 
-        /* Floating Animation */
-        @keyframes float {
-
-            0%,
-            100% {
-                transform: translateY(0px);
-            }
-
-            50% {
-                transform: translateY(-20px);
-            }
+        .icon-3d {
+            width: 64px;
+            height: 64px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
-        .float {
-            animation: float 6s ease-in-out infinite;
+        .icon-3d::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, transparent 100%);
+            border-radius: 20px 20px 0 0;
+            pointer-events: none;
+        }
+
+        .icon-3d:hover {
+            transform: scale(1.1) rotate(-5deg) translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4);
         }
     </style>
 </head>
 
-<body class="min-h-screen flex items-start pt-12 lg:pt-0 lg:items-center justify-center p-4 font-sans">
-
+<body class="min-h-screen font-sans overflow-x-hidden overflow-y-auto">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 
     <!-- Login Container -->
     <div class="relative z-10 w-full max-w-6xl flex items-center gap-12">
@@ -247,27 +262,24 @@
                 <span class="text-white">IQC Sense</span>
             </h1>
 
-            <div class="mt-12 flex gap-6">
-                <div class="flex flex-col items-center gap-2">
-                    <div
-                        class="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-lg border border-white/20 flex items-center justify-center">
-                        <i class="fa-solid fa-shield-halved text-2xl text-cyan-300"></i>
+            <div class="mt-12 flex gap-8">
+                <div class="flex flex-col items-center gap-3">
+                    <div class="icon-3d" style="background: linear-gradient(145deg, #0ea5e9, #0284c7);">
+                        <i class="fa-solid fa-shield-halved text-2xl text-white"></i>
                     </div>
-                    <span class="text-sm text-white/70 font-medium">Secure</span>
+                    <span class="text-xs text-white/80 font-bold uppercase tracking-widest">Secure</span>
                 </div>
-                <div class="flex flex-col items-center gap-2">
-                    <div
-                        class="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-lg border border-white/20 flex items-center justify-center">
-                        <i class="fa-solid fa-bolt text-2xl text-yellow-300"></i>
+                <div class="flex flex-col items-center gap-3">
+                    <div class="icon-3d" style="background: linear-gradient(145deg, #f59e0b, #d97706);">
+                        <i class="fa-solid fa-bolt text-2xl text-white"></i>
                     </div>
-                    <span class="text-sm text-white/70 font-medium">Fast</span>
+                    <span class="text-xs text-white/80 font-bold uppercase tracking-widest">Fast</span>
                 </div>
-                <div class="flex flex-col items-center gap-2">
-                    <div
-                        class="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-lg border border-white/20 flex items-center justify-center">
-                        <i class="fa-solid fa-gem text-2xl text-pink-300"></i>
+                <div class="flex flex-col items-center gap-3">
+                    <div class="icon-3d" style="background: linear-gradient(145deg, #ec4899, #db2777);">
+                        <i class="fa-solid fa-gem text-2xl text-white"></i>
                     </div>
-                    <span class="text-sm text-white/70 font-medium">Premium</span>
+                    <span class="text-xs text-white/80 font-bold uppercase tracking-widest">Premium</span>
                 </div>
             </div>
         </div>
@@ -285,13 +297,16 @@
 
             <div class="glass-card rounded-3xl p-6 md:p-10 max-w-md mx-auto">
                 <div class="text-center mb-8">
-                    <div
-                        class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-dark mb-4 shadow-lg">
-                        <i class="fa-solid fa-user text-2xl text-white"></i>
+                    <div class="flex justify-center mb-6">
+                        <div class="icon-3d"
+                            style="background: linear-gradient(145deg, #004F68, #00384a); width: 60px; height: 60px;">
+                            <i class="fa-solid fa-user text-xl text-white relative z-10"></i>
+                        </div>
                     </div>
                     <h2 class="font-display text-3xl font-bold text-premium mb-2">Welcome Back</h2>
                     <p class="text-slate-500">Please enter your credentials to continue</p>
-                    <div class="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
+                    <div
+                        class="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
                         <i class="fa-solid fa-shield-halved text-green-600"></i>
                         <span class="text-green-700 text-sm font-medium">Protected by Two-Factor Authentication</span>
                     </div>
