@@ -98,65 +98,91 @@
         ========================================= */
         .sidebar-gradient-bg {
             background: linear-gradient(180deg,
-                #ffffff       0%,
-                #f0fafd      12%,
-                #cdeaf4      30%,
-                #7fc8df      52%,
-                #1a8aaa      70%,
-                #006a8a      84%,
-                #004F68     100%);
+                    #ffffff 0%,
+                    #f0fafd 12%,
+                    #cdeaf4 30%,
+                    #7fc8df 52%,
+                    #1a8aaa 70%,
+                    #006a8a 84%,
+                    #004F68 100%);
             position: relative;
             overflow: hidden;
             border-right: none;
-            box-shadow: 6px 0 32px rgba(0,79,104,0.18);
+            box-shadow: 6px 0 32px rgba(0, 79, 104, 0.18);
         }
 
         /* Animated floating orbs in background */
         .sidebar-gradient-bg::before {
             content: '';
             position: absolute;
-            top: -80px; left: -60px;
-            width: 220px; height: 220px;
+            top: -80px;
+            left: -60px;
+            width: 220px;
+            height: 220px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(0,136,179,0.18) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(0, 136, 179, 0.18) 0%, transparent 70%);
             animation: sidebarOrb1 8s ease-in-out infinite alternate;
-            pointer-events: none; z-index: 0;
+            pointer-events: none;
+            z-index: 0;
         }
+
         .sidebar-gradient-bg::after {
             content: '';
             position: absolute;
-            bottom: -60px; right: -50px;
-            width: 200px; height: 200px;
+            bottom: -60px;
+            right: -50px;
+            width: 200px;
+            height: 200px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
             animation: sidebarOrb2 10s ease-in-out infinite alternate;
-            pointer-events: none; z-index: 0;
+            pointer-events: none;
+            z-index: 0;
         }
+
         @keyframes sidebarOrb1 {
-            0%   { transform: translate(0,0) scale(1);    opacity: 0.7; }
-            100% { transform: translate(30px,60px) scale(1.3); opacity: 1; }
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 0.7;
+            }
+
+            100% {
+                transform: translate(30px, 60px) scale(1.3);
+                opacity: 1;
+            }
         }
+
         @keyframes sidebarOrb2 {
-            0%   { transform: translate(0,0) scale(1);    opacity: 0.5; }
-            100% { transform: translate(-20px,-50px) scale(1.2); opacity: 0.9; }
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: translate(-20px, -50px) scale(1.2);
+                opacity: 0.9;
+            }
         }
 
         /* Logo area: frosted glass strip */
         .sidebar-logo-area {
-            background: rgba(255,255,255,0.65);
+            background: rgba(255, 255, 255, 0.65);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            border-bottom: 1px solid rgba(255,255,255,0.3);
-            box-shadow: 0 4px 16px rgba(0,79,104,0.08);
-            position: relative; z-index: 10;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 16px rgba(0, 79, 104, 0.08);
+            position: relative;
+            z-index: 10;
         }
+
         .sidebar-logo {
-            filter: drop-shadow(0 2px 6px rgba(0,79,104,0.2));
-            transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), filter 0.3s ease;
+            filter: drop-shadow(0 2px 6px rgba(0, 79, 104, 0.2));
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
         }
+
         .sidebar-logo:hover {
             transform: scale(1.08) rotate(-2deg);
-            filter: drop-shadow(0 4px 14px rgba(0,79,104,0.35));
+            filter: drop-shadow(0 4px 14px rgba(0, 79, 104, 0.35));
         }
 
         /* =========================================
@@ -169,8 +195,9 @@
             text-transform: uppercase;
             padding: 0 12px;
             margin: 14px 0 5px;
-            color: rgba(0,0,0,0.38);
-            position: relative; z-index: 10;
+            color: rgba(0, 0, 0, 0.38);
+            position: relative;
+            z-index: 10;
             transition: color 0.3s ease;
         }
 
@@ -187,6 +214,7 @@
             z-index: 10;
             font-weight: 700;
             letter-spacing: 0.01em;
+            font-size: 16px;
         }
 
         /* Shimmer sweep on hover */
@@ -195,89 +223,102 @@
             position: absolute;
             inset: 0;
             background: linear-gradient(105deg,
-                transparent 30%,
-                rgba(255,255,255,0.25) 50%,
-                transparent 70%);
+                    transparent 30%,
+                    rgba(255, 255, 255, 0.25) 50%,
+                    transparent 70%);
             transform: translateX(-100%);
             transition: transform 0.6s ease;
             border-radius: 14px;
             pointer-events: none;
         }
+
         .nav-item:hover::before {
             transform: translateX(100%);
         }
 
         .nav-item:hover {
-            background: rgba(255,255,255,0.62);
+            background: rgba(255, 255, 255, 0.62);
             backdrop-filter: blur(14px);
             -webkit-backdrop-filter: blur(14px);
             color: #004F68;
             box-shadow:
-                0 4px 20px rgba(0,79,104,0.14),
-                0 1px 4px rgba(0,0,0,0.07),
-                inset 0 1px 0 rgba(255,255,255,0.9);
+                0 4px 20px rgba(0, 79, 104, 0.14),
+                0 1px 4px rgba(0, 0, 0, 0.07),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
             transform: translateX(4px);
-            border: 1px solid rgba(255,255,255,0.55);
+            border: 1px solid rgba(255, 255, 255, 0.55);
         }
 
         .nav-item.active {
-            background: rgba(255,255,255,0.82);
+            background: rgba(255, 255, 255, 0.82);
             backdrop-filter: blur(18px);
             -webkit-backdrop-filter: blur(18px);
             color: #004F68;
             font-weight: 700;
             box-shadow:
-                0 8px 28px rgba(0,79,104,0.22),
-                0 2px 8px rgba(0,0,0,0.09),
-                inset 0 1px 0 rgba(255,255,255,1);
+                0 8px 28px rgba(0, 79, 104, 0.22),
+                0 2px 8px rgba(0, 0, 0, 0.09),
+                inset 0 1px 0 rgba(255, 255, 255, 1);
             border-left: 3px solid #004F68;
             transform: translateX(3px);
-            border-top: 1px solid rgba(255,255,255,0.7);
-            border-bottom: 1px solid rgba(255,255,255,0.4);
-            border-right: 1px solid rgba(255,255,255,0.4);
+            border-top: 1px solid rgba(255, 255, 255, 0.7);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+            border-right: 1px solid rgba(255, 255, 255, 0.4);
         }
 
         /* Active indicator dot */
         .nav-item.active::after {
             content: '';
             position: absolute;
-            right: 10px; top: 50%;
+            right: 10px;
+            top: 50%;
             transform: translateY(-50%);
-            width: 6px; height: 6px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             background: #004F68;
-            box-shadow: 0 0 8px rgba(0,79,104,0.6);
+            box-shadow: 0 0 8px rgba(0, 79, 104, 0.6);
             animation: activePulse 2s ease-in-out infinite;
         }
+
         @keyframes activePulse {
-            0%, 100% { box-shadow: 0 0 6px rgba(0,79,104,0.5); transform: translateY(-50%) scale(1); }
-            50%       { box-shadow: 0 0 14px rgba(0,136,179,0.8); transform: translateY(-50%) scale(1.25); }
+
+            0%,
+            100% {
+                box-shadow: 0 0 6px rgba(0, 79, 104, 0.5);
+                transform: translateY(-50%) scale(1);
+            }
+
+            50% {
+                box-shadow: 0 0 14px rgba(0, 136, 179, 0.8);
+                transform: translateY(-50%) scale(1.25);
+            }
         }
 
         .nav-item.active .nav-icon-wrap {
             background: linear-gradient(145deg, #003d52 0%, #004F68 40%, #006a8a 75%, #0088b3 100%);
             color: #fff;
             box-shadow:
-                0 6px 18px rgba(0,79,104,0.45),
-                0 2px 6px rgba(0,0,0,0.25),
-                inset 0 1px 0 rgba(255,255,255,0.35),
-                inset 0 -1px 0 rgba(0,0,0,0.15);
-            border-color: rgba(255,255,255,0.3);
+                0 6px 18px rgba(0, 79, 104, 0.45),
+                0 2px 6px rgba(0, 0, 0, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.35),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
         }
 
         /* =========================================
            NAV ICON WRAP — True 3D Glass Box
         ========================================= */
         .nav-icon-wrap {
-            background: rgba(255,255,255,0.72);
+            background: rgba(255, 255, 255, 0.72);
             color: #004F68;
             transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
             box-shadow:
-                0 3px 8px rgba(0,79,104,0.14),
-                0 1px 3px rgba(0,0,0,0.1),
-                inset 0 1px 0 rgba(255,255,255,1),
-                inset 0 -1px 0 rgba(0,79,104,0.08);
-            border: 1px solid rgba(255,255,255,0.75);
+                0 3px 8px rgba(0, 79, 104, 0.14),
+                0 1px 3px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 1),
+                inset 0 -1px 0 rgba(0, 79, 104, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.75);
             position: relative;
             overflow: hidden;
         }
@@ -286,9 +327,11 @@
         .nav-icon-wrap::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0;
+            top: 0;
+            left: 0;
+            right: 0;
             height: 45%;
-            background: linear-gradient(180deg, rgba(255,255,255,0.6) 0%, transparent 100%);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, transparent 100%);
             border-radius: 8px 8px 0 0;
             pointer-events: none;
         }
@@ -298,23 +341,25 @@
             color: #fff;
             transform: scale(1.12) translateY(-2px) rotate(-3deg);
             box-shadow:
-                0 10px 28px rgba(0,79,104,0.45),
-                0 4px 10px rgba(0,0,0,0.2),
-                inset 0 1px 0 rgba(255,255,255,0.4),
-                inset 0 -1px 0 rgba(0,0,0,0.15);
-            border-color: rgba(255,255,255,0.4);
+                0 10px 28px rgba(0, 79, 104, 0.45),
+                0 4px 10px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
         }
+
         .nav-item:hover .nav-icon-wrap::before {
-            background: linear-gradient(180deg, rgba(255,255,255,0.35) 0%, transparent 100%);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, transparent 100%);
         }
 
         /* Bottom user strip in sidebar */
         .sidebar-user-strip {
-            background: rgba(0,0,0,0.18);
+            background: rgba(0, 0, 0, 0.18);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(255,255,255,0.12);
-            position: relative; z-index: 10;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            position: relative;
+            z-index: 10;
         }
 
         /* Cards with Hover Effect */
@@ -658,9 +703,11 @@
             x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
             x-transition:leave="transition ease-in-out duration-300 transform" x-transition:leave-start="translate-x-0"
             x-transition:leave-end="-translate-x-full"
-            class="fixed inset-y-0 left-0 w-64 shadow-2xl z-50 md:hidden flex flex-col sidebar-gradient-bg" style="display: none;">
+            class="fixed inset-y-0 left-0 w-64 shadow-2xl z-50 md:hidden flex flex-col sidebar-gradient-bg"
+            style="display: none;">
 
-            <div class="h-20 flex items-center justify-between px-4 border-b border-white/15 bg-white/60 backdrop-blur-sm">
+            <div
+                class="h-20 flex items-center justify-between px-4 border-b border-white/15 bg-white/60 backdrop-blur-sm">
                 <a href="{{ route('dashboard') }}">
                     <img src="{{ $globalLogoUrl ?? asset('images/logo.png') }}" alt="IQC Logo" class="h-10 w-auto">
                 </a>
@@ -733,12 +780,16 @@
                             class="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 group relative"
                             title="Messages"
                             style="background:linear-gradient(145deg,#10b981,#059669); box-shadow:0 4px 12px rgba(16,185,129,0.25), inset 0 1px 0 rgba(255,255,255,0.3);">
-                            <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl" style="background:rgba(255,255,255,0.25);"></div>
-                            <i class="fa-solid fa-comment-dots text-white text-sm relative z-10 drop-shadow-sm group-hover:scale-110 transition-transform"></i>
+                            <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl"
+                                style="background:rgba(255,255,255,0.25);"></div>
+                            <i
+                                class="fa-solid fa-comment-dots text-white text-sm relative z-10 drop-shadow-sm group-hover:scale-110 transition-transform"></i>
                             @if($unreadMessages > 0)
                                 <span class="absolute -top-1.5 -right-1.5 flex h-4 w-4 z-20">
-                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
-                                    <span class="relative inline-flex flex-col rounded-full h-4 w-4 bg-teal-500 border-2 border-white text-[9px] text-white font-bold items-center justify-center">
+                                    <span
+                                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                                    <span
+                                        class="relative inline-flex flex-col rounded-full h-4 w-4 bg-teal-500 border-2 border-white text-[9px] text-white font-bold items-center justify-center">
                                         {{ $unreadMessages > 9 ? '9+' : $unreadMessages }}
                                     </span>
                                 </span>
@@ -749,12 +800,16 @@
                             class="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 group relative"
                             title="Notifications"
                             style="background:linear-gradient(145deg,#f43f5e,#e11d48); box-shadow:0 4px 12px rgba(244,63,94,0.25), inset 0 1px 0 rgba(255,255,255,0.3);">
-                            <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl" style="background:rgba(255,255,255,0.25);"></div>
-                            <i class="fa-solid fa-bell text-white text-sm relative z-10 drop-shadow-sm group-hover:scale-110 transition-transform"></i>
+                            <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl"
+                                style="background:rgba(255,255,255,0.25);"></div>
+                            <i
+                                class="fa-solid fa-bell text-white text-sm relative z-10 drop-shadow-sm group-hover:scale-110 transition-transform"></i>
                             @if($unreadNotifs > 0)
                                 <span class="absolute -top-1.5 -right-1.5 flex h-4 w-4 z-20">
-                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                                    <span class="relative inline-flex flex-col rounded-full h-4 w-4 bg-rose-500 border-2 border-white text-[9px] text-white font-bold items-center justify-center">
+                                    <span
+                                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                                    <span
+                                        class="relative inline-flex flex-col rounded-full h-4 w-4 bg-rose-500 border-2 border-white text-[9px] text-white font-bold items-center justify-center">
                                         {{ $unreadNotifs > 9 ? '9+' : $unreadNotifs }}
                                     </span>
                                 </span>
@@ -766,8 +821,10 @@
                                 class="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 group relative"
                                 title="Settings"
                                 style="background:linear-gradient(145deg,#64748b,#475569); box-shadow:0 4px 12px rgba(100,116,139,0.25), inset 0 1px 0 rgba(255,255,255,0.3);">
-                                <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl" style="background:rgba(255,255,255,0.25);"></div>
-                                <i class="fa-solid fa-cog text-white text-sm relative z-10 drop-shadow-sm group-hover:rotate-90 transition-transform duration-500"></i>
+                                <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl"
+                                    style="background:rgba(255,255,255,0.25);"></div>
+                                <i
+                                    class="fa-solid fa-cog text-white text-sm relative z-10 drop-shadow-sm group-hover:rotate-90 transition-transform duration-500"></i>
                             </a>
                         @endif
                     </div>
@@ -778,12 +835,13 @@
                     <div class="relative" x-data="{ open: false, showPasswordModal: false }" @click.away="open = false">
                         <button @click="open = !open"
                             class="flex items-center gap-3 px-2 py-1.5 rounded-2xl hover:bg-slate-50 transition-all group border border-transparent hover:border-slate-100">
-                            
+
                             {{-- User Icon & Status Wrapper --}}
                             <div class="relative">
                                 <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition-all relative"
-                                     style="background:linear-gradient(135deg,#004F68,#1a8aaa); box-shadow:0 4px 12px rgba(0,79,104,0.25), inset 0 1px 0 rgba(255,255,255,0.3);">
-                                    <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl" style="background:rgba(255,255,255,0.2);"></div>
+                                    style="background:linear-gradient(135deg,#004F68,#1a8aaa); box-shadow:0 4px 12px rgba(0,79,104,0.25), inset 0 1px 0 rgba(255,255,255,0.3);">
+                                    <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl"
+                                        style="background:rgba(255,255,255,0.2);"></div>
                                     <i class="fa-solid fa-user text-white text-sm relative z-10 drop-shadow-sm"></i>
                                 </div>
                                 @if($user && $user->employee && $user->employee->status)
@@ -793,8 +851,11 @@
                             </div>
 
                             <div class="hidden md:block text-left pr-2">
-                                <p class="text-[12px] font-bold text-slate-800 leading-tight group-hover:text-[#004F68] transition-colors">Account</p>
-                                <p class="text-[10px] text-slate-500 font-medium leading-tight mt-0.5 uppercase tracking-wide">
+                                <p
+                                    class="text-[12px] font-bold text-slate-800 leading-tight group-hover:text-[#004F68] transition-colors">
+                                    Account</p>
+                                <p
+                                    class="text-[10px] text-slate-500 font-medium leading-tight mt-0.5 uppercase tracking-wide">
                                     {{ ucfirst($user->user_type ?? 'User') }}
                                 </p>
                             </div>
@@ -810,23 +871,28 @@
                             style="display: none;">
 
                             <div class="px-5 pb-3 border-b border-slate-50 mb-1">
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Logged in as</p>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Logged
+                                    in as</p>
                                 <p class="text-[13px] font-bold text-slate-800 truncate">{{ $user->user_email }}</p>
                             </div>
 
                             @if(isset($userStatuses) && $user && $user->employee)
                                 <div class="px-3 py-2">
-                                    <p class="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 mb-2">Set Status</p>
+                                    <p
+                                        class="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 mb-2">
+                                        Set Status</p>
                                     <div class="grid grid-cols-1 gap-1">
                                         @foreach($userStatuses as $status)
                                             <button onclick="updateUserStatus({{ $status->staus_id }})"
                                                 class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-all text-left w-full group
-                                                    {{ $user->employee->emp_status_id == $status->staus_id ? 'bg-slate-50' : '' }}">
+                                                            {{ $user->employee->emp_status_id == $status->staus_id ? 'bg-slate-50' : '' }}">
                                                 <div class="w-3 h-3 rounded-full shadow-sm ring-4 ring-slate-50 group-hover:ring-white transition-all"
                                                     style="background-color: {{ $status->staus_color }}"></div>
-                                                <span class="text-xs font-semibold text-slate-600 group-hover:text-slate-900">{{ $status->staus_name }}</span>
+                                                <span
+                                                    class="text-xs font-semibold text-slate-600 group-hover:text-slate-900">{{ $status->staus_name }}</span>
                                                 @if($user->employee->emp_status_id == $status->staus_id)
-                                                    <i class="fa-solid fa-check text-xs text-teal-600 ml-auto bg-teal-50 p-1 rounded-full"></i>
+                                                    <i
+                                                        class="fa-solid fa-check text-xs text-teal-600 ml-auto bg-teal-50 p-1 rounded-full"></i>
                                                 @endif
                                             </button>
                                         @endforeach
@@ -840,21 +906,25 @@
                                 <button @click="showPasswordModal = true; open = false"
                                     class="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-indigo-700 transition-all group text-left">
                                     <div class="w-9 h-9 rounded-xl flex items-center justify-center shadow-sm relative overflow-hidden transition-transform group-hover:scale-110"
-                                         style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe); box-shadow:0 4px 12px rgba(99,102,241,0.15), inset 0 1px 0 rgba(255,255,255,0.8);">
-                                        <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl" style="background:rgba(255,255,255,0.4);"></div>
+                                        style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe); box-shadow:0 4px 12px rgba(99,102,241,0.15), inset 0 1px 0 rgba(255,255,255,0.8);">
+                                        <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl"
+                                            style="background:rgba(255,255,255,0.4);"></div>
                                         <i class="fa-solid fa-key text-sm text-indigo-600 relative z-10"></i>
                                     </div>
                                     <span class="text-sm font-semibold">Change Password</span>
-                                    <i class="fa-solid fa-angle-right text-[10px] text-slate-300 ml-auto group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all"></i>
+                                    <i
+                                        class="fa-solid fa-angle-right text-[10px] text-slate-300 ml-auto group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all"></i>
                                 </button>
 
                                 {{-- Logout --}}
                                 <a href="{{ route('logout') }}"
                                     class="flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-rose-600 hover:bg-rose-50 transition-all group">
                                     <div class="w-9 h-9 rounded-xl flex items-center justify-center shadow-sm relative overflow-hidden transition-transform group-hover:scale-110"
-                                         style="background:linear-gradient(135deg,#ffe4e6,#fecdd3); box-shadow:0 4px 12px rgba(244,63,94,0.15), inset 0 1px 0 rgba(255,255,255,0.8);">
-                                        <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl" style="background:rgba(255,255,255,0.4);"></div>
-                                        <i class="fa-solid fa-right-from-bracket text-sm text-rose-600 relative z-10"></i>
+                                        style="background:linear-gradient(135deg,#ffe4e6,#fecdd3); box-shadow:0 4px 12px rgba(244,63,94,0.15), inset 0 1px 0 rgba(255,255,255,0.8);">
+                                        <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl"
+                                            style="background:rgba(255,255,255,0.4);"></div>
+                                        <i
+                                            class="fa-solid fa-right-from-bracket text-sm text-rose-600 relative z-10"></i>
                                     </div>
                                     <span class="text-sm font-semibold">Logout</span>
                                 </a>
@@ -984,11 +1054,11 @@
                                     const badgeContainer = document.createElement('span');
                                     badgeContainer.className = 'absolute top-2 right-2 flex h-4 w-4';
                                     badgeContainer.innerHTML = `
-                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                                            <span class="relative inline-flex rounded-full h-4 w-4 bg-indigo-600 text-[9px] text-white font-bold items-center justify-center transition-transform duration-200 ease-out">
-                                                ${displayCount}
-                                            </span>
-                                        `;
+                                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                                                <span class="relative inline-flex rounded-full h-4 w-4 bg-indigo-600 text-[9px] text-white font-bold items-center justify-center transition-transform duration-200 ease-out">
+                                                    ${displayCount}
+                                                </span>
+                                            `;
                                     messageLink.appendChild(badgeContainer);
                                     console.log('Created new badge with count:', displayCount);
                                 }

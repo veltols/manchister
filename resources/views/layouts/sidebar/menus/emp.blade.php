@@ -5,7 +5,7 @@
         <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
             <i class="fa-solid fa-chart-line text-base"></i>
         </div>
-        <span class="text-sm font-semibold">Dashboard</span>
+        <span class="text-base font-semibold">Dashboard</span>
     </a>
 
     <a href="{{ route('emp.tasks.index') }}"
@@ -13,7 +13,7 @@
         <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
             <i class="fa-solid fa-list-check text-base"></i>
         </div>
-        <span class="text-sm font-semibold">My Tasks</span>
+        <span class="text-base font-semibold">My Tasks</span>
     </a>
 
     @php
@@ -32,7 +32,7 @@
                 <span
                     class="absolute -top-1.5 -right-1.5 bg-amber-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">{{ $empPendingCount }}</span>
             </div>
-            <span class="text-sm font-semibold">Pending</span>
+            <span class="text-base font-semibold">Pending</span>
         </a>
     @endif
 
@@ -41,7 +41,7 @@
         <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
             <i class="fa-solid fa-headset text-base"></i>
         </div>
-        <span class="text-sm font-semibold">Support</span>
+        <span class="text-base font-semibold">Support</span>
     </a>
 
     <a href="{{ route('emp.calendar.index') }}"
@@ -49,7 +49,7 @@
         <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
             <i class="fa-solid fa-calendar-days text-base"></i>
         </div>
-        <span class="text-sm font-semibold">Calendar</span>
+        <span class="text-base font-semibold">Calendar</span>
     </a>
 </div>
 
@@ -60,7 +60,7 @@
             <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
                 <i class="fa-solid fa-user-shield text-base"></i>
             </div>
-            <span class="text-sm font-semibold">EQA</span>
+            <span class="text-base font-semibold">EQA</span>
         </a>
     @else
         <a href="{{ route('emp.atps.index') }}"
@@ -68,7 +68,7 @@
             <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
                 <i class="fa-solid fa-building-columns text-base"></i>
             </div>
-            <span class="text-sm font-semibold">Training Providers</span>
+            <span class="text-base font-semibold">Training Providers</span>
         </a>
     @endif
 
@@ -77,7 +77,7 @@
         <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
             <i class="fa-solid fa-arrow-left text-base"></i>
         </div>
-        <span class="text-sm font-semibold">Back</span>
+        <span class="text-base font-semibold">Back</span>
     </button>
 </div>
 
@@ -85,14 +85,17 @@
 <div id="emp-rc-eqa-toggle" class="mt-auto pt-3 px-1">
     <!-- Divider with label -->
     <div class="flex items-center gap-2 mb-3 px-2">
-        <div class="flex-1 h-px" style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);"></div>
-        <span style="font-size:9px; font-weight:700; letter-spacing:0.12em; color:rgba(255,255,255,0.45); text-transform:uppercase;">Switch Mode</span>
-        <div class="flex-1 h-px" style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);"></div>
+        <div class="flex-1 h-px"
+            style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);"></div>
+        <span
+            style="font-size:9px; font-weight:700; letter-spacing:0.12em; color:rgba(255,255,255,0.45); text-transform:uppercase;">Switch
+            Mode</span>
+        <div class="flex-1 h-px"
+            style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);"></div>
     </div>
 
     <button onclick="switchEmpMenu('rc')"
-        class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl relative overflow-hidden group"
-        style="
+        class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl relative overflow-hidden group" style="
             background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 100%);
             border: 1.5px solid rgba(255,255,255,0.3);
             box-shadow: 0 4px 20px rgba(0,0,0,0.2), 0 1px 4px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.25);
@@ -105,15 +108,15 @@
 
         <!-- Shimmer sweep -->
         <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-             style="background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%); pointer-events:none;"></div>
+            style="background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%); pointer-events:none;">
+        </div>
 
         <!-- Icon with glow ring -->
         <div class="relative flex-shrink-0">
             <!-- Pulse ring -->
             <div class="absolute inset-0 rounded-xl animate-ping"
-                 style="background: rgba(255,255,255,0.15); animation-duration: 2.5s;"></div>
-            <div class="w-9 h-9 rounded-xl flex items-center justify-center relative z-10"
-                 style="
+                style="background: rgba(255,255,255,0.15); animation-duration: 2.5s;"></div>
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center relative z-10" style="
                      background: linear-gradient(145deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 100%);
                      border: 1px solid rgba(255,255,255,0.4);
                      box-shadow: 0 4px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.5);
@@ -124,7 +127,7 @@
 
         <!-- Label -->
         <div class="flex-1 text-left">
-            <p class="text-sm font-bold text-white leading-none">
+            <p class="text-base font-bold text-white leading-none">
                 {{ Auth::user()->user_type == 'eqa' ? 'EQA Portal' : 'RC Portal' }}
             </p>
             <p class="text-[10px] mt-0.5" style="color: rgba(255,255,255,0.6);">Switch workspace</p>
