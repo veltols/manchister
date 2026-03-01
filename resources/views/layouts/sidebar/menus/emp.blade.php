@@ -73,11 +73,27 @@
         </a>
 
         <a href="{{ route('emp.ext.strategies.index') }}"
-            class="nav-item {{ request()->routeIs('emp.ext.strategies.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
+            class="nav-item {{ request()->routeIs('emp.ext.strategies.*') && !request()->routeIs('emp.ext.strategies.projects.*') && !request()->routeIs('emp.ext.strategies.self_studies.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
             <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
                 <i class="fa-solid fa-chess-knight text-base"></i>
             </div>
             <span class="text-base font-semibold">Strategic Plans</span>
+        </a>
+
+        <a href="{{ route('emp.ext.strategies.projects.index') }}"
+            class="nav-item {{ request()->routeIs('emp.ext.strategies.projects.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
+            <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
+                <i class="fa-solid fa-briefcase text-base"></i>
+            </div>
+            <span class="text-base font-semibold">Operational Planning</span>
+        </a>
+
+        <a href="{{ route('emp.ext.strategies.self_studies.index') }}"
+            class="nav-item {{ request()->routeIs('emp.ext.strategies.self_studies.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
+            <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
+                <i class="fa-solid fa-book-open text-base"></i>
+            </div>
+            <span class="text-base font-semibold">Self Studies</span>
         </a>
     @endif
 

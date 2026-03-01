@@ -11,7 +11,7 @@ class OperationalProject extends Model
 
     protected $table = 'm_operational_projects';
     protected $primaryKey = 'project_id';
-    public $timestamps = false; // Assumed
+    public $timestamps = false;
 
     protected $guarded = [];
 
@@ -23,5 +23,15 @@ class OperationalProject extends Model
     public function department()
     {
         return $this->belongsTo(Department::class, 'department_id', 'department_id');
+    }
+
+    public function milestones()
+    {
+        return $this->hasMany(OperationalProjectMilestone::class, 'project_id', 'project_id');
+    }
+
+    public function kpis()
+    {
+        return $this->hasMany(OperationalProjectKpi::class, 'project_id', 'project_id');
     }
 }

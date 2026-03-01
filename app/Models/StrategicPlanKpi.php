@@ -28,4 +28,9 @@ class StrategicPlanKpi extends Model
     {
         return $this->belongsTo(StrategicPlanKpiFreq::class, 'kpi_frequncy_id', 'kpi_frequncy_id');
     }
+
+    public function theme()
+    {
+        return $this->belongsTo(StrategicPlanTheme::class, 'theme_id', 'theme_id');
+    }
 }

@@ -106,12 +106,20 @@ Route::middleware('auth')->group(function () {
             Route::get('/strategies/projects/new', [App\Http\Controllers\Employee\Ext\OperationalProjectController::class, 'create'])->name('strategies.projects.create');
             Route::post('/strategies/projects/new', [App\Http\Controllers\Employee\Ext\OperationalProjectController::class, 'store'])->name('strategies.projects.store');
             Route::get('/strategies/projects/view/{id}', [App\Http\Controllers\Employee\Ext\OperationalProjectController::class, 'show'])->name('strategies.projects.show');
+            Route::post('/strategies/projects/update/{id}', [App\Http\Controllers\Employee\Ext\OperationalProjectController::class, 'update'])->name('strategies.projects.update');
+            Route::post('/strategies/projects/publish/{id}', [App\Http\Controllers\Employee\Ext\OperationalProjectController::class, 'publish'])->name('strategies.projects.publish');
+            Route::post('/strategies/projects/view/{id}/kpis', [App\Http\Controllers\Employee\Ext\OperationalProjectController::class, 'storeKpiLink'])->name('strategies.projects.kpis.store');
+            Route::post('/strategies/projects/view/{id}/milestones', [App\Http\Controllers\Employee\Ext\OperationalProjectController::class, 'storeMilestone'])->name('strategies.projects.milestones.store');
 
             // Self Studies
             Route::get('/strategies/self_studies/list', [App\Http\Controllers\Employee\Ext\StrategicStudyController::class, 'index'])->name('strategies.self_studies.index');
             Route::get('/strategies/self_studies/new', [App\Http\Controllers\Employee\Ext\StrategicStudyController::class, 'create'])->name('strategies.self_studies.create');
             Route::post('/strategies/self_studies/new', [App\Http\Controllers\Employee\Ext\StrategicStudyController::class, 'store'])->name('strategies.self_studies.store');
             Route::get('/strategies/self_studies/view/{id}', [App\Http\Controllers\Employee\Ext\StrategicStudyController::class, 'show'])->name('strategies.self_studies.show');
+            Route::post('/strategies/self_studies/update/{id}', [App\Http\Controllers\Employee\Ext\StrategicStudyController::class, 'update'])->name('strategies.self_studies.update');
+            Route::post('/strategies/self_studies/view/{id}/pages', [App\Http\Controllers\Employee\Ext\StrategicStudyController::class, 'storePage'])->name('strategies.self_studies.pages.store');
+            Route::post('/strategies/self_studies/view/{id}/pages/{pageId}', [App\Http\Controllers\Employee\Ext\StrategicStudyController::class, 'updatePage'])->name('strategies.self_studies.pages.update');
+            Route::post('/strategies/self_studies/view/{id}/pages/{pageId}/delete', [App\Http\Controllers\Employee\Ext\StrategicStudyController::class, 'destroyPage'])->name('strategies.self_studies.pages.destroy');
         });
 
         // Support Tickets
