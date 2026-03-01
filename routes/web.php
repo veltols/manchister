@@ -87,6 +87,19 @@ Route::middleware('auth')->group(function () {
             Route::get('/strategies/new', [App\Http\Controllers\Employee\Ext\StrategicPlanController::class, 'create'])->name('strategies.create');
             Route::post('/strategies/new', [App\Http\Controllers\Employee\Ext\StrategicPlanController::class, 'store'])->name('strategies.store');
             Route::get('/strategies/view/{id}', [App\Http\Controllers\Employee\Ext\StrategicPlanController::class, 'show'])->name('strategies.show');
+            Route::post('/strategies/update/{id}', [App\Http\Controllers\Employee\Ext\StrategicPlanController::class, 'update'])->name('strategies.update');
+            Route::post('/strategies/publish/{id}', [App\Http\Controllers\Employee\Ext\StrategicPlanController::class, 'publish'])->name('strategies.publish');
+            // Themes
+            Route::post('/strategies/view/{planId}/themes', [App\Http\Controllers\Employee\Ext\StrategicPlanController::class, 'storeTheme'])->name('strategies.themes.store');
+            Route::post('/strategies/view/{planId}/themes/{themeId}', [App\Http\Controllers\Employee\Ext\StrategicPlanController::class, 'updateTheme'])->name('strategies.themes.update');
+            // Objectives
+            Route::post('/strategies/view/{planId}/objectives', [App\Http\Controllers\Employee\Ext\StrategicPlanController::class, 'storeObjective'])->name('strategies.objectives.store');
+            // KPIs
+            Route::post('/strategies/view/{planId}/kpis', [App\Http\Controllers\Employee\Ext\StrategicPlanController::class, 'storeKpi'])->name('strategies.kpis.store');
+            // Milestones
+            Route::post('/strategies/view/{planId}/milestones', [App\Http\Controllers\Employee\Ext\StrategicPlanController::class, 'storeMilestone'])->name('strategies.milestones.store');
+            // External Maps
+            Route::post('/strategies/view/{planId}/external-maps', [App\Http\Controllers\Employee\Ext\StrategicPlanController::class, 'storeExternalMap'])->name('strategies.external_maps.store');
 
             // Operational Projects
             Route::get('/strategies/projects/list', [App\Http\Controllers\Employee\Ext\OperationalProjectController::class, 'index'])->name('strategies.projects.index');

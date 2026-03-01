@@ -14,4 +14,14 @@ class StrategicPlanTheme extends Model
     public $timestamps = false;
 
     protected $guarded = [];
+
+    public function plan()
+    {
+        return $this->belongsTo(StrategicPlan::class, 'plan_id', 'plan_id');
+    }
+
+    public function objectives()
+    {
+        return $this->hasMany(StrategicPlanObjective::class, 'theme_id', 'theme_id')->orderBy('order_no');
+    }
 }

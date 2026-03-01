@@ -26,13 +26,14 @@
         <a href="{{ route('emp.tasks.pending') }}"
             class="nav-item {{ request()->routeIs('emp.tasks.pending') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 relative"
             style="background: rgba(251,191,36,0.1); color: #92400e;">
-            <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 relative"
+            <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                 style="background: rgba(251,191,36,0.2); color: #d97706;">
                 <i class="fa-solid fa-clock-rotate-left text-base"></i>
-                <span
-                    class="absolute -top-1.5 -right-1.5 bg-amber-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">{{ $empPendingCount }}</span>
             </div>
             <span class="text-base font-semibold">Pending</span>
+            {{-- Badge outside icon-wrap so overflow:hidden doesn't clip it --}}
+            <span class="absolute top-1 right-2 bg-amber-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm"
+                  style="box-shadow: 0 2px 6px rgba(245,158,11,0.5);">{{ $empPendingCount }}</span>
         </a>
     @endif
 
@@ -69,6 +70,14 @@
                 <i class="fa-solid fa-building-columns text-base"></i>
             </div>
             <span class="text-base font-semibold">Training Providers</span>
+        </a>
+
+        <a href="{{ route('emp.ext.strategies.index') }}"
+            class="nav-item {{ request()->routeIs('emp.ext.strategies.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
+            <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
+                <i class="fa-solid fa-chess-knight text-base"></i>
+            </div>
+            <span class="text-base font-semibold">Strategic Plans</span>
         </a>
     @endif
 
