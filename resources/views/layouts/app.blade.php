@@ -164,25 +164,24 @@
             }
         }
 
-        /* Logo area: frosted glass strip */
+        /* Logo area - Seamless integration */
         .sidebar-logo-area {
-            background: rgba(255, 255, 255, 0.65);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 4px 16px rgba(0, 79, 104, 0.08);
+            background: transparent;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            border-bottom: none;
             position: relative;
             z-index: 10;
         }
 
         .sidebar-logo {
-            filter: drop-shadow(0 2px 6px rgba(0, 79, 104, 0.2));
-            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.06));
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .sidebar-logo:hover {
-            transform: scale(1.08) rotate(-2deg);
-            filter: drop-shadow(0 4px 14px rgba(0, 79, 104, 0.35));
+            transform: scale(1.05) translateY(-5px);
+            filter: drop-shadow(0 20px 30px rgba(0, 79, 104, 0.15));
         }
 
         /* =========================================
