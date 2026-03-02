@@ -112,6 +112,11 @@
                         class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300">
                         Assets
                     </button>
+                    <button @click="activeTab = 'services'"
+                        :class="activeTab === 'services' ? 'premium-button from-indigo-600 to-purple-600 text-white shadow-md' : 'bg-white text-slate-500 hover:bg-slate-100'"
+                        class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300">
+                        <i class="fa-solid fa-shield-halved mr-1"></i> Permissions
+                    </button>
                     <button @click="activeTab = 'logs'"
                         :class="activeTab === 'logs' ? 'premium-button from-indigo-600 to-purple-600 text-white shadow-md' : 'bg-white text-slate-500 hover:bg-slate-100'"
                         class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300">
@@ -169,6 +174,150 @@
                                 </div>
                                 <h3 class="text-slate-800 font-semibold mb-1">No Assets Assigned</h3>
                                 <p class="text-sm text-slate-500">This user currently has no assets assigned.</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Services / Permissions Tab -->
+                <div x-show="activeTab === 'services'" class="p-0 animate-fade-in-up" style="display: none;">
+                    <div class="p-6">
+
+                        <style>
+                            /* === Toggle Switch === */
+                            .srv-toggle-wrap { display: flex; align-items: center; gap: 12px; }
+                            .srv-toggle { position: relative; width: 52px; height: 28px; flex-shrink: 0; cursor: pointer; }
+                            .srv-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+                            .srv-slider {
+                                position: absolute; inset: 0;
+                                background: #e2e8f0;
+                                border-radius: 99px;
+                                transition: background 0.3s ease, box-shadow 0.3s ease;
+                                box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);
+                            }
+                            .srv-slider::before {
+                                content: '';
+                                position: absolute;
+                                left: 3px; top: 3px;
+                                width: 22px; height: 22px;
+                                border-radius: 50%;
+                                background: white;
+                                box-shadow: 0 2px 6px rgba(0,0,0,0.20);
+                                transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease;
+                            }
+                            .srv-toggle input:checked + .srv-slider {
+                                background: linear-gradient(135deg, #004F68 0%, #006a8a 100%);
+                                box-shadow: 0 0 0 3px rgba(0,106,138,0.18), inset 0 2px 4px rgba(0,0,0,0.1);
+                            }
+                            .srv-toggle input:checked + .srv-slider::before {
+                                transform: translateX(24px);
+                                box-shadow: 0 3px 10px rgba(0,79,104,0.35);
+                            }
+                            .srv-toggle input:not(:checked) + .srv-slider:hover { background: #cbd5e1; }
+                            /* Saving spinner overlay */
+                            .srv-toggle.saving .srv-slider { opacity: 0.55; pointer-events: none; }
+
+                            /* === Service Cards === */
+                            .srv-card {
+                                background: white;
+                                border-radius: 16px;
+                                border: 1.5px solid #e2e8f0;
+                                padding: 18px 20px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: space-between;
+                                gap: 16px;
+                                transition: border-color 0.3s, box-shadow 0.3s, transform 0.2s;
+                            }
+                            .srv-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+                            .srv-card.is-enabled { border-color: rgba(0,106,138,0.3); background: linear-gradient(135deg, #f0f9ff 0%, #e7f4f8 100%); }
+                            .srv-card.is-enabled:hover { box-shadow: 0 8px 20px rgba(0,79,104,0.12); }
+
+                            .srv-icon {
+                                width: 42px; height: 42px;
+                                border-radius: 12px;
+                                display: flex; align-items: center; justify-content: center;
+                                font-size: 17px;
+                                flex-shrink: 0;
+                                transition: all 0.3s;
+                            }
+                            .srv-icon.off { background: #f1f5f9; color: #94a3b8; }
+                            .srv-icon.on  { background: linear-gradient(135deg,#004F68,#006a8a); color: white; box-shadow: 0 4px 12px rgba(0,79,104,0.3); }
+
+                            .srv-badge {
+                                font-size: 10px; font-weight: 700; letter-spacing: .06em;
+                                padding: 3px 8px; border-radius: 99px; text-transform: uppercase;
+                            }
+                            .srv-badge.on  { background: #dcf5e7; color: #15803d; }
+                            .srv-badge.off { background: #f1f5f9; color: #94a3b8; }
+
+                            .srv-saving-dot {
+                                width: 8px; height: 8px; border-radius: 50%;
+                                background: #0088b3; display: none;
+                                animation: srvPulse 0.7s infinite alternate;
+                            }
+                            @keyframes srvPulse {
+                                from { transform: scale(0.8); opacity: 0.5; }
+                                to   { transform: scale(1.3); opacity: 1; }
+                            }
+                        </style>
+
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-800">System Service Permissions</h3>
+                                <p class="text-xs text-slate-400 mt-0.5">Toggle a switch to instantly enable or disable a service for this user.</p>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs font-semibold text-slate-400 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
+                                <i class="fa-solid fa-circle-info text-brand-accent"></i>
+                                Changes save automatically
+                            </div>
+                        </div>
+
+                        @if($allServices->count() > 0)
+                            <div class="grid grid-cols-1 gap-3" id="servicesGrid">
+                                @foreach($allServices as $service)
+                                    @php
+                                        $isEnabled = in_array($service->service_id, $enabledServiceIds);
+                                        $sid = $service->service_id;
+                                    @endphp
+                                    <div class="srv-card {{ $isEnabled ? 'is-enabled' : '' }}" id="srv-card-{{ $sid }}">
+
+                                        {{-- Left: Icon + Text --}}
+                                        <div class="flex items-center gap-3 flex-1 min-w-0">
+                                            <div class="srv-icon {{ $isEnabled ? 'on' : 'off' }}" id="srv-icon-{{ $sid }}">
+                                                <i class="fa-solid fa-layer-group"></i>
+                                            </div>
+                                            <div class="min-w-0">
+                                                <p class="font-bold text-slate-800 text-sm truncate">{{ $service->service_title }}</p>
+                                                <div class="flex items-center gap-2 mt-0.5">
+                                                    <span class="srv-badge {{ $isEnabled ? 'on' : 'off' }}" id="srv-badge-{{ $sid }}">
+                                                        {{ $isEnabled ? 'Active' : 'Inactive' }}
+                                                    </span>
+                                                    <div class="srv-saving-dot" id="srv-dot-{{ $sid }}"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {{-- Right: Toggle --}}
+                                        <label class="srv-toggle" id="srv-toggle-{{ $sid }}" title="{{ $isEnabled ? 'Click to disable' : 'Click to enable' }}">
+                                            <input
+                                                type="checkbox"
+                                                id="srv-chk-{{ $sid }}"
+                                                {{ $isEnabled ? 'checked' : '' }}
+                                                onchange="toggleService({{ $sid }}, this.checked)">
+                                            <span class="srv-slider"></span>
+                                        </label>
+
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="text-center py-16">
+                                <div class="w-20 h-20 rounded-full bg-slate-50 mx-auto flex items-center justify-center mb-4">
+                                    <i class="fa-solid fa-layer-group text-3xl text-slate-300"></i>
+                                </div>
+                                <h3 class="text-slate-800 font-semibold mb-1">No Services Defined</h3>
+                                <p class="text-sm text-slate-500">No system services found in the database.</p>
                             </div>
                         @endif
                     </div>
@@ -532,6 +681,72 @@
                         document.getElementById('revoke_asset_display').textContent = "Revoking: " + name;
                         openModal('revokeAssetModal');
                     }
+                });
+            }
+
+            function toggleService(serviceId, isChecked) {
+                const newVal  = isChecked ? 1 : 0;
+                const card    = document.getElementById('srv-card-'  + serviceId);
+                const icon    = document.getElementById('srv-icon-'  + serviceId);
+                const badge   = document.getElementById('srv-badge-' + serviceId);
+                const dot     = document.getElementById('srv-dot-'   + serviceId);
+                const toggle  = document.getElementById('srv-toggle-'+ serviceId);
+                const chk     = document.getElementById('srv-chk-'   + serviceId);
+
+                // Show saving state
+                dot.style.display = 'block';
+                toggle.classList.add('saving');
+
+                fetch('{{ route('admin.users.update-service', $user->employee_id) }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ service_id: serviceId, new_val: newVal })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    dot.style.display = 'none';
+                    toggle.classList.remove('saving');
+
+                    if (data.success) {
+                        // Update card visuals
+                        if (newVal === 1) {
+                            card.classList.add('is-enabled');
+                            icon.classList.replace('off', 'on');
+                            badge.classList.replace('off', 'on');
+                            badge.textContent = 'Active';
+                            toggle.title = 'Click to disable';
+                        } else {
+                            card.classList.remove('is-enabled');
+                            icon.classList.replace('on', 'off');
+                            badge.classList.replace('on', 'off');
+                            badge.textContent = 'Inactive';
+                            toggle.title = 'Click to enable';
+                        }
+
+                        // Toast
+                        Swal.fire({
+                            toast: true, position: 'top-end',
+                            icon: 'success',
+                            title: newVal === 1 ? '✓ Service Enabled' : '✓ Service Disabled',
+                            showConfirmButton: false,
+                            timer: 2200, timerProgressBar: true
+                        });
+                    } else {
+                        // Revert toggle on error
+                        chk.checked = !isChecked;
+                        Swal.fire({ icon: 'error', title: 'Failed', text: data.message ?? 'Something went wrong.' });
+                    }
+                })
+                .catch(() => {
+                    dot.style.display = 'none';
+                    toggle.classList.remove('saving');
+                    // Revert toggle on network error
+                    chk.checked = !isChecked;
+                    Swal.fire({ icon: 'error', title: 'Network Error', text: 'Please try again.' });
                 });
             }
         </script>

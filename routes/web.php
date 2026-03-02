@@ -446,6 +446,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/users/{id}/update-status', [App\Http\Controllers\Admin\UserController::class, 'updateStatus'])->name('users.update-status');
         Route::post('/users/{id}/reset-password', [App\Http\Controllers\Admin\UserController::class, 'resetPassword'])->name('users.reset-password');
         Route::post('/users/{id}/update-permissions', [App\Http\Controllers\Admin\UserController::class, 'updatePermissions'])->name('users.update-permissions');
+        Route::post('/users/{id}/update-service', [App\Http\Controllers\Admin\UserController::class, 'updateService'])->name('users.update-service');
         Route::post('/users/{id}/assign-asset', [App\Http\Controllers\Admin\UserController::class, 'assignAsset'])->name('users.assign-asset');
         Route::post('/users/{id}/revoke-asset', [App\Http\Controllers\Admin\UserController::class, 'revokeAsset'])->name('users.revoke-asset');
         Route::get('/users/data', [App\Http\Controllers\Admin\UserController::class, 'getData'])->name('users.data');

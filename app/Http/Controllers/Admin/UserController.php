@@ -9,8 +9,11 @@ use App\Models\EmployeePass;
 use App\Models\Department;
 use App\Models\SystemLog;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use App\Models\Asset;
 use App\Models\AssetCategory;
+use App\Models\EmployeeListService;
+use App\Models\EmployeeService;
 
 class UserController extends Controller
 {
@@ -103,7 +106,11 @@ class UserController extends Controller
             ->where('assigned_to', 0)
             ->get();
 
-        return view('admin.users.show', compact('user', 'assets', 'logs', 'availableAssets'));
+        // Fetch all services and which ones are enabled for this user
+        $allServices = EmployeeListService::orderBy('service_id')->get();
+        $enabledServiceIds = EmployeeService::where('employee_id', $id)->pluck('service_id')->toArray();
+
+        return view('admin.users.show', compact('user', 'assets', 'logs', 'availableAssets', 'allServices', 'enabledServiceIds'));
     }
 
     public function updateStatus(Request $request, $id)
@@ -175,6 +182,43 @@ class UserController extends Controller
         $this->logAction($id, 'Permissions Updated', "Groups: {$user->is_group}, Committees: {$user->is_committee}. " . $request->log_remark);
 
         return redirect()->back()->with('success', "Permissions updated successfully.");
+    }
+
+    public function updateService(Request $request, $id)
+    {
+        $request->validate([
+            'service_id' => 'required|integer',
+            'new_val' => 'required|in:0,1',
+        ]);
+
+        $serviceId = (int) $request->service_id;
+        $newVal = (int) $request->new_val;
+
+        if ($newVal === 0) {
+            // Disable: remove from employees_services
+            DB::table('employees_services')
+                ->where('employee_id', $id)
+                ->where('service_id', $serviceId)
+                ->delete();
+            $this->logAction($id, 'Service Removed', "Service #{$serviceId} disabled.");
+        } else {
+            // Enable: insert only if not already present
+            $exists = DB::table('employees_services')
+                ->where('employee_id', $id)
+                ->where('service_id', $serviceId)
+                ->exists();
+            if (!$exists) {
+                DB::table('employees_services')->insert([
+                    'employee_id' => $id,
+                    'service_id' => $serviceId,
+                    'added_by' => auth()->id() ?? 1,
+                    'added_date' => now()->format('Y-m-d H:i:s'),
+                ]);
+            }
+            $this->logAction($id, 'Service Added', "Service #{$serviceId} enabled.");
+        }
+
+        return response()->json(['success' => true, 'message' => 'Service updated.']);
     }
 
     public function assignAsset(Request $request, $id)

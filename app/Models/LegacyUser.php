@@ -28,12 +28,12 @@ class LegacyUser extends Authenticatable
     public function getUnreadMessagesCountAttribute()
     {
         $userId = $this->user_id;
-        return Message::whereHas('conversation', function($q) use ($userId) {
+        return Message::whereHas('conversation', function ($q) use ($userId) {
             $q->where('a_id', $userId)->orWhere('b_id', $userId);
         })
-        ->where('added_by', '!=', $userId)
-        ->where('is_read', 0)
-        ->count();
+            ->where('added_by', '!=', $userId)
+            ->where('is_read', 0)
+            ->count();
     }
 
     public function getUnreadNotificationsCountAttribute()
@@ -51,22 +51,47 @@ class LegacyUser extends Authenticatable
     {
         return $this->belongsTo(Atp::class, 'user_id', 'atp_id');
     }
-    
+
     // Override to prevent default password check behavior if we use Auth::attempt
     public function getAuthPassword()
     {
         // This logic is complex because it depends on the type.
         // We will likely handle password verification manually in the Controller.
-        return ''; 
+        return '';
     }
 
     public function getRememberTokenName()
     {
         return ''; // Disable remember token
     }
-    
+
     public function setRememberToken($value)
     {
         // Do nothing
+    }
+
+    /**
+     * Return all service_ids enabled for this user (cached per request).
+     */
+    public function enabledServiceIds(): array
+    {
+        if (!isset($this->_serviceIds)) {
+            $this->_serviceIds = \Illuminate\Support\Facades\DB::table('employees_services')
+                ->where('employee_id', $this->user_id)
+                ->pluck('service_id')
+                ->map(fn($id) => (int) $id)
+                ->toArray();
+        }
+        return $this->_serviceIds;
+    }
+
+    /**
+     * Check if the user has a specific service permission.
+     * Service IDs: 10001=Training Providers, 10002=Strategic Plans,
+     *              10003=Operational Planning, 10004=Self Studies, 10005=EQA
+     */
+    public function hasService(int $serviceId): bool
+    {
+        return in_array($serviceId, $this->enabledServiceIds());
     }
 }
