@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Atp;
+use App\Models\AtpPass;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -69,7 +71,7 @@ class AuthController extends Controller
                 if (!\App\Models\LoginOtp::canRequestOtp($user->user_email)) {
                     $waitTime = \App\Models\LoginOtp::getRateLimitWaitTime($user->user_email);
                     $minutes = ceil($waitTime / 60);
-                    
+
                     return back()->withErrors([
                         'username' => "Too many login attempts. Please try again in {$minutes} minute(s)."
                     ])->onlyInput('username');
@@ -84,7 +86,7 @@ class AuthController extends Controller
 
                 // Generate plain OTP for email
                 $plainOtp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-                
+
                 // Update with hashed version
                 $otp->update(['otp_code' => Hash::make($plainOtp)]);
 
@@ -100,18 +102,18 @@ class AuthController extends Controller
                 // Send OTP email
                 try {
                     $user->notify(new \App\Notifications\LoginOtpNotification($plainOtp));
-                    
+
                     Log::info('2FA OTP sent to: ' . $user->user_email);
-                    
+
                     return redirect()->route('login.otp.verify')
                         ->with('email', $user->user_email)
                         ->with('success', 'Password verified! Please check your email for the OTP code.');
                 } catch (\Exception $e) {
                     Log::error('Failed to send 2FA OTP email: ' . $e->getMessage());
-                    
+
                     // Clear session data
                     $request->session()->forget(['pending_2fa', 'pending_user_id', 'pending_email', 'pending_user_type', '2fa_timestamp']);
-                    
+
                     return back()->withErrors([
                         'username' => 'Failed to send OTP. Please try again later.'
                     ])->onlyInput('username');
@@ -119,29 +121,41 @@ class AuthController extends Controller
             }
         }
 
-        // 2. Fallback: Check Training Provider (atps_list)
-        // ATPs might login with email, but we use the 'username' input field
-        $atp = \App\Models\TrainingProvider::where('atp_email', $username)->first();
+        // ── 2. ATP Login (atps_list + atps_list_pass) ────────────────────────
+        $atp = Atp::where('atp_email', $username)->first();
+
         if ($atp) {
-            // Check Password
-            $pass = \App\Models\TrainingProviderPass::where('atp_id', $atp->atp_id)
-                ->where('is_active', '1')
+            // Check active password in atps_list_pass
+            $pass = AtpPass::where('atp_id', $atp->atp_id)
+                ->where('is_active', 1)
                 ->latest('pass_id')
                 ->first();
+
             if ($pass && Hash::check($password, $pass->pass_value)) {
-                // Log them in via Session for the Portal
+
+                // Find the users_list record for this ATP
+                // (inserted at ATP creation: user_id = atp_id, user_type = 'atp')
+                $atpUser = User::where('user_id', $atp->atp_id)
+                    ->where('user_type', 'atp')
+                    ->first();
+
+                if ($atpUser) {
+                    // Proper Laravel login so Auth::user() works in layouts/sidebar
+                    Auth::login($atpUser);
+                    $request->session()->regenerate();
+                }
+
+                // Also store atp_id in session for portal controllers
                 session([
                     'atp_id' => $atp->atp_id,
-                    'atp_name' => $atp->atp_name_en,
-                    'user_type' => 'atp'
+                    'atp_name' => $atp->atp_name,
+                    'user_type' => 'atp',
                 ]);
 
-                // Redirect based on status (Registration vs Dashboard)
-                if ($atp->status_id <= 2) {
-                    return redirect()->route('rc.portal.wizard.step1');
-                } else {
-                    return redirect()->route('rc.portal.dashboard');
-                }
+                Log::info('ATP login successful for: ' . $username);
+
+                // ATPs skip 2FA — redirect straight to portal dashboard
+                return redirect()->route('rc.portal.dashboard');
             }
         }
 
@@ -149,9 +163,15 @@ class AuthController extends Controller
         return back()->withErrors(['username' => 'Invalid credentials.']);
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
         Auth::logout();
+
+        // Clear ATP portal session data
+        $request->session()->forget(['atp_id', 'atp_name', 'user_type']);
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
         return redirect()->route('login');
     }
 
@@ -168,7 +188,7 @@ class AuthController extends Controller
         if ($user && in_array($user->user_type, ['emp', 'hr', 'root', 'sys_admin', 'admin_hr'])) {
             $employee = $user->employee;
             if ($employee && $employee->passwordData && Hash::check($request->current_password, $employee->passwordData->pass_value)) {
-                
+
                 // 1. Deactivate all old passwords for this employee
                 \App\Models\EmployeesListPass::where('employee_id', $employee->employee_id)->update(['is_active' => '0']);
 
@@ -182,7 +202,7 @@ class AuthController extends Controller
                 // 3. Mark employee as having a password set
                 $employee->is_pass = '1';
                 $employee->save();
-                
+
                 return back()->with('success', 'Password updated successfully.');
             }
         }
@@ -203,7 +223,7 @@ class AuthController extends Controller
         }
 
         $email = $request->session()->get('pending_email') ?? session('email');
-        
+
         return view('auth.otp-verify', compact('email'));
     }
 
@@ -263,24 +283,24 @@ class AuthController extends Controller
         $pendingUserId = $request->session()->get('pending_user_id');
         $pendingUserType = $request->session()->get('pending_user_type');
         $timestamp = $request->session()->get('2fa_timestamp');
-        
+
         // Check if session has expired (5 minutes timeout)
         if ($timestamp && (now()->timestamp - $timestamp) > 300) {
             // Clear session data
             $request->session()->forget(['pending_2fa', 'pending_user_id', 'pending_email', 'pending_user_type', '2fa_timestamp']);
-            
+
             return back()->withErrors([
                 'otp' => 'Session expired. Please login again.'
             ])->withInput();
         }
-        
+
         // Verify email matches
         if ($pendingEmail !== $email) {
             return back()->withErrors([
                 'otp' => 'Email mismatch. Please login again.'
             ])->withInput();
         }
-        
+
         $user = User::where('record_id', $pendingUserId)->first();
 
         if (!$user) {
@@ -292,7 +312,7 @@ class AuthController extends Controller
         // Complete the login
         Auth::login($user);
         $request->session()->regenerate();
-        
+
         // Clear 2FA session data
         $request->session()->forget(['pending_2fa', 'pending_user_id', 'pending_email', 'pending_user_type', '2fa_timestamp']);
 

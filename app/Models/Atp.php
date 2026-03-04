@@ -60,4 +60,14 @@ class Atp extends Model
     {
         return $this->hasMany(AtpContact::class, 'atp_id', 'atp_id');
     }
+
+    public function passwordData()
+    {
+        return $this->hasOne(AtpPass::class, 'atp_id', 'atp_id');
+    }
+
+    public function logs()
+    {
+        return $this->hasMany(AtpLog::class, 'atp_id', 'atp_id');
+    }
 }

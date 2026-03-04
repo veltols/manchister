@@ -155,6 +155,10 @@
                                                 <a href="{{ route('emp.atps.forms.sed', $atp->atp_id) }}" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
                                                     <i class="fa-solid fa-eye text-xs"></i>
                                                 </a>
+                                            @elseif($app['type'] == 'Initial')
+                                                <a href="{{ route('emp.atps.forms.initial', $atp->atp_id) }}" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
+                                                    <i class="fa-solid fa-eye text-xs"></i>
+                                                </a>
                                             @else
                                                 <button class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 text-slate-300 cursor-not-allowed text-xs" disabled>
                                                     <i class="fa-solid fa-eye-slash"></i>

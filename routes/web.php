@@ -208,10 +208,11 @@ Route::middleware('auth')->group(function () {
         Route::resource('atps', App\Http\Controllers\Employee\AtpController::class)->names('atps');
 
         // ATP Detailed Form Views
+        Route::get('/atps/{id}/initial', [App\Http\Controllers\Employee\AtpFormController::class, 'showInitialForm'])->name('atps.forms.initial');
+        Route::post('/atps/{id}/initial/status', [App\Http\Controllers\Employee\AtpFormController::class, 'updateStatus'])->name('atps.forms.initial.status');
         Route::get('/atps/{id}/registration-request', [App\Http\Controllers\Employee\AtpFormController::class, 'showRegistrationRequest'])->name('atps.forms.registration-request');
         Route::get('/atps/{id}/sed', [App\Http\Controllers\Employee\AtpFormController::class, 'showSed'])->name('atps.forms.sed');
         Route::get('/atps/{id}/compliance/{main_id}', [App\Http\Controllers\Employee\AtpFormController::class, 'showCompliance'])->name('atps.forms.compliance');
-        Route::get('/atps/{id}/faculty', [App\Http\Controllers\Employee\AtpFormController::class, 'showFaculty'])->name('atps.forms.faculty');
         Route::get('/atps/{id}/faculty', [App\Http\Controllers\Employee\AtpFormController::class, 'showFaculty'])->name('atps.forms.faculty');
 
         // Settings
@@ -499,6 +500,49 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\RC\PortalController::class, 'dashboard'])->name('dashboard');
         Route::get('/register/step1', [App\Http\Controllers\RC\PortalController::class, 'wizardStep1'])->name('wizard.step1');
         Route::post('/register/step1', [App\Http\Controllers\RC\PortalController::class, 'submitStep1'])->name('wizard.submit1');
+
+        // Accreditation sub-forms
+        Route::prefix('accreditation')->name('accreditation.')->group(function () {
+            Route::get('/initial-form', [App\Http\Controllers\RC\AccreditationController::class, 'initialForm'])->name('initial_form');
+            Route::post('/initial-form', [App\Http\Controllers\RC\AccreditationController::class, 'saveInitialForm'])->name('initial_form.save');
+
+            Route::get('/qualifications', [App\Http\Controllers\RC\AccreditationController::class, 'qualifications'])->name('qualifications');
+            Route::post('/qualifications', [App\Http\Controllers\RC\AccreditationController::class, 'saveQualification'])->name('qualifications.save');
+            Route::delete('/qualifications/{id}', [App\Http\Controllers\RC\AccreditationController::class, 'deleteQualification'])->name('qualifications.delete');
+
+            Route::get('/faculty', [App\Http\Controllers\RC\AccreditationController::class, 'faculty'])->name('faculty');
+            Route::post('/faculty', [App\Http\Controllers\RC\AccreditationController::class, 'saveFaculty'])->name('faculty.save');
+            Route::delete('/faculty/{id}', [App\Http\Controllers\RC\AccreditationController::class, 'deleteFaculty'])->name('faculty.delete');
+
+            Route::get('/learners', [App\Http\Controllers\RC\AccreditationController::class, 'learners'])->name('learners');
+            Route::post('/learners', [App\Http\Controllers\RC\AccreditationController::class, 'saveLearners'])->name('learners.save');
+            Route::delete('/learners/{id}', [App\Http\Controllers\RC\AccreditationController::class, 'deleteLearnerStatistic'])->name('learners.delete');
+
+            Route::get('/electronic-systems', [App\Http\Controllers\RC\AccreditationController::class, 'electronicSystems'])->name('electronic_systems');
+            Route::post('/electronic-systems', [App\Http\Controllers\RC\AccreditationController::class, 'saveElectronicSystems'])->name('electronic_systems.save');
+            Route::delete('/electronic-systems/{id}', [App\Http\Controllers\RC\AccreditationController::class, 'deleteElectronicSystem'])->name('electronic_systems.delete');
+
+            Route::get('/attachments', [App\Http\Controllers\RC\AccreditationController::class, 'attachments'])->name('attachments');
+            Route::post('/attachments', [App\Http\Controllers\RC\AccreditationController::class, 'saveAttachments'])->name('attachments.save');
+
+            Route::get('/submit', [App\Http\Controllers\RC\AccreditationController::class, 'submit'])->name('submit');
+            Route::post('/submit', [App\Http\Controllers\RC\AccreditationController::class, 'processSubmission'])->name('submit.process');
+        });
+
+        // Program Registration Sub-forms (Phase 2)
+        Route::prefix('program-registration')->name('program_registration.')->group(function () {
+            Route::get('/faculty', [App\Http\Controllers\RC\ProgramRegistrationController::class, 'faculty'])->name('faculty');
+            Route::post('/faculty', [App\Http\Controllers\RC\ProgramRegistrationController::class, 'saveFaculty'])->name('faculty.save');
+            Route::post('/faculty/upload-cv', [App\Http\Controllers\RC\ProgramRegistrationController::class, 'uploadCV'])->name('faculty.upload_cv');
+            Route::delete('/faculty/{id}', [App\Http\Controllers\RC\ProgramRegistrationController::class, 'deleteFaculty'])->name('faculty.delete');
+
+            Route::get('/qualification-mapping', [App\Http\Controllers\RC\ProgramRegistrationController::class, 'qualificationMapping'])->name('qualification_mapping');
+            Route::post('/qualification-mapping', [App\Http\Controllers\RC\ProgramRegistrationController::class, 'saveQualificationMapping'])->name('qualification_mapping.save');
+            Route::delete('/qualification-mapping/{id}', [App\Http\Controllers\RC\ProgramRegistrationController::class, 'deleteQualificationMapping'])->name('qualification_mapping.delete');
+
+            Route::get('/submit', [App\Http\Controllers\RC\ProgramRegistrationController::class, 'submit'])->name('submit');
+            Route::post('/submit', [App\Http\Controllers\RC\ProgramRegistrationController::class, 'processSubmission'])->name('submit.process');
+        });
     });
 });
 Route::fallback(function () {
