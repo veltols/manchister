@@ -590,7 +590,7 @@
     </div>
 </div>
 
-<script src="{{ asset('vendor/chartjs/chart.min.js') }}"></script>
+<script src="{{ asset('libs/chartjs/chart.min.js') }}"></script>
 <script>
     const colors = {
         primary: '#004F68', primaryLight: '#1a8aaa',

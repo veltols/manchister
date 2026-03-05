@@ -291,6 +291,6 @@
     </div>
 
     <!-- Alpine.js for Tabs & Progress Range -->
-    <script src="{{ asset('vendor/alpinejs/alpine.min.js') }}" defer></script>
+    <script src="{{ asset('libs/alpinejs/alpine.min.js') }}" defer></script>
 
 @endsection

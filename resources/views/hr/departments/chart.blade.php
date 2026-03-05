@@ -74,9 +74,9 @@
     </div>
 
     @push('scripts')
-        <script src="{{ asset('vendor/jspdf/jspdf.umd.min.js') }}"></script>
-        <script src="{{ asset('vendor/html2canvas/html2canvas.min.js') }}"></script>
-        <script type="text/javascript" src="{{ asset('vendor/google-charts/loader.js') }}"></script>
+        <script src="{{ asset('libs/jspdf/jspdf.umd.min.js') }}"></script>
+        <script src="{{ asset('libs/html2canvas/html2canvas.min.js') }}"></script>
+        <script type="text/javascript" src="{{ asset('libs/google-charts/loader.js') }}"></script>
         <script type="text/javascript">
             let chart;
             let data;

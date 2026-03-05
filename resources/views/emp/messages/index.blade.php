@@ -458,7 +458,7 @@
         </form>
     </div>
 </div>
-    <script src="{{ asset('vendor/mammoth/mammoth.browser.min.js') }}"></script>
+    <script src="{{ asset('libs/mammoth/mammoth.browser.min.js') }}"></script>
     <script src="{{ asset('js/attachment-preview.js') }}"></script>
     <script>
         // Initialize Attachment Preview for Chat

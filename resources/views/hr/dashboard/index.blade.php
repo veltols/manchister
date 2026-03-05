@@ -519,7 +519,7 @@
 </div>
 
 {{-- Chart.js Library --}}
-<script src="{{ asset('vendor/chartjs/chart.min.js') }}"></script>
+<script src="{{ asset('libs/chartjs/chart.min.js') }}"></script>
 
 <script>
     // Counter Animation

@@ -253,7 +253,7 @@
     </div>
 
     <!-- Alpine.js for Tabs -->
-    <script src="{{ asset('vendor/alpinejs/alpine.min.js') }}" defer></script>
+    <script src="{{ asset('libs/alpinejs/alpine.min.js') }}" defer></script>
 
     <script>
         function onStatusChange(select) {
