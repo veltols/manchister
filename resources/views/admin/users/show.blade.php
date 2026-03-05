@@ -602,7 +602,7 @@
 
 
     @push('scripts')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+    <script src="{{ asset('vendor/mammoth/mammoth.browser.min.js') }}"></script>
     <script src="{{ asset('js/attachment-preview.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -751,6 +751,6 @@
             }
         </script>
         <!-- Alpine.js -->
-        <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+        <script src="{{ asset('vendor/alpinejs/alpine.min.js') }}" defer></script>
     @endpush
 @endsection

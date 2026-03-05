@@ -13,11 +13,9 @@
         $logoUrl = $logoPath ? asset('uploads/' . $logoPath) : asset('images/logo.png');
     @endphp
     <link rel="icon" type="image/png" href="{{ $favUrl }}">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="{{ asset('vendor/tailwindcss/tailwind.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('vendor/fonts/fonts.css') }}">
+    <link rel="stylesheet" href="{{ asset('vendor/fontawesome/css/all.min.css') }}">
 
     <script>
         tailwind.config = {
@@ -364,7 +362,7 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{{ asset('vendor/sweetalert2/sweetalert2.all.min.js') }}"></script>
     <script>
         const Toast = Swal.mixin({
             toast: true,

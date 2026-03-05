@@ -12,9 +12,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Print Asset Label - {{ $asset->asset_serial }}</title>
     <link rel="icon" type="image/png" href="{{ $favUrl }}">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+    <script src="{{ asset('vendor/tailwindcss/tailwind.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('vendor/fonts/fonts.css') }}">
+    <script src="{{ asset('vendor/jsbarcode/JsBarcode.all.min.js') }}"></script>
     <script>
         tailwind.config = {
             theme: {

@@ -159,7 +159,7 @@
         </div>
     </div>
     <script src="{{ asset('js/ajax-pagination.js') }}"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+    <script src="{{ asset('vendor/mammoth/mammoth.browser.min.js') }}"></script>
     <script src="{{ asset('js/attachment-preview.js') }}"></script>
     <script>
         window.ajaxPagination = new AjaxPagination({
