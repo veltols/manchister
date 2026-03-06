@@ -53,7 +53,8 @@
                                 </span>
                             </div>
                             <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">
-                                {{ $member->faculty_spec ?? 'General Specification' }}</p>
+                                {{ $member->educational_qualifications ?? 'General Specification' }}
+                            </p>
 
                             <div class="grid grid-cols-2 gap-2 mt-4">
                                 <div class="p-2 bg-slate-50 rounded-lg border border-slate-100/50">

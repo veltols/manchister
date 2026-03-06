@@ -88,9 +88,9 @@ class FormController extends Controller
 
         if ($form_id == '004') {
             $sed_data = DB::table('atps_sed_form')->where('atp_id', $atp_id)->first();
-            
+
             // Decode JSON arrays for Form 004
-            if ($formData && !empty((array)$formData)) {
+            if ($formData && !empty((array) $formData)) {
                 foreach ($formData as $key => $value) {
                     if (is_string($value) && (strpos($value, '[') === 0 || strpos($value, '{') === 0)) {
                         $decoded = json_decode($value, true);
@@ -104,7 +104,7 @@ class FormController extends Controller
 
         if ($form_id == '014') {
             // Decode JSON arrays for Form 014
-            if ($formData && !empty((array)$formData)) {
+            if ($formData && !empty((array) $formData)) {
                 foreach ($formData as $key => $value) {
                     if (is_string($value) && (strpos($value, '[') === 0 || strpos($value, '{') === 0)) {
                         $decoded = json_decode($value, true);
@@ -156,10 +156,12 @@ class FormController extends Controller
                     ->count();
 
                 $score = ($totFilled > 0) ? ceil(($totOk / $totFilled) * 100) : 0;
-                
+
                 $status = 'danger';
-                if ($score > 80) $status = 'success';
-                elseif ($score > 35) $status = 'warning';
+                if ($score > 80)
+                    $status = 'success';
+                elseif ($score > 35)
+                    $status = 'warning';
 
                 $kpiData[$main->main_id] = [
                     'score' => $score,
@@ -169,8 +171,10 @@ class FormController extends Controller
             }
             $avgScore = (count($qsMains) > 0) ? ceil($totalScore / count($qsMains)) : 0;
             $avgStatus = 'danger';
-            if ($avgScore > 80) $avgStatus = 'success';
-            elseif ($avgScore > 35) $avgStatus = 'warning';
+            if ($avgScore > 80)
+                $avgStatus = 'success';
+            elseif ($avgScore > 35)
+                $avgStatus = 'warning';
 
             $kpis = [
                 'mains' => $kpiData,
@@ -196,7 +200,7 @@ class FormController extends Controller
                         $item->cat_ref = 'N/A';
                         $item->cat_description = 'Description unavailable';
                         return $item;
-                });
+                    });
             }
 
             return view('eqa.forms.006', compact('atp', 'sed_data', 'complianceData', 'qsMains', 'kpis'));
@@ -368,7 +372,7 @@ class FormController extends Controller
                         DB::table('eqa_007_areas')->where('record_id', $id)->update($data);
                     }
                 } else {
-                    $data['added_by'] = auth()->id() ?? 1;
+                    $data['added_by'] = auth()->user()->user_id ?? 1;
                     $data['added_date'] = now();
                     if (Schema::hasTable('eqa_007_areas')) {
                         DB::table('eqa_007_areas')->insert($data);
@@ -472,7 +476,7 @@ class FormController extends Controller
         if ($id > 0) {
             DB::table('eqa_007_interview')->where('interview_type', $data['interview_type'])->where('interview_id', $id)->update($data);
         } else {
-            $data['added_by'] = auth()->id() ?? 1;
+            $data['added_by'] = auth()->user()->user_id ?? 1;
             $data['added_date'] = now();
             DB::table('eqa_007_interview')->insert($data);
         }

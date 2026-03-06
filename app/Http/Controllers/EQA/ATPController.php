@@ -81,13 +81,13 @@ class ATPController extends Controller
     public function sendRegistrationEmail($id)
     {
         $atp = Atp::findOrFail($id);
-        
+
         // Send the premium registration email
         $atp->notify(new \App\Notifications\AtpRegistrationNotification($atp));
 
         // Update status if needed (e.g. from New to Registration Sent)
         // Adjust the status_id according to your database (assuming 2 is 'Email Sent' or similar)
-        $atp->status_id = 2; 
+        $atp->status_id = 2;
         $atp->save();
 
         return redirect()->back()->with('success', 'Premium registration email sent successfully to ' . $atp->atp_email);
@@ -121,7 +121,7 @@ class ATPController extends Controller
         $requestId = DB::table('atps_info_request')->insertGetId([
             'atp_id' => $atp_id,
             'request_date' => now(),
-            'added_by' => auth()->id() ?? 0,
+            'added_by' => auth()->user()->user_id ?? 0,
             'request_status' => 'pending_submission',
             'request_department' => 2, // EQA
             'added_date' => now(),
@@ -133,7 +133,7 @@ class ATPController extends Controller
                 'required_evidence' => $evidence,
             ]);
         }
-        
+
         // $this->logAtpAction($atp_id, 'Created Information Request #' . $requestId);
 
         return redirect()->route('eqa.atps.show', ['id' => $atp_id, 'tab' => 'planner'])->with('success', 'Information Request created successfully.');
@@ -142,7 +142,7 @@ class ATPController extends Controller
     public function viewInfoRequest($atp_id, $request_id)
     {
         $atp = Atp::findOrFail($atp_id);
-        
+
         $infoRequest = DB::table('atps_info_request')
             ->leftJoin('employees_list', 'atps_info_request.added_by', '=', 'employees_list.employee_id')
             ->where('atp_id', $atp_id)
@@ -165,9 +165,11 @@ class ATPController extends Controller
     {
         DB::table('atps_list_logs')->insert([
             'atp_id' => $atp_id,
-            'action' => $action,
-            'logged_by' => auth()->id() ?? 0,
-            'log_date' => now()
+            'log_action' => $action,
+            'log_date' => now()->toDateTimeString(),
+            'logger_type' => 'employees_list',
+            'log_dept' => 'EQA',
+            'logged_by' => auth()->user()->user_id ?? 0,
         ]);
     }
 
@@ -185,12 +187,12 @@ class ATPController extends Controller
         // Advanced Search (Legacy Parity)
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('atp_name', 'like', "%{$search}%")
-                  ->orWhere('atp_ref', 'like', "%{$search}%")
-                  ->orWhere('contact_name', 'like', "%{$search}%")
-                  ->orWhere('atp_email', 'like', "%{$search}%")
-                  ->orWhere('atp_phone', 'like', "%{$search}%");
+                    ->orWhere('atp_ref', 'like', "%{$search}%")
+                    ->orWhere('contact_name', 'like', "%{$search}%")
+                    ->orWhere('atp_email', 'like', "%{$search}%")
+                    ->orWhere('atp_phone', 'like', "%{$search}%");
             });
         }
 

@@ -7,7 +7,8 @@
     <div class="max-w-6xl mx-auto space-y-8 animate-fade-in-up">
 
         @if (session('success'))
-            <div class="bg-emerald-50 border border-emerald-200 text-emerald-600 px-6 py-4 rounded-2xl flex items-center gap-4 animate-fade-in">
+            <div
+                class="bg-emerald-50 border border-emerald-200 text-emerald-600 px-6 py-4 rounded-2xl flex items-center gap-4 animate-fade-in">
                 <i class="fa-solid fa-circle-check text-xl"></i>
                 <p class="font-bold text-sm">{{ session('success') }}</p>
             </div>
@@ -60,15 +61,20 @@
                 </div>
                 <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-2 flex flex-col">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Institute Name</label>
-                        <div class="flex-1 p-3.5 rounded-xl bg-slate-50 border-2 border-slate-100 text-premium font-bold text-sm shadow-inner group transition-all flex items-center">
-                            <i class="fa-solid fa-building-columns text-brand/30 mr-3 group-hover:text-brand transition-colors"></i>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Institute
+                            Name</label>
+                        <div
+                            class="flex-1 p-3.5 rounded-xl bg-slate-50 border-2 border-slate-100 text-premium font-bold text-sm shadow-inner group transition-all flex items-center">
+                            <i
+                                class="fa-solid fa-building-columns text-brand/30 mr-3 group-hover:text-brand transition-colors"></i>
                             {{ $atp->atp_name }}
                         </div>
                     </div>
                     <div class="space-y-2 flex flex-col">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Author of SED</label>
-                        <div class="flex-1 p-3.5 rounded-xl bg-slate-50 border-2 border-slate-100 text-premium font-bold text-sm shadow-inner group transition-all flex items-center">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Author of
+                            SED</label>
+                        <div
+                            class="flex-1 p-3.5 rounded-xl bg-slate-50 border-2 border-slate-100 text-premium font-bold text-sm shadow-inner group transition-all flex items-center">
                             <i class="fa-solid fa-user-pen text-brand/30 mr-3 group-hover:text-brand transition-colors"></i>
                             {{ $sed_data->sed_1 ?? 'Legacy Data (N/A)' }}
                         </div>
@@ -226,7 +232,7 @@
                                     <div>
                                         <div class="font-bold text-premium text-sm">{{ $q->qualification_name }}</div>
                                         <div class="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-bold">
-                                            {{ $q->qualification_provider }} • {{ $q->qualification_type }}
+                                            {{ $q->qualification_category }} • {{ $q->qualification_type }}
                                         </div>
                                     </div>
                                 </div>
@@ -257,12 +263,13 @@
                                         <div>
                                             <div class="font-bold text-premium text-sm">{{ $f->faculty_name }}</div>
                                             <div class="text-[10px] text-slate-400 mt-0.5 font-bold uppercase">
-                                                {{ $f->faculty_spec }}</div>
+                                                {{ $f->educational_qualifications }}
+                                            </div>
                                         </div>
                                     </div>
                                     <span
                                         class="px-3 py-1 rounded-lg bg-slate-50 border border-slate-100 text-[10px] font-black text-slate-500 uppercase tracking-tighter">
-                                        {{ ['1' => 'IQA', '2' => 'IQA Lead', '3' => 'Assessor', '4' => 'Trainer', '5' => 'Teacher'][$f->faculty_type] ?? 'Staff' }}
+                                        {{ ['1' => 'IQA', '2' => 'IQA Lead', '3' => 'Assessor', '4' => 'Trainer', '5' => 'Teacher'][$f->faculty_type_id] ?? 'Staff' }}
                                     </span>
                                 </div>
                             </div>
