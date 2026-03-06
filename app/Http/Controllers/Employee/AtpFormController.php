@@ -68,7 +68,8 @@ class AtpFormController extends Controller
                 ->where('atp_id', $atpId)
                 ->update([
                     'form_status' => $request->status,
-                    'rc_comment' => $request->rc_comment
+                    'rc_comment' => $request->rc_comment,
+                    'eqa_user_id' => $request->eqa_user_id ?? null
                 ]);
 
             // Update ATP Phase according to legacy logic
@@ -86,6 +87,19 @@ class AtpFormController extends Controller
                         $phase_id = 6;
                     }
                     $is_phase_ok = 1;
+
+                    // If EQA user is assigned, create/update EQA detail record
+                    if ($request->eqa_user_id) {
+                        DB::table('atps_eqa_details')->updateOrInsert(
+                            ['atp_id' => $atpId],
+                            [
+                                'assigned_to' => $request->eqa_user_id,
+                                'form_status' => 'pending',
+                                'added_date' => now(),
+                                'eqa_visit_date' => null
+                            ]
+                        );
+                    }
                 } elseif ($request->form_type == 'sed') {
                     $phase_id = 5;
                     $is_phase_ok = 0;
@@ -140,6 +154,18 @@ class AtpFormController extends Controller
         $locations = DB::table('atps_list_locations')->where('atp_id', $atpId)->get();
         $qualifications = DB::table('atps_list_qualifications')->where('atp_id', $atpId)->get();
 
+        // Load mappings for qualifications
+        $mappings = DB::table('atps_list_qualifications_faculties')
+            ->join('atps_list_faculties', 'atps_list_qualifications_faculties.faculty_id', '=', 'atps_list_faculties.faculty_id')
+            ->where('atps_list_qualifications_faculties.atp_id', $atpId)
+            ->select('atps_list_qualifications_faculties.qualification_id', 'atps_list_faculties.faculty_name')
+            ->get()
+            ->groupBy('qualification_id');
+
+        foreach ($qualifications as $q) {
+            $q->mapped_faculty = isset($mappings[$q->qualification_id]) ? $mappings[$q->qualification_id]->pluck('faculty_name')->toArray() : [];
+        }
+
         $learnerEnrolled = DB::table('atps_learner_enrolled')->where('atp_id', $atpId)->first();
 
         // Faculty: Types mapping based on legacy findName logic
@@ -147,6 +173,8 @@ class AtpFormController extends Controller
         $trainers = DB::table('atps_list_faculties')->where('atp_id', $atpId)->whereIn('faculty_type_id', [4, 5])->get();
         $assessors = DB::table('atps_list_faculties')->where('atp_id', $atpId)->where('faculty_type_id', 3)->get();
         $iqas = DB::table('atps_list_faculties')->where('atp_id', $atpId)->where('faculty_type_id', 1)->get();
+
+        $electronicSystems = DB::table('atps_electronic_systems')->where('atp_id', $atpId)->get();
 
         return view('emp.atps.forms.registration_request', compact(
             'atp',
@@ -156,7 +184,8 @@ class AtpFormController extends Controller
             'learnerEnrolled',
             'trainers',
             'assessors',
-            'iqas'
+            'iqas',
+            'electronicSystems'
         ));
     }
 
@@ -238,5 +267,22 @@ class AtpFormController extends Controller
         $faculty = DB::table('atps_list_faculties')->where('atp_id', $atpId)->get();
 
         return view('emp.atps.forms.faculty', compact('atp', 'faculty'));
+    }
+    public function getEqaUsers()
+    {
+        try {
+            $users = DB::table('users_list')
+                ->join('employees_list', 'users_list.user_id', '=', 'employees_list.employee_id')
+                ->whereRaw('LOWER(users_list.user_type) = ?', ['eqa'])
+                ->select('employees_list.employee_id', 'employees_list.first_name', 'employees_list.last_name')
+                ->get();
+
+            \Log::info('EQA Users Fetched: ' . $users->count());
+
+            return response()->json(['success' => true, 'data' => $users]);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching EQA users: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 }

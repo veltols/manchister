@@ -11,6 +11,10 @@ use App\Http\Controllers\Employee\PerformanceController;
 use App\Http\Controllers\Employee\ExitInterviewController;
 use App\Http\Controllers\Rc\AtpController;
 
+Route::get('/debug-eqa', function () {
+    return 'EQA Module is active';
+});
+
 Route::get('/', function () {
     return redirect()->route('login');
 });
@@ -202,6 +206,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/messages-conversation-list', [App\Http\Controllers\Employee\MessageController::class, 'getConversationList'])->name('messages.conversation_list');
 
         // Training Providers (ATPs)
+        Route::get('/atps/eqa-users', [App\Http\Controllers\Employee\AtpFormController::class, 'getEqaUsers'])->name('atps.eqa-users');
         Route::post('/atps/{id}/send-email', [App\Http\Controllers\Employee\AtpController::class, 'sendEmail'])->name('atps.send-email');
         Route::post('/atps/{id}/accredit', [App\Http\Controllers\Employee\AtpController::class, 'accredit'])->name('atps.accredit');
         Route::get('/atps/data', [App\Http\Controllers\Employee\AtpController::class, 'getData'])->name('atps.data');
