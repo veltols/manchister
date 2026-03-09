@@ -399,11 +399,7 @@ Route::middleware('auth')->group(function () {
 
 
 
-        // Users Management
-        Route::get('/users', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
-        Route::get('/users/create', [App\Http\Controllers\Admin\UserController::class, 'create'])->name('users.create');
-        Route::post('/users', [App\Http\Controllers\Admin\UserController::class, 'store'])->name('users.store');
-        Route::get('/users/{id}', [App\Http\Controllers\Admin\UserController::class, 'show'])->name('users.show');
+
 
         // Assets Management (Root/Admin Logic)
         Route::get('/assets', [App\Http\Controllers\Admin\AssetController::class, 'index'])->name('assets.index');
@@ -447,6 +443,8 @@ Route::middleware('auth')->group(function () {
 
         // Users
         Route::get('/users', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
+        Route::get('/users/data', [App\Http\Controllers\Admin\UserController::class, 'getData'])->name('users.data');
+        Route::get('/users/create', [App\Http\Controllers\Admin\UserController::class, 'create'])->name('users.create');
         Route::post('/users', [App\Http\Controllers\Admin\UserController::class, 'store'])->name('users.store');
         Route::get('/users/{id}', [App\Http\Controllers\Admin\UserController::class, 'show'])->name('users.show');
         Route::post('/users/{id}/update-status', [App\Http\Controllers\Admin\UserController::class, 'updateStatus'])->name('users.update-status');
@@ -455,7 +453,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/users/{id}/update-service', [App\Http\Controllers\Admin\UserController::class, 'updateService'])->name('users.update-service');
         Route::post('/users/{id}/assign-asset', [App\Http\Controllers\Admin\UserController::class, 'assignAsset'])->name('users.assign-asset');
         Route::post('/users/{id}/revoke-asset', [App\Http\Controllers\Admin\UserController::class, 'revokeAsset'])->name('users.revoke-asset');
-        Route::get('/users/data', [App\Http\Controllers\Admin\UserController::class, 'getData'])->name('users.data');
 
         // Settings (Dynamics Lists)
         Route::get('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');

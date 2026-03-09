@@ -73,7 +73,7 @@
 
     @if($canEqa)
         {{-- EQA portal — requires service 10005 --}}
-        <a href="{{ route('eqa.atps.index') }}" class="nav-item flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
+        <a href="{{ route('eqa.atps.index') }}" class="nav-item {{ request()->routeIs('eqa.atps.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
             <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
                 <i class="fa-solid fa-user-shield text-base"></i>
             </div>
@@ -207,7 +207,24 @@
 <script>
     function switchEmpMenu(mode) {
         localStorage.setItem('emp_menu_mode', mode);
-        window.location.href = "{{ route('emp.dashboard') }}";
+        
+        if (mode === 'rc') {
+            @if($canEqa)
+                window.location.href = "{{ route('eqa.atps.index') }}";
+            @elseif($canTraining)
+                window.location.href = "{{ route('emp.atps.index') }}";
+            @elseif($canStrategy)
+                window.location.href = "{{ route('emp.ext.strategies.index') }}";
+            @elseif($canOpsPlanning)
+                window.location.href = "{{ route('emp.ext.strategies.projects.index') }}";
+            @elseif($canSelfStudy)
+                window.location.href = "{{ route('emp.ext.strategies.self_studies.index') }}";
+            @else
+                window.location.href = "{{ route('emp.dashboard') }}";
+            @endif
+        } else {
+            window.location.href = "{{ route('emp.dashboard') }}";
+        }
     }
 
     // Immediately invoked function to prevent FOUC (Flash of Unstyled Content)
