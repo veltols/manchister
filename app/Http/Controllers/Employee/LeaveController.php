@@ -46,6 +46,16 @@ class LeaveController extends Controller
         $user = Auth::user();
         $employeeId = $user->employee ? $user->employee->employee_id : 0;
 
+        $totalDays = $this->calculateTotalDays($request->start_date, $request->end_date);
+
+        if (!$user->employee || $user->employee->leaves_open_balance < $totalDays) {
+            return redirect()->back()->with('error', "You don't have enough balance");
+        }
+
+        if (!$this->checkStaffingLevel($request->start_date, $request->end_date)) {
+            return redirect()->back()->with('error', 'Cannot apply. Less than 70% employees would be present during this period.');
+        }
+
         $leave = new HrLeave();
         $leave->employee_id = $employeeId;
         $leave->leave_type_id = $request->leave_type_id;
@@ -54,9 +64,7 @@ class LeaveController extends Controller
         $leave->leave_remarks = $request->leave_remarks;
         $leave->submission_date = now();
         $leave->leave_status_id = 1; // Pending HR
-
-        // Calculate total days excluding weekends (Sat/Sun)
-        $leave->total_days = $this->calculateTotalDays($request->start_date, $request->end_date);
+        $leave->total_days = $totalDays;
 
         if ($request->hasFile('leave_attachment')) {
             $file = $request->file('leave_attachment');
@@ -82,15 +90,15 @@ class LeaveController extends Controller
 
         // Send Notification to Employee
         \App\Services\NotificationService::send(
-            "Your leave request has been submitted successfully.", 
-            "emp/leaves", 
+            "Your leave request has been submitted successfully.",
+            "emp/leaves",
             $employeeId
         );
 
         // Notify HR (Always ID 1 in legacy/current system logic for alerts)
         \App\Services\NotificationService::send(
-            "New leave request submitted by " . $user->employee->full_name, 
-            "hr/leaves", 
+            "New leave request submitted by " . $user->employee->full_name,
+            "hr/leaves",
             1
         );
 
@@ -100,7 +108,7 @@ class LeaveController extends Controller
     public function resubmit(Request $request, $id)
     {
         $leave = HrLeave::findOrFail($id);
-        
+
         // Security check: ensure the user owns this leave
         $user = Auth::user();
         $employeeId = $user->employee ? $user->employee->employee_id : 0;
@@ -123,7 +131,17 @@ class LeaveController extends Controller
         $leave->leave_status_id = 1; // Return to Pending HR
 
         // Recalculate duration
-        $leave->total_days = $this->calculateTotalDays($request->start_date, $request->end_date);
+        $totalDays = $this->calculateTotalDays($request->start_date, $request->end_date);
+
+        if (!$user->employee || $user->employee->leaves_open_balance < $totalDays) {
+            return redirect()->back()->with('error', "You don't have enough balance");
+        }
+
+        if (!$this->checkStaffingLevel($request->start_date, $request->end_date, $id)) {
+            return redirect()->back()->with('error', 'Cannot apply. Less than 70% employees would be present during this period.');
+        }
+
+        $leave->total_days = $totalDays;
 
         if ($request->hasFile('leave_attachment')) {
             $file = $request->file('leave_attachment');
@@ -149,8 +167,8 @@ class LeaveController extends Controller
 
         // Notify HR
         \App\Services\NotificationService::send(
-            "Leave request #{$leave->leave_id} has been resubmitted by " . $user->employee->full_name, 
-            "hr/leaves", 
+            "Leave request #{$leave->leave_id} has been resubmitted by " . $user->employee->full_name,
+            "hr/leaves",
             1
         );
 
@@ -191,17 +209,47 @@ class LeaveController extends Controller
     {
         $startDate = Carbon::parse($start);
         $endDate = Carbon::parse($end);
-        
+
         $days = 0;
         $current = $startDate->copy();
-        
+
         while ($current <= $endDate) {
             if ($current->dayOfWeek != Carbon::SATURDAY && $current->dayOfWeek != Carbon::SUNDAY) {
                 $days++;
             }
             $current->addDay();
         }
-        
+
         return $days;
+    }
+
+    private function checkStaffingLevel($startDate, $endDate, $excludeLeaveId = null)
+    {
+        $totalEmployees = \App\Models\Employee::where('is_deleted', 0)->where('is_hidden', 0)->count();
+        if ($totalEmployees == 0)
+            return true;
+
+        $activeStatusNames = ['Pending', 'Pending Approval', 'Approved'];
+        $activeStatusIds = \Illuminate\Support\Facades\DB::table('hr_employees_leave_status')
+            ->whereIn('leave_status_name', $activeStatusNames)
+            ->pluck('leave_status_id')
+            ->toArray();
+
+        $query = \App\Models\HrLeave::where(function ($q) use ($startDate, $endDate) {
+            $q->where('start_date', '<=', $endDate)
+                ->where('end_date', '>=', $startDate);
+        })->whereIn('leave_status_id', $activeStatusIds);
+
+        if ($excludeLeaveId) {
+            $query->where('leave_id', '!=', $excludeLeaveId);
+        }
+
+        $employeesOnLeave = $query->distinct('employee_id')->count('employee_id');
+
+        // Add 1 for the person currently applying
+        $expectedOnLeave = $employeesOnLeave + 1;
+        $expectedPresent = $totalEmployees - $expectedOnLeave;
+
+        return ($expectedPresent / $totalEmployees) >= 0.70;
     }
 }

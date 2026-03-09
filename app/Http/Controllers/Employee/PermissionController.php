@@ -31,7 +31,7 @@ class PermissionController extends Controller
         $request->validate([
             'permission_date' => 'required|date',
             'start_time' => 'required',
-            'end_time' => 'required',
+            'end_time' => 'required|after:start_time',
             'permission_remarks' => 'required|string',
         ]);
 
@@ -47,11 +47,43 @@ class PermissionController extends Controller
         $permission->employee_id = $employeeId;
         $permission->permission_status_id = 1; // Pending
 
-        // Calculate total hours roughly (optional, core has it)
-        $start = strtotime($request->start_time);
-        $end = strtotime($request->end_time);
-        $diff = round(abs($end - $start) / 3600, 1);
-        $permission->total_hours = (int) $diff;
+        // Calculate total hours
+        $start = \Carbon\Carbon::parse($request->start_time);
+        $end = \Carbon\Carbon::parse($request->end_time);
+        $totalHours = ceil(abs($start->diffInMinutes($end, false)) / 60);
+
+        // Check if employee has enough total permission hours remaining
+        $employee = clone $user->employee;
+        $allowed = $employee->allowed_permission_hours ?? 0;
+        $used = $employee->permission_hours_balance ?? 0;
+
+        $remainingHours = max(0, $allowed - $used);
+
+        if ($totalHours > $remainingHours) {
+            return redirect()->back()->with('error', "Not enough permission balance available (Allowed: {$allowed}, Used: {$used}, Remaining: {$remainingHours}).");
+        }
+
+        // Check Monthly limit
+        $currentMonth = \Carbon\Carbon::parse($request->permission_date)->month;
+        $currentYear = \Carbon\Carbon::parse($request->permission_date)->year;
+
+        $activeStatusNames = ['Pending', 'Pending Approval', 'Approved'];
+        $activeStatusIds = \Illuminate\Support\Facades\DB::table('hr_employees_permissions_status')
+            ->whereIn('permission_status_name', $activeStatusNames)
+            ->pluck('permission_status_id')
+            ->toArray();
+
+        $usedHoursThisMonth = Permission::where('employee_id', $employeeId)
+            ->whereMonth('start_date', $currentMonth)
+            ->whereYear('start_date', $currentYear)
+            ->whereIn('permission_status_id', $activeStatusIds)
+            ->sum('total_hours');
+
+        if ($usedHoursThisMonth + $totalHours > 8) {
+            return redirect()->back()->with('error', "Maximum 8 permission hours allowed per month. You have already used {$usedHoursThisMonth} hours this month.");
+        }
+
+        $permission->total_hours = $totalHours;
 
         $permission->save();
 

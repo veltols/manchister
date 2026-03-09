@@ -726,8 +726,10 @@
 
         <!-- Header -->
         <header
-            class="h-24 bg-white/95 backdrop-blur-xl flex items-center justify-between px-4 md:px-8 border-b border-slate-100/80 z-20 shadow-[0_4px_30px_rgba(0,30,50,0.06)] shrink-0 transition-all duration-300">
-            <div class="flex items-center gap-3">
+            class="h-24 flex items-center justify-between px-4 md:px-8 border-b border-slate-200 z-20 shadow-[0_4px_30px_rgba(0,30,50,0.06)] shrink-0 transition-all duration-300 relative overflow-hidden"
+            style="background-color: #f8fafc; background-image: url('{{ asset('images/pattern.png') }}'); background-repeat: repeat;">
+
+            <div class="flex items-center gap-3 relative z-10">
                 <!-- Mobile Menu Toggle -->
                 <button @click="mobileSidebarOpen = true"
                     class="md:hidden w-10 h-10 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors text-slate-600">
@@ -745,7 +747,7 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-4 relative z-10">
 
                 <div class="flex items-center gap-3">
                     @php
@@ -883,7 +885,7 @@
                                         @foreach($userStatuses as $status)
                                             <button onclick="updateUserStatus({{ $status->staus_id }})"
                                                 class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-all text-left w-full group
-                                                                    {{ $user->employee->emp_status_id == $status->staus_id ? 'bg-slate-50' : '' }}">
+                                                                                                    {{ $user->employee->emp_status_id == $status->staus_id ? 'bg-slate-50' : '' }}">
                                                 <div class="w-3 h-3 rounded-full shadow-sm ring-4 ring-slate-50 group-hover:ring-white transition-all"
                                                     style="background-color: {{ $status->staus_color }}"></div>
                                                 <span
@@ -1052,11 +1054,11 @@
                                     const badgeContainer = document.createElement('span');
                                     badgeContainer.className = 'absolute top-2 right-2 flex h-4 w-4';
                                     badgeContainer.innerHTML = `
-                                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                                                    <span class="relative inline-flex rounded-full h-4 w-4 bg-indigo-600 text-[9px] text-white font-bold items-center justify-center transition-transform duration-200 ease-out">
-                                                        ${displayCount}
-                                                    </span>
-                                                `;
+                                                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                                                                    <span class="relative inline-flex rounded-full h-4 w-4 bg-indigo-600 text-[9px] text-white font-bold items-center justify-center transition-transform duration-200 ease-out">
+                                                                        ${displayCount}
+                                                                    </span>
+                                                                `;
                                     messageLink.appendChild(badgeContainer);
                                     console.log('Created new badge with count:', displayCount);
                                 }

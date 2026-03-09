@@ -99,6 +99,7 @@ class EmployeeController extends Controller
             'employee_join_date' => 'required|date',
             'department_id' => 'required|exists:employees_list_departments,department_id',
             'designation_id' => 'required|exists:employees_list_designations,designation_id',
+            'leaves_open_balance' => 'required|numeric|min:0',
             'log_remark' => 'required|string',
         ]);
 

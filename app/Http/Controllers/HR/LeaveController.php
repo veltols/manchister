@@ -21,7 +21,7 @@ class LeaveController extends Controller
             ->where('is_hidden', 0)
             ->orderBy('first_name')
             ->get();
-            
+
         $types = LeaveType::all();
 
         return view('hr.leaves.index', compact('leaves', 'employees', 'types'));
@@ -54,9 +54,9 @@ class LeaveController extends Controller
             ->where('is_hidden', 0)
             ->orderBy('first_name')
             ->get();
-            
+
         $types = LeaveType::all();
-        
+
         return view('hr.leaves.create', compact('employees', 'types'));
     }
 
@@ -79,9 +79,19 @@ class LeaveController extends Controller
         $leave->leave_remarks = $request->leave_remarks;
         $leave->submission_date = now();
         $leave->leave_status_id = 1; // Pending
-        
-        // Calculate total days excluding weekends (Sat/Sun)
-        $leave->total_days = $this->calculateTotalDays($request->start_date, $request->end_date);
+
+        $totalDays = $this->calculateTotalDays($request->start_date, $request->end_date);
+        $employee = Employee::find($request->employee_id);
+
+        if (!$employee || $employee->leaves_open_balance < $totalDays) {
+            return redirect()->back()->with('error', "You don't have enough balance");
+        }
+
+        if (!$this->checkStaffingLevel($request->start_date, $request->end_date)) {
+            return redirect()->back()->with('error', 'Cannot apply. Less than 70% employees would be present during this period.');
+        }
+
+        $leave->total_days = $totalDays;
 
         if ($request->hasFile('leave_attachment')) {
             $file = $request->file('leave_attachment');
@@ -106,8 +116,8 @@ class LeaveController extends Controller
 
         // Notify Employee
         \App\Services\NotificationService::send(
-            "A leave request has been created for you by HR.", 
-            "emp/leaves", 
+            "A leave request has been created for you by HR.",
+            "emp/leaves",
             $leave->employee_id
         );
 
@@ -125,7 +135,7 @@ class LeaveController extends Controller
         // 100 in request -> status 2 (Sent for approval)
         // 200 in request -> status 6 (Sent back to user)
         // Others used directly if provided
-        
+
         if ($newStatus == 100) {
             $leave->leave_status_id = 2; // Sent for approval
         } else if ($newStatus == 200) {
@@ -137,7 +147,7 @@ class LeaveController extends Controller
         $leave->save();
 
         $employee = Employee::find($leave->employee_id);
-        
+
         // System Log
         \App\Models\SystemLog::create([
             'related_table' => 'hr_employees_leaves',
@@ -169,7 +179,7 @@ class LeaveController extends Controller
 
                 // Notify Line Manager
                 \App\Services\NotificationService::send(
-                    "You have a pending leave approval request.", 
+                    "You have a pending leave approval request.",
                     "hr_approvals/list/", // Legacy path
                     $lineManagerId
                 );
@@ -178,12 +188,14 @@ class LeaveController extends Controller
 
         // Notify employee
         $statusMsg = "Your leave request status has been updated.";
-        if ($leave->leave_status_id == 2) $statusMsg = "Your leave application has been sent for approval.";
-        if ($leave->leave_status_id == 6) $statusMsg = "Your request is pending your action - " . $remark;
+        if ($leave->leave_status_id == 2)
+            $statusMsg = "Your leave application has been sent for approval.";
+        if ($leave->leave_status_id == 6)
+            $statusMsg = "Your request is pending your action - " . $remark;
 
         \App\Services\NotificationService::send(
-            $statusMsg, 
-            "emp/leaves", 
+            $statusMsg,
+            "emp/leaves",
             $leave->employee_id
         );
 
@@ -194,10 +206,10 @@ class LeaveController extends Controller
     {
         $startDate = \Carbon\Carbon::parse($start);
         $endDate = \Carbon\Carbon::parse($end);
-        
+
         $days = 0;
         $current = $startDate->copy();
-        
+
         while ($current <= $endDate) {
             // Laravel's Carbon dayOfWeek: 0 (Sunday) to 6 (Saturday)
             // Legacy JS: if (day !== 0 && day !== 6) { count++; }
@@ -206,7 +218,37 @@ class LeaveController extends Controller
             }
             $current->addDay();
         }
-        
+
         return $days;
+    }
+
+    private function checkStaffingLevel($startDate, $endDate, $excludeLeaveId = null)
+    {
+        $totalEmployees = Employee::where('is_deleted', 0)->where('is_hidden', 0)->count();
+        if ($totalEmployees == 0)
+            return true;
+
+        $activeStatusNames = ['Pending', 'Pending Approval', 'Approved'];
+        $activeStatusIds = \Illuminate\Support\Facades\DB::table('hr_employees_leave_status')
+            ->whereIn('leave_status_name', $activeStatusNames)
+            ->pluck('leave_status_id')
+            ->toArray();
+
+        $query = HrLeave::where(function ($q) use ($startDate, $endDate) {
+            $q->where('start_date', '<=', $endDate)
+                ->where('end_date', '>=', $startDate);
+        })->whereIn('leave_status_id', $activeStatusIds);
+
+        if ($excludeLeaveId) {
+            $query->where('leave_id', '!=', $excludeLeaveId);
+        }
+
+        $employeesOnLeave = $query->distinct('employee_id')->count('employee_id');
+
+        // Add 1 for the person currently applying
+        $expectedOnLeave = $employeesOnLeave + 1;
+        $expectedPresent = $totalEmployees - $expectedOnLeave;
+
+        return ($expectedPresent / $totalEmployees) >= 0.70;
     }
 }

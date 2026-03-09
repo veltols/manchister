@@ -414,6 +414,10 @@
                     <label class="premium-label">Join Date</label>
                     <input type="date" name="employee_join_date" value="{{ $employee->employee_join_date }}" class="premium-input w-full px-4 py-2.5 text-sm" required>
                 </div>
+                <div>
+                    <label class="premium-label">Leaves Open Balance</label>
+                    <input type="number" step="1" name="leaves_open_balance" value="{{ $employee->leaves_open_balance }}" class="premium-input w-full px-4 py-2.5 text-sm" required>
+                </div>
                 <div class="col-span-2">
                     <label class="premium-label">Department</label>
                     <select name="department_id" class="premium-input w-full px-4 py-2.5 text-sm">
