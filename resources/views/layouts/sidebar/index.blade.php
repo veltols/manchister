@@ -2,8 +2,11 @@
 
 <aside class="w-64 flex-shrink-0 flex flex-col shadow-2xl relative z-20 hidden md:flex sidebar-gradient-bg">
 
+    <!-- Decorative Pattern Overlay -->
+    <div class="absolute inset-0 z-0 opacity-10 pointer-events-none" style="background: url('{{ asset('images/pattern.png') }}') repeat; background-size: 200px;"></div>
+
     <!-- Decorative Orb -->
-    <div class="absolute bottom-0 left-0 right-0 h-1/2 pointer-events-none overflow-hidden">
+    <div class="absolute bottom-0 left-0 right-0 h-1/2 pointer-events-none overflow-hidden z-0">
         <div class="absolute bottom-8 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full opacity-20"
             style="background: radial-gradient(circle, rgba(255,255,255,0.6) 0%, transparent 70%); filter: blur(30px);">
         </div>

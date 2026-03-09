@@ -727,7 +727,7 @@
         <!-- Header -->
         <header
             class="h-24 flex items-center justify-between px-4 md:px-8 border-b border-slate-200 z-20 shadow-[0_4px_30px_rgba(0,30,50,0.06)] shrink-0 transition-all duration-300 relative"
-            style="background-color: #f8fafc; background-image: url('{{ asset('images/pattern.png') }}'); background-repeat: repeat;">
+            style="background-color: #f8fafc;">
 
             <div class="flex items-center gap-3 relative z-10">
                 <!-- Mobile Menu Toggle -->
