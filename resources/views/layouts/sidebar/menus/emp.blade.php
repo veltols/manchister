@@ -10,6 +10,12 @@
 
     // RC toggle only shown if at least one RC service is granted
     $hasAnyRcService = $canEqa || $canTraining || $canStrategy || $canOpsPlanning || $canSelfStudy;
+
+    // Check if employee has submitted feedback
+    $hasSubmittedFeedback = false;
+    if ($authUser && $authUser->employee) {
+        $hasSubmittedFeedback = \App\Models\FeedbackForm::where('employee_id', $authUser->employee->employee_id)->exists();
+    }
 @endphp
 
 <!-- Standard Menu Items -->
@@ -58,6 +64,16 @@
         </div>
         <span class="text-base font-semibold">Support</span>
     </a>
+
+    @if(!$hasSubmittedFeedback)
+        <a href="{{ route('emp.feedback.index') }}"
+            class="nav-item {{ request()->routeIs('emp.feedback.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
+            <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
+                <i class="fa-solid fa-comment-dots text-base"></i>
+            </div>
+            <span class="text-base font-semibold">Feedback</span>
+        </a>
+    @endif
 
     <a href="{{ route('emp.calendar.index') }}"
         class="nav-item {{ request()->routeIs('emp.calendar.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
