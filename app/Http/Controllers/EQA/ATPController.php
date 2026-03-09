@@ -15,6 +15,17 @@ class ATPController extends Controller
         $stt = $request->input('stt', '00');
         $query = Atp::with(['status', 'adder', 'emirate'])->orderBy('atp_id', 'desc');
 
+        // Only show ATPs assigned to the current EQA user
+        if (auth()->check() && auth()->user()->user_type === 'eqa') {
+            $user_id = auth()->user()->user_id ?? 0;
+            $query->whereExists(function ($q) use ($user_id) {
+                $q->select(DB::raw(1))
+                    ->from('atps_eqa_details')
+                    ->whereColumn('atps_eqa_details.atp_id', 'atps_list.atp_id')
+                    ->where('atps_eqa_details.assigned_to', $user_id);
+            });
+        }
+
         if ($stt != '00') {
             $query->where('atp_status_id', $stt);
         }
@@ -178,6 +189,17 @@ class ATPController extends Controller
         $perPage = $request->get('per_page', 20);
         $stt = $request->input('stt', '00');
         $query = Atp::with(['status', 'adder', 'emirate'])->orderBy('atp_id', 'desc');
+
+        // Only show ATPs assigned to the current EQA user
+        if (auth()->check() && auth()->user()->user_type === 'eqa') {
+            $user_id = auth()->user()->user_id ?? 0;
+            $query->whereExists(function ($q) use ($user_id) {
+                $q->select(DB::raw(1))
+                    ->from('atps_eqa_details')
+                    ->whereColumn('atps_eqa_details.atp_id', 'atps_list.atp_id')
+                    ->where('atps_eqa_details.assigned_to', $user_id);
+            });
+        }
 
         // Status Filtering (Legacy Parity)
         if ($stt != '00') {

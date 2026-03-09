@@ -1,0 +1,18 @@
+CREATE TABLE `atps_eqa_details` (
+  `eqa_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `atp_id` int(11) NOT NULL,
+  `eqa_visit_date` date DEFAULT NULL,
+  `visit_type` varchar(255) DEFAULT NULL,
+  `activity` varchar(255) DEFAULT NULL,
+  `visit_length` varchar(255) DEFAULT NULL,
+  `visit_scope` text DEFAULT NULL,
+  `visit_agenda` text DEFAULT NULL,
+  `visit_comment` text DEFAULT NULL,
+  `recommendation` varchar(255) DEFAULT NULL,
+  `accreditation_date` date DEFAULT NULL,
+  `general_comments` text DEFAULT NULL,
+  `action_plan` text DEFAULT NULL,
+  `details` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`details`)),
+  `criteria_data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`criteria_data`)),
+  PRIMARY KEY (`eqa_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci

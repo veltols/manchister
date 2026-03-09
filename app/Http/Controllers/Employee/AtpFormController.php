@@ -68,8 +68,7 @@ class AtpFormController extends Controller
                 ->where('atp_id', $atpId)
                 ->update([
                     'form_status' => $request->status,
-                    'rc_comment' => $request->rc_comment,
-                    'eqa_user_id' => $request->eqa_user_id ?? null
+                    'rc_comment' => $request->rc_comment
                 ]);
 
             // Update ATP Phase according to legacy logic
