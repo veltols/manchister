@@ -27,11 +27,11 @@ class DepartmentController extends Controller
     {
         $page = $request->get('page', 1);
         $perPage = $request->get('per_page', 15);
-        
+
         $departments = Department::with(['mainDepartment', 'lineManager'])
             ->orderBy('department_id', 'desc')
             ->paginate($perPage);
-        
+
         return response()->json([
             'success' => true,
             'data' => $departments->items(),
@@ -55,12 +55,15 @@ class DepartmentController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'department_code' => 'required|string|max:50',
-            'department_name' => 'required|string|max:255',
+            'department_code' => 'required|string|max:50|unique:employees_list_departments,department_code',
+            'department_name' => 'required|string|max:255|unique:employees_list_departments,department_name',
             'main_department_id' => 'nullable|integer',
             'line_manager_id' => 'nullable|exists:employees_list,employee_id',
             'user_type' => 'required|in:emp,hr,eqa',
             'log_remark' => 'nullable|string',
+        ], [
+            'department_name.unique' => 'This department already exists.',
+            'department_code.unique' => 'This department code already exists.',
         ]);
 
         $dept = new Department();
@@ -81,12 +84,15 @@ class DepartmentController extends Controller
         $dept = Department::findOrFail($id);
 
         $request->validate([
-            'department_code' => 'required|string|max:50',
-            'department_name' => 'required|string|max:255',
+            'department_code' => 'required|string|max:50|unique:employees_list_departments,department_code,' . $id . ',department_id',
+            'department_name' => 'required|string|max:255|unique:employees_list_departments,department_name,' . $id . ',department_id',
             'main_department_id' => 'nullable|integer',
             'line_manager_id' => 'nullable|exists:employees_list,employee_id',
             'user_type' => 'required|in:emp,hr,eqa',
             'log_remark' => 'required|string',
+        ], [
+            'department_name.unique' => 'This department already exists.',
+            'department_code.unique' => 'This department code already exists.',
         ]);
 
         $dept->department_code = $request->department_code;
