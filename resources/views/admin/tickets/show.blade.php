@@ -14,11 +14,26 @@
                 <span>Back to Tickets</span>
             </a>
             
-            <button onclick="openModal('updateStatusModal')"
-                class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200 flex items-center gap-2">
-                <i class="fa-solid fa-pen text-sm"></i>
-                <span>Update Status / Assign</span>
-            </button>
+            @php
+                $statusOpen = \App\Models\SupportTicketStatus::OPEN;
+                $statusInProgress = \App\Models\SupportTicketStatus::IN_PROGRESS;
+                $statusResolved = \App\Models\SupportTicketStatus::RESOLVED;
+                $statusCancelled = \App\Models\SupportTicketStatus::CANCELLED;
+            @endphp
+
+            @if($ticket->status_id == $statusResolved)
+                <button onclick="reopenTicket()"
+                    class="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 hover:scale-105 transition-all duration-200 flex items-center gap-2">
+                    <i class="fa-solid fa-rotate-left text-sm"></i>
+                    <span>Reopen Ticket</span>
+                </button>
+            @else
+                <button onclick="openModal('updateStatusModal')"
+                    class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200 flex items-center gap-2">
+                    <i class="fa-solid fa-pen text-sm"></i>
+                    <span>Update Status / Assign</span>
+                </button>
+            @endif
         </div>
 
         <!-- Premium Hero Banner -->
@@ -205,11 +220,16 @@
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">New Status</label>
                         <select name="status_id" class="premium-input w-full px-4 py-3 text-sm" required>
-                             @foreach(App\Models\SupportTicketStatus::all() as $st)
-                                <option value="{{ $st->status_id }}" {{ $ticket->status_id == $st->status_id ? 'selected' : '' }}>
-                                    {{ $st->status_name }}
-                                </option>
-                            @endforeach
+                            <option value="">Select Status...</option>
+                            @if($ticket->status_id == $statusOpen)
+                                <option value="{{ $statusInProgress }}">In Progress</option>
+                                <option value="{{ $statusCancelled }}">Cancelled</option>
+                            @elseif($ticket->status_id == $statusInProgress)
+                                <option value="{{ $statusResolved }}">Resolved</option>
+                                <option value="{{ $statusCancelled }}">Cancelled</option>
+                            @elseif($ticket->status_id == $statusCancelled)
+                                <option value="{{ $statusOpen }}">Reopen (Move to Open)</option>
+                            @endif
                         </select>
                     </div>
 
@@ -245,4 +265,38 @@
             </form>
         </div>
     </div>
+
+    <!-- Reopen Modal (Hidden Form) -->
+    <form id="reopenForm" action="{{ route('admin.tickets.update_status', $ticket->ticket_id) }}" method="POST" style="display: none;">
+        @csrf
+        <input type="hidden" name="status_id" value="{{ $statusOpen }}">
+        <input type="hidden" name="ticket_remarks" value="Ticket reopened by Admin.">
+    </form>
+    @push('scripts')
+        <script>
+            function reopenTicket() {
+                Swal.fire({
+                    title: 'Reopen Ticket?',
+                    text: 'Are you sure you want to reopen this ticket? This will move it back to Open status.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#004F68',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Yes, Reopen it!',
+                    cancelButtonText: 'Cancel',
+                    reverseButtons: true,
+                    background: '#ffffff',
+                    customClass: {
+                        popup: 'rounded-3xl border-0 shadow-2xl',
+                        confirmButton: 'px-6 py-3 rounded-xl font-bold',
+                        cancelButton: 'px-6 py-3 rounded-xl font-bold'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('reopenForm').submit();
+                    }
+                });
+            }
+        </script>
+    @endpush
 @endsection

@@ -439,6 +439,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/assets/{id}/print', [App\Http\Controllers\Admin\AssetController::class, 'print'])->name('assets.print');
         Route::post('/assets/{id}/assign', [App\Http\Controllers\Admin\AssetController::class, 'assign'])->name('assets.assign');
         Route::post('/assets/{id}/status', [App\Http\Controllers\Admin\AssetController::class, 'updateStatus'])->name('assets.update_status');
+        Route::post('/assets/{id}/description', [App\Http\Controllers\Admin\AssetController::class, 'updateDescription'])->name('assets.update_description');
         Route::get('/assets/data', [App\Http\Controllers\Admin\AssetController::class, 'getData'])->name('assets.data');
 
         // Users
@@ -453,6 +454,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/users/{id}/update-service', [App\Http\Controllers\Admin\UserController::class, 'updateService'])->name('users.update-service');
         Route::post('/users/{id}/assign-asset', [App\Http\Controllers\Admin\UserController::class, 'assignAsset'])->name('users.assign-asset');
         Route::post('/users/{id}/revoke-asset', [App\Http\Controllers\Admin\UserController::class, 'revokeAsset'])->name('users.revoke-asset');
+        Route::post('/users/{id}/update-login-id', [App\Http\Controllers\Admin\UserController::class, 'updateLoginId'])->name('users.update-login-id');
 
         // Settings (Dynamics Lists)
         Route::get('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');

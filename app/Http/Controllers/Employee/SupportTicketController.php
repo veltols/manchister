@@ -168,7 +168,33 @@ class SupportTicketController extends Controller
         $employeeId = $user->employee ? $user->employee->employee_id : 0;
 
         $ticket = SupportTicket::findOrFail($id);
-        $ticket->status_id = $request->status_id;
+        $currentStatusId = (int)$ticket->status_id;
+        $newStatusId = (int)$request->status_id;
+
+        // Constants from Model
+        $statusOpen = \App\Models\SupportTicketStatus::OPEN;
+        $statusInProgress = \App\Models\SupportTicketStatus::IN_PROGRESS;
+        $statusResolved = \App\Models\SupportTicketStatus::RESOLVED;
+        $statusCancelled = \App\Models\SupportTicketStatus::CANCELLED;
+
+        // Validation Rules
+        // b. You should not change ticket from open to resolved directly
+        if ($currentStatusId == $statusOpen && $newStatusId == $statusResolved) {
+            return redirect()->back()->with('error', 'Tickets cannot be moved from Open to Resolved directly. Please set to In Progress first.');
+        }
+
+        // c. You should not change ticket status from closed to in progress
+        if ($currentStatusId == $statusResolved && $newStatusId == $statusInProgress) {
+            return redirect()->back()->with('error', 'Resolved tickets cannot be moved to In Progress. Please Reopen the ticket first if needed.');
+        }
+
+        $ticket->status_id = $newStatusId;
+        
+        // Set end date if resolved
+        if ($newStatusId == $statusResolved) {
+            $ticket->ticket_end_date = now();
+        }
+
         $ticket->save();
 
         // Create Log

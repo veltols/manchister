@@ -76,7 +76,10 @@
                 <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Account Actions</h3>
                 <div class="space-y-3">
                     <button onclick="openModal('permissionsModal')" class="w-full py-2.5 px-4 rounded-xl bg-slate-50 text-slate-600 font-semibold hover:bg-slate-100 hover:text-slate-800 transition-colors text-sm flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-shield-halved"></i> Permissions
+                        <i class="fa-solid fa-shield-halved"></i> Services
+                    </button>
+                    <button onclick="openModal('changeLoginIdModal')" class="w-full py-2.5 px-4 rounded-xl bg-indigo-50 text-indigo-600 font-semibold hover:bg-indigo-100 hover:text-indigo-800 transition-colors text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-envelope"></i> Change Login ID
                     </button>
                     <button onclick="openModal('resetPasswordModal')" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white font-semibold shadow-md hover:shadow-amber-200/50 hover:scale-[1.02] transition-all text-sm flex items-center justify-center gap-2 border border-white/10">
                         <i class="fa-solid fa-key"></i> Reset Password
@@ -89,14 +92,10 @@
                             <i class="fa-solid fa-ban"></i> Deactivate User
                         </button>
                     @else
-                        <!-- Activate Form (Direct) -->
-                        <form id="activateUserForm" action="{{ route('admin.users.update-status', $user->employee_id) }}" method="POST">
-                            @csrf
-                            <input type="hidden" name="status" value="1">
-                            <button type="button" onclick="confirmActivation()" class="w-full py-2.5 px-4 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-colors text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-emerald-200">
-                                <i class="fa-solid fa-check"></i> Activate User
-                            </button>
-                        </form>
+                        <!-- Activate Button (Opens Modal) -->
+                        <button onclick="openModal('activateUserModal')" class="w-full py-2.5 px-4 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-colors text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-emerald-200">
+                            <i class="fa-solid fa-check"></i> Activate User
+                        </button>
                     @endif
                 </div>
             </div>
@@ -115,7 +114,7 @@
                     <button @click="activeTab = 'services'"
                         :class="activeTab === 'services' ? 'premium-button from-indigo-600 to-purple-600 text-white shadow-md' : 'bg-white text-slate-500 hover:bg-slate-100'"
                         class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300">
-                        <i class="fa-solid fa-shield-halved mr-1"></i> Permissions
+                        Services
                     </button>
                     <button @click="activeTab = 'logs'"
                         :class="activeTab === 'logs' ? 'premium-button from-indigo-600 to-purple-600 text-white shadow-md' : 'bg-white text-slate-500 hover:bg-slate-100'"
@@ -273,43 +272,116 @@
                             </div>
                         </div>
 
-                        @if($allServices->count() > 0)
-                            <div class="grid grid-cols-1 gap-3" id="servicesGrid">
-                                @foreach($allServices as $service)
-                                    @php
-                                        $isEnabled = in_array($service->service_id, $enabledServiceIds);
-                                        $sid = $service->service_id;
-                                    @endphp
-                                    <div class="srv-card {{ $isEnabled ? 'is-enabled' : '' }}" id="srv-card-{{ $sid }}">
+                        @php
+                            $categoryMap = [
+                                'External Services' => ['Training Providers Management', 'Learner Affairs', 'Claim Certificate'],
+                                'Strategy Services' => ['Strategy Management', 'Operational Planning', 'Self-Studies'],
+                                'EQA Services'      => ['All EQA Services']
+                            ];
+                        @endphp
 
-                                        {{-- Left: Icon + Text --}}
-                                        <div class="flex items-center gap-3 flex-1 min-w-0">
-                                            <div class="srv-icon {{ $isEnabled ? 'on' : 'off' }}" id="srv-icon-{{ $sid }}">
-                                                <i class="fa-solid fa-layer-group"></i>
+                        @if($allServices->count() > 0)
+                            <div class="space-y-8" id="servicesGrid">
+                                @foreach($categoryMap as $catTitle => $titles)
+                                    @php
+                                        $catServices = $allServices->filter(function($s) use ($titles) {
+                                            $cleanS = strtolower(trim($s->service_title));
+                                            foreach($titles as $t) {
+                                                if(strtolower(trim($t)) == $cleanS) return true;
+                                            }
+                                            return false;
+                                        });
+                                    @endphp
+
+                                    @if($catServices->count() > 0)
+                                        <div>
+                                            <div class="flex items-center gap-3 mb-4">
+                                                <div class="h-6 w-1 bg-gradient-brand rounded-full"></div>
+                                                <h4 class="text-sm font-bold text-slate-800 uppercase tracking-widest">{{ $catTitle }}</h4>
                                             </div>
-                                            <div class="min-w-0">
-                                                <p class="font-bold text-slate-800 text-sm truncate">{{ $service->service_title }}</p>
-                                                <div class="flex items-center gap-2 mt-0.5">
-                                                    <span class="srv-badge {{ $isEnabled ? 'on' : 'off' }}" id="srv-badge-{{ $sid }}">
-                                                        {{ $isEnabled ? 'Active' : 'Inactive' }}
-                                                    </span>
-                                                    <div class="srv-saving-dot" id="srv-dot-{{ $sid }}"></div>
-                                                </div>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                @foreach($catServices as $service)
+                                                    @php
+                                                        $isEnabled = in_array($service->service_id, $enabledServiceIds);
+                                                        $sid = $service->service_id;
+                                                    @endphp
+                                                    <div class="srv-card {{ $isEnabled ? 'is-enabled' : '' }}" id="srv-card-{{ $sid }}">
+                                                        {{-- Left: Icon + Text --}}
+                                                        <div class="flex items-center gap-3 flex-1 min-w-0">
+                                                            <div class="srv-icon {{ $isEnabled ? 'on' : 'off' }}" id="srv-icon-{{ $sid }}">
+                                                                <i class="fa-solid fa-layer-group"></i>
+                                                            </div>
+                                                            <div class="min-w-0">
+                                                                <p class="font-bold text-slate-800 text-sm truncate">{{ $service->service_title }}</p>
+                                                                <div class="flex items-center gap-2 mt-0.5">
+                                                                    <span class="srv-badge {{ $isEnabled ? 'on' : 'off' }}" id="srv-badge-{{ $sid }}">
+                                                                        {{ $isEnabled ? 'Active' : 'Inactive' }}
+                                                                    </span>
+                                                                    <div class="srv-saving-dot" id="srv-dot-{{ $sid }}"></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {{-- Right: Toggle --}}
+                                                        <label class="srv-toggle" id="srv-toggle-{{ $sid }}" title="{{ $isEnabled ? 'Click to disable' : 'Click to enable' }}">
+                                                            <input
+                                                                type="checkbox"
+                                                                id="srv-chk-{{ $sid }}"
+                                                                {{ $isEnabled ? 'checked' : '' }}
+                                                                onchange="toggleService({{ $sid }}, this.checked)">
+                                                            <span class="srv-slider"></span>
+                                                        </label>
+                                                    </div>
+                                                @endforeach
                                             </div>
                                         </div>
-
-                                        {{-- Right: Toggle --}}
-                                        <label class="srv-toggle" id="srv-toggle-{{ $sid }}" title="{{ $isEnabled ? 'Click to disable' : 'Click to enable' }}">
-                                            <input
-                                                type="checkbox"
-                                                id="srv-chk-{{ $sid }}"
-                                                {{ $isEnabled ? 'checked' : '' }}
-                                                onchange="toggleService({{ $sid }}, this.checked)">
-                                            <span class="srv-slider"></span>
-                                        </label>
-
-                                    </div>
+                                    @endif
                                 @endforeach
+
+                                @php
+                                    $otherServices = $allServices->filter(function($s) use ($categoryMap) {
+                                        $allGroupedTitles = collect($categoryMap)->flatten()->map(fn($t) => strtolower(trim($t)))->toArray();
+                                        $cleanS = strtolower(trim($s->service_title));
+                                        return !in_array($cleanS, $allGroupedTitles);
+                                    });
+                                @endphp
+
+                                @if($otherServices->count() > 0)
+                                    <div>
+                                        <div class="flex items-center gap-3 mb-4">
+                                            <div class="h-6 w-1 bg-slate-300 rounded-full"></div>
+                                            <h4 class="text-sm font-bold text-slate-500 uppercase tracking-widest">Other Services</h4>
+                                        </div>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            @foreach($otherServices as $service)
+                                                @php
+                                                    $isEnabled = in_array($service->service_id, $enabledServiceIds);
+                                                    $sid = $service->service_id;
+                                                @endphp
+                                                <div class="srv-card {{ $isEnabled ? 'is-enabled' : '' }}" id="srv-card-{{ $sid }}">
+                                                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                                                        <div class="srv-icon {{ $isEnabled ? 'on' : 'off' }}" id="srv-icon-{{ $sid }}">
+                                                            <i class="fa-solid fa-layer-group"></i>
+                                                        </div>
+                                                        <div class="min-w-0">
+                                                            <p class="font-bold text-slate-800 text-sm truncate">{{ $service->service_title }}</p>
+                                                            <div class="flex items-center gap-2 mt-0.5">
+                                                                <span class="srv-badge {{ $isEnabled ? 'on' : 'off' }}" id="srv-badge-{{ $sid }}">
+                                                                    {{ $isEnabled ? 'Active' : 'Inactive' }}
+                                                                </span>
+                                                                <div class="srv-saving-dot" id="srv-dot-{{ $sid }}"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <label class="srv-toggle" id="srv-toggle-{{ $sid }}">
+                                                        <input type="checkbox" id="srv-chk-{{ $sid }}" {{ $isEnabled ? 'checked' : '' }} onchange="toggleService({{ $sid }}, this.checked)">
+                                                        <span class="srv-slider"></span>
+                                                    </label>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
                         @else
                             <div class="text-center py-16">
@@ -430,7 +502,7 @@
         <div class="modal-content max-w-lg p-6">
             <div class="flex justify-between items-center mb-6">
                 <div>
-                    <h2 class="text-2xl font-display font-bold text-premium">System Permissions</h2>
+                    <h2 class="text-2xl font-display font-bold text-premium">System Services</h2>
                     <p class="text-slate-500 text-sm">Manage group and committee access</p>
                 </div>
                 <button onclick="closeModal('permissionsModal')" class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400">
@@ -459,14 +531,14 @@
 
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Log Remark</label>
-                        <textarea name="log_remark" required rows="3" class="premium-input w-full px-4 py-3" placeholder="Reason for permission change..."></textarea>
+                        <textarea name="log_remark" required rows="3" class="premium-input w-full px-4 py-3" placeholder="Reason for change..."></textarea>
                     </div>
                 </div>
 
                 <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-100">
                     <button type="button" onclick="closeModal('permissionsModal')" class="px-6 py-2.5 rounded-xl font-bold text-slate-400 hover:text-slate-600 transition-colors">Cancel</button>
                     <button type="submit" class="px-6 py-2.5 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:scale-105 transition-all border border-white/10">
-                        Update Permissions
+                        Update Services
                     </button>
                 </div>
             </form>
@@ -551,7 +623,97 @@
             </form>
         </div>
     </div>
-    <!-- Deactivate User Modal -->
+    <!-- Change Login ID Modal -->
+    <div id="changeLoginIdModal" class="modal">
+        <div class="modal-backdrop" onclick="closeModal('changeLoginIdModal')"></div>
+        <div class="modal-content max-w-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-display font-bold text-premium">Change Login ID</h2>
+                    <p class="text-slate-500 text-sm">Update the system login email for {{ $user->first_name }}</p>
+                </div>
+                <button onclick="closeModal('changeLoginIdModal')" class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form action="{{ route('admin.users.update-login-id', $user->employee_id) }}" method="POST">
+                @csrf
+                <div class="space-y-4">
+                    <div class="p-4 rounded-xl bg-amber-50 border border-amber-100 flex gap-3 text-amber-700">
+                        <i class="fa-solid fa-circle-info mt-1"></i>
+                        <p class="text-sm">Changing the login ID will update the user's login email across the system. Current: <strong>{{ $user->employee_email }}</strong></p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">New Login Email <span class="text-rose-500">*</span></label>
+                        <input type="text" name="new_email" required class="premium-input w-full px-4 py-3" placeholder="e.g. user@example.com">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Log Remark / Reason <span class="text-rose-500">*</span></label>
+                        <textarea name="log_remark" required rows="3" class="premium-input w-full px-4 py-3" placeholder="Reason for changing login ID..."></textarea>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('changeLoginIdModal')" class="px-6 py-2.5 rounded-xl font-bold text-slate-400 hover:text-slate-600 transition-colors">Cancel</button>
+                    <button type="submit" class="px-6 py-2.5 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:scale-105 transition-all border border-white/10">
+                        <i class="fa-solid fa-save mr-2"></i>Update Login ID
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Activate User Modal -->
+    <div id="activateUserModal" class="modal">
+        <div class="modal-backdrop" onclick="closeModal('activateUserModal')"></div>
+        <div class="modal-content max-w-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-display font-bold text-emerald-600">Activate User</h2>
+                    <p class="text-slate-500 text-sm">Restore access for {{ $user->first_name }}</p>
+                </div>
+                <button onclick="closeModal('activateUserModal')" class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form action="{{ route('admin.users.update-status', $user->employee_id) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="status" value="1">
+                
+                <div class="space-y-4">
+                    <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-100 flex gap-3 text-emerald-700">
+                        <i class="fa-solid fa-circle-check mt-1"></i>
+                        <p class="text-sm">This action will allow the user to log in again. Please provide a reason.</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Reason / Comment <span class="text-rose-500">*</span></label>
+                        <textarea name="log_remark" required rows="3" class="premium-input w-full px-4 py-3" placeholder="Reason for activation..."></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">
+                            <i class="fa-solid fa-paperclip text-indigo-500 mr-1"></i> Attachment <span class="text-slate-400 font-normal normal-case">(Optional)</span>
+                        </label>
+                        <input type="file" name="log_attachment" class="premium-input w-full px-4 py-3 text-sm">
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('activateUserModal')" class="px-6 py-2.5 rounded-xl font-bold text-slate-400 hover:text-slate-600 transition-colors">Cancel</button>
+                    <button type="submit" class="px-6 py-2.5 bg-emerald-600 text-white font-bold rounded-xl shadow-lg hover:bg-emerald-700 hover:scale-105 transition-all">
+                        Confirm Activation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="deactivateUserModal" class="modal">
         <div class="modal-backdrop" onclick="closeModal('deactivateUserModal')"></div>
         <div class="modal-content max-w-lg p-6">

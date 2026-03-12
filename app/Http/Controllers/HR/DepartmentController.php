@@ -10,10 +10,16 @@ use Illuminate\Support\Facades\Auth;
 
 class DepartmentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $departments = Department::with(['mainDepartment', 'lineManager'])
-            ->orderBy('department_id', 'desc')
+        $search = $request->get('search');
+        $query = Department::with(['mainDepartment', 'lineManager']);
+
+        if ($search) {
+            $query->where('department_name', 'LIKE', '%' . $search . '%');
+        }
+
+        $departments = $query->orderBy('department_id', 'desc')
             ->paginate(15);
 
         $employees = Employee::where('is_deleted', 0)->where('is_hidden', 0)->orderBy('first_name')->get();
@@ -27,9 +33,15 @@ class DepartmentController extends Controller
     {
         $page = $request->get('page', 1);
         $perPage = $request->get('per_page', 15);
+        $search = $request->get('search');
 
-        $departments = Department::with(['mainDepartment', 'lineManager'])
-            ->orderBy('department_id', 'desc')
+        $query = Department::with(['mainDepartment', 'lineManager']);
+
+        if ($search) {
+            $query->where('department_name', 'LIKE', '%' . $search . '%');
+        }
+
+        $departments = $query->orderBy('department_id', 'desc')
             ->paginate($perPage);
 
         return response()->json([
@@ -59,7 +71,6 @@ class DepartmentController extends Controller
             'department_name' => 'required|string|max:255|unique:employees_list_departments,department_name',
             'main_department_id' => 'nullable|integer',
             'line_manager_id' => 'nullable|exists:employees_list,employee_id',
-            'user_type' => 'required|in:emp,hr,eqa',
             'log_remark' => 'nullable|string',
         ], [
             'department_name.unique' => 'This department already exists.',
@@ -71,7 +82,7 @@ class DepartmentController extends Controller
         $dept->department_name = $request->department_name;
         $dept->main_department_id = $request->main_department_id == 0 ? 0 : $request->main_department_id;
         $dept->line_manager_id = $request->line_manager_id;
-        $dept->user_type = $request->user_type;
+        $dept->user_type = 'emp';
         $dept->save();
 
         $this->logAction($dept->department_id, 'Department_Added', $request->log_remark ?? '---');
@@ -88,7 +99,6 @@ class DepartmentController extends Controller
             'department_name' => 'required|string|max:255|unique:employees_list_departments,department_name,' . $id . ',department_id',
             'main_department_id' => 'nullable|integer',
             'line_manager_id' => 'nullable|exists:employees_list,employee_id',
-            'user_type' => 'required|in:emp,hr,eqa',
             'log_remark' => 'required|string',
         ], [
             'department_name.unique' => 'This department already exists.',
@@ -99,7 +109,6 @@ class DepartmentController extends Controller
         $dept->department_name = $request->department_name;
         $dept->main_department_id = $request->main_department_id == 0 ? 0 : $request->main_department_id;
         $dept->line_manager_id = $request->line_manager_id;
-        $dept->user_type = $request->user_type;
         $dept->save();
 
         $this->logAction($dept->department_id, 'Department_Updated', $request->log_remark);

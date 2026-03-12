@@ -11,9 +11,18 @@
 
         <!-- Header with Action Button -->
         <div class="flex items-center justify-between">
-            <div>
-                <h2 class="text-2xl font-display font-bold text-premium">Designations</h2>
-                <p class="text-sm text-slate-500 mt-1">{{ $designations->total() }} total designations</p>
+            <div class="flex items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-display font-bold text-premium">Designations</h2>
+                    <p class="text-sm text-slate-500 mt-1">{{ $designations->total() }} total designations</p>
+                </div>
+                <!-- Search Input -->
+                <div class="relative ml-4">
+                    <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" id="designationSearch" placeholder="Search by name..." 
+                        class="premium-input pl-11 pr-4 py-2.5 text-sm w-64 shadow-sm"
+                        value="{{ request('search') }}">
+                </div>
             </div>
             <button onclick="openModal('addDesignationModal')"
                 class="inline-flex items-center gap-2 px-6 py-3 premium-button bg-gradient-brand text-white font-semibold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
@@ -214,6 +223,11 @@
                 containerSelector: '#designations-container',
                 paginationSelector: '#designations-pagination',
                 perPage: 15,
+                getAdditionalParams: function() {
+                    return {
+                        search: document.getElementById('designationSearch').value
+                    };
+                },
                 renderCallback: function(designations) {
                     const container = document.querySelector('#designations-container');
                     
@@ -277,6 +291,15 @@
                     total: {{ $designations->total() }}
                 });
             @endif
+
+            // Search Event Listener with Debounce
+            let searchTimer;
+            document.getElementById('designationSearch').addEventListener('keyup', function() {
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(() => {
+                    window.ajaxPagination.loadPage(1);
+                }, 300);
+            });
         </script>
     @endpush
 @endsection

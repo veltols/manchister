@@ -158,13 +158,31 @@ class SupportTicketController extends Controller
         ]);
 
         $ticket = SupportTicket::findOrFail($id);
-        $oldStatus = $ticket->status_id;
-        $ticket->status_id = $request->status_id;
+        $currentStatusId = (int)$ticket->status_id;
+        $newStatusId = (int)$request->status_id;
+
+        // Constants from Model
+        $statusOpen = \App\Models\SupportTicketStatus::OPEN;
+        $statusInProgress = \App\Models\SupportTicketStatus::IN_PROGRESS;
+        $statusResolved = \App\Models\SupportTicketStatus::RESOLVED;
+
+        // Validation Rules
+        // b. You should not change ticket from open to resolved directly
+        if ($currentStatusId == $statusOpen && $newStatusId == $statusResolved) {
+            return redirect()->back()->with('error', 'Tickets cannot be moved from Open to Resolved directly. Please set to In Progress first.');
+        }
+
+        // c. You should not change ticket status from closed to in progress
+        if ($currentStatusId == $statusResolved && $newStatusId == $statusInProgress) {
+            return redirect()->back()->with('error', 'Resolved tickets cannot be moved to In Progress. Please Reopen the ticket first if needed.');
+        }
+
+        $ticket->status_id = $newStatusId;
 
         $logAction = "Status Updated";
-        if ($ticket->status_id == 2 && $oldStatus != 2)
+        if ($newStatusId == $statusInProgress && $currentStatusId != $statusInProgress)
             $logAction = "Ticket In Progress";
-        if ($ticket->status_id == 3 && $oldStatus != 3) {
+        if ($newStatusId == $statusResolved && $currentStatusId != $statusResolved) {
             $logAction = "Ticket Resolved";
             $ticket->ticket_end_date = now();
         }
@@ -192,7 +210,7 @@ class SupportTicketController extends Controller
         // Notifications
         // Notify Requester
         \App\Services\NotificationService::send(
-            "Your ticket status has been updated to " . $ticket->status->status_name . ", REF: " . $ticket->ticket_ref,
+            "Your ticket status has been updated to " . ($ticket->status ? $ticket->status->status_name : 'Updated') . ", REF: " . $ticket->ticket_ref,
             "tickets/list",
             $ticket->added_by
         );

@@ -38,7 +38,8 @@ class UserController extends Controller
             'first_name' => 'required|string',
             'last_name' => 'required|string',
             'department_id' => 'required|exists:employees_list_departments,department_id',
-            'employee_email' => 'required|unique:employees_list,employee_email',
+            'user_type' => 'required|in:emp,hr,eqa',
+            'employee_email' => 'nullable|unique:employees_list,employee_email',
             'password' => 'required|string|min:6',
         ]);
 
@@ -61,9 +62,8 @@ class UserController extends Controller
         $pass->is_active = 1;
         $pass->save();
 
-        // 3. Get User Type from Department
-        $dept = Department::find($request->department_id);
-        $userType = $dept ? $dept->user_type : 'NA';
+        // 3. Use User Type from Request
+        $userType = $request->user_type;
 
         // 4. Create Credentials Record
         $cred = new \App\Models\EmployeeCred();
@@ -123,23 +123,21 @@ class UserController extends Controller
             $logRemark = "Status changed to " . ($newStatus ? 'Active' : 'Inactive');
             $action = $newStatus ? 'User Activated' : 'User Deactivated';
 
-            // Specific logic for Deactivation
-            if ($newStatus == 0) {
-                $request->validate([
-                    'log_remark' => 'required|string',
-                    'log_attachment' => 'nullable|file|max:10240'
-                ]);
-                $logRemark = $request->log_remark;
+            // Validate mandatory remark and optional attachment
+            $request->validate([
+                'log_remark' => 'required|string',
+                'log_attachment' => 'nullable|file|max:10240'
+            ]);
+            $logRemark = $request->log_remark;
 
-                // Handle Attachment
-                if ($request->hasFile('log_attachment')) {
-                    $file = $request->file('log_attachment');
-                    $filename = 'deactivate_' . time() . '_' . $id . '.' . $file->getClientOriginalExtension();
-                    $file->move(public_path('uploads/admin_logs'), $filename);
+            // Handle Attachment
+            if ($request->hasFile('log_attachment')) {
+                $file = $request->file('log_attachment');
+                $filename = ($newStatus == 1 ? 'activate_' : 'deactivate_') . time() . '_' . $id . '.' . $file->getClientOriginalExtension();
+                $file->move(public_path('uploads/admin_logs'), $filename);
 
-                    // Append attachment link to remark
-                    $logRemark .= "\n[Attachment: uploads/admin_logs/$filename]";
-                }
+                // Append attachment link to remark
+                $logRemark .= "\n[Attachment: uploads/admin_logs/$filename]";
             }
 
             $systemUser->is_active = $newStatus;
@@ -254,6 +252,41 @@ class UserController extends Controller
         $this->logAction($id, 'Asset Revoked', "Asset #{$asset->asset_ref} revoked. " . $request->log_remark);
 
         return redirect()->back()->with('success', "Asset revoked successfully.");
+    }
+
+    public function updateLoginId(Request $request, $id)
+    {
+        $request->validate([
+            'new_email' => 'required|string|unique:employees_list,employee_email,'.$id.',employee_id|unique:users_list,user_email,'.$id.',user_id',
+            'log_remark' => 'required|string'
+        ]);
+
+        $user = Employee::findOrFail($id);
+        $systemUser = \App\Models\User::where('user_id', $id)->first();
+
+        $oldEmail = $user->employee_email;
+        $newEmail = $request->new_email;
+
+        DB::beginTransaction();
+        try {
+            // Update Employee
+            $user->employee_email = $newEmail;
+            $user->save();
+
+            // Update System User
+            if ($systemUser) {
+                $systemUser->user_email = $newEmail;
+                $systemUser->save();
+            }
+
+            $this->logAction($id, 'Login ID Updated', "Updated from {$oldEmail} to {$newEmail}. Reason: " . $request->log_remark);
+
+            DB::commit();
+            return redirect()->back()->with('success', "Login ID updated successfully.");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', "Failed to update Login ID: " . $e->getMessage());
+        }
     }
 
     private function logAction($refId, $action, $remark)

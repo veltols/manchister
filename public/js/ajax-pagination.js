@@ -9,6 +9,7 @@ class AjaxPagination {
         this.containerSelector = config.containerSelector;
         this.paginationSelector = config.paginationSelector;
         this.renderCallback = config.renderCallback;
+        this.getAdditionalParams = config.getAdditionalParams || (() => ({}));
         this.perPage = config.perPage || 15;
         this.currentPage = 1;
         this.isLoading = false;
@@ -46,6 +47,14 @@ class AjaxPagination {
             url.searchParams.set('page', page);
             url.searchParams.set('per_page', this.perPage);
 
+            // Add additional params (like search filters)
+            const params = this.getAdditionalParams();
+            Object.keys(params).forEach(key => {
+                if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+                    url.searchParams.set(key, params[key]);
+                }
+            });
+
             const response = await fetch(url);
             const result = await response.json();
 
@@ -60,7 +69,18 @@ class AjaxPagination {
                 if (updateHistory) {
                     const url = new URL(window.location);
                     url.searchParams.set('page', page);
-                    window.history.pushState({ page }, '', url);
+
+                    // Sync additional params to URL
+                    const params = this.getAdditionalParams();
+                    Object.keys(params).forEach(key => {
+                        if (params[key]) {
+                            url.searchParams.set(key, params[key]);
+                        } else {
+                            url.searchParams.delete(key);
+                        }
+                    });
+
+                    window.history.pushState({ page, params }, '', url);
                 }
 
                 // Scroll to top smoothly

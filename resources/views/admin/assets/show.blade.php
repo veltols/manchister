@@ -14,11 +14,18 @@
                 <span>Back to Assets</span>
             </a>
             
-            <button onclick="openModal('manageAssetModal')"
-                class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200 flex items-center gap-2">
-                <i class="fa-solid fa-sliders text-sm"></i>
-                <span>Manage Asset</span>
-            </button>
+            <div class="flex gap-2">
+                <button onclick="openModal('assignModal')"
+                    class="px-6 py-3 bg-amber-500 text-white font-bold rounded-xl shadow-lg hover:shadow-amber-500/40 hover:scale-105 transition-all duration-200 flex items-center gap-2">
+                    <i class="fa-solid fa-user-plus text-sm"></i>
+                    <span>Assign Asset</span>
+                </button>
+                <button onclick="openModal('statusModal')"
+                    class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200 flex items-center gap-2">
+                    <i class="fa-solid fa-arrows-rotate text-sm"></i>
+                    <span>Update Status</span>
+                </button>
+            </div>
         </div>
 
         <!-- Premium Hero Banner -->
@@ -135,10 +142,17 @@
                     <div x-show="activeTab === 'details'" class="animate-fade-in-up space-y-8">
                         <div class="premium-card p-1">
                             <div class="bg-indigo-50/50 p-8 rounded-[1.25rem]">
-                                <h3 class="flex items-center gap-2 text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">
-                                    <i class="fa-solid fa-align-left text-brand"></i>
-                                    Asset Description
-                                </h3>
+                                <div class="flex items-center justify-between mb-6">
+                                    <h3 class="flex items-center gap-2 text-sm font-bold text-slate-400 uppercase tracking-widest">
+                                        <i class="fa-solid fa-align-left text-brand"></i>
+                                        Asset Description
+                                    </h3>
+                                    <button onclick="openModal('editDescriptionModal')"
+                                        class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                                        title="Edit Description">
+                                        <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                    </button>
+                                </div>
                                 <div class="prose prose-slate max-w-none prose-p:font-medium prose-p:text-slate-600">
                                     {!! nl2br(e($asset->asset_description)) !!}
                                 </div>
@@ -240,9 +254,13 @@
                             <i class="fa-solid fa-list-check opacity-50"></i>
                             <span class="text-[10px] font-bold uppercase tracking-wider">All Assets</span>
                         </a>
-                        <button onclick="openModal('manageAssetModal')" class="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex flex-col items-center gap-2 text-center text-white">
+                        <button onclick="openModal('assignModal')" class="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex flex-col items-center gap-2 text-center text-white">
+                            <i class="fa-solid fa-user-plus opacity-50"></i>
+                            <span class="text-[10px] font-bold uppercase tracking-wider">Assign</span>
+                        </button>
+                        <button onclick="openModal('statusModal')" class="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex flex-col items-center gap-2 text-center text-white">
                             <i class="fa-solid fa-arrows-rotate opacity-50"></i>
-                            <span class="text-[10px] font-bold uppercase tracking-wider">Update</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider">Status</span>
                         </button>
                     </div>
                 </div>
@@ -250,43 +268,26 @@
         </div>
     </div>
 
-    <!-- Manage Asset Modal (Combined Status & Assign) -->
-    <div id="manageAssetModal" class="modal text-slate-900">
-        <div class="modal-backdrop" onclick="closeModal('manageAssetModal')"></div>
+    <!-- Assign Modal -->
+    <div id="assignModal" class="modal text-slate-900">
+        <div class="modal-backdrop" onclick="closeModal('assignModal')"></div>
         <div class="modal-content max-w-lg p-6">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-display font-bold text-premium">Manage Asset</h2>
-                <button onclick="closeModal('manageAssetModal')"
+                <h2 class="text-2xl font-display font-bold text-premium">Assign Asset</h2>
+                <button onclick="closeModal('assignModal')"
                     class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
                     <i class="fa-solid fa-times text-xl"></i>
                 </button>
             </div>
 
-            <div class="mb-6 p-4 bg-amber-50 rounded-xl border border-amber-100">
-                <p class="text-xs font-semibold text-amber-700 leading-relaxed">
-                    <i class="fa-solid fa-circle-info mr-1"></i>
-                    Update the asset's current state or change the person it's assigned to.
-                </p>
-            </div>
-
-            <form action="{{ route('admin.assets.update_status', $asset->asset_id) }}" method="POST" id="manageForm">
+            <form action="{{ route('admin.assets.assign', $asset->asset_id) }}" method="POST">
                 @csrf
-                <div class="space-y-6">
+                <div class="space-y-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Change Status</label>
-                        <select name="status_id" class="premium-input w-full px-4 py-3 text-sm" required>
-                             @foreach($statuses as $st)
-                                <option value="{{ $st->status_id }}" {{ $asset->status_id == $st->status_id ? 'selected' : '' }}>
-                                    {{ $st->status_name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Assign To Employee</label>
-                        <select name="assigned_to" class="premium-input w-full px-4 py-3 text-sm">
-                            <option value="">-- Keep Current / In Stock --</option>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Assign To Employee</label>
+                        <select name="assigned_to" required class="premium-input w-full px-4 py-3 text-sm">
+                            <option value="">Select Employee...</option>
+                            <option value="0">Unequip (Return to Stock)</option>
                             @foreach($employees as $emp)
                                 <option value="{{ $emp->employee_id }}" {{ $asset->assigned_to == $emp->employee_id ? 'selected' : '' }}>
                                     {{ $emp->first_name }} {{ $emp->last_name }}
@@ -294,22 +295,97 @@
                             @endforeach
                         </select>
                     </div>
-
                     <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Update Remarks</label>
-                        <textarea name="remarks" class="premium-input w-full px-4 py-3 text-sm" rows="3"
-                            placeholder="Briefly describe the change..." required></textarea>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Remarks</label>
+                        <textarea name="remarks" rows="3" required class="premium-input w-full px-4 py-3 text-sm" placeholder="Assignment notes..."></textarea>
                     </div>
                 </div>
-
                 <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
-                    <button type="button" onclick="closeModal('manageAssetModal')"
+                    <button type="button" onclick="closeModal('assignModal')"
+                        class="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="px-6 py-3 bg-amber-500 text-white font-bold rounded-xl shadow-lg hover:shadow-amber-500/40 hover:scale-105 transition-all duration-200">
+                        Assign Asset
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Status Modal -->
+    <div id="statusModal" class="modal text-slate-900">
+        <div class="modal-backdrop" onclick="closeModal('statusModal')"></div>
+        <div class="modal-content max-w-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-display font-bold text-premium">Update Asset Status</h2>
+                <button onclick="closeModal('statusModal')"
+                    class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form action="{{ route('admin.assets.update_status', $asset->asset_id) }}" method="POST">
+                @csrf
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">New Status</label>
+                        <select name="status_id" required class="premium-input w-full px-4 py-3 text-sm">
+                            @foreach($statuses as $st)
+                                <option value="{{ $st->status_id }}" {{ $asset->status_id == $st->status_id ? 'selected' : '' }}>
+                                    {{ $st->status_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Remarks</label>
+                        <textarea name="remarks" rows="3" required class="premium-input w-full px-4 py-3 text-sm" placeholder="Enter status update notes..."></textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
+                    <button type="button" onclick="closeModal('statusModal')"
                         class="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">
                         Cancel
                     </button>
                     <button type="submit"
                         class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
-                        Save Changes
+                        Update Status
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Description Modal -->
+    <div id="editDescriptionModal" class="modal text-slate-900">
+        <div class="modal-backdrop" onclick="closeModal('editDescriptionModal')"></div>
+        <div class="modal-content max-w-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-display font-bold text-premium">Edit Asset Description</h2>
+                <button onclick="closeModal('editDescriptionModal')"
+                    class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form action="{{ route('admin.assets.update_description', $asset->asset_id) }}" method="POST">
+                @csrf
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Description</label>
+                        <textarea name="description" rows="6" required class="premium-input w-full px-4 py-3 text-sm" placeholder="Detailed description of the asset...">{{ $asset->asset_description }}</textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
+                    <button type="button" onclick="closeModal('editDescriptionModal')"
+                        class="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
+                        Update Description
                     </button>
                 </div>
             </form>

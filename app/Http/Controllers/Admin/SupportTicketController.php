@@ -161,18 +161,37 @@ class SupportTicketController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status_id' => 'required|integer', // 2=In Progress, 3=Resolved, 1=Reopen (mapped logic)
+            'status_id' => 'required|integer',
             'ticket_remarks' => 'required|string'
         ]);
 
         $ticket = SupportTicket::findOrFail($id);
         
-        $statusId = $request->status_id;
-        if($statusId == 100) { // Reopen code from legacy
-            $statusId = 1; // Open
+        $currentStatusId = (int)$ticket->status_id;
+        $newStatusId = (int)$request->status_id;
+
+        // Legacy Reopen logic handling
+        if($newStatusId == 100) { 
+            $newStatusId = \App\Models\SupportTicketStatus::OPEN; 
         }
 
-        $ticket->status_id = $statusId;
+        // Constants from Model
+        $statusOpen = \App\Models\SupportTicketStatus::OPEN;
+        $statusInProgress = \App\Models\SupportTicketStatus::IN_PROGRESS;
+        $statusResolved = \App\Models\SupportTicketStatus::RESOLVED;
+
+        // Validation Rules
+        // b. You should not change ticket from open to resolved directly
+        if ($currentStatusId == $statusOpen && $newStatusId == $statusResolved) {
+            return redirect()->back()->with('error', 'Tickets cannot be moved from Open to Resolved directly. Please set to In Progress first.');
+        }
+
+        // c. You should not change ticket status from closed to in progress
+        if ($currentStatusId == $statusResolved && $newStatusId == $statusInProgress) {
+            return redirect()->back()->with('error', 'Resolved tickets cannot be moved to In Progress. Please Reopen the ticket first if needed.');
+        }
+
+        $ticket->status_id = $newStatusId;
 
         // Handle Assignment Change if provided
         if ($request->has('assigned_to') && !empty($request->assigned_to)) {
@@ -181,16 +200,17 @@ class SupportTicketController extends Controller
         }
         
         // Set end date if resolved
-        if ($statusId == 3) {
+        if ($newStatusId == $statusResolved) {
             $ticket->ticket_end_date = now();
         }
         
         $ticket->save();
 
-        $actionName = match((int)$statusId) {
-            1 => 'Ticket Reopened',
-            2 => 'Status: In Progress',
-            3 => 'Ticket Resolved',
+        $actionName = match((int)$newStatusId) {
+            \App\Models\SupportTicketStatus::OPEN => 'Ticket Reopened',
+            \App\Models\SupportTicketStatus::IN_PROGRESS => 'Status: In Progress',
+            \App\Models\SupportTicketStatus::RESOLVED => 'Ticket Resolved',
+            \App\Models\SupportTicketStatus::CANCELLED => 'Ticket Cancelled',
             default => 'Status Update'
         };
 
@@ -198,7 +218,7 @@ class SupportTicketController extends Controller
 
         // Notify Requester
         \App\Services\NotificationService::send(
-            "Your ticket status has been updated to " . $ticket->status->status_name . ", REF: " . $ticket->ticket_ref, 
+            "Your ticket status has been updated to " . ($ticket->status ? $ticket->status->status_name : 'Updated') . ", REF: " . $ticket->ticket_ref, 
             "tickets/list", 
             $ticket->added_by
         );
@@ -206,7 +226,7 @@ class SupportTicketController extends Controller
         // Notify Assignee (if ticket is assigned)
         if ($ticket->assigned_to && $ticket->assigned_to != 0) {
              \App\Services\NotificationService::send(
-                "Ticket status updated to " . $ticket->status->status_name . ", REF: " . $ticket->ticket_ref, 
+                "Ticket status updated to " . ($ticket->status ? $ticket->status->status_name : 'Updated') . ", REF: " . $ticket->ticket_ref, 
                 "tickets/list", 
                 $ticket->assigned_to
             );

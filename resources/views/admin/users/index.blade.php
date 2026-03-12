@@ -242,20 +242,29 @@
                 @csrf
                 <div class="space-y-5">
                     
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="md:col-span-1">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">IQC ID</label>
                             <input type="text" name="employee_no" required class="premium-input w-full px-4 py-3 text-sm" placeholder="e.g. 1045">
                         </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">Department</label>
-                            <select name="department_id" required class="premium-input w-full px-4 py-3 text-sm">
-                                <option value="">Select Department...</option>
-                                @foreach($departments as $dept)
-                                    <option value="{{ $dept->department_id }}">{{ $dept->department_name }}</option>
-                                @endforeach
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">User Type</label>
+                            <select name="user_type" required class="premium-input w-full px-4 py-3 text-sm">
+                                <option value="emp">Employee (emp)</option>
+                                <option value="hr">HR (hr)</option>
+                                <option value="eqa">EQA (eqa)</option>
                             </select>
                         </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Department</label>
+                        <select name="department_id" required class="premium-input w-full px-4 py-3 text-sm">
+                            <option value="">Select Department...</option>
+                            @foreach($departments as $dept)
+                                <option value="{{ $dept->department_id }}">{{ $dept->department_name }}</option>
+                            @endforeach
+                        </select>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
@@ -273,8 +282,8 @@
                         <h3 class="text-sm font-bold text-indigo-900 mb-4">Login Credentials</h3>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">Email / Login ID</label>
-                                <input type="text" name="employee_email" required class="premium-input w-full px-4 py-3 text-sm" placeholder="john.doe@company.com">
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Login ID / Username <span class="text-slate-400 font-normal">(Optional)</span></label>
+                                <input type="text" name="employee_email" class="premium-input w-full px-4 py-3 text-sm" placeholder="e.g. john.doe or email@example.com">
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">Password</label>

@@ -17,8 +17,13 @@ class AssetController extends Controller
     public function index(Request $request)
     {
         $stt = $request->input('stt', 0); // 0=All, 1=About to Expire, 2=Expired
+        $statusId = $request->input('status_id');
 
         $query = Asset::with(['category', 'assignee', 'assignedBy', 'status']);
+
+        if ($statusId) {
+            $query->where('status_id', $statusId);
+        }
 
         if ($stt == 1) {
             // About to expire (next 30 days)
@@ -41,7 +46,7 @@ class AssetController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'asset_name' => 'required|string|max:255',
+            'asset_name' => 'required|string|max:255|unique:z_assets_list,asset_name',
             'category_id' => 'required|exists:z_assets_list_cats,category_id',
             'asset_serial' => 'nullable|string|max:100',
             'status_id' => 'required|exists:z_assets_list_status,status_id',
@@ -68,7 +73,7 @@ class AssetController extends Controller
         }
 
         $asset->purchase_date = $request->purchase_date;
-        $asset->expiry_date = $request->expiry_date ?? now();
+        $asset->expiry_date = $request->expiry_date;
         $asset->status_id = $request->status_id;
         
         $asset->added_date = now();
@@ -172,9 +177,14 @@ class AssetController extends Controller
     public function getData(Request $request)
     {
         $stt = $request->input('stt', 0);
+        $statusId = $request->input('status_id');
         $perPage = $request->get('per_page', 15);
 
         $query = Asset::with(['category', 'assignee', 'assignedBy', 'status']);
+
+        if ($statusId) {
+            $query->where('status_id', $statusId);
+        }
 
         if ($stt == 1) {
             $query->whereBetween('expiry_date', [Carbon::now(), Carbon::now()->addDays(30)]);
@@ -199,6 +209,21 @@ class AssetController extends Controller
             ],
             'statuses' => $statuses
         ]);
+    }
+
+    public function updateDescription(Request $request, $id)
+    {
+        $request->validate([
+            'description' => 'required|string'
+        ]);
+
+        $asset = Asset::findOrFail($id);
+        $asset->asset_description = $request->description;
+        $asset->save();
+
+        $this->logAction($id, 'Description Updated', 'Asset description was updated.');
+
+        return redirect()->back()->with('success', 'Asset description updated successfully.');
     }
 
     private function logAction($refId, $action, $remark)

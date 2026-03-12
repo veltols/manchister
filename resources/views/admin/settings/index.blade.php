@@ -39,7 +39,7 @@
                 <p class="px-4 py-2 text-xs font-bold text-slate-400 uppercase tracking-widest">Workflows</p>
                  <a href="{{ route('admin.settings.index', ['type' => 'ss']) }}" 
                    class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'ss' ? 'bg-brand/10 text-brand' : 'text-slate-600 hover:bg-slate-50' }}">
-                    <i class="fa-solid fa-share-nodes w-5"></i> Service Categories
+                    <i class="fa-solid fa-share-nodes w-5"></i> Support Services
                 </a>
                  <a href="{{ route('admin.settings.index', ['type' => 'ct']) }}" 
                    class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'ct' ? 'bg-brand/10 text-brand' : 'text-slate-600 hover:bg-slate-50' }}">

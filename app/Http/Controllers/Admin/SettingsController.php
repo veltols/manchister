@@ -59,7 +59,7 @@ class SettingsController extends Controller
             ],
             'ss' => [
                 'model' => SupportServiceCategory::class,
-                'title' => 'Service Categories',
+                'title' => 'Support Services',
                 'pk' => 'category_id',
                 'name_field' => 'category_name',
                 'fields' => [
@@ -161,10 +161,19 @@ class SettingsController extends Controller
 
         $conf = $this->config[$type];
         $modelClass = $conf['model'];
+        $modelInstance = new $modelClass();
+        $table = $modelInstance->getTable();
+        $nameField = $conf['name_field'];
+
+        $request->validate([
+            $nameField => "required|string|max:255|unique:{$table},{$nameField}",
+        ], [
+            "{$nameField}.unique" => 'This entry already exists.',
+        ]);
+
         $item = new $modelClass();
 
         foreach ($conf['fields'] as $field => $label) {
-            $key = explode('|', $label)[0]; // Just in case I parse label later
             $item->$field = $request->input($field);
         }
 
@@ -183,6 +192,17 @@ class SettingsController extends Controller
 
         $conf = $this->config[$type];
         $modelClass = $conf['model'];
+        $modelInstance = new $modelClass();
+        $table = $modelInstance->getTable();
+        $pk = $conf['pk'];
+        $nameField = $conf['name_field'];
+
+        $request->validate([
+            $nameField => "required|string|max:255|unique:{$table},{$nameField},{$id},{$pk}",
+        ], [
+            "{$nameField}.unique" => 'This entry already exists.',
+        ]);
+
         $item = $modelClass::findOrFail($id);
 
          foreach ($conf['fields'] as $field => $label) {

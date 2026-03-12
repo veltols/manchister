@@ -64,47 +64,12 @@
     </div>
 
     <!-- Label Card -->
-    <div class="label-container bg-white rounded-2xl shadow-xl max-w-sm w-full overflow-hidden border border-slate-200 relative">
-        <!-- Brand Header -->
-        <div class="bg-gradient-to-r from-[#004F68] to-[#006a8a] p-4 text-center">
-           
-            <div class="flex flex-col items-center justify-center mb-2">
-                <img src="{{ $logoUrl }}" class="h-10 w-10 object-contain drop-shadow-md bg-white/20 rounded p-1 mb-1">
-            </div>
-            <h1 class="text-white font-display font-bold text-xl tracking-wide uppercase">{{ config('app.name', 'IQC Sense') }}</h1>
-            <p class="text-white/80 text-xs font-medium uppercase tracking-widest mt-0.5">Asset Management</p>
-        </div>
-
-        <div class="p-6 text-center">
-            <!-- Asset Name -->
-            <h2 class="text-2xl font-display font-bold text-slate-800 leading-tight mb-1">{{ $asset->asset_name }}</h2>
-            
-            <!-- Category Badge -->
-            <div class="inline-block px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wider mb-6">
-                {{ $asset->category->category_name ?? 'General Asset' }}
-            </div>
-
+    <div class="bg-white p-8 label-container">
+        <div class="flex flex-col items-center justify-center">
             <!-- Barcode -->
-            <div class="flex justify-center mb-4">
-                <svg id="barcode" class="w-full max-w-[280px]"></svg>
+            <div class="flex justify-center">
+                <svg id="barcode"></svg>
             </div>
-
-            <!-- Meta Data Grid -->
-            <div class="grid grid-cols-2 gap-4 border-t border-slate-100 pt-4 mt-2">
-                <div class="text-center">
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Asset Ref</p>
-                    <p class="text-sm font-mono font-bold text-slate-700">{{ $asset->asset_ref }}</p>
-                </div>
-                <div class="text-center">
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Purchase Date</p>
-                    <p class="text-sm font-semibold text-slate-700">{{ $asset->purchase_date ? $asset->purchase_date->format('M d, Y') : 'N/A' }}</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Footer Strip -->
-        <div class="bg-slate-50 p-3 text-center border-t border-slate-100">
-            <p class="text-[10px] text-slate-400">Property of {{ config('app.name', 'Company') }} • If found, please return to admin.</p>
         </div>
     </div>
 

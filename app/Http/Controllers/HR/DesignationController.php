@@ -9,10 +9,16 @@ use App\Models\Department;
 
 class DesignationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $designations = Designation::with('department')
-            ->orderBy('designation_id', 'desc')
+        $search = $request->get('search');
+        $query = Designation::with('department');
+
+        if ($search) {
+            $query->where('designation_name', 'LIKE', '%' . $search . '%');
+        }
+
+        $designations = $query->orderBy('designation_id', 'desc')
             ->paginate(15);
         $departments = Department::orderBy('department_name')->get();
 
@@ -23,9 +29,15 @@ class DesignationController extends Controller
     {
         $page = $request->get('page', 1);
         $perPage = $request->get('per_page', 15);
-        
-        $designations = Designation::with('department')
-            ->orderBy('designation_id', 'desc')
+        $search = $request->get('search');
+
+        $query = Designation::with('department');
+
+        if ($search) {
+            $query->where('designation_name', 'LIKE', '%' . $search . '%');
+        }
+
+        $designations = $query->orderBy('designation_id', 'desc')
             ->paginate($perPage);
         
         return response()->json([
@@ -52,9 +64,12 @@ class DesignationController extends Controller
     {
         $request->validate([
             'designation_code' => 'required|string|max:50|unique:employees_list_designations,designation_code',
-            'designation_name' => 'required|string|max:255',
+            'designation_name' => 'required|string|max:255|unique:employees_list_designations,designation_name',
             'department_id' => 'required|exists:employees_list_departments,department_id',
             'log_remark' => 'nullable|string',
+        ], [
+            'designation_name.unique' => 'This designation already exists.',
+            'designation_code.unique' => 'This designation code already exists.',
         ]);
 
         $designation = new Designation();
@@ -66,7 +81,7 @@ class DesignationController extends Controller
         $this->logAction($designation->designation_id, 'Designation_Added', $request->log_remark ?? '---');
 
         $prefix = request()->is('admin*') ? 'admin' : 'hr';
-        return redirect()->route($prefix . '.designations.index')->with('success', 'Designation created successfully.');
+        return redirect()->back()->with('success', 'Designation created successfully.');
     }
 
     public function edit($id)
@@ -80,9 +95,12 @@ class DesignationController extends Controller
     {
         $request->validate([
             'designation_code' => 'required|string|max:50|unique:employees_list_designations,designation_code,' . $id . ',designation_id',
-            'designation_name' => 'required|string|max:255',
+            'designation_name' => 'required|string|max:255|unique:employees_list_designations,designation_name,' . $id . ',designation_id',
             'department_id' => 'required|exists:employees_list_departments,department_id',
             'log_remark' => 'required|string',
+        ], [
+            'designation_name.unique' => 'This designation already exists.',
+            'designation_code.unique' => 'This designation code already exists.',
         ]);
 
         $designation = Designation::findOrFail($id);
@@ -94,7 +112,7 @@ class DesignationController extends Controller
         $this->logAction($designation->designation_id, 'Designation_Updated', $request->log_remark);
 
         $prefix = request()->is('admin*') ? 'admin' : 'hr';
-        return redirect()->route($prefix . '.designations.index')->with('success', 'Designation updated successfully.');
+        return redirect()->back()->with('success', 'Designation updated successfully.');
     }
 
     public function destroy($id)

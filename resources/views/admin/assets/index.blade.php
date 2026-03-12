@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Manage Assets')
-@section('subtitle', 'Track and assign company assets')
+@section('subtitle', 'Track and assign assets')
 
 @section('content')
     <div class="space-y-6 animate-fade-in-up">
@@ -9,7 +9,7 @@
         <!-- Header -->
         <div class="flex items-center justify-between">
             <div>
-                <h2 class="text-2xl font-display font-bold text-premium">Company Assets</h2>
+                <h2 class="text-2xl font-display font-bold text-premium">Assets</h2>
                 <p class="text-sm text-slate-500 mt-1">{{ $assets->total() }} total assets</p>
             </div>
             <!-- Create Asset Button -->
@@ -20,22 +20,36 @@
             </button>
         </div>
 
-        <!-- Filter Tabs -->
-        <div class="premium-card p-2">
-            <div class="flex gap-2">
-                @php $stt = request('stt', 0); @endphp
-                <a href="{{ route('admin.assets.index', ['stt' => 0]) }}" 
-                   class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 0 ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
-                    All Assets
-                </a>
-                <a href="{{ route('admin.assets.index', ['stt' => 1]) }}" 
-                   class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 1 ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
-                    About to Expire
-                </a>
-                <a href="{{ route('admin.assets.index', ['stt' => 2]) }}" 
-                   class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 2 ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
-                    Expired
-                </a>
+        <!-- Filter Tabs & Status Dropdown -->
+        <div class="premium-card p-4">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="flex gap-2">
+                    @php $stt = request('stt', 0); @endphp
+                    <a href="{{ route('admin.assets.index', ['stt' => 0, 'status_id' => request('status_id')]) }}" 
+                       class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 0 ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
+                        All Assets
+                    </a>
+                    <a href="{{ route('admin.assets.index', ['stt' => 1, 'status_id' => request('status_id')]) }}" 
+                       class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 1 ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
+                        About to Expire
+                    </a>
+                    <a href="{{ route('admin.assets.index', ['stt' => 2, 'status_id' => request('status_id')]) }}" 
+                       class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 2 ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
+                        Expired
+                    </a>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest">Filter by Status:</label>
+                    <select id="statusFilter" onchange="filterByStatus(this.value)" class="premium-input px-4 py-2 text-xs font-bold min-w-[150px]">
+                        <option value="">All Statuses</option>
+                        @foreach($statuses as $status)
+                            <option value="{{ $status->status_id }}" {{ request('status_id') == $status->status_id ? 'selected' : '' }}>
+                                {{ $status->status_name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -344,7 +358,11 @@
 
         // Initialize AJAX Pagination
         window.ajaxPagination = new AjaxPagination({
-            endpoint: "{{ route('admin.assets.data', ['stt' => $stt]) }}",
+            endpoint: "{{ route('admin.assets.data') }}",
+            extraParams: {
+                stt: "{{ $stt }}",
+                status_id: "{{ request('status_id') }}"
+            },
             containerSelector: '#assets-container',
             paginationSelector: '#assets-pagination',
             perPage: 15,
@@ -470,6 +488,16 @@
                 total: {{ $assets->total() }}
             });
         @endif
+
+        function filterByStatus(statusId) {
+            const url = new URL(window.location.href);
+            if (statusId) {
+                url.searchParams.set('status_id', statusId);
+            } else {
+                url.searchParams.delete('status_id');
+            }
+            window.location.href = url.toString();
+        }
     </script>
     @endpush
 @endsection

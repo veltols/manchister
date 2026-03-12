@@ -46,7 +46,7 @@ class AssetController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'asset_name' => 'required|string|max:255',
+            'asset_name' => 'required|string|max:255|unique:z_assets_list,asset_name',
             'category_id' => 'required|exists:z_assets_list_cats,category_id',
             'asset_ref' => 'required|string|max:50',
             'asset_serial' => 'nullable|string',
@@ -58,7 +58,12 @@ class AssetController extends Controller
         $asset->asset_ref = $request->asset_ref;
         $asset->asset_serial = $request->asset_serial;
         $asset->asset_description = $request->asset_description;
+        $asset->added_date = now();
+        $asset->added_by = 1; // Default admin
+        $asset->assigned_by = 0; // Default
+        $asset->assigned_date = now();
         $asset->assigned_to = 0; // Default unassigned
+        $asset->status_id = 2; // Default Active/In Stock
         $asset->save();
 
         return redirect()->back()->with('success', 'Asset added successfully.');
