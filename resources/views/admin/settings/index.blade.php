@@ -15,10 +15,10 @@
                    class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'tc' ? 'bg-brand/10 text-brand' : 'text-slate-600 hover:bg-slate-50' }}">
                     <i class="fa-solid fa-tags w-5"></i> Ticket Categories
                 </a>
-                <a href="{{ route('admin.settings.index', ['type' => 'ts']) }}" 
+                <!-- <a href="{{ route('admin.settings.index', ['type' => 'ts']) }}" 
                    class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'ts' ? 'bg-brand/10 text-brand' : 'text-slate-600 hover:bg-slate-50' }}">
                     <i class="fa-solid fa-list-check w-5"></i> Ticket Status
-                </a>
+                </a> -->
                 <a href="{{ route('admin.settings.index', ['type' => 'lt']) }}" 
                    class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'lt' ? 'bg-brand/10 text-brand' : 'text-slate-600 hover:bg-slate-50' }}">
                     <i class="fa-solid fa-calendar-minus w-5"></i> Leave Types
@@ -27,6 +27,10 @@
                    class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'pp' ? 'bg-brand/10 text-brand' : 'text-slate-600 hover:bg-slate-50' }}">
                     <i class="fa-solid fa-flag w-5"></i> Priorities
                 </a>
+                 <a href="{{ route('admin.settings.index', ['type' => 'it']) }}" 
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'it' ? 'bg-brand/10 text-brand' : 'text-slate-600 hover:bg-slate-50' }}">
+                     <i class="fa-solid fa-shield-virus w-5"></i> Incident Types
+                 </a>
 
                 <div class="border-t border-slate-100 my-2 pt-2"></div>
                 <p class="px-4 py-2 text-xs font-bold text-slate-400 uppercase tracking-widest">Asset Config</p>

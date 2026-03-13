@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Incident;
+use App\Models\IncidentType;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
@@ -13,7 +14,8 @@ class IncidentController extends Controller
     public function index()
     {
         $incidents = Incident::latest()->paginate(10);
-        return view('admin.incidents.index', compact('incidents'));
+        $types = IncidentType::orderBy('type_name')->get();
+        return view('admin.incidents.index', compact('incidents', 'types'));
     }
 
     public function store(Request $request)

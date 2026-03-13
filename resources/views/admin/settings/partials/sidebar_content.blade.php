@@ -22,10 +22,16 @@
         <span class="font-bold text-sm">Support Routes</span>
     </a>
 
-    <a href="{{ route('admin.settings.priorities') }}"
-        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white hover:shadow-sm text-slate-600 hover:text-indigo-600 transition-all {{ request()->routeIs('admin.settings.priorities') ? 'bg-white shadow-sm text-indigo-600' : '' }}">
+    <a href="{{ route('admin.settings.index', ['type' => 'pp']) }}"
+        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white hover:shadow-sm text-slate-600 hover:text-indigo-600 transition-all {{ request()->routeIs('admin.settings.index') && request('type') == 'pp' ? 'bg-white shadow-sm text-indigo-600' : '' }}">
         <i class="fa-solid fa-flag w-5 text-center"></i>
         <span class="font-bold text-sm">Priorities</span>
+    </a>
+
+    <a href="{{ route('admin.settings.index', ['type' => 'it']) }}"
+        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white hover:shadow-sm text-slate-600 hover:text-indigo-600 transition-all {{ request()->routeIs('admin.settings.index') && request('type') == 'it' ? 'bg-white shadow-sm text-indigo-600' : '' }}">
+        <i class="fa-solid fa-shield-virus w-5 text-center"></i>
+        <span class="font-bold text-sm">Incident Types</span>
     </a>
 
     <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest px-4 mb-2 mt-4">Assets Lists</h3>

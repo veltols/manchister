@@ -14,6 +14,7 @@ use App\Models\SupportServiceCategory;
 use App\Models\CommunicationType;
 use App\Models\Employee;
 use App\Models\UsersListTheme;
+use App\Models\IncidentType;
 
 class SettingsController extends Controller
 {
@@ -92,6 +93,13 @@ class SettingsController extends Controller
                     'color_third' => 'Third Color|color',
                     'color_on_third' => 'On Third|color',
                 ]
+            ],
+            'it' => [
+                'model' => IncidentType::class,
+                'title' => 'Incident Types',
+                'pk' => 'incident_type_id',
+                'name_field' => 'type_name',
+                'fields' => ['type_name' => 'Name']
             ],
         ];
     }

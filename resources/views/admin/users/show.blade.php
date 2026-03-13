@@ -274,9 +274,9 @@
 
                         @php
                             $categoryMap = [
-                                'External Services' => ['Training Providers Management', 'Learner Affairs', 'Claim Certificate'],
-                                'Strategy Services' => ['Strategy Management', 'Operational Planning', 'Self-Studies'],
-                                'EQA Services'      => ['All EQA Services']
+                                'External Services' => ['Training Providers Management', 'Learners Affairs', 'Claim Certificate'],
+                                'Strategy Services' => ['Strategy Management', 'Operational Planning', 'Self Studies'],
+                                'EQA Services'      => ['EQA']
                             ];
                         @endphp
 

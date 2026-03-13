@@ -20,34 +20,35 @@ class SupportTicketController extends Controller
 
         // Monthly Resolved Stats
         $resolvedMonths = [];
-        if ($stt == 3) {
+        if ($stt == \App\Models\SupportTicketStatus::RESOLVED) {
             $resolvedMonths = SupportTicket::select(
                 DB::raw("DATE_FORMAT(ticket_added_date, '%Y-%m') as month_value"),
                 DB::raw("DATE_FORMAT(ticket_added_date, '%M %Y') as month_label"),
                 DB::raw('count(*) as total')
             )
-                ->where('status_id', 3)
+                ->where('status_id', \App\Models\SupportTicketStatus::RESOLVED)
                 ->groupBy('month_value', 'month_label')
                 ->orderBy('month_value', 'desc')
                 ->get();
         }
 
-        $query = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'latestLog.logger']);
+        $query = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'latestLog.logger'])
+            ->where('added_by', $user->user_id);
 
         // Filter by Status
-        if ($stt == 1) {
-            $query->where('status_id', 1);
-        } elseif ($stt == 2) {
-            $query->where('status_id', 2);
-        } elseif ($stt == 3) {
-            $query->where('status_id', 3);
+        if ($stt == \App\Models\SupportTicketStatus::OPEN) {
+            $query->where('status_id', \App\Models\SupportTicketStatus::OPEN);
+        } elseif ($stt == \App\Models\SupportTicketStatus::IN_PROGRESS) {
+            $query->where('status_id', \App\Models\SupportTicketStatus::IN_PROGRESS);
+        } elseif ($stt == \App\Models\SupportTicketStatus::RESOLVED) {
+            $query->where('status_id', \App\Models\SupportTicketStatus::RESOLVED);
             // Filter by Month if selected
             if ($request->filled('month')) {
                 $query->where(DB::raw("DATE_FORMAT(ticket_added_date, '%Y-%m')"), $request->month);
             }
-        } elseif ($stt == 4) {
+        } elseif ($stt == 4) { // 4 is a custom UI filter for Unassigned
             // Unassigned (Open and assigned_to = 0)
-            $query->where('status_id', 1)
+            $query->where('status_id', \App\Models\SupportTicketStatus::OPEN)
                 ->where('assigned_to', 0);
         }
 
@@ -114,7 +115,7 @@ class SupportTicketController extends Controller
         $ticket->department_id = $departmentId;
         $ticket->ticket_added_date = now();
 
-        $ticket->status_id = 1; // Project default typically 1 for Open
+        $ticket->status_id = \App\Models\SupportTicketStatus::OPEN;
         $ticket->assigned_to = 0;
         $ticket->save();
 
@@ -150,6 +151,7 @@ class SupportTicketController extends Controller
     public function show($id)
     {
         $ticket = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'logs.logger', 'latestLog.logger'])
+            ->where('added_by', Auth::user()->user_id)
             ->findOrFail($id);
 
         $statuses = \App\Models\SupportTicketStatus::all();
@@ -167,25 +169,33 @@ class SupportTicketController extends Controller
         $user = Auth::user();
         $employeeId = $user->employee ? $user->employee->employee_id : 0;
 
-        $ticket = SupportTicket::findOrFail($id);
+        $ticket = SupportTicket::where('added_by', $user->user_id)->findOrFail($id);
         $currentStatusId = (int)$ticket->status_id;
         $newStatusId = (int)$request->status_id;
 
-        // Constants from Model
+        // Status IDs
         $statusOpen = \App\Models\SupportTicketStatus::OPEN;
         $statusInProgress = \App\Models\SupportTicketStatus::IN_PROGRESS;
         $statusResolved = \App\Models\SupportTicketStatus::RESOLVED;
         $statusCancelled = \App\Models\SupportTicketStatus::CANCELLED;
 
         // Validation Rules
-        // b. You should not change ticket from open to resolved directly
-        if ($currentStatusId == $statusOpen && $newStatusId == $statusResolved) {
-            return redirect()->back()->with('error', 'Tickets cannot be moved from Open to Resolved directly. Please set to In Progress first.');
-        }
-
-        // c. You should not change ticket status from closed to in progress
-        if ($currentStatusId == $statusResolved && $newStatusId == $statusInProgress) {
-            return redirect()->back()->with('error', 'Resolved tickets cannot be moved to In Progress. Please Reopen the ticket first if needed.');
+        if ($currentStatusId == $statusOpen) {
+            if (!in_array($newStatusId, [$statusInProgress, $statusCancelled])) {
+                return redirect()->back()->with('error', 'From Open, you can only move to In Progress or Cancelled.');
+            }
+        } elseif ($currentStatusId == $statusInProgress) {
+            if (!in_array($newStatusId, [$statusResolved, $statusCancelled])) {
+                return redirect()->back()->with('error', 'From In Progress, you can only move to Resolved or Cancelled.');
+            }
+        } elseif ($currentStatusId == $statusResolved) {
+            if ($newStatusId != $statusOpen) {
+                return redirect()->back()->with('error', 'Resolved tickets can only be Reopened.');
+            }
+        } elseif ($currentStatusId == $statusCancelled) {
+            if ($newStatusId != $statusOpen) {
+                return redirect()->back()->with('error', 'Cancelled tickets can only be Reopened.');
+            }
         }
 
         $ticket->status_id = $newStatusId;
@@ -217,16 +227,17 @@ class SupportTicketController extends Controller
         $stt = $request->input('stt', 0);
         $perPage = $request->get('per_page', 10);
 
-        $query = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'latestLog.logger']);
+        $query = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'latestLog.logger'])
+            ->where('added_by', $user->user_id);
 
-        if ($stt == 1) {
-            $query->where('status_id', 1);
-        } elseif ($stt == 2) {
-            $query->where('status_id', 2);
-        } elseif ($stt == 3) {
-            $query->where('status_id', 3);
+        if ($stt == \App\Models\SupportTicketStatus::OPEN) {
+            $query->where('status_id', \App\Models\SupportTicketStatus::OPEN);
+        } elseif ($stt == \App\Models\SupportTicketStatus::IN_PROGRESS) {
+            $query->where('status_id', \App\Models\SupportTicketStatus::IN_PROGRESS);
+        } elseif ($stt == \App\Models\SupportTicketStatus::RESOLVED) {
+            $query->where('status_id', \App\Models\SupportTicketStatus::RESOLVED);
         } elseif ($stt == 4) {
-            $query->where('status_id', 1)->where('assigned_to', 0);
+            $query->where('status_id', \App\Models\SupportTicketStatus::OPEN)->where('assigned_to', 0);
         }
 
         $tickets = $query->orderBy('ticket_id', 'desc')->paginate($perPage);

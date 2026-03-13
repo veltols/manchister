@@ -134,11 +134,16 @@
                             <span class="text-rose-500">*</span></label>
                         <select name="incident_type" required class="premium-input w-full appearance-none">
                             <option value="" disabled selected>Select Type...</option>
-                            <option value="Security Breach">Security Breach</option>
-                            <option value="Workplace Accident">Workplace Accident</option>
-                            <option value="System Failure">System Failure</option>
-                            <option value="Data Loss">Data Loss</option>
-                            <option value="Misconduct">Misconduct</option>
+                            @foreach($types as $type)
+                                <option value="{{ $type->type_name }}">{{ $type->type_name }}</option>
+                            @endforeach
+                            @if($types->isEmpty())
+                                <option value="Security Breach">Security Breach</option>
+                                <option value="Workplace Accident">Workplace Accident</option>
+                                <option value="System Failure">System Failure</option>
+                                <option value="Data Loss">Data Loss</option>
+                                <option value="Misconduct">Misconduct</option>
+                            @endif
                             <option value="Other">Other</option>
                         </select>
                     </div>
