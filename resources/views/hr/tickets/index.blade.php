@@ -78,25 +78,82 @@
             </div>
         @endif
 
-        <!-- Tickets Table Area -->
+        <!-- Tickets Area -->
         <div class="space-y-4">
-            <div class="overflow-x-auto px-1 pb-4">
-                <table class="premium-table w-full">
-                    <thead>
-                        <tr>
-                            <th class="text-left">REF</th>
-                            <th class="text-left">Subject</th>
-                            <th class="text-left">Category</th>
-                            <th class="text-left">Last Updated</th>
-                            <th class="text-left">Updated By</th>
-                            <th class="text-center">Priority</th>
-                            <th class="text-center">Status</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    </thead>
-                    <tbody id="tickets-container">
-                        @forelse($tickets as $ticket)
+            @if($stt == 3)
+                <!-- Grid/Box View for Resolved Tickets -->
+                <div id="tickets-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    @forelse($tickets as $ticket)
+                        <div class="premium-card p-0 overflow-hidden group hover:-translate-y-1 transition-all duration-300">
+                            <!-- Card Header -->
+                            <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                                <span class="font-mono text-xs font-bold text-slate-500">{{ $ticket->ticket_ref }}</span>
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white text-[10px] font-bold shadow-sm"
+                                    style="background: #{{ $ticket->priority->priority_color ?? 'ccc' }}">
+                                    {{ $ticket->priority->priority_name ?? 'Normal' }}
+                                 </span>
+                            </div>
+                            <!-- Card Body -->
+                            <div class="p-5">
+                                <div class="mb-4">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <span class="inline-block px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 text-[10px] font-bold uppercase tracking-wider">
+                                            {{ $ticket->category->category_name ?? 'N/A' }}
+                                        </span>
+                                        <span class="text-[10px] font-bold text-slate-400">By: {{ $ticket->addedBy->first_name ?? 'System' }} {{ $ticket->addedBy->last_name ?? '' }}</span>
+                                    </div>
+                                    <h3 class="text-slate-800 font-bold leading-snug line-clamp-2 h-10 mb-1" title="{{ $ticket->ticket_subject }}">
+                                        {{ $ticket->ticket_subject }}
+                                    </h3>
+                                    <p class="text-slate-500 text-xs line-clamp-2 mt-2 leading-relaxed">
+                                        {{ Str::limit($ticket->ticket_description, 100) }}
+                                    </p>
+                                </div>
+
+                                <div class="flex items-center justify-between pt-4 border-t border-slate-50">
+                                    <div class="flex flex-col">
+                                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Resolved on</span>
+                                        <span class="text-xs text-slate-600 font-medium">
+                                            {{ $ticket->last_updated_date ? \Carbon\Carbon::parse($ticket->last_updated_date)->format('M d, Y') : '-' }}
+                                        </span>
+                                    </div>
+                                    <a href="{{ route('hr.tickets.show', $ticket->ticket_id) }}" 
+                                       class="w-10 h-10 rounded-xl bg-gradient-brand text-white flex items-center justify-center shadow-lg shadow-brand/20 hover:scale-110 transition-all">
+                                        <i class="fa-solid fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="col-span-full py-20 premium-card flex flex-col items-center justify-center gap-4">
+                            <div class="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center">
+                                <i class="fa-solid fa-check-double text-3xl text-slate-300"></i>
+                            </div>
+                            <div class="text-center">
+                                <h3 class="text-slate-700 font-bold">No Resolved Tickets</h3>
+                                <p class="text-slate-500 text-sm">No tickets have been resolved in this category yet.</p>
+                            </div>
+                        </div>
+                    @endforelse
+                </div>
+            @else
+                <!-- Table View for Other Statuses -->
+                <div class="overflow-x-auto px-1 pb-4">
+                    <table class="premium-table w-full">
+                        <thead>
+                            <tr>
+                                <th class="text-left">REF</th>
+                                <th class="text-left">Subject</th>
+                                <th class="text-left">Category</th>
+                                <th class="text-left">Last Updated</th>
+                                <th class="text-left">Updated By</th>
+                                <th class="text-center">Priority</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tickets-container">
+                            @forelse($tickets as $ticket)
                                             <!-- Initial server-side render -->
                                             <tr>
                                                 <td>
@@ -170,17 +227,14 @@
                                             <i class="fa-solid fa-ticket text-2xl text-slate-400"></i>
                                         </div>
                                         <p class="text-slate-500 font-medium">No tickets found</p>
-                                        <button onclick="openModal('newTicketModal')"
-                                            class="text-brand-dark hover:text-brand-light font-bold text-sm">
-                                            Create your first ticket
-                                        </button>
                                     </div>
                                 </td>
                             </tr>
                         @endforelse
-                    </tbody>
-                </table>
-            </div>
+                        </tbody>
+                    </table>
+                </div>
+            @endif
 
             <!-- AJAX Pagination Container -->
             <div id="tickets-pagination"></div>
@@ -208,9 +262,23 @@
                 perPage: 10,
                 renderCallback: function (tickets) {
                     const container = document.querySelector('#tickets-container');
+                    const isResolved = {{ $stt }} == 3;
 
                     if (tickets.length === 0) {
-                        container.innerHTML = `
+                       if (isResolved) {
+                            container.innerHTML = `
+                                <div class="col-span-full py-20 premium-card flex flex-col items-center justify-center gap-4">
+                                    <div class="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center">
+                                        <i class="fa-solid fa-check-double text-3xl text-slate-300"></i>
+                                    </div>
+                                    <div class="text-center">
+                                        <h3 class="text-slate-700 font-bold">No Resolved Tickets</h3>
+                                        <p class="text-slate-500 text-sm">No tickets have been resolved in this category yet.</p>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            container.innerHTML = `
                                 <tr>
                                     <td colspan="8" class="text-center py-12">
                                         <div class="flex flex-col items-center gap-3">
@@ -218,39 +286,75 @@
                                                 <i class="fa-solid fa-ticket text-2xl text-slate-400"></i>
                                             </div>
                                             <p class="text-slate-500 font-medium">No tickets found</p>
-                                            <button onclick="openModal('newTicketModal')"
-                                                class="text-brand-dark hover:text-brand-light font-bold text-sm">
-                                                Create your first ticket
-                                            </button>
                                         </div>
                                     </td>
                                 </tr>
                             `;
+                        }
                         return;
                     }
 
                     let html = '';
                     tickets.forEach(ticket => {
                         const showUrl = `{{ route('hr.tickets.show', ':id') }}`.replace(':id', ticket.ticket_id);
+                        const priorityColor = ticket.priority ? ticket.priority.priority_color : 'ccc';
+                        const priorityName = ticket.priority ? ticket.priority.priority_name : 'Normal';
+                        const categoryName = ticket.category ? ticket.category.category_name : 'N/A';
+                        const addedBy = ticket.added_by ? (ticket.added_by.first_name + ' ' + (ticket.added_by.last_name || '')) : 'System';
+                        const statusColor = ticket.status ? ticket.status.status_color : 'ccc';
+                        const statusName = ticket.status ? ticket.status.status_name : 'Open';
+                        const resolvedDate = ticket.last_updated_date ? new Date(ticket.last_updated_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-';
+                        const description = ticket.ticket_description ? (ticket.ticket_description.length > 100 ? ticket.ticket_description.substring(0, 100) + '...' : ticket.ticket_description) : '';
 
-                        // Logger info
-                        let loggerInitial = '-';
-                        let loggerName = '-';
-                        if (ticket.latest_log && ticket.latest_log.logger) {
-                            loggerInitial = (ticket.latest_log.logger.first_name.charAt(0) + ticket.latest_log.logger.last_name.charAt(0)).toUpperCase();
-                            loggerName = ticket.latest_log.logger.first_name + ' ' + ticket.latest_log.logger.last_name;
-                        }
+                        if (isResolved) {
+                            html += `
+                                <div class="premium-card p-0 overflow-hidden group hover:-translate-y-1 transition-all duration-300">
+                                    <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                                        <span class="font-mono text-xs font-bold text-slate-500">${ticket.ticket_ref}</span>
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white text-[10px] font-bold shadow-sm" style="background: #${priorityColor}">
+                                            ${priorityName}
+                                        </span>
+                                    </div>
+                                    <div class="p-5">
+                                        <div class="mb-4">
+                                            <div class="flex justify-between items-start mb-2">
+                                                <span class="inline-block px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 text-[10px] font-bold uppercase tracking-wider">
+                                                    ${categoryName}
+                                                </span>
+                                                <span class="text-[10px] font-bold text-slate-400">By: ${addedBy}</span>
+                                            </div>
+                                            <h3 class="text-slate-800 font-bold leading-snug line-clamp-2 h-10 mb-1" title="${ticket.ticket_subject}">
+                                                ${ticket.ticket_subject}
+                                            </h3>
+                                            <p class="text-slate-500 text-xs line-clamp-2 mt-2 leading-relaxed h-8">
+                                                ${description}
+                                            </p>
+                                        </div>
+                                        <div class="flex items-center justify-between pt-4 border-t border-slate-50">
+                                            <div class="flex flex-col">
+                                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Resolved on</span>
+                                                <span class="text-xs text-slate-600 font-medium">${resolvedDate}</span>
+                                            </div>
+                                            <a href="${showUrl}" class="w-10 h-10 rounded-xl bg-gradient-brand text-white flex items-center justify-center shadow-lg shadow-brand/20 hover:scale-110 transition-all">
+                                                <i class="fa-solid fa-arrow-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            // Logger info
+                            let loggerInitial = '-';
+                            let loggerName = '-';
+                            if (ticket.latest_log && ticket.latest_log.logger) {
+                                loggerInitial = (ticket.latest_log.logger.first_name.charAt(0) + (ticket.latest_log.logger.last_name ? ticket.latest_log.logger.last_name.charAt(0) : '')).toUpperCase();
+                                loggerName = ticket.latest_log.logger.first_name + ' ' + (ticket.latest_log.logger.last_name || '');
+                            }
 
-                        // Date parsing (Simplified relative time for JS or just display date)
-                        // For precise diffForHumans in JS, we'd need a library like moment.js or date-fns. 
-                        // Using simple date here or passing formatted date from backend would be better.
-                        // Assuming existing setup relies on server formatting mostly, but JS needs to render.
-                        // We'll just show local date string for now or raw date if acceptable, 
-                        // or better: The Controller should ideally return formatted dates. 
-                        // Let's stick to a simple format for JS rendering as backend resource modification is heavier.
-                        const updatedDate = ticket.last_updated_date ? new Date(ticket.last_updated_date).toLocaleDateString() : '-';
+                            // Date parsing
+                            const updatedDate = ticket.last_updated_date ? new Date(ticket.last_updated_date).toLocaleDateString() : '-';
 
-                        html += `
+                            html += `
                                 <tr>
                                     <td>
                                         <span class="font-mono text-sm font-semibold text-slate-600">${ticket.ticket_ref}</span>
@@ -262,7 +366,7 @@
                                     <td>
                                         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 text-indigo-800 text-sm font-medium">
                                             <i class="fa-solid fa-tag text-xs"></i>
-                                            ${ticket.category ? ticket.category.category_name : 'N/A'}
+                                            ${categoryName}
                                         </span>
                                     </td>
                                     <td>
@@ -281,13 +385,13 @@
                                         </div>
                                     </td>
                                     <td class="text-center">
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #${ticket.priority ? ticket.priority.priority_color : 'ccc'}">
-                                            ${ticket.priority ? ticket.priority.priority_name : 'Normal'}
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #${priorityColor}">
+                                            ${priorityName}
                                         </span>
                                     </td>
                                     <td class="text-center">
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #${ticket.status ? ticket.status.status_color : 'ccc'}">
-                                            ${ticket.status ? ticket.status.status_name : 'Open'}
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #${statusColor}">
+                                            ${statusName}
                                         </span>
                                     </td>
                                     <td class="text-center">
@@ -301,6 +405,7 @@
                                     </td>
                                 </tr>
                             `;
+                        }
                     });
 
                     container.innerHTML = html;

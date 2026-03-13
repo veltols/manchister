@@ -19,6 +19,20 @@ class SupportTicketController extends Controller
     {
         $stt = $request->input('stt', 0); // 0=All, 1=Open, 2=In Progress, 3=Resolved
 
+        // Monthly Resolved Stats (Like HR side)
+        $resolvedMonths = [];
+        if ($stt == \App\Models\SupportTicketStatus::RESOLVED) {
+            $resolvedMonths = SupportTicket::select(
+                \Illuminate\Support\Facades\DB::raw("DATE_FORMAT(ticket_added_date, '%Y-%m') as month_value"),
+                \Illuminate\Support\Facades\DB::raw("DATE_FORMAT(ticket_added_date, '%M %Y') as month_label"),
+                \Illuminate\Support\Facades\DB::raw('count(*) as total')
+            )
+                ->where('status_id', \App\Models\SupportTicketStatus::RESOLVED)
+                ->groupBy('month_value', 'month_label')
+                ->orderBy('month_value', 'desc')
+                ->get();
+        }
+
         $query = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'assignedTo']);
 
         // Filter by Status
@@ -28,6 +42,11 @@ class SupportTicketController extends Controller
             $query->where('status_id', \App\Models\SupportTicketStatus::IN_PROGRESS);
         } elseif ($stt == \App\Models\SupportTicketStatus::RESOLVED) { // Resolved/Closed
             $query->whereIn('status_id', [\App\Models\SupportTicketStatus::RESOLVED, \App\Models\SupportTicketStatus::CANCELLED]);
+            
+            // Filter by Month if selected
+            if ($request->filled('month')) {
+                $query->where(\Illuminate\Support\Facades\DB::raw("DATE_FORMAT(ticket_added_date, '%Y-%m')"), $request->month);
+            }
         } elseif ($stt == 4) { // Unassigned
             $query->where('assigned_to', 0)->whereIn('status_id', [\App\Models\SupportTicketStatus::OPEN, \App\Models\SupportTicketStatus::IN_PROGRESS]); // Open or In Progress but unassigned
         }
@@ -49,7 +68,7 @@ class SupportTicketController extends Controller
             ->orderBy('first_name')
             ->get();
 
-        return view('admin.tickets.index', compact('tickets', 'stt', 'itEmployees', 'categories', 'priorities', 'allEmployees'));
+        return view('admin.tickets.index', compact('tickets', 'stt', 'itEmployees', 'categories', 'priorities', 'allEmployees', 'resolvedMonths'));
     }
 
     public function show($id)
@@ -273,6 +292,9 @@ class SupportTicketController extends Controller
             $query->where('status_id', \App\Models\SupportTicketStatus::IN_PROGRESS);
         } elseif ($stt == \App\Models\SupportTicketStatus::RESOLVED) {
             $query->whereIn('status_id', [\App\Models\SupportTicketStatus::RESOLVED, \App\Models\SupportTicketStatus::CANCELLED]);
+            if ($request->filled('month')) {
+                $query->where(\Illuminate\Support\Facades\DB::raw("DATE_FORMAT(ticket_added_date, '%Y-%m')"), $request->month);
+            }
         } elseif ($stt == 4) {
              $query->where('assigned_to', 0)->whereIn('status_id', [\App\Models\SupportTicketStatus::OPEN, \App\Models\SupportTicketStatus::IN_PROGRESS]);
         }

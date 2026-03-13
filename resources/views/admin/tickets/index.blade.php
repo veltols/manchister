@@ -47,97 +47,191 @@
             </div>
         </div>
 
-        <!-- Tickets Table Area -->
+        <!-- Monthly Resolved Filter (Mirror HR side) -->
+        @if(isset($resolvedMonths) && count($resolvedMonths) > 0)
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 animate-fade-in-up">
+                <!-- All Time Box -->
+                <a href="{{ route('admin.tickets.index', ['stt' => 3]) }}"
+                    class="group relative overflow-hidden rounded-2xl p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg border {{ !request('month') ? 'bg-gradient-brand text-white shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-100 hover:border-indigo-200' }}">
+                    <div class="relative z-10 flex flex-col items-center justify-center h-full gap-1">
+                        <div
+                            class="w-8 h-8 rounded-full mb-1 flex items-center justify-center {{ !request('month') ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-500' }}">
+                            <i class="fa-solid fa-layer-group text-sm"></i>
+                        </div>
+                        <span class="text-xs font-bold uppercase tracking-widest opacity-80">All Time</span>
+                        <span class="text-sm font-bold">View All</span>
+                    </div>
+                </a>
+
+                @foreach($resolvedMonths as $month)
+                    <a href="{{ route('admin.tickets.index', ['stt' => 3, 'month' => $month->month_value]) }}"
+                        class="group relative overflow-hidden rounded-2xl p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg border {{ request('month') == $month->month_value ? 'bg-gradient-brand text-white shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-100 hover:border-indigo-200' }}">
+
+                        <div class="relative z-10 flex flex-col items-center justify-center gap-1">
+                            <span
+                                class="text-[10px] font-bold uppercase tracking-widest opacity-70">{{ $month->month_label }}</span>
+                            <span class="text-2xl font-display font-bold">{{ $month->total }}</span>
+                            <span class="text-[10px] opacity-60">Resolved</span>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        @endif
+
+        <!-- Tickets Area -->
         <div class="space-y-4">
-            <div class="overflow-x-auto px-1 pb-4">
-                <table class="premium-table w-full">
-                    <thead>
-                        <tr>
-                            <th class="text-left">REF</th>
-                            <th class="text-left">Subject</th>
-                            <th class="text-left">Added By</th>
-                            <th class="text-left">Assigned To</th>
-                            <th class="text-center">Priority</th>
-                            <th class="text-center">Status</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tickets-container">
-                        @forelse($tickets as $ticket)
-                            <!-- Initial server-side render -->
-                            <tr>
-                                <td>
-                                    <span class="font-mono text-sm font-semibold text-slate-600">{{ $ticket->ticket_ref }}</span>
-                                </td>
-                                <td class="max-w-xs">
-                                    <div class="flex flex-col">
-                                        <span class="font-semibold text-slate-800 block truncate" title="{{ $ticket->ticket_subject }}">
-                                            {{ $ticket->ticket_subject }}
-                                        </span>
-                                        <span class="text-xs text-slate-500">
+            @if($stt == 3)
+                <!-- Grid/Box View for Resolved Tickets -->
+                <div id="tickets-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    @forelse($tickets as $ticket)
+                        <div class="premium-card p-0 overflow-hidden group hover:-translate-y-1 transition-all duration-300">
+                            <!-- Card Header -->
+                            <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                                <span class="font-mono text-xs font-bold text-slate-500">{{ $ticket->ticket_ref }}</span>
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white text-[10px] font-bold shadow-sm"
+                                    style="background: #{{ $ticket->priority->priority_color ?? 'ccc' }}">
+                                    {{ $ticket->priority->priority_name ?? 'Normal' }}
+                                 </span>
+                            </div>
+                            <!-- Card Body -->
+                            <div class="p-5">
+                                <div class="mb-4">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <span class="inline-block px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 text-[10px] font-bold uppercase tracking-wider">
                                             {{ $ticket->category->category_name ?? 'General' }}
                                         </span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border border-slate-200">
-                                            {{ $ticket->addedBy ? substr($ticket->addedBy->first_name, 0, 1) : 'S' }}
+                                        <div class="text-[10px] font-bold text-slate-400 flex flex-col items-end">
+                                            <span>By: {{ $ticket->addedBy->first_name ?? 'System' }} {{ $ticket->addedBy->last_name ?? '' }}</span>
+                                            @if($ticket->assignedTo)
+                                                <span class="text-indigo-500">To: {{ $ticket->assignedTo->first_name }}</span>
+                                            @endif
                                         </div>
-                                        <span class="text-sm text-slate-600 font-medium">
-                                            {{ $ticket->addedBy ? $ticket->addedBy->first_name . ' ' . $ticket->addedBy->last_name : 'System' }}
+                                    </div>
+                                    <h3 class="text-slate-800 font-bold leading-snug line-clamp-2 h-10 mb-1" title="{{ $ticket->ticket_subject }}">
+                                        {{ $ticket->ticket_subject }}
+                                    </h3>
+                                    <p class="text-slate-500 text-xs line-clamp-2 mt-2 leading-relaxed">
+                                        {{ Str::limit($ticket->ticket_description, 100) }}
+                                    </p>
+                                </div>
+
+                                <div class="flex items-center justify-between pt-4 border-t border-slate-50">
+                                    <div class="flex flex-col">
+                                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Resolved on</span>
+                                        <span class="text-xs text-slate-600 font-medium">
+                                            {{ $ticket->last_updated_date ? \Carbon\Carbon::parse($ticket->last_updated_date)->format('M d, Y') : '-' }}
                                         </span>
                                     </div>
-                                </td>
-                                <td>
-                                    @if($ticket->assignedTo)
-                                        <div class="flex items-center gap-2">
-                                            <div class="w-7 h-7 rounded-full bg-indigo-50 flex items-center justify-center text-[10px] font-bold text-indigo-600 border border-indigo-100">
-                                                {{ substr($ticket->assignedTo->first_name, 0, 1) }}
-                                            </div>
-                                            <span class="text-sm text-indigo-700 font-medium">
-                                                {{ $ticket->assignedTo->first_name }} {{ $ticket->assignedTo->last_name }}
+                                    <a href="{{ route('admin.tickets.show', $ticket->ticket_id) }}" 
+                                       class="w-10 h-10 rounded-xl bg-gradient-brand text-white flex items-center justify-center shadow-lg shadow-brand/20 hover:scale-110 transition-all">
+                                        <i class="fa-solid fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="col-span-full py-20 premium-card flex flex-col items-center justify-center gap-4">
+                            <div class="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center">
+                                <i class="fa-solid fa-check-double text-3xl text-slate-300"></i>
+                            </div>
+                            <div class="text-center">
+                                <h3 class="text-slate-700 font-bold">No Resolved Tickets</h3>
+                                <p class="text-slate-500 text-sm">No tickets have been resolved yet.</p>
+                            </div>
+                        </div>
+                    @endforelse
+                </div>
+            @else
+                <!-- Table View for Other Statuses -->
+                <div class="overflow-x-auto px-1 pb-4">
+                    <table class="premium-table w-full">
+                        <thead>
+                            <tr>
+                                <th class="text-left">REF</th>
+                                <th class="text-left">Subject</th>
+                                <th class="text-left">Added By</th>
+                                <th class="text-left">Assigned To</th>
+                                <th class="text-center">Priority</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tickets-container">
+                            @forelse($tickets as $ticket)
+                                <tr>
+                                    <td>
+                                        <span class="font-mono text-sm font-semibold text-slate-600">{{ $ticket->ticket_ref }}</span>
+                                    </td>
+                                    <td class="max-w-xs">
+                                        <div class="flex flex-col">
+                                            <span class="font-semibold text-slate-800 block truncate" title="{{ $ticket->ticket_subject }}">
+                                                {{ $ticket->ticket_subject }}
+                                            </span>
+                                            <span class="text-xs text-slate-500">
+                                                {{ $ticket->category->category_name ?? 'General' }}
                                             </span>
                                         </div>
-                                    @else
-                                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-100 px-2 py-1 rounded">Unassigned</span>
-                                    @endif
-                                </td>
-                                <td class="text-center">
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #{{ $ticket->priority->priority_color ?? 'ccc' }}">
-                                        {{ $ticket->priority->priority_name ?? 'Normal' }}
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #{{ $ticket->status->status_color ?? 'ccc' }}">
-                                        {{ $ticket->status->status_name ?? 'Open' }}
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <div class="flex items-center justify-center gap-2">
-                                        <a href="{{ route('admin.tickets.show', $ticket->ticket_id) }}"
-                                            class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
-                                            title="View Details & Manage">
-                                            <i class="fa-solid fa-eye text-sm"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="8" class="text-center py-12">
-                                    <div class="flex flex-col items-center gap-3">
-                                        <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
-                                            <i class="fa-solid fa-ticket text-2xl text-slate-400"></i>
+                                    </td>
+                                    <td>
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border border-slate-200">
+                                                {{ $ticket->addedBy ? substr($ticket->addedBy->first_name, 0, 1) : 'S' }}
+                                            </div>
+                                            <span class="text-sm text-slate-600 font-medium">
+                                                {{ $ticket->addedBy ? $ticket->addedBy->first_name . ' ' . $ticket->addedBy->last_name : 'System' }}
+                                            </span>
                                         </div>
-                                        <p class="text-slate-500 font-medium">No tickets found</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                                    </td>
+                                    <td>
+                                        @if($ticket->assignedTo)
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-7 h-7 rounded-full bg-indigo-50 flex items-center justify-center text-[10px] font-bold text-indigo-600 border border-indigo-100">
+                                                    {{ substr($ticket->assignedTo->first_name, 0, 1) }}
+                                                </div>
+                                                <span class="text-sm text-indigo-700 font-medium">
+                                                    {{ $ticket->assignedTo->first_name }} {{ $ticket->assignedTo->last_name }}
+                                                </span>
+                                            </div>
+                                        @else
+                                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-100 px-2 py-1 rounded">Unassigned</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #{{ $ticket->priority->priority_color ?? 'ccc' }}">
+                                            {{ $ticket->priority->priority_name ?? 'Normal' }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #{{ $ticket->status->status_color ?? 'ccc' }}">
+                                            {{ $ticket->status->status_name ?? 'Open' }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <a href="{{ route('admin.tickets.show', $ticket->ticket_id) }}"
+                                                class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
+                                                title="View Details & Manage">
+                                                <i class="fa-solid fa-eye text-sm"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="text-center py-12">
+                                        <div class="flex flex-col items-center gap-3">
+                                            <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+                                                <i class="fa-solid fa-ticket text-2xl text-slate-400"></i>
+                                            </div>
+                                            <p class="text-slate-500 font-medium">No tickets found</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            @endif
 
             <!-- AJAX Pagination Container -->
             <div id="tickets-pagination"></div>
@@ -390,75 +484,140 @@
         
         // Initialize AJAX Pagination
         window.ajaxPagination = new AjaxPagination({
-            endpoint: "{{ route('admin.tickets.data', ['stt' => $stt]) }}", // Pass current filter
+            endpoint: "{{ route('admin.tickets.data', ['stt' => $stt, 'month' => request('month')]) }}", // Pass current filter
             containerSelector: '#tickets-container',
             paginationSelector: '#tickets-pagination',
             perPage: 15,
             renderCallback: function(tickets) {
                 const container = document.querySelector('#tickets-container');
+                const isResolved = {{ $stt }} == 3;
                 
                 if (tickets.length === 0) {
-                    container.innerHTML = `
-                        <tr>
-                            <td colspan="8" class="text-center py-12">
-                                <div class="flex flex-col items-center gap-3">
-                                    <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
-                                        <i class="fa-solid fa-ticket text-2xl text-slate-400"></i>
-                                    </div>
-                                    <p class="text-slate-500 font-medium">No tickets found</p>
+                    if (isResolved) {
+                        container.innerHTML = `
+                            <div class="col-span-full py-20 premium-card flex flex-col items-center justify-center gap-4">
+                                <div class="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center">
+                                    <i class="fa-solid fa-check-double text-3xl text-slate-300"></i>
                                 </div>
-                            </td>
-                        </tr>
-                    `;
+                                <div class="text-center">
+                                    <h3 class="text-slate-700 font-bold">No Resolved Tickets</h3>
+                                    <p class="text-slate-500 text-sm">No tickets have been resolved yet.</p>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        container.innerHTML = `
+                            <tr>
+                                <td colspan="7" class="text-center py-12">
+                                    <div class="flex flex-col items-center gap-3">
+                                        <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+                                            <i class="fa-solid fa-ticket text-2xl text-slate-400"></i>
+                                        </div>
+                                        <p class="text-slate-500 font-medium">No tickets found</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }
                     return;
                 }
                 
                 let html = '';
                 tickets.forEach(ticket => {
                     const showUrl = `{{ route('admin.tickets.show', ':id') }}`.replace(':id', ticket.ticket_id);
-                    
-                    html += `
-                        <tr>
-                            <td>
-                                <span class="font-mono text-sm font-semibold text-slate-600">${ticket.ticket_ref}</span>
-                            </td>
-                            <td class="max-w-xs">
-                                <div class="flex flex-col">
-                                    <span class="font-semibold text-slate-800 block truncate" title="${ticket.ticket_subject}">
-                                        ${ticket.ticket_subject}
-                                    </span>
-                                    <span class="text-xs text-slate-500">
-                                        ${ticket.category ? ticket.category.category_name : 'General'}
+                    const priorityColor = ticket.priority ? ticket.priority.priority_color : 'ccc';
+                    const priorityName = ticket.priority ? ticket.priority.priority_name : 'Normal';
+                    const categoryName = ticket.category ? ticket.category.category_name : 'General';
+                    const addedByName = ticket.added_by ? (ticket.added_by.first_name + ' ' + (ticket.added_by.last_name || '')) : 'System';
+                    const assignedToName = ticket.assigned_to ? (ticket.assigned_to.first_name + ' ' + (ticket.assigned_to.last_name || '')) : null;
+                    const statusColor = ticket.status ? ticket.status.status_color : 'ccc';
+                    const statusName = ticket.status ? ticket.status.status_name : 'Open';
+                    const resolvedDate = ticket.last_updated_date ? new Date(ticket.last_updated_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-';
+                    const description = ticket.ticket_description ? (ticket.ticket_description.length > 100 ? ticket.ticket_description.substring(0, 100) + '...' : ticket.ticket_description) : '';
+
+                    if (isResolved) {
+                        html += `
+                            <div class="premium-card p-0 overflow-hidden group hover:-translate-y-1 transition-all duration-300">
+                                <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                                    <span class="font-mono text-xs font-bold text-slate-500">${ticket.ticket_ref}</span>
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white text-[10px] font-bold shadow-sm" style="background: #${priorityColor}">
+                                        ${priorityName}
                                     </span>
                                 </div>
-                            </td>
-                            <td>
-                                ${getAddedByBadge(ticket.added_by)}
-                            </td>
-                            <td>
-                                ${getAssignedToBadge(ticket.assigned_to)}
-                            </td>
-                            <td class="text-center">
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #${ticket.priority ? ticket.priority.priority_color : 'ccc'}">
-                                    ${ticket.priority ? ticket.priority.priority_name : 'Normal'}
-                                </span>
-                            </td>
-                            <td class="text-center">
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #${ticket.status ? ticket.status.status_color : 'ccc'}">
-                                    ${ticket.status ? ticket.status.status_name : 'Open'}
-                                </span>
-                            </td>
-                            <td class="text-center">
-                                <div class="flex items-center justify-center gap-2">
-                                    <a href="${showUrl}"
-                                        class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
-                                        title="View Details & Manage">
-                                        <i class="fa-solid fa-eye text-sm"></i>
-                                    </a>
+                                <div class="p-5">
+                                    <div class="mb-4">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <span class="inline-block px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 text-[10px] font-bold uppercase tracking-wider">
+                                                ${categoryName}
+                                            </span>
+                                            <div class="text-[10px] font-bold text-slate-400 flex flex-col items-end">
+                                                <span>By: ${addedByName}</span>
+                                                ${assignedToName ? `<span class="text-indigo-500">To: ${ticket.assigned_to.first_name}</span>` : ''}
+                                            </div>
+                                        </div>
+                                        <h3 class="text-slate-800 font-bold leading-snug line-clamp-2 h-10 mb-1" title="${ticket.ticket_subject}">
+                                            ${ticket.ticket_subject}
+                                        </h3>
+                                        <p class="text-slate-500 text-xs line-clamp-2 mt-2 leading-relaxed h-8">
+                                            ${description}
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center justify-between pt-4 border-t border-slate-50">
+                                        <div class="flex flex-col">
+                                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Resolved on</span>
+                                            <span class="text-xs text-slate-600 font-medium">${resolvedDate}</span>
+                                        </div>
+                                        <a href="${showUrl}" class="w-10 h-10 rounded-xl bg-gradient-brand text-white flex items-center justify-center shadow-lg shadow-brand/20 hover:scale-110 transition-all">
+                                            <i class="fa-solid fa-arrow-right"></i>
+                                        </a>
+                                    </div>
                                 </div>
-                            </td>
-                        </tr>
-                    `;
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <tr>
+                                <td>
+                                    <span class="font-mono text-sm font-semibold text-slate-600">${ticket.ticket_ref}</span>
+                                </td>
+                                <td class="max-w-xs">
+                                    <div class="flex flex-col">
+                                        <span class="font-semibold text-slate-800 block truncate" title="${ticket.ticket_subject}">
+                                            ${ticket.ticket_subject}
+                                        </span>
+                                        <span class="text-xs text-slate-500">
+                                            ${categoryName}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    ${getAddedByBadge(ticket.added_by)}
+                                </td>
+                                <td>
+                                    ${getAssignedToBadge(ticket.assigned_to)}
+                                </td>
+                                <td class="text-center">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #${priorityColor}">
+                                        ${priorityName}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-md" style="background: #${statusColor}">
+                                        ${statusName}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <a href="${showUrl}"
+                                            class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
+                                            title="View Details & Manage">
+                                            <i class="fa-solid fa-eye text-sm"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }
                 });
                 
                 container.innerHTML = html;
