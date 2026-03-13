@@ -76,27 +76,9 @@
     @push('scripts')
         <script src="{{ asset('libs/jspdf/jspdf.umd.min.js') }}"></script>
         <script src="{{ asset('libs/html2canvas/html2canvas.min.js') }}"></script>
-        <script type="text/javascript" src="{{ asset('libs/google-charts/loader.js') }}"></script>
         <script type="text/javascript">
-            let chart;
-            let data;
-            let options = {
-                'allowHtml': true, 
-                'size': 'medium',
-                'nodeClass': 'premium-org-node',
-                'selectedNodeClass': 'premium-org-node-selected'
-            };
-
-            google.charts.load('current', {packages:["orgchart"]});
-            google.charts.setOnLoadCallback(initializeChart);
-
             function initializeChart() {
-                data = new google.visualization.DataTable();
-                data.addColumn('string', 'Name');
-                data.addColumn('string', 'Manager');
-                data.addColumn('string', 'ToolTip');
-                
-                const rows = [
+                const rawData = [
                     @foreach($departments as $dept)
                         @php
                             $deptId = (string)$dept->department_id;
@@ -136,36 +118,68 @@
                                         ' . $managerHtml . '
                                     </div>';
                         @endphp
-                        [{v: @json($deptId), f: @json($html)}, @json($parentId), @json($dept->department_name)],
+                        { id: @json($deptId), parentId: @json($parentId), html: @json($html), name: @json($dept->department_name) },
                     @endforeach
                 ];
 
-                data.addRows(rows);
-                chart = new google.visualization.OrgChart(document.getElementById('chart_div'));
-                
-                drawChart();
+                const tree = buildTree(rawData);
+                const chartContainer = document.getElementById('chart_div');
+                chartContainer.innerHTML = renderTree(tree);
 
                 // Smoothly fade out overlay
                 const overlay = document.getElementById('loadingOverlay');
-                overlay.style.opacity = '0';
-                setTimeout(() => {
-                    overlay.style.display = 'none';
-                }, 500);
+                if (overlay) {
+                    overlay.style.opacity = '0';
+                    setTimeout(() => {
+                        overlay.style.display = 'none';
+                    }, 500);
+                }
 
                 // Initialize Controls
                 initControls();
                 
-                // Add Resize Listener with Debounce
-                window.addEventListener('resize', debounce(() => {
-                    drawChart();
-                }, 150));
+                // Resize handling removed as custom CSS is responsive
             }
 
-            function drawChart() {
-                if (chart && data) {
-                    chart.draw(data, options);
-                }
+            function buildTree(data) {
+                const map = {};
+                const roots = [];
+                
+                data.forEach(item => {
+                    map[item.id] = { ...item, children: [] };
+                });
+
+                data.forEach(item => {
+                    if (item.parentId && map[item.parentId]) {
+                        map[item.parentId].children.push(map[item.id]);
+                    } else {
+                        roots.push(map[item.id]);
+                    }
+                });
+
+                return roots;
             }
+
+            function renderTree(nodes) {
+                if (!nodes || nodes.length === 0) return '';
+                
+                let html = '<ul>';
+                nodes.forEach(node => {
+                    html += `
+                        <li>
+                            <div class="premium-org-node">
+                                ${node.html}
+                            </div>
+                            ${renderTree(node.children)}
+                        </li>
+                    `;
+                });
+                html += '</ul>';
+                return html;
+            }
+
+            // Trigger initialization immediately as we are offline and don't need loaders
+            document.addEventListener('DOMContentLoaded', initializeChart);
 
             function debounce(func, wait) {
                 let timeout;
@@ -364,14 +378,79 @@
 
     @push('styles')
         <style>
-            /* Google Chart Overrides */
-            .google-visualization-orgchart-node {
-                border: none !important;
-                background: transparent !important;
-                box-shadow: none !important;
-                padding: 12px 18px !important;
+            /* Offline Org Chart - Tree Structure */
+            #chart_div ul {
+                padding-top: 20px; 
+                position: relative;
+                transition: all 0.5s;
+                display: flex;
+                justify-content: center;
+                gap: 0;
             }
+
+            #chart_div li {
+                float: left; 
+                text-align: center;
+                list-style-type: none;
+                position: relative;
+                padding: 20px 5px 0 5px;
+                transition: all 0.5s;
+            }
+
+            /* We will use ::before and ::after to draw the lines */
+            #chart_div li::before, #chart_div li::after {
+                content: '';
+                position: absolute; 
+                top: 0; 
+                right: 50%;
+                border-top: 2px solid #cbd5e1;
+                width: 50%; 
+                height: 20px;
+            }
+
+            #chart_div li::after {
+                right: auto; 
+                left: 50%;
+                border-left: 2px solid #cbd5e1;
+            }
+
+            /* We need to remove left-right connectors from elements without any siblings */
+            #chart_div li:only-child::after, #chart_div li:only-child::before {
+                display: none;
+            }
+
+            /* Remove space from the top of single children */
+            #chart_div li:only-child { padding-top: 0; }
+
+            /* Remove left connector from first child and right connector from last child */
+            #chart_div li:first-child::before, #chart_div li:last-child::after {
+                border: 0 none;
+            }
+
+            /* Adding back the vertical connector to the last nodes */
+            #chart_div li:last-child::before {
+                border-right: 2px solid #cbd5e1;
+                border-radius: 0 5px 0 0;
+            }
+
+            #chart_div li:first-child::after {
+                border-radius: 5px 0 0 0;
+            }
+
+            /* Time to add downward connectors from parents */
+            #chart_div ul ul::before {
+                content: '';
+                position: absolute; 
+                top: 0; 
+                left: 50%;
+                border-left: 2px solid #cbd5e1;
+                width: 0; 
+                height: 20px;
+            }
+
+            /* Node Styling */
             .premium-org-node {
+                display: inline-block;
                 background: white !important;
                 border: 1px solid #f1f5f9 !important;
                 border-radius: 24px !important;
@@ -380,6 +459,8 @@
                 padding: 0 !important;
                 min-width: 140px !important;
                 max-width: 240px !important;
+                position: relative;
+                z-index: 10;
             }
             @media (min-width: 768px) {
                 .premium-org-node { min-width: 200px !important; }
@@ -403,12 +484,6 @@
                 background: #fdfdff !important;
                 box-shadow: 0 0 0 6px rgb(99 102 241 / 0.1) !important;
             }
-            
-            /* High-Performance Connectors */
-            .google-visualization-orgchart-lineleft { border-left: 2px solid #cbd5e1 !important; }
-            .google-visualization-orgchart-lineright { border-right: 2px solid #cbd5e1 !important; }
-            .google-visualization-orgchart-linebottom { border-bottom: 2px solid #cbd5e1 !important; }
-            .google-visualization-orgchart-connrow-medium { height: 35px !important; }
 
             /* Fullscreen & Scrollbar Styling */
             #chartContainer:fullscreen { background: #fbfcfe; padding: 2.5rem; overflow: auto; height: 100vh; }
