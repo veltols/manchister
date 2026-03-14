@@ -726,7 +726,7 @@
 
         <!-- Header -->
         <header
-            class="h-24 flex items-center justify-between px-4 md:px-8 border-b border-slate-200 z-20 shadow-[0_4px_30px_rgba(0,30,50,0.06)] shrink-0 transition-all duration-300 relative overflow-hidden"
+            class="h-24 flex items-center justify-between px-4 md:px-8 border-b border-slate-200 z-20 shadow-[0_4px_30px_rgba(0,30,50,0.06)] shrink-0 transition-all duration-300 relative"
             style="background-color: #f8fafc;">
 
             <!-- Decorative Pattern Overlay -->

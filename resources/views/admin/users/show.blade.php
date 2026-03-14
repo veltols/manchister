@@ -647,7 +647,7 @@
 
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">New Login Email <span class="text-rose-500">*</span></label>
-                        <input type="text" name="new_email" required class="premium-input w-full px-4 py-3" placeholder="e.g. user@example.com">
+                        <input type="text" name="new_email" required class="premium-input w-full px-4 py-3" placeholder="e.g. john.doe or email@example.com">
                     </div>
 
                     <div>

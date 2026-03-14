@@ -283,7 +283,7 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">Login ID / Username <span class="text-slate-400 font-normal">(Optional)</span></label>
-                                <input type="text" name="employee_email" class="premium-input w-full px-4 py-3 text-sm" placeholder="e.g. john.doe or email@example.com">
+                                <input type="text" name="employee_email" class="premium-input w-full px-4 py-3 text-sm" placeholder="e.g. john.doe or email@example.com" required>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">Password</label>
