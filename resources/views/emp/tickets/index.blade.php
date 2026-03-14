@@ -55,43 +55,84 @@
             </div>
         </div>
 
-        <!-- Monthly Resolved Filter -->
+        <!-- Monthly Resolved Filter Slider -->
         @if(isset($resolvedMonths) && count($resolvedMonths) > 0)
-            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 animate-fade-in-up">
-                <!-- All Time Box -->
-                <a href="{{ route('emp.tickets.index', ['stt' => 3]) }}"
-                    class="group relative overflow-hidden rounded-2xl p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg border {{ !request('month') ? 'bg-gradient-brand text-white shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-100 hover:border-indigo-200' }}">
-                    <div class="relative z-10 flex flex-col items-center justify-center h-full gap-1">
-                        <div
-                            class="w-8 h-8 rounded-full mb-1 flex items-center justify-center {{ !request('month') ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-500' }}">
-                            <i class="fa-solid fa-layer-group text-sm"></i>
-                        </div>
-                        <span class="text-xs font-bold uppercase tracking-widest opacity-80">All Time</span>
-                        <span class="text-sm font-bold">View All</span>
-                    </div>
-                </a>
+            <div class="relative group/slider animate-fade-in-up">
+                <!-- Scroll Buttons -->
+                <button onclick="scrollSlider('resolved-slider', -200)" 
+                    class="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/80 backdrop-blur-md shadow-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:text-indigo-600 hover:scale-110 transition-all opacity-0 group-hover/slider:opacity-100 -ml-4">
+                    <i class="fa-solid fa-chevron-left text-xs"></i>
+                </button>
+                
+                <button onclick="scrollSlider('resolved-slider', 200)" 
+                    class="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/80 backdrop-blur-md shadow-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:text-indigo-600 hover:scale-110 transition-all opacity-0 group-hover/slider:opacity-100 -mr-4">
+                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                </button>
 
-                @foreach($resolvedMonths as $month)
-                    <a href="{{ route('emp.tickets.index', ['stt' => 3, 'month' => $month->month_value]) }}"
-                        class="group relative overflow-hidden rounded-2xl p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg border {{ request('month') == $month->month_value ? 'bg-gradient-brand text-white shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-100 hover:border-indigo-200' }}">
-
-                        <div class="relative z-10 flex flex-col items-center justify-center gap-1">
-                            <span
-                                class="text-[10px] font-bold uppercase tracking-widest opacity-70">{{ $month->month_label }}</span>
-                            <span class="text-2xl font-display font-bold">{{ $month->total }}</span>
-                            <span class="text-[10px] opacity-60">Resolved</span>
-                        </div>
+                <div id="resolved-slider" class="flex items-center gap-3 overflow-x-auto pb-3 no-scrollbar scroll-smooth">
+                    <!-- All Time Tab -->
+                    <a href="{{ route('emp.tickets.index', ['stt' => 3]) }}"
+                        class="flex-none px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all border flex items-center gap-2.5 {{ !request('month') ? 'bg-gradient-brand text-white shadow-lg border-transparent' : 'bg-white text-slate-500 border-slate-100 hover:border-indigo-200 hover:text-indigo-600' }}">
+                        <i class="fa-solid fa-layer-group text-sm"></i>
+                        <span>All Time</span>
                     </a>
-                @endforeach
+
+                    @foreach($resolvedMonths as $month)
+                        <a href="{{ route('emp.tickets.index', ['stt' => 3, 'month' => $month->month_value]) }}"
+                            class="flex-none px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all border flex items-center gap-3 {{ request('month') == $month->month_value ? 'bg-gradient-brand text-white shadow-lg border-transparent' : 'bg-white text-slate-500 border-slate-100 hover:border-indigo-200 hover:text-indigo-600' }}">
+                            
+                            <span>{{ $month->month_label }}</span>
+                            
+                            <!-- Count Badge -->
+                            <span class="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full text-[10px] font-bold shadow-sm transition-all {{ request('month') == $month->month_value ? 'bg-white text-indigo-600' : ($month->total > 0 ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-400 border border-slate-100') }}">
+                                {{ $month->total }}
+                            </span>
+                        </a>
+                    @endforeach
+                </div>
             </div>
+            
+            <script>
+                function scrollSlider(id, amount) {
+                    const slider = document.getElementById(id);
+                    slider.scrollLeft += amount;
+                }
+            </script>
+
+            <style>
+                .no-scrollbar::-webkit-scrollbar { display: none; }
+                .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+            </style>
         @endif
 
         <!-- Tickets Area -->
         <div class="space-y-4">
-            @if($stt == 3)
-                <!-- Grid/Box View for Resolved Tickets -->
-                <div id="tickets-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    @forelse($tickets as $ticket)
+            @if($stt == 3 && !request('month'))
+                <!-- Initial State for Resolved Tickets: Show Message -->
+                <div class="premium-card py-20 flex flex-col items-center justify-center gap-6 animate-fade-in-up">
+                    <div class="w-24 h-24 rounded-full bg-indigo-50 flex items-center justify-center relative">
+                        <div class="absolute inset-0 rounded-full bg-indigo-100 animate-pulse"></div>
+                        <i class="fa-solid fa-calendar-check text-4xl text-indigo-600 relative z-10 transition-transform hover:scale-110"></i>
+                    </div>
+                    <div class="text-center max-w-md mx-auto px-6">
+                        <h3 class="text-xl font-display font-bold text-slate-800 mb-2">Monthly Resolved Archives</h3>
+                        <p class="text-slate-500 text-sm leading-relaxed mb-6">
+                            Select a specific month from the blocks above to view the resolved tickets for that period. 
+                            This helps in organized auditing and performance review.
+                        </p>
+                        <div class="flex items-center justify-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-widest">
+                            <i class="fa-solid fa-arrow-up animate-bounce"></i>
+                            <span>Select a Month Above</span>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            @if($stt != 3 || request('month'))
+                @if($stt == 3)
+                    <!-- Grid/Box View for Resolved Tickets -->
+                    <div id="tickets-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        @forelse($tickets as $ticket)
                         <div class="premium-card p-0 overflow-hidden group hover:-translate-y-1 transition-all duration-300">
                             <!-- Card Header -->
                             <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
@@ -238,6 +279,7 @@
                     </table>
                 </div>
             @endif
+        @endif
 
             <!-- AJAX Pagination Container -->
             <div id="tickets-pagination"></div>

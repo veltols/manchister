@@ -35,6 +35,7 @@ class User extends Authenticatable
         'user_id',
         'user_theme_id',
         'user_lang',
+        'is_active',
     ];
 
     protected $hidden = [];

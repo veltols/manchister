@@ -19,18 +19,31 @@ class SupportTicketController extends Controller
     {
         $stt = $request->input('stt', 0); // 0=All, 1=Open, 2=In Progress, 3=Resolved
 
-        // Monthly Resolved Stats (Like HR side)
+        // Monthly Resolved Stats (Current Year - January to December)
         $resolvedMonths = [];
         if ($stt == \App\Models\SupportTicketStatus::RESOLVED) {
-            $resolvedMonths = SupportTicket::select(
+            $currentYear = \Carbon\Carbon::now()->year;
+            $counts = SupportTicket::select(
                 \Illuminate\Support\Facades\DB::raw("DATE_FORMAT(ticket_added_date, '%Y-%m') as month_value"),
-                \Illuminate\Support\Facades\DB::raw("DATE_FORMAT(ticket_added_date, '%M %Y') as month_label"),
                 \Illuminate\Support\Facades\DB::raw('count(*) as total')
             )
-                ->where('status_id', \App\Models\SupportTicketStatus::RESOLVED)
-                ->groupBy('month_value', 'month_label')
-                ->orderBy('month_value', 'desc')
-                ->get();
+            ->where('status_id', \App\Models\SupportTicketStatus::RESOLVED)
+            ->whereYear('ticket_added_date', $currentYear)
+            ->groupBy('month_value')
+            ->get()
+            ->pluck('total', 'month_value');
+
+            for ($m = 1; $m <= 12; $m++) {
+                $date = \Carbon\Carbon::createFromDate($currentYear, $m, 1);
+                $monthValue = $date->format('Y-m');
+                $monthLabel = $date->format('F Y');
+                
+                $resolvedMonths[] = (object)[
+                    'month_value' => $monthValue,
+                    'month_label' => $monthLabel,
+                    'total' => $counts[$monthValue] ?? 0
+                ];
+            }
         }
 
         $query = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'assignedTo']);

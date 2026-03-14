@@ -34,6 +34,16 @@ class AuthController extends Controller
         // Note: Legacy system uses 'user_email' column for username
         $user = User::where('user_email', $username)->first();
 
+        // Check user status (Active/Deleted/Hidden)
+        if ($user) {
+            if (!$user->is_active || ($user->employee && ($user->employee->is_deleted || $user->employee->is_hidden))) {
+                Log::warning('Login blocked for inactive system user: ' . $username);
+                return back()->withErrors([
+                    'username' => 'Your account is inactive. Please contact the administrator.',
+                ])->onlyInput('username');
+            }
+        }
+
         if ($user) {
             // ... [Existing Employee Password Check Logic] ...
             $isValid = false;
@@ -122,7 +132,21 @@ class AuthController extends Controller
         }
 
         // ── 2. ATP Login (atps_list + atps_list_pass) ────────────────────────
-        $atp = Atp::where('atp_email', $username)->first();
+        $atp = Atp::with('status')->where('atp_email', $username)->first();
+
+        if ($atp) {
+            // Check if ATP is active (assuming status_id 1 is active, or we check the linked system user)
+            $atpUser = User::where('user_id', $atp->atp_id)
+                ->where('user_type', 'atp')
+                ->first();
+
+            if ($atpUser && !$atpUser->is_active) {
+                Log::warning('Login blocked for inactive ATP: ' . $username);
+                return back()->withErrors([
+                    'username' => 'Your account is inactive. Please contact the administrator.',
+                ])->onlyInput('username');
+            }
+        }
 
         if ($atp) {
             // Check active password in atps_list_pass
