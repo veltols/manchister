@@ -36,7 +36,7 @@ class AuthController extends Controller
 
         // Check user status (Active/Deleted/Hidden)
         if ($user) {
-            if (!$user->is_active || ($user->employee && ($user->employee->is_deleted || $user->employee->is_hidden))) {
+            if (!$user->is_active) {
                 Log::warning('Login blocked for inactive system user: ' . $username);
                 return back()->withErrors([
                     'username' => 'Your account is inactive. Please contact the administrator.',
