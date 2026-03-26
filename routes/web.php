@@ -113,7 +113,9 @@ Route::middleware('auth')->group(function () {
             Route::post('/strategies/projects/update/{id}', [App\Http\Controllers\Employee\Ext\OperationalProjectController::class, 'update'])->name('strategies.projects.update');
             Route::post('/strategies/projects/publish/{id}', [App\Http\Controllers\Employee\Ext\OperationalProjectController::class, 'publish'])->name('strategies.projects.publish');
             Route::post('/strategies/projects/view/{id}/kpis', [App\Http\Controllers\Employee\Ext\OperationalProjectController::class, 'storeKpiLink'])->name('strategies.projects.kpis.store');
+            Route::delete('/strategies/projects/kpis/{id}', [App\Http\Controllers\Employee\Ext\OperationalProjectController::class, 'destroyKpiLink'])->name('strategies.projects.kpis.destroy');
             Route::post('/strategies/projects/view/{id}/milestones', [App\Http\Controllers\Employee\Ext\OperationalProjectController::class, 'storeMilestone'])->name('strategies.projects.milestones.store');
+            Route::delete('/strategies/projects/milestones/{id}', [App\Http\Controllers\Employee\Ext\OperationalProjectController::class, 'destroyMilestone'])->name('strategies.projects.milestones.destroy');
 
             // Self Studies
             Route::get('/strategies/self_studies/list', [App\Http\Controllers\Employee\Ext\StrategicStudyController::class, 'index'])->name('strategies.self_studies.index');

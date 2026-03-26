@@ -70,8 +70,7 @@
                     </div>
                 </div>
 
-                {{-- Stats Row --}}
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-5 border-t border-slate-50">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-50">
                     <div class="text-center">
                         <span class="block text-2xl font-bold text-slate-700">{{ $plan->themes_count }}</span>
                         <span class="text-[10px] uppercase tracking-widest text-slate-400 mt-0.5 block">Themes</span>
@@ -82,11 +81,36 @@
                     </div>
                     <div class="text-center">
                         <span class="block text-xl font-bold text-slate-700">{{ $plan->plan_from }}</span>
-                        <span class="text-[10px] uppercase tracking-widest text-slate-400 mt-0.5 block">Start Year</span>
+                        <span class="text-[10px] uppercase tracking-widest text-slate-400 mt-0.5 block">Start Date</span>
                     </div>
                     <div class="text-center">
                         <span class="block text-xl font-bold text-slate-700">{{ $plan->plan_to }}</span>
-                        <span class="text-[10px] uppercase tracking-widest text-slate-400 mt-0.5 block">End Year</span>
+                        <span class="text-[10px] uppercase tracking-widest text-slate-400 mt-0.5 block">End Date</span>
+                    </div>
+                </div>
+
+                {{-- Strategic Objectives Mapped to Outcomes --}}
+                @php
+                    $totMapped = $plan->internal_maps_count ?? 0;
+                    $totMilestones = $plan->milestones_count ?? 0;
+                    $calcPct = $totMilestones > 0 ? round(($totMapped / $totMilestones) * 100) : 0;
+                    $totalMappedPercentage = $calcPct > 100 ? 100 : $calcPct;
+                @endphp
+                <div class="mt-5 pt-4 border-t border-slate-50">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Strategic Objectives Mapped to Outcomes</span>
+                        <div class="flex items-center gap-3 text-[9px] uppercase font-bold tracking-wider">
+                            <span class="flex items-center gap-1.5 text-slate-400">
+                                <span class="w-2.5 h-2.5 rounded-full bg-slate-200"></span> Not Mapped
+                            </span>
+                            <span class="flex items-center gap-1.5" style="color:#004F68;">
+                                <span class="w-2.5 h-2.5 rounded-full" style="background:#004F68;"></span> Mapped
+                            </span>
+                        </div>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                        <div class="h-2.5 rounded-full transition-all duration-700" 
+                             style="width: {{ $totalMappedPercentage }}%; background: linear-gradient(90deg, #004F68, #0088b3);"></div>
                     </div>
                 </div>
             </div>

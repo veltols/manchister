@@ -87,6 +87,7 @@ class OperationalProjectController extends Controller
 
         $availableKpis = $project->plan
             ? StrategicPlanKpi::where('plan_id', $project->plan_id)
+                ->whereIn('department_id', [$project->department_id, 0])
                 ->with(['objective', 'theme'])
                 ->get()
             : collect();
@@ -173,5 +174,23 @@ class OperationalProjectController extends Controller
 
         return redirect()->route('emp.ext.strategies.projects.show', $projectId)
             ->with('success', 'Milestone added successfully.');
+    }
+
+    public function destroyKpiLink($id)
+    {
+        $pk = OperationalProjectKpi::findOrFail($id);
+        $projectId = $pk->project_id;
+        $pk->delete();
+        return redirect()->route('emp.ext.strategies.projects.show', $projectId)
+            ->with('success', 'KPI link removed.');
+    }
+
+    public function destroyMilestone($id)
+    {
+        $ms = OperationalProjectMilestone::findOrFail($id);
+        $projectId = $ms->project_id;
+        $ms->delete();
+        return redirect()->route('emp.ext.strategies.projects.show', $projectId)
+            ->with('success', 'Milestone deleted.');
     }
 }

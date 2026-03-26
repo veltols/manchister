@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class OperationalProjectKpi extends Model
 {
     protected $table      = 'm_operational_projects_kpis';
-    protected $primaryKey = 'kpi_id';
+    protected $primaryKey = 'linked_kpi_id';
     public    $timestamps = false;
     protected $guarded    = [];
 

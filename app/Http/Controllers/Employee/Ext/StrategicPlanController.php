@@ -24,7 +24,7 @@ class StrategicPlanController extends Controller
     public function index()
     {
         $plans = StrategicPlan::orderBy('plan_id', 'desc')
-            ->withCount(['themes', 'objectives'])
+            ->withCount(['themes', 'objectives', 'milestones', 'internalMaps'])
             ->with('department')
             ->paginate(10);
 
@@ -41,8 +41,8 @@ class StrategicPlanController extends Controller
     {
         $request->validate([
             'plan_title'   => 'required|string|max:255',
-            'plan_from'    => 'required|integer',
-            'plan_to'      => 'required|integer',
+            'plan_from'    => 'required|date',
+            'plan_to'      => 'required|date',
             'plan_level'   => 'required|integer',
             'plan_vision'  => 'nullable|string',
             'plan_mission' => 'nullable|string',
@@ -84,7 +84,40 @@ class StrategicPlanController extends Controller
         $frequencies    = StrategicPlanKpiFreq::all();
         $departments    = Department::all();
 
-        return view('emp.ext.strategies.show', compact('plan', 'objectiveTypes', 'frequencies', 'departments'));
+        // ─────────────────────────────────────────────────────
+        //  INSIGHTS DATA (Published Plans)
+        // ─────────────────────────────────────────────────────
+        $stats = [];
+        if ($plan->is_published) {
+            // 1. Mapped Milestones / Internal Mapping Stats
+            $stats['totalInternalMaps'] = $plan->internalMaps->count();
+            $stats['unassignedMaps']    = $plan->internalMaps->where('is_task_assigned', 0)->count();
+            $stats['assignedMaps']      = $plan->internalMaps->where('is_task_assigned', 1)->count();
+            
+            // 2. Task Stats
+            $tasks = \DB::table('tasks_list')->where('strategic_plan_id', $id)->get();
+            $stats['tasksOpen']     = $tasks->where('status_id', 1)->count();
+            $stats['tasksStarted']  = $tasks->where('status_id', 2)->count();
+            $stats['tasksFinished'] = $tasks->where('status_id', 3)->count();
+
+            // 3. Objectives Internal Distribution (by Dept)
+            $internalDist = $plan->internalMaps->groupBy('department_id')->map(function ($group) {
+                return $group->count();
+            });
+            $stats['internalLabels'] = $internalDist->keys()->map(function($deptId) use ($departments) {
+                return $departments->where('department_id', $deptId)->first()?->department_name ?? 'Unknown';
+            })->values();
+            $stats['internalData']   = $internalDist->values();
+
+            // 4. Objectives External Distribution (by Entity)
+            $externalDist = $plan->externalMaps->groupBy('external_entity_name')->map(function ($group) {
+                return $group->count();
+            });
+            $stats['externalLabels'] = $externalDist->keys()->values();
+            $stats['externalData']   = $externalDist->values();
+        }
+
+        return view('emp.ext.strategies.show', compact('plan', 'objectiveTypes', 'frequencies', 'departments', 'stats'));
     }
 
     public function update(Request $request, $id)
@@ -92,8 +125,8 @@ class StrategicPlanController extends Controller
         $plan = StrategicPlan::findOrFail($id);
         $request->validate([
             'plan_title'   => 'required|string|max:255',
-            'plan_from'    => 'required',
-            'plan_to'      => 'required',
+            'plan_from'    => 'required|date',
+            'plan_to'      => 'required|date',
             'plan_level'   => 'required',
         ]);
 
@@ -202,6 +235,8 @@ class StrategicPlanController extends Controller
             'theme_id'     => 'required|integer',
             'objective_id' => 'required|integer',
             'kpi_title'    => 'required|string|max:100',
+            'kpi_code'     => 'nullable|string|max:50',
+            'department_id'=> 'nullable|integer',
         ]);
 
         $kpi = new StrategicPlanKpi();
@@ -210,7 +245,7 @@ class StrategicPlanController extends Controller
         $kpi->objective_id     = $request->objective_id;
         $kpi->kpi_title        = $request->kpi_title;
         $kpi->kpi_description  = $request->kpi_description;
-        $kpi->kpi_code         = 'KPI-' . strtoupper(uniqid());
+        $kpi->kpi_code         = $request->kpi_code ?: 'KPI-' . strtoupper(uniqid());
         $kpi->kpi_formula      = $request->kpi_formula;
         $kpi->data_source      = $request->data_source;
         $kpi->kpi_frequncy_id  = $request->kpi_frequncy_id ?? null;

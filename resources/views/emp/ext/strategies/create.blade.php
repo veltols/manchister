@@ -36,14 +36,12 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">From Year</label>
-                        <input type="number" name="plan_from" id="plan_from" class="premium-input w-full"
-                               placeholder="e.g. 2026" min="2000" max="2100" required>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">From Date</label>
+                        <input type="date" name="plan_from" id="plan_from" class="premium-input w-full" required>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">To Year</label>
-                        <input type="number" name="plan_to" id="plan_to" class="premium-input w-full"
-                               placeholder="e.g. 2030" min="2000" max="2100" required>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">To Date</label>
+                        <input type="date" name="plan_to" id="plan_to" class="premium-input w-full" required>
                     </div>
 
                     <div>
@@ -96,11 +94,39 @@
 
     <script>
         function calculatePeriod() {
-            const from = parseInt(document.getElementById('plan_from').value);
-            const to   = parseInt(document.getElementById('plan_to').value);
-            if (from && to && to > from) {
-                const years = to - from;
-                document.getElementById('plan_period').value = years + (years === 1 ? ' year' : ' years');
+            const fromVal = document.getElementById('plan_from').value;
+            const toVal   = document.getElementById('plan_to').value;
+            if (fromVal && toVal) {
+                const start = new Date(fromVal);
+                const end = new Date(toVal);
+                if (end > start) {
+                    let years = end.getFullYear() - start.getFullYear();
+                    let months = end.getMonth() - start.getMonth();
+                    let days = end.getDate() - start.getDate();
+
+                    if (days < 0) {
+                        months--;
+                        let prevMonth = new Date(end.getFullYear(), end.getMonth(), 0);
+                        days += prevMonth.getDate();
+                    }
+                    if (months < 0) {
+                        years--;
+                        months += 12;
+                    }
+
+                    let parts = [];
+                    if (years > 0) parts.push(years + (years === 1 ? ' year' : ' years'));
+                    if (months > 0) parts.push(months + (months === 1 ? ' month' : ' months'));
+                    if (days > 0) parts.push(days + (days === 1 ? ' day' : ' days'));
+
+                    if (parts.length === 0) {
+                        document.getElementById('plan_period').value = '0 days';
+                    } else {
+                        document.getElementById('plan_period').value = parts.join(', ');
+                    }
+                } else {
+                    document.getElementById('plan_period').value = '';
+                }
             } else {
                 document.getElementById('plan_period').value = '';
             }

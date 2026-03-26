@@ -77,9 +77,10 @@
         <nav class="-mb-px flex space-x-0 overflow-x-auto" aria-label="Tabs">
             @php
                 $tabs = [
-                    'overview' => ['Overview',          'fa-circle-info',  true],
-                    'themes'   => ['Themes & Objectives','fa-layer-group',  true],
+                    'overview' => ['Plan Overview',        'fa-circle-info',  true],
+                    'themes'   => ['Themes/Pillars',       'fa-layer-group',  true],
                     'mapping'  => ['External Mapping',  'fa-share-nodes',  true],
+                    'logs'     => ['Logs',              'fa-clock-rotate-left', true],
                 ];
                 if($plan->is_published) {
                     $tabs['insights']    = ['Insights',    'fa-chart-pie',    true];
@@ -101,63 +102,98 @@
         </nav>
     </div>
 
-    {{-- ─── TAB: OVERVIEW ─── --}}
-    <div x-show="activeTab === 'overview'" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="md:col-span-2 space-y-5">
-            {{-- Vision --}}
-            <div class="premium-card p-6 border-l-4 border-indigo-400" style="background: linear-gradient(135deg, rgba(99,102,241,0.04) 0%, #fff 100%);">
-                <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-eye"></i> Vision
-                </h3>
-                <p class="text-slate-700 text-base italic font-display leading-relaxed">
-                    "{{ $plan->plan_vision ?? 'No vision statement defined.' }}"
-                </p>
-            </div>
-            {{-- Mission --}}
-            <div class="premium-card p-6 border-l-4 border-emerald-400" style="background: linear-gradient(135deg, rgba(16,185,129,0.04) 0%, #fff 100%);">
-                <h3 class="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-crosshairs"></i> Mission
-                </h3>
-                <p class="text-slate-700 leading-relaxed">{{ $plan->plan_mission ?? 'No mission statement defined.' }}</p>
-            </div>
-            {{-- Values --}}
-            <div class="premium-card p-6">
-                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-gem"></i> Core Values
-                </h3>
-                <p class="text-slate-600 whitespace-pre-line">{{ $plan->plan_values ?? 'No values defined.' }}</p>
-            </div>
+    {{-- ─── TAB: PLAN OVERVIEW ─── --}}
+    <div x-show="activeTab === 'overview'" class="space-y-5">
+        {{-- Vision --}}
+        <div class="premium-card p-6 border-l-4 border-indigo-400" style="background: linear-gradient(135deg, rgba(99,102,241,0.04) 0%, #fff 100%);">
+            <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-eye"></i> Vision
+            </h3>
+            <p class="text-slate-700 text-base italic font-display leading-relaxed">
+                "{{ $plan->plan_vision ?? 'No vision statement defined.' }}"
+            </p>
+        </div>
+        {{-- Mission --}}
+        <div class="premium-card p-6 border-l-4 border-emerald-400" style="background: linear-gradient(135deg, rgba(16,185,129,0.04) 0%, #fff 100%);">
+            <h3 class="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-crosshairs"></i> Mission
+            </h3>
+            <p class="text-slate-700 leading-relaxed">{{ $plan->plan_mission ?? 'No mission statement defined.' }}</p>
+        </div>
+        {{-- Values --}}
+        <div class="premium-card p-6">
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-gem"></i> Core Values
+            </h3>
+            <p class="text-slate-600 whitespace-pre-line">{{ $plan->plan_values ?? 'No values defined.' }}</p>
         </div>
 
-        <div class="space-y-5">
+        {{-- Statistics Grid --}}
+        @php
+            $totalWeight = $plan->themes->sum('theme_weight');
+            $externalDist = [];
+            foreach($plan->externalMaps as $map) {
+                $extName = $map->external_entity_name;
+                $externalDist[$extName] = ($externalDist[$extName] ?? 0) + 1;
+            }
+        @endphp
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 pb-6">
+            {{-- Theme Statistics --}}
             <div class="premium-card p-6">
-                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-5">Plan Statistics</h3>
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-5 flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group text-indigo-400"></i> Theme Statistics
+                </h3>
+                <div class="mb-4 flex flex-wrap gap-4 border-b border-slate-50 pb-4">
+                    <span class="text-sm font-bold text-slate-700"><span class="text-indigo-600">{{ $plan->themes->count() }}</span> Themes</span>
+                    <span class="text-slate-300">•</span>
+                    <span class="text-sm font-bold text-slate-700"><span class="text-rose-500">{{ $plan->objectives->count() }}</span> Objectives</span>
+                </div>
                 <div class="space-y-4">
-                    @foreach([
-                        ['From Year',       $plan->plan_from,                                      'fa-calendar-day',   'text-indigo-500'],
-                        ['To Year',         $plan->plan_to,                                        'fa-calendar-check', 'text-emerald-500'],
-                        ['Period',          $plan->plan_period ?: '—',                             'fa-hourglass-half', 'text-amber-500'],
-                        ['Themes',          $plan->themes->count(),                                'fa-layer-group',    'text-purple-500'],
-                        ['Objectives',      $plan->objectives->count(),                            'fa-bullseye',       'text-rose-500'],
-                        ['KPIs',            $plan->kpis->count(),                                  'fa-chart-line',     'text-blue-500'],
-                    ] as [$label, $value, $icon, $color])
-                    <div class="flex justify-between items-center pb-3.5 border-b border-slate-50 last:border-0 last:pb-0">
-                        <span class="text-slate-500 text-sm flex items-center gap-2">
-                            <i class="fa-solid {{ $icon }} {{ $color }} text-xs w-4 text-center"></i>
-                            {{ $label }}
-                        </span>
-                        <span class="font-bold text-slate-700 text-sm">{{ $value }}</span>
-                    </div>
-                    @endforeach
+                    @forelse($plan->themes as $theme)
+                        @php $pct = $totalWeight > 0 ? round(($theme->theme_weight / $totalWeight) * 100) : 0; @endphp
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-xs font-semibold text-slate-600 truncate max-w-[70%]">{{ $theme->theme_title }}</span>
+                                <span class="text-[10px] font-bold" style="color:#004F68;">Weight: {{ $theme->theme_weight }}%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden mb-1">
+                                <div class="h-2 rounded-full transition-all duration-700"
+                                     style="width:{{ $pct }}%; background: linear-gradient(90deg, #004F68, #0088b3);"></div>
+                            </div>
+                            <span class="text-[10px] text-slate-400"><i class="fa-solid fa-bullseye text-rose-400 mr-1"></i>{{ $theme->objectives->count() }} objectives attached</span>
+                        </div>
+                    @empty
+                        <p class="text-sm text-slate-400 italic text-center py-4">No themes defined.</p>
+                    @endforelse
+                </div>
+            </div>
+
+            {{-- External Mapping Statistics --}}
+            <div class="premium-card p-6">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-5 flex items-center gap-2">
+                    <i class="fa-solid fa-globe text-emerald-400"></i> External Mapping Statistics
+                </h3>
+                <div class="mb-4 border-b border-slate-50 pb-4">
+                    <span class="text-sm font-bold text-slate-700"><span class="text-emerald-500">{{ $plan->externalMaps->count() }}</span> Mapped Links</span>
+                </div>
+                <div class="space-y-3">
+                    @forelse($externalDist as $name => $count)
+                        <div class="flex justify-between items-center pb-2 border-b border-slate-50 last:border-0 last:pb-0">
+                            <span class="text-xs font-semibold text-slate-700 truncate pr-2" title="{{ $name }}">{{ $name }}</span>
+                            <span class="text-[10px] flex-shrink-0 font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">{{ $count }} objective(s)</span>
+                        </div>
+                    @empty
+                        <p class="text-sm text-slate-400 italic text-center py-4">No external mappings defined.</p>
+                    @endforelse
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- ─── TAB: THEMES & OBJECTIVES ─── --}}
+    {{-- ─── TAB: THEMES/PILLARS ─── --}}
     <div x-show="activeTab === 'themes'" style="display:none;">
         <div class="flex justify-between items-center mb-5">
-            <h3 class="text-base font-bold text-slate-700">Strategic Themes & Objectives</h3>
+            <h3 class="text-base font-bold text-slate-700">Strategic Themes & Pillars</h3>
             @if(!$plan->is_published)
             <button @click="addThemeOpen = true" class="premium-button px-4 py-2 text-sm">
                 <i class="fa-solid fa-plus text-xs"></i> Add Theme
@@ -247,6 +283,12 @@
                                                 <span class="text-[10px] font-mono bg-white text-slate-600 border border-slate-200 px-2 py-0.5 rounded font-bold">{{ $kpi->kpi_code }}</span>
                                                 @if($kpi->kpi_frequncy_id)
                                                     <span class="text-[10px] bg-sky-50 text-sky-600 px-2 py-0.5 rounded font-bold">{{ $frequencies->where('kpi_frequncy_id', $kpi->kpi_frequncy_id)->first()?->kpi_frequncy_name ?? '' }}</span>
+                                                @endif
+                                                @if($kpi->department_id)
+                                                    <span class="text-[10px] bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded font-bold">
+                                                        <i class="fa-solid fa-building text-[8px] mr-1"></i>
+                                                        {{ $departments->where('department_id', $kpi->department_id)->first()?->department_name ?? 'Org-Wide' }}
+                                                    </span>
                                                 @endif
                                                 <span class="text-[10px] text-slate-400 font-bold">Progress: {{ $kpi->kpi_progress }}%</span>
                                             </div>
@@ -472,6 +514,43 @@
             </div>
         </div>
 
+        {{-- ─────────────────────────────────────────────────────
+             SECTION: MAPPED MILESTONES (INTERNAL MAPPING)
+             ───────────────────────────────────────────────────── --}}
+        <div class="premium-card p-6 mb-8">
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-5 flex items-center gap-2">
+                <i class="fa-solid fa-share-nodes text-emerald-500"></i>
+                Mapped Milestones (Internal Mapping)
+            </h3>
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                {{-- Total Maps --}}
+                <div class="bg-emerald-50 rounded-2xl p-5 flex flex-col items-center gap-2 border border-emerald-100/50 shadow-sm transition-transform hover:-translate-y-1">
+                    <span class="text-3xl font-black text-emerald-600">{{ $stats['totalInternalMaps'] ?? 0 }}</span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-emerald-500">Total maps</span>
+                </div>
+                {{-- Unassigned --}}
+                <div class="bg-rose-50 rounded-2xl p-5 flex flex-col items-center gap-2 border border-rose-100/50 shadow-sm transition-transform hover:-translate-y-1">
+                    <span class="text-3xl font-black text-rose-600">{{ $stats['unassignedMaps'] ?? 0 }}</span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-rose-500">Unassigned</span>
+                </div>
+                {{-- Assigned --}}
+                <div class="bg-sky-50 rounded-2xl p-5 flex flex-col items-center gap-2 border border-sky-100/50 shadow-sm transition-transform hover:-translate-y-1">
+                    <span class="text-3xl font-black text-sky-600">{{ $stats['assignedMaps'] ?? 0 }}</span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-sky-500">Assigned</span>
+                </div>
+                {{-- Open Tasks --}}
+                <div class="bg-amber-50 rounded-2xl p-5 flex flex-col items-center gap-2 border border-amber-100/50 shadow-sm transition-transform hover:-translate-y-1">
+                    <span class="text-3xl font-black text-amber-600">{{ $stats['tasksOpen'] ?? 0 }}</span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-amber-500">Open Tasks</span>
+                </div>
+                {{-- Started Tasks --}}
+                <div class="bg-indigo-50 rounded-2xl p-5 flex flex-col items-center gap-2 border border-indigo-100/50 shadow-sm transition-transform hover:-translate-y-1">
+                    <span class="text-3xl font-black text-indigo-600">{{ $stats['tasksStarted'] ?? 0 }}</span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-indigo-500">Started</span>
+                </div>
+            </div>
+        </div>
+
         {{-- Theme Weight Distribution --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="premium-card p-6">
@@ -522,6 +601,31 @@
                         </div>
                     </div>
                     @endforeach
+                </div>
+            </div>
+        </div>
+
+
+        {{-- ─────────────────────────────────────────────────────
+             SECTION: OBJECTIVES DISTRIBUTION CHARTS
+             ───────────────────────────────────────────────────── --}}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+            <div class="premium-card p-6">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-bar text-indigo-500"></i>
+                    Objectives Internal Distribution (by Dept)
+                </h3>
+                <div class="h-[350px] relative">
+                    <canvas id="internalDistChart"></canvas>
+                </div>
+            </div>
+            <div class="premium-card p-6">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-rose-500"></i>
+                    Objectives External Distribution (by Entity)
+                </h3>
+                <div class="h-[350px] relative">
+                    <canvas id="externalDistChart"></canvas>
                 </div>
             </div>
         </div>
@@ -678,23 +782,24 @@
                 <table class="w-full text-sm">
                     <thead>
                         <tr style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
-                            <th class="text-left px-5 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">#</th>
+                            <th class="text-left px-5 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 w-12 text-center">#</th>
                             <th class="text-left px-5 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Department</th>
-                            <th class="text-left px-5 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Task</th>
+                            <th class="text-left px-5 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Theme</th>
                             <th class="text-left px-5 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Objective</th>
-                            <th class="text-left px-5 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Dates</th>
-                            <th class="text-left px-5 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Status</th>
+                            <th class="text-left px-5 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">KPI / Milestone</th>
+                            <th class="text-left px-5 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Task Details</th>
+                            <th class="text-left px-5 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-center">Status</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50">
                         @foreach($plan->internalMaps as $i => $map)
                             <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="px-5 py-4 text-slate-400 text-xs font-mono">{{ $i + 1 }}</td>
+                                <td class="px-5 py-4 text-slate-400 text-xs font-mono text-center">{{ $i + 1 }}</td>
                                 <td class="px-5 py-4">
                                     <div class="flex items-center gap-2">
-                                        <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                        <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                                              style="background:rgba(0,79,104,0.1);">
-                                            <i class="fa-solid fa-building text-[10px]" style="color:#004F68;"></i>
+                                            <i class="fa-solid fa-building text-xs" style="color:#004F68;"></i>
                                         </div>
                                         <span class="text-xs font-semibold text-slate-700">
                                             {{ $map->department?->department_name ?? 'N/A' }}
@@ -702,33 +807,43 @@
                                     </div>
                                 </td>
                                 <td class="px-5 py-4">
+                                    <span class="text-xs text-slate-600 font-medium">{{ $map->theme?->theme_title ?? '—' }}</span>
+                                </td>
+                                <td class="px-5 py-4">
+                                    <p class="text-xs font-semibold text-slate-700">{{ $map->objective?->objective_title ?? '—' }}</p>
+                                    <span class="text-[9px] text-slate-400 font-mono">{{ $map->objective?->objective_ref }}</span>
+                                </td>
+                                <td class="px-5 py-4">
+                                    <div class="flex flex-col gap-1">
+                                        @if($map->kpi)
+                                            <span class="text-[10px] bg-sky-50 text-sky-600 px-2 py-0.5 rounded font-bold border border-sky-100 w-fit">
+                                                <i class="fa-solid fa-chart-line mr-1"></i>{{ $map->kpi->kpi_title }}
+                                            </span>
+                                        @endif
+                                        @if($map->milestone)
+                                            <span class="text-[10px] bg-amber-50 text-amber-600 px-2 py-0.5 rounded font-bold border border-amber-100 w-fit">
+                                                <i class="fa-solid fa-flag mr-1"></i>{{ $map->milestone->milestone_title }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="px-5 py-4">
                                     <p class="text-xs font-semibold text-slate-700">{{ $map->task_title }}</p>
                                     @if($map->task_description)
-                                        <p class="text-[10px] text-slate-400 mt-0.5 line-clamp-2">{{ $map->task_description }}</p>
+                                        <p class="text-[10px] text-slate-400 mt-0.5 line-clamp-1 truncate max-w-[200px]">{{ $map->task_description }}</p>
                                     @endif
-                                </td>
-                                <td class="px-5 py-4">
-                                    <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded font-bold">
-                                        {{ $map->objective?->objective_title ?? '—' }}
-                                    </span>
-                                </td>
-                                <td class="px-5 py-4 text-xs text-slate-500 whitespace-nowrap">
-                                    @if($map->start_date || $map->end_date)
-                                        <span class="flex items-center gap-1">
-                                            <i class="fa-solid fa-calendar text-slate-300 text-[10px]"></i>
-                                            {{ $map->start_date ? \Carbon\Carbon::parse($map->start_date)->format('d M Y') : '—' }}
-                                            <i class="fa-solid fa-arrow-right text-[10px] text-slate-300"></i>
-                                            {{ $map->end_date ? \Carbon\Carbon::parse($map->end_date)->format('d M Y') : '—' }}
+                                    <div class="flex items-center gap-2 mt-1.5 grayscale opacity-60">
+                                        <i class="fa-solid fa-calendar text-[10px]"></i>
+                                        <span class="text-[9px] font-bold text-slate-500">
+                                            {{ $map->start_date ? \Carbon\Carbon::parse($map->start_date)->format('M d') : '—' }}
+                                            → {{ $map->end_date ? \Carbon\Carbon::parse($map->end_date)->format('M d') : '—' }}
                                         </span>
-                                    @else
-                                        <span class="text-slate-300">—</span>
-                                    @endif
+                                    </div>
                                 </td>
-                                <td class="px-5 py-4">
-                                    <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold
-                                        {{ $map->is_task_assigned ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600' }}">
-                                        <i class="fa-solid {{ $map->is_task_assigned ? 'fa-check-circle' : 'fa-clock' }} text-[9px]"></i>
-                                        {{ $map->is_task_assigned ? 'Assigned' : 'Pending' }}
+                                <td class="px-5 py-4 text-center">
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold
+                                        {{ $map->is_task_assigned ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100' }}">
+                                        {{ $map->is_task_assigned ? 'Assigned' : 'Unassigned' }}
                                     </span>
                                 </td>
                             </tr>
@@ -807,18 +922,18 @@
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">From Year</label>
-                        <input type="number" name="plan_from" class="premium-input w-full" value="{{ $plan->plan_from }}" required>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">From Date</label>
+                        <input type="date" name="plan_from" id="edit_plan_from" class="premium-input w-full" value="{{ $plan->plan_from }}" required>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">To Year</label>
-                        <input type="number" name="plan_to" class="premium-input w-full" value="{{ $plan->plan_to }}" required>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">To Date</label>
+                        <input type="date" name="plan_to" id="edit_plan_to" class="premium-input w-full" value="{{ $plan->plan_to }}" required>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Period</label>
-                        <input type="text" name="plan_period" class="premium-input w-full" value="{{ $plan->plan_period }}">
+                        <input type="text" name="plan_period" id="edit_plan_period" class="premium-input w-full bg-slate-50 text-slate-500" value="{{ $plan->plan_period }}" readonly>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Org. Level</label>
@@ -871,9 +986,12 @@
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Description</label>
                     <textarea name="theme_description" rows="3" class="premium-input w-full" placeholder="Brief description..."></textarea>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Weight (%)</label>
-                    <input type="number" name="theme_weight" class="premium-input w-full" min="0" max="100" value="0">
+                <div x-data="{ weight: 0 }">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest">Weight (%)</label>
+                        <span class="text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg px-2 py-0.5" x-text="weight + '%'"></span>
+                    </div>
+                    <input type="range" name="theme_weight" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" min="0" max="100" step="5" x-model="weight">
                 </div>
                 <div class="flex justify-end pt-2">
                     <button type="submit" class="premium-button px-8 py-2.5">
@@ -904,8 +1022,11 @@
                     <textarea name="theme_description" rows="3" class="premium-input w-full" x-text="editThemeDesc"></textarea>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Weight (%)</label>
-                    <input type="number" name="theme_weight" class="premium-input w-full" :value="editThemeWeight" min="0" max="100">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest">Weight (%)</label>
+                        <span class="text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg px-2 py-0.5" x-text="editThemeWeight + '%'"></span>
+                    </div>
+                    <input type="range" name="theme_weight" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" min="0" max="100" step="5" x-model="editThemeWeight">
                 </div>
                 <div class="flex justify-end pt-2">
                     <button type="submit" class="premium-button px-8 py-2.5">
@@ -946,9 +1067,12 @@
                             @endforeach
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Weight (%)</label>
-                        <input type="number" name="objective_weight" class="premium-input w-full" min="0" max="100" value="0">
+                    <div x-data="{ weight: 0 }">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest">Weight (%)</label>
+                            <span class="text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg px-2 py-0.5" x-text="weight + '%'"></span>
+                        </div>
+                        <input type="range" name="objective_weight" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" min="0" max="100" step="5" x-model="weight">
                     </div>
                 </div>
                 <div class="flex justify-end pt-2">
@@ -973,15 +1097,30 @@
                 @csrf
                 <input type="hidden" name="theme_id" :value="addKpiThemeId">
                 <input type="hidden" name="objective_id" :value="addKpiObjId">
-                <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">KPI Title</label>
-                    <input type="text" name="kpi_title" class="premium-input w-full" required placeholder="e.g. Graduate Employment Rate">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">KPI Code</label>
+                        <input type="text" name="kpi_code" class="premium-input w-full" placeholder="e.g. KPI-01">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">KPI Title</label>
+                        <input type="text" name="kpi_title" class="premium-input w-full" required placeholder="e.g. Graduate Employment Rate">
+                    </div>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Description</label>
                     <textarea name="kpi_description" rows="2" class="premium-input w-full"></textarea>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">KPI Owner (Dept)</label>
+                        <select name="department_id" class="premium-input w-full">
+                            <option value="0">— Select —</option>
+                            @foreach($departments as $dept)
+                                <option value="{{ $dept->department_id }}">{{ $dept->department_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Measurement Frequency</label>
                         <select name="kpi_frequncy_id" class="premium-input w-full">
@@ -991,18 +1130,23 @@
                             @endforeach
                         </select>
                     </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Weight (%)</label>
-                        <input type="number" name="kpi_weight" class="premium-input w-full" min="0" max="100" value="0">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Formula</label>
+                        <input type="text" name="kpi_formula" class="premium-input w-full" placeholder="e.g. (Employed / Total Graduates) x 100">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Data Source</label>
+                        <input type="text" name="data_source" class="premium-input w-full" placeholder="e.g. Graduate Tracer Survey">
                     </div>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Formula</label>
-                    <input type="text" name="kpi_formula" class="premium-input w-full" placeholder="e.g. (Employed / Total Graduates) x 100">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Data Source</label>
-                    <input type="text" name="data_source" class="premium-input w-full" placeholder="e.g. Graduate Tracer Survey">
+                <div x-data="{ weight: 0 }">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest">Weight (%)</label>
+                        <span class="text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg px-2 py-0.5" x-text="weight + '%'"></span>
+                    </div>
+                    <input type="range" name="kpi_weight" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" min="0" max="100" step="5" x-model="weight">
                 </div>
                 <div class="flex justify-end pt-2">
                     <button type="submit" class="premium-button px-8 py-2.5">
@@ -1010,6 +1154,83 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    {{-- ─── TAB: LOGS ─── --}}
+    @php
+        $sysLogs = \Illuminate\Support\Facades\DB::table('sys_logs')
+            ->where('related_table', 'm_strategic_plans')
+            ->where('related_id', $plan->plan_id)
+            ->orderBy('log_id', 'desc')
+            ->get();
+        
+        $logEmpIds = $sysLogs->pluck('logged_by')->unique()->filter();
+        $logEmployees = \Illuminate\Support\Facades\DB::table('employees_list')
+            ->whereIn('employee_id', $logEmpIds)
+            ->select('employee_id', \Illuminate\Support\Facades\DB::raw("CONCAT(first_name, ' ', last_name) as name"))
+            ->pluck('name', 'employee_id');
+    @endphp
+    <div x-show="activeTab === 'logs'" style="display:none;" class="space-y-4">
+        <div class="premium-card p-6">
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-5 flex items-center gap-2">
+                <i class="fa-solid fa-clock-rotate-left text-indigo-500"></i> System Logs
+            </h3>
+            
+            @if($sysLogs->isEmpty())
+                <div class="text-center py-12 bg-slate-50/50 rounded-xl border-2 border-dashed border-slate-100">
+                    <div class="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center mx-auto mb-4">
+                        <i class="fa-solid fa-clock-rotate-left text-2xl text-slate-300"></i>
+                    </div>
+                    <p class="text-slate-500 font-medium">No activity logs found for this plan.</p>
+                </div>
+            @else
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-separate border-spacing-y-2">
+                        <thead>
+                            <tr class="text-[10px] uppercase tracking-wider text-slate-400">
+                                <th class="pb-3 px-4 font-bold w-1/5">Action</th>
+                                <th class="pb-3 px-4 font-bold">Remark</th>
+                                <th class="pb-3 px-4 font-bold w-48">Date</th>
+                                <th class="pb-3 px-4 font-bold w-48">By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($sysLogs as $log)
+                            <tr class="bg-white hover:bg-slate-50 transition-colors shadow-sm rounded-lg group">
+                                <td class="py-3 px-4 rounded-l-lg border-y border-l border-slate-100 group-hover:border-slate-200 transition-colors">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-100/80 text-slate-600 text-[10px] font-bold font-mono tracking-wide uppercase">
+                                        <i class="fa-solid fa-bolt text-indigo-400 text-[8px]"></i>
+                                        {{ $log->log_action }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 text-sm text-slate-600 border-y border-slate-100 group-hover:border-slate-200 transition-colors">
+                                    {{ $log->log_remark }}
+                                </td>
+                                <td class="py-3 px-4 border-y border-slate-100 group-hover:border-slate-200 transition-colors">
+                                    <div class="flex items-center gap-2 text-[11px] font-semibold text-slate-400 font-mono">
+                                        <i class="fa-regular fa-calendar-clock"></i>
+                                        {{ \Carbon\Carbon::parse($log->log_date)->format('d M, Y H:i') }}
+                                    </div>
+                                </td>
+                                <td class="py-3 px-4 rounded-r-lg border-y border-r border-slate-100 group-hover:border-slate-200 transition-colors">
+                                    <div class="flex items-center gap-2.5">
+                                        <div class="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-50 to-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-black border border-indigo-200/50 shadow-sm">
+                                            {{ substr($logEmployees[$log->logged_by] ?? 'U', 0, 1) }}
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span class="text-xs font-bold text-slate-700 truncate max-w-[120px]" title="{{ $logEmployees[$log->logged_by] ?? ('User ' . $log->logged_by) }}">
+                                                {{ $logEmployees[$log->logged_by] ?? ('User ' . $log->logged_by) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -1035,9 +1256,12 @@
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Description</label>
                     <textarea name="milestone_description" rows="3" class="premium-input w-full"></textarea>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Weight (%)</label>
-                    <input type="number" name="milestone_weight" class="premium-input w-full" min="0" max="100" value="0">
+                <div x-data="{ weight: 0 }">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest">Weight (%)</label>
+                        <span class="text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg px-2 py-0.5" x-text="weight + '%'"></span>
+                    </div>
+                    <input type="range" name="milestone_weight" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" min="0" max="100" step="5" x-model="weight">
                 </div>
                 <div class="flex justify-end pt-2">
                     <button type="submit" class="premium-button px-8 py-2.5">
@@ -1134,6 +1358,115 @@
             }
         });
     }
+
+    function calculateEditPeriod() {
+        const fromVal = document.getElementById('edit_plan_from').value;
+        const toVal   = document.getElementById('edit_plan_to').value;
+        if (fromVal && toVal) {
+            const start = new Date(fromVal);
+            const end = new Date(toVal);
+            if (end > start) {
+                let years = end.getFullYear() - start.getFullYear();
+                let months = end.getMonth() - start.getMonth();
+                let days = end.getDate() - start.getDate();
+
+                if (days < 0) {
+                    months--;
+                    let prevMonth = new Date(end.getFullYear(), end.getMonth(), 0);
+                    days += prevMonth.getDate();
+                }
+                if (months < 0) {
+                    years--;
+                    months += 12;
+                }
+
+                let parts = [];
+                if (years > 0) parts.push(years + (years === 1 ? ' year' : ' years'));
+                if (months > 0) parts.push(months + (months === 1 ? ' month' : ' months'));
+                if (days > 0) parts.push(days + (days === 1 ? ' day' : ' days'));
+
+                if (parts.length === 0) {
+                    document.getElementById('edit_plan_period').value = '0 days';
+                } else {
+                    document.getElementById('edit_plan_period').value = parts.join(', ');
+                }
+            } else {
+                document.getElementById('edit_plan_period').value = '';
+            }
+        } else {
+            document.getElementById('edit_plan_period').value = '';
+        }
+    }
+
+    const editFrom = document.getElementById('edit_plan_from');
+    const editTo = document.getElementById('edit_plan_to');
+    if (editFrom && editTo) {
+        editFrom.addEventListener('input', calculateEditPeriod);
+        editTo.addEventListener('input', calculateEditPeriod);
+    }
+</script>
+
+{{-- Chart.js Library --}}
+<script src="{{ asset('libs/chartjs/chart.min.js') }}"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    @if($plan->is_published)
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = '#64748b';
+
+    // 1. Internal Distribution (by Department)
+    const ctxInt = document.getElementById('internalDistChart');
+    if (ctxInt) {
+        new Chart(ctxInt, {
+            type: 'bar',
+            data: {
+                labels: {!! json_encode($stats['internalLabels'] ?? []) !!},
+                datasets: [{
+                    label: 'Objectives',
+                    data: {!! json_encode($stats['internalData'] ?? []) !!},
+                    backgroundColor: 'rgba(79, 70, 229, 0.8)',
+                    borderRadius: 8,
+                    maxBarThickness: 40
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { stepSize: 1 } },
+                    x: { grid: { display: false } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    // 2. External Distribution (by Entity)
+    const ctxExt = document.getElementById('externalDistChart');
+    if (ctxExt) {
+        new Chart(ctxExt, {
+            type: 'doughnut',
+            data: {
+                labels: {!! json_encode($stats['externalLabels'] ?? []) !!},
+                datasets: [{
+                    data: {!! json_encode($stats['externalData'] ?? []) !!},
+                    backgroundColor: [
+                        '#6366f1', '#f43f5e', '#10b981', '#f59e0b', '#0ea5e9', '#ec4899', '#8b5cf6', '#06b6d4'
+                    ],
+                    borderWidth: 0, hoverOffset: 15
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, font: { size: 10, weight: '600' } } }
+                }
+            }
+        });
+    }
+    @endif
+});
 </script>
 @endpush
 

@@ -7,7 +7,10 @@
 <div x-data="{
         activeTab: 'overview',
         linkKpiOpen: false,
+        linkThemeId: 0,
+        linkObjId: 0,
         addMsOpen: false, addMsKpiId: 0, addMsKpiTitle: '',
+        addMsWeight: 0,
         editOpen: false,
     }"
      class="space-y-6 animate-fade-in-up">
@@ -29,18 +32,66 @@
             </div>
             <form action="{{ route('emp.ext.strategies.projects.kpis.store', $project->project_id) }}" method="POST">
                 @csrf
-                <div class="mb-4">
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Select KPI from Strategic Plan</label>
-                    <select name="kpi_id" required
-                            class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-brand-dark transition-colors">
-                        <option value="">— choose a KPI —</option>
-                        @foreach($availableKpis as $kpi)
-                            <option value="{{ $kpi->kpi_id }}">
-                                [{{ $kpi->kpi_code }}] {{ $kpi->kpi_title }}
-                                @if($kpi->objective) — {{ Str::limit($kpi->objective->objective_title, 40) }}@endif
-                            </option>
-                        @endforeach
-                    </select>
+                <div class="space-y-4">
+                    {{-- Fixed Headers --}}
+                    <div class="grid grid-cols-2 gap-3 opacity-60">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Project</label>
+                            <div class="bg-slate-50 px-3 py-2 rounded-lg text-xs font-semibold text-slate-600 truncate border border-slate-100">
+                                {{ $project->project_name }}
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Plan</label>
+                            <div class="bg-slate-50 px-3 py-2 rounded-lg text-xs font-semibold text-slate-600 truncate border border-slate-100">
+                                {{ $project->plan?->plan_title ?? 'N/A' }}
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Theme Select --}}
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">1. Strategic Theme</label>
+                        <select x-model="linkThemeId" @change="linkObjId = 0"
+                                class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-brand-dark transition-colors">
+                            <option value="0">— select theme —</option>
+                            @foreach($availableKpis->pluck('theme')->unique('theme_id') as $theme)
+                                @if($theme)
+                                    <option value="{{ $theme->theme_id }}">{{ $theme->theme_title }}</option>
+                                @endif
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Objective Select --}}
+                    <div x-show="linkThemeId != 0" x-transition>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">2. Strategic Objective</label>
+                        <select x-model="linkObjId"
+                                class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-brand-dark transition-colors">
+                            <option value="0">— select objective —</option>
+                            @foreach($availableKpis->pluck('objective')->unique('objective_id') as $obj)
+                                @if($obj)
+                                    <template x-if="linkThemeId == {{ $obj->theme_id }}">
+                                        <option value="{{ $obj->objective_id }}">{{ $obj->objective_title }}</option>
+                                    </template>
+                                @endif
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- KPI Select --}}
+                    <div x-show="linkObjId != 0" x-transition>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">3. Strategic KPI</label>
+                        <select name="kpi_id" required
+                                class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-brand-dark transition-colors">
+                            <option value="">— choose a KPI —</option>
+                            @foreach($availableKpis as $kpi)
+                                <template x-if="linkObjId == {{ $kpi->objective_id }}">
+                                    <option value="{{ $kpi->kpi_id }}">[{{ $kpi->kpi_code }}] {{ $kpi->kpi_title }}</option>
+                                </template>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" @click="linkKpiOpen = false"
@@ -84,11 +135,16 @@
                                   class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-brand-dark resize-none transition-colors"></textarea>
                     </div>
                     <div class="grid grid-cols-3 gap-3">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Weight (%)</label>
-                            <input type="number" name="milestone_weight" min="0" max="100" value="0" required
-                                   class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-brand-dark transition-colors">
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 flex justify-between">
+                            Weight (%) <span class="text-indigo-600 font-black" x-text="addMsWeight + '%'"></span>
+                        </label>
+                        <div class="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            <input type="range" name="milestone_weight" min="0" max="100" step="5"
+                                   x-model="addMsWeight"
+                                   class="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
                         </div>
+                    </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Start Date</label>
                             <input type="date" name="start_date" required
@@ -232,9 +288,11 @@
         <nav class="-mb-px flex space-x-0 overflow-x-auto" aria-label="Project Tabs">
             @php
                 $tabs = [
-                    'overview'  => ['Overview',         'fa-circle-info'],
-                    'analysis'  => ['Analysis & Recs',  'fa-magnifying-glass-chart'],
-                    'kpis'      => ['KPIs & Milestones', 'fa-chart-line'],
+                    'overview'   => ['Project Overview', 'fa-circle-info'],
+                    'plan'       => ['Plan Overview',    'fa-chess-knight'],
+                    'kpis'       => ['Linked KPIs',      'fa-link'],
+                    'milestones' => ['Milestones',       'fa-flag'],
+                    'logs'       => ['Logs',             'fa-clock-rotate-left'],
                 ];
             @endphp
             @foreach($tabs as $tab => [$label, $icon])
@@ -313,123 +371,268 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    {{-- ── TAB: ANALYSIS & RECS ── --}}
-    <div x-show="activeTab === 'analysis'" style="display:none;" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="premium-card p-6">
-            <h3 class="text-xs font-bold text-amber-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <i class="fa-solid fa-magnifying-glass"></i> Project Analysis
-            </h3>
-            <p class="text-slate-700 leading-relaxed whitespace-pre-line">{{ $project->project_analysis ?? 'No analysis provided.' }}</p>
-        </div>
-        <div class="premium-card p-6">
-            <h3 class="text-xs font-bold text-blue-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <i class="fa-solid fa-lightbulb"></i> Recommendations
-            </h3>
-            <p class="text-slate-700 leading-relaxed whitespace-pre-line">{{ $project->project_recommendations ?? 'No recommendations provided.' }}</p>
-        </div>
-    </div>
-
-    {{-- ── TAB: KPIs & MILESTONES ── --}}
-    <div x-show="activeTab === 'kpis'" style="display:none;">
-
-        <div class="flex justify-between items-center mb-5">
-            <h3 class="text-base font-bold text-slate-700">Linked KPIs & Milestones</h3>
-            @if($project->project_status_id == 1)
-            <button @click="linkKpiOpen = true" class="premium-button px-4 py-2 text-sm">
-                <i class="fa-solid fa-plus text-xs"></i> Link KPI
-            </button>
-            @endif
-        </div>
-
-        @forelse($project->kpis as $pk)
-        @php $linkedKpi = $pk->linkedKpi; @endphp
-        <div class="premium-card mb-5 overflow-hidden">
-            {{-- KPI Header --}}
-            <div class="flex justify-between items-start p-5 border-b border-slate-50"
-                 style="background:linear-gradient(135deg,rgba(14,165,233,0.04) 0%,#fff 100%);">
-                <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="font-mono text-[10px] font-bold px-2 py-0.5 rounded-lg"
-                              style="background:rgba(14,165,233,0.1); color:#0284c7;">
-                            {{ $linkedKpi->kpi_code ?? 'KPI' }}
-                        </span>
-                        @if($linkedKpi?->theme)
-                        <span class="text-[10px] bg-purple-50 text-purple-600 px-2 py-0.5 rounded font-bold">
-                            {{ Str::limit($linkedKpi->theme->theme_title, 30) }}
-                        </span>
-                        @endif
-                    </div>
-                    <p class="font-bold text-slate-700">{{ $linkedKpi->kpi_title ?? 'Unknown KPI' }}</p>
-                    @if($linkedKpi?->objective)
-                    <p class="text-xs text-slate-400 mt-0.5">{{ $linkedKpi->objective->objective_title }}</p>
-                    @endif
-                </div>
-                @if($project->project_status_id == 1)
-                <button
-                    @click="addMsOpen = true; addMsKpiId = {{ $linkedKpi->kpi_id ?? 0 }}; addMsKpiTitle = '{{ addslashes($linkedKpi->kpi_title ?? '') }}'"
-                    class="premium-button px-3 py-1.5 text-xs flex-shrink-0 ml-4">
-                    <i class="fa-solid fa-plus text-xs"></i> Milestone
-                </button>
-                @endif
+        {{-- Analysis & Recommendations --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="premium-card p-6">
+                <h3 class="text-xs font-bold text-amber-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-magnifying-glass"></i> Project Analysis
+                </h3>
+                <p class="text-slate-700 leading-relaxed whitespace-pre-line">{{ $project->project_analysis ?? 'No analysis provided.' }}</p>
             </div>
+            <div class="premium-card p-6">
+                <h3 class="text-xs font-bold text-blue-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-lightbulb"></i> Recommendations
+                </h3>
+                <p class="text-slate-700 leading-relaxed whitespace-pre-line">{{ $project->project_recommendations ?? 'No recommendations provided.' }}</p>
+            </div>
+        </div>
+    </div>
 
-            {{-- Milestones for this KPI --}}
-            @php $kpiMilestones = $pk->milestones; @endphp
-            @if($kpiMilestones->count())
-            <div class="px-5 py-4">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Milestones</p>
-                <div class="space-y-2">
-                    @foreach($kpiMilestones as $ms)
-                    <div class="flex items-center gap-3 bg-slate-50 rounded-xl px-4 py-3 border border-slate-100">
-                        <i class="fa-solid fa-flag text-amber-400 text-[10px] flex-shrink-0"></i>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-semibold text-slate-700 truncate">{{ $ms->milestone_title }}</p>
-                            @if($ms->milestone_description)
-                                <p class="text-xs text-slate-400 mt-0.5 truncate">{{ $ms->milestone_description }}</p>
-                            @endif
-                        </div>
-                        <div class="flex items-center gap-3 text-xs text-slate-400 flex-shrink-0">
-                            <span class="font-bold px-2 py-0.5 rounded-full"
-                                  style="background:rgba(245,158,11,0.1); color:#d97706;">
-                                W: {{ $ms->milestone_weight }}%
+    {{-- ── TAB: PLAN OVERVIEW ── --}}
+    <div x-show="activeTab === 'plan'" style="display:none;" class="space-y-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="premium-card p-6 border-t-4 border-indigo-500">
+                <h3 class="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-3">Plan Vision</h3>
+                <p class="text-slate-700 italic font-display">"{{ $project->plan?->plan_vision ?? 'N/A' }}"</p>
+            </div>
+            <div class="premium-card p-6 border-t-4 border-emerald-500">
+                <h3 class="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-3">Plan Mission</h3>
+                <p class="text-slate-700">{{ $project->plan?->plan_mission ?? 'N/A' }}</p>
+            </div>
+            <div class="premium-card p-6 border-t-4 border-slate-400">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Core Values</h3>
+                <p class="text-slate-600 whitespace-pre-line">{{ $project->plan?->plan_values ?? 'N/A' }}</p>
+            </div>
+        </div>
+
+        <div class="premium-card overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100" style="background:#f8fafc;">
+                <h3 class="text-sm font-bold text-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group text-slate-400"></i>
+                    Strategic Hierarchy
+                </h3>
+            </div>
+            <div class="p-6">
+                @forelse($project->plan->themes ?? [] as $theme)
+                    <div class="mb-10 last:mb-0">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold border border-indigo-100">
+                                {{ $theme->theme_weight }}%
                             </span>
-                            <span>{{ $ms->start_date }} → {{ $ms->end_date }}</span>
+                            <div>
+                                <h4 class="font-bold text-slate-800">{{ $theme->theme_title }}</h4>
+                                <p class="text-[10px] text-slate-400 font-mono tracking-widest uppercase">{{ $theme->theme_ref }}</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ml-12">
+                            @foreach($theme->objectives as $obj)
+                                <div class="bg-slate-50/50 rounded-xl p-4 border border-slate-100 hover:border-blue-200 transition-colors">
+                                    <p class="text-xs font-bold text-slate-400 mb-1 uppercase tracking-tighter">{{ $obj->objective_ref }}</p>
+                                    <p class="text-xs font-bold text-slate-700 mb-3">{{ $obj->objective_title }}</p>
+                                    <div class="space-y-1.5 opacity-80">
+                                        @foreach($obj->kpis as $k)
+                                            <div class="text-[10px] text-slate-500 flex gap-2">
+                                                <i class="fa-solid fa-chart-line text-blue-400 mt-0.5"></i>
+                                                <span>{{ $k->kpi_title }}</span>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
                     </div>
-                    @endforeach
-                </div>
+                @empty
+                    <p class="text-center text-slate-400 italic py-10">No hierarchical data available for this plan.</p>
+                @endforelse
             </div>
-            @else
-            <div class="px-5 py-4 text-center">
-                <p class="text-xs text-slate-400 italic">No milestones added yet for this KPI.</p>
-                @if($project->project_status_id == 1)
-                <button
-                    @click="addMsOpen = true; addMsKpiId = {{ $linkedKpi->kpi_id ?? 0 }}; addMsKpiTitle = '{{ addslashes($linkedKpi->kpi_title ?? '') }}'"
-                    class="mt-1 text-xs text-indigo-500 hover:text-indigo-700 font-semibold">
-                    + Add first milestone
-                </button>
-                @endif
-            </div>
-            @endif
         </div>
-        @empty
-        <div class="text-center py-16 bg-white rounded-2xl border-2 border-dashed border-slate-200">
-            <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                 style="background:linear-gradient(135deg,rgba(14,165,233,0.08),rgba(14,165,233,0.04));">
-                <i class="fa-solid fa-chart-line text-2xl" style="color:#0ea5e9; opacity:0.5;"></i>
-            </div>
-            <p class="text-slate-500 font-bold mb-1">No KPIs Linked</p>
-            <p class="text-xs text-slate-400 mb-4">Link KPIs from the strategic plan to track performance.</p>
-            @if($project->project_status_id == 1)
-            <button @click="linkKpiOpen = true; activeTab = 'kpis'" class="premium-button px-5 py-2 text-sm">
-                <i class="fa-solid fa-plus text-xs"></i> Link First KPI
-            </button>
-            @endif
-        </div>
-        @endforelse
+    </div>
 
+    {{-- ── TAB: LINKED KPIs ── --}}
+    <div x-show="activeTab === 'kpis'" style="display:none;" class="space-y-6">
+        <div class="flex justify-between items-center">
+            <h3 class="text-base font-bold text-slate-700 flex items-center gap-2">
+                <i class="fa-solid fa-link text-indigo-500"></i> Linked Strategic KPIs
+            </h3>
+            @if($project->project_status_id == 1)
+                <button @click="linkKpiOpen = true" class="premium-button px-4 py-2 text-sm">
+                    <i class="fa-solid fa-plus text-xs"></i> Link KPI
+                </button>
+            @endif
+        </div>
+
+        <div class="premium-card overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-100">
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Plan</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Theme</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Objective</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">KPI</th>
+                        @if($project->project_status_id == 1)
+                            <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Actions</th>
+                        @endif
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    @forelse($project->kpis as $pk)
+                        @php $lk = $pk->linkedKpi; @endphp
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="px-6 py-4">
+                                <span class="text-xs font-semibold text-slate-600 truncate block max-w-[120px]">{{ $project->plan?->plan_title ?? '—' }}</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="text-xs text-slate-500 font-medium">{{ $lk?->theme?->theme_title ?? '—' }}</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="text-xs text-slate-500">{{ $lk?->objective?->objective_title ?? '—' }}</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col">
+                                    <span class="text-xs font-bold text-slate-700">{{ $lk?->kpi_title ?? '—' }}</span>
+                                    <span class="text-[10px] text-indigo-400 font-mono">{{ $lk?->kpi_code ?? '—' }}</span>
+                                </div>
+                            </td>
+                            @if($project->project_status_id == 1)
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center justify-center gap-3">
+                                        <button @click="addMsOpen = true; addMsKpiId = {{ $lk?->kpi_id ?? 0 }}; addMsKpiTitle = '{{ addslashes($lk?->kpi_title ?? '') }}'"
+                                            class="text-amber-500 hover:text-amber-700 transition-colors" title="Add Milestone">
+                                            <i class="fa-solid fa-flag text-sm"></i>
+                                        </button>
+                                        <form action="{{ route('emp.ext.strategies.projects.kpis.destroy', $pk->linked_kpi_id ?? 0) }}" method="POST" class="inline" 
+                                              onsubmit="return confirmDeletion(event, 'Remove KPI Link?', 'This will decouple the operational project from this strategic KPI.')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="text-rose-400 hover:text-rose-600 transition-colors">
+                                                <i class="fa-solid fa-trash-can text-sm"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            @endif
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="px-6 py-12 text-center text-slate-400 italic">No KPIs linked yet.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {{-- ── TAB: MILESTONES ── --}}
+    <div x-show="activeTab === 'milestones'" style="display:none;" class="space-y-6">
+        <div class="flex justify-between items-center">
+            <h3 class="text-base font-bold text-slate-700 flex items-center gap-2">
+                <i class="fa-solid fa-flag text-amber-500"></i> Project Milestones
+            </h3>
+        </div>
+
+        <div class="premium-card overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-100">
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Linked KPI</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Milestone</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Description</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Owner</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Duration</th>
+                        @if($project->project_status_id == 1)
+                            <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Action</th>
+                        @endif
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    @forelse($project->milestones as $ms)
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="px-6 py-4">
+                                <span class="text-xs font-semibold text-slate-600 truncate block max-w-[150px]">{{ $ms->kpi?->kpi_title ?? '—' }}</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col">
+                                    <span class="text-xs font-bold text-slate-700">{{ $ms->milestone_title }}</span>
+                                    <span class="text-[10px] text-amber-500 font-bold">Weight: {{ $ms->milestone_weight }}%</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="text-xs text-slate-500 truncate block max-w-[200px]">{{ $ms->milestone_description ?? '—' }}</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-400 uppercase">
+                                        {{ substr($ms->owner->first_name ?? '?', 0, 1) }}
+                                    </div>
+                                    <span class="text-xs text-slate-600 font-medium">{{ $ms->owner->first_name ?? '—' }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="text-[10px] text-slate-400 font-medium">{{ $ms->start_date }} → {{ $ms->end_date }}</span>
+                            </td>
+                            @if($project->project_status_id == 1)
+                                <td class="px-6 py-4 text-center">
+                                    <form action="{{ route('emp.ext.strategies.projects.milestones.destroy', $ms->milestone_id) }}" method="POST" class="inline"
+                                          onsubmit="return confirmDeletion(event, 'Delete Milestone?', 'Are you sure you want to remove this milestone?')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="text-rose-400 hover:text-rose-600 transition-colors">
+                                            <i class="fa-solid fa-trash-can text-sm"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            @endif
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="px-6 py-12 text-center text-slate-400 italic">No milestones added yet.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {{-- ── TAB: LOGS ── --}}
+    <div x-show="activeTab === 'logs'" style="display:none;" class="space-y-6">
+        <div class="premium-card p-0 overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-100">
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Time</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Action</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">User</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Remark</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    @php
+                        $logs = DB::table('sys_logs')
+                            ->where('related_table', 'm_operational_projects')
+                            ->where('related_id', $project->project_id)
+                            ->join('users', 'sys_logs.logged_by', '=', 'users.id')
+                            ->select('sys_logs.*', 'users.name as user_name')
+                            ->orderBy('log_id', 'desc')
+                            ->get();
+                    @endphp
+                    @forelse($logs as $log)
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-6 py-4 text-[10px] text-slate-400 font-mono">{{ $log->log_date }}</td>
+                            <td class="px-6 py-4">
+                                <span class="text-xs font-bold @if($log->log_action == 'CREATE') text-emerald-600 @elseif($log->log_action == 'UPDATE') text-blue-600 @else text-slate-600 @endif">
+                                    {{ $log->log_action }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-xs font-medium text-slate-600">{{ $log->user_name }}</td>
+                            <td class="px-6 py-4 text-xs text-slate-500">{{ $log->log_remark }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="px-6 py-12 text-center text-slate-400 italic">No log entries found.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 
 </div>
@@ -457,6 +660,32 @@ function confirmProjectPublish() {
             document.getElementById('publishProjectForm').submit();
         }
     }
+}
+
+function confirmDeletion(event, title = 'Are you sure?', text = 'This action cannot be undone.') {
+    event.preventDefault();
+    const form = event.target;
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: title,
+            text: text,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+    } else {
+        if (confirm(title + '\n' + text)) {
+            form.submit();
+        }
+    }
+    return false;
 }
 </script>
 @endpush

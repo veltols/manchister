@@ -4,12 +4,30 @@
 @section('subtitle', $study->study_ref)
 
 @section('content')
-<div x-data="{
+    <div x-data="{
         activeTab: 'overview',
         editOpen: false,
         addPageOpen: false, addPageType: 'introductry',
+        viewPageOpen: false, viewPageTitle: '', viewPageContent: '',
         editPageOpen: false, editPageId: 0, editPageTitle: '', editPageContent: '',
         deletePageOpen: false, deletePageId: 0, deletePageTitle: '',
+
+        openEditPage(id, title, content) {
+            this.editPageId = id;
+            this.editPageTitle = title;
+            this.editPageOpen = true;
+            setTimeout(() => {
+                if (window.editors && window.editors['edit_page_editor']) {
+                    window.editors['edit_page_editor'].setContent(content || '');
+                }
+            }, 100);
+        },
+
+        openViewPage(title, content) {
+            this.viewPageTitle = title;
+            this.viewPageContent = content;
+            this.viewPageOpen = true;
+        }
     }"
      class="space-y-6 animate-fade-in-up">
 
@@ -34,8 +52,8 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Overview *</label>
-                    <textarea name="study_overview" rows="5" required
-                              class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-brand-dark resize-none transition-colors">{{ $study->study_overview }}</textarea>
+                    <textarea id="study_overview_editor" name="study_overview" rows="5" required
+                              class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-brand-dark premium-editor">{{ $study->study_overview }}</textarea>
                 </div>
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" @click="editOpen = false"
@@ -71,9 +89,8 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Content</label>
-                    <textarea name="page_content" rows="5"
-                              placeholder="Page content (optional, can be added later)..."
-                              class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-brand-dark resize-none transition-colors"></textarea>
+                    <textarea id="add_page_editor" name="page_content" rows="5"
+                              class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-brand-dark premium-editor"></textarea>
                 </div>
                 <div class="flex justify-end gap-2 pt-1">
                     <button type="button" @click="addPageOpen = false"
@@ -107,8 +124,8 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Content</label>
-                    <textarea name="page_content" rows="8" x-text="editPageContent"
-                              class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-brand-dark resize-none transition-colors"></textarea>
+                    <textarea id="edit_page_editor" name="page_content" rows="8"
+                              class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-brand-dark premium-editor"></textarea>
                 </div>
                 <div class="flex justify-end gap-2 pt-1">
                     <button type="button" @click="editPageOpen = false"
@@ -121,6 +138,7 @@
         </div>
     </div>
 
+    {{-- ── DELETE PAGE MODAL ── --}}
     {{-- ── DELETE PAGE MODAL ── --}}
     <div x-show="deletePageOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4"
          style="background:rgba(0,0,0,0.5); backdrop-filter:blur(4px);">
@@ -148,6 +166,42 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    {{-- ── VIEW PAGE MODAL (READ ONLY) ── --}}
+    <div x-show="viewPageOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4"
+         style="background:rgba(15,23,42,0.6); backdrop-filter:blur(8px);">
+        <div @click.outside="viewPageOpen = false"
+             class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl p-0 flex flex-col max-h-[90vh] overflow-hidden">
+            {{-- Modal Header --}}
+            <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <div>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Reading Mode</span>
+                    <h3 class="text-xl font-bold text-slate-800" x-text="viewPageTitle"></h3>
+                </div>
+                <button @click="viewPageOpen = false" 
+                        class="w-10 h-10 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-all flex items-center justify-center">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            {{-- Modal Body --}}
+            <div class="px-8 py-10 overflow-y-auto flex-1">
+                <div class="prose prose-slate max-w-none prose-headings:text-slate-800 prose-p:text-slate-600 prose-p:leading-relaxed"
+                     x-html="viewPageContent">
+                </div>
+                <div x-show="!viewPageContent || viewPageContent.trim() === ''" class="text-center py-20">
+                    <i class="fa-solid fa-file-circle-exclamation text-4xl text-slate-200 mb-4 block"></i>
+                    <p class="text-slate-400 italic">This page has no content to display.</p>
+                </div>
+            </div>
+            {{-- Modal Footer --}}
+            <div class="px-8 py-5 border-t border-slate-50 bg-slate-50/30 flex justify-end">
+                <button @click="viewPageOpen = false" 
+                        class="px-6 py-2 bg-slate-800 text-white rounded-xl text-sm font-bold hover:bg-slate-700 transition-colors">
+                    Close Reader
+                </button>
+            </div>
         </div>
     </div>
 
@@ -193,9 +247,9 @@
                 class="whitespace-nowrap py-4 px-4 text-sm transition-all flex items-center gap-1.5">
                 <i class="fa-solid {{ $icon }} text-xs"></i> {{ $label }}
                 @if($tab === 'introductry')
-                    <span class="ml-1 text-[10px] font-black px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-600">{{ $introPages->count() }}</span>
+                    <span class="ml-1 text-[10px] font-black px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-600">{{ count($introPages) }}</span>
                 @elseif($tab === 'sections')
-                    <span class="ml-1 text-[10px] font-black px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-600">{{ $sections->count() }}</span>
+                    <span class="ml-1 text-[10px] font-black px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-600">{{ count($sections) }}</span>
                 @endif
             </button>
             @endforeach
@@ -220,7 +274,7 @@
                     </div>
                     <h3 class="font-bold text-slate-700">Introductory Pages</h3>
                 </div>
-                <p class="text-3xl font-black" style="color:#6366f1;">{{ $introPages->count() }}</p>
+                <p class="text-3xl font-black" style="color:#6366f1;">{{ count($introPages) }}</p>
                 <p class="text-xs text-slate-400 mt-1">pages added</p>
             </div>
             <div class="premium-card p-5" @click="activeTab = 'sections'" style="cursor:pointer;">
@@ -231,7 +285,7 @@
                     </div>
                     <h3 class="font-bold text-slate-700">Sections</h3>
                 </div>
-                <p class="text-3xl font-black" style="color:#8b5cf6;">{{ $sections->count() }}</p>
+                <p class="text-3xl font-black" style="color:#8b5cf6;">{{ count($sections) }}</p>
                 <p class="text-xs text-slate-400 mt-1">sections added</p>
             </div>
         </div>
@@ -257,14 +311,18 @@
                     <div class="flex-1">
                         <h4 class="font-bold text-slate-700 text-sm mb-1">{{ $page->page_title }}</h4>
                         @if($page->page_content)
-                            <p class="text-xs text-slate-400 line-clamp-2">{{ Str::limit($page->page_content, 120) }}</p>
+                            <p class="text-xs text-slate-400 line-clamp-2">{{ Str::limit(strip_tags($page->page_content), 120) }}</p>
                         @else
                             <p class="text-xs text-slate-300 italic">No content yet</p>
                         @endif
                     </div>
                 </div>
                 <div class="flex items-center gap-1 flex-shrink-0 ml-4">
-                    <button @click="editPageOpen = true; editPageId = {{ $page->page_id }}; editPageTitle = '{{ addslashes($page->page_title) }}'; editPageContent = '{{ addslashes($page->page_content) }}'"
+                    <button @click="openViewPage({{ json_encode($page->page_title) }}, {{ json_encode($page->page_content) }})"
+                            class="w-8 h-8 rounded-lg hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 transition-colors flex items-center justify-center" title="Read Page">
+                        <i class="fa-solid fa-eye text-xs"></i>
+                    </button>
+                    <button @click="openEditPage({{ $page->page_id }}, {{ json_encode($page->page_title) }}, {{ json_encode($page->page_content) }})"
                             class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-indigo-600 transition-colors flex items-center justify-center">
                         <i class="fa-solid fa-pencil text-xs"></i>
                     </button>
@@ -307,14 +365,18 @@
                     <div class="flex-1">
                         <h4 class="font-bold text-slate-700 text-sm mb-1">{{ $section->page_title }}</h4>
                         @if($section->page_content)
-                            <p class="text-xs text-slate-400 line-clamp-2">{{ Str::limit($section->page_content, 120) }}</p>
-                        @else
+                            <p class="text-xs text-slate-400 line-clamp-2">{{ Str::limit(strip_tags($section->page_content), 120) }}</p>
+@else
                             <p class="text-xs text-slate-300 italic">No content yet</p>
                         @endif
                     </div>
                 </div>
                 <div class="flex items-center gap-1 flex-shrink-0 ml-4">
-                    <button @click="editPageOpen = true; editPageId = {{ $section->page_id }}; editPageTitle = '{{ addslashes($section->page_title) }}'; editPageContent = '{{ addslashes($section->page_content) }}'"
+                    <button @click="openViewPage({{ json_encode($section->page_title) }}, {{ json_encode($section->page_content) }})"
+                            class="w-8 h-8 rounded-lg hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 transition-colors flex items-center justify-center" title="Read Page">
+                        <i class="fa-solid fa-eye text-xs"></i>
+                    </button>
+                    <button @click="openEditPage({{ $section->page_id }}, {{ json_encode($section->page_title) }}, {{ json_encode($section->page_content) }})"
                             class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-purple-600 transition-colors flex items-center justify-center">
                         <i class="fa-solid fa-pencil text-xs"></i>
                     </button>
@@ -338,4 +400,100 @@
     </div>
 
 </div>
+
+@push('scripts')
+<script>
+    /**
+     * Native Rich Text Editor (Zero Dependency / Offline Friendly)
+     */
+    function initNativeEditor(textareaId) {
+        const textarea = document.getElementById(textareaId);
+        if (!textarea) return;
+
+        // Create editor container
+        const container = document.createElement('div');
+        container.className = 'native-editor-container border border-slate-200 rounded-xl overflow-hidden focus-within:border-brand-dark transition-colors';
+        
+        // Toolbar
+        const toolbar = document.createElement('div');
+        toolbar.className = 'bg-slate-50 border-b border-slate-100 p-2 flex flex-wrap gap-1';
+        
+        const commands = [
+            { cmd: 'bold', icon: 'fa-bold', title: 'Bold' },
+            { cmd: 'italic', icon: 'fa-italic', title: 'Italic' },
+            { cmd: 'underline', icon: 'fa-underline', title: 'Underline' },
+            { separator: true },
+            { cmd: 'insertUnorderedList', icon: 'fa-list-ul', title: 'Bullet List' },
+            { cmd: 'insertOrderedList', icon: 'fa-list-ol', title: 'Number List' },
+            { separator: true },
+            { cmd: 'justifyLeft', icon: 'fa-align-left', title: 'Left' },
+            { cmd: 'justifyCenter', icon: 'fa-align-center', title: 'Center' },
+            { cmd: 'justifyRight', icon: 'fa-align-right', title: 'Right' },
+            { separator: true },
+            { cmd: 'removeFormat', icon: 'fa-eraser', title: 'Clear' }
+        ];
+
+        commands.forEach(c => {
+            if (c.separator) {
+                const sep = document.createElement('div');
+                sep.className = 'w-px h-4 bg-slate-200 mx-1 self-center';
+                toolbar.appendChild(sep);
+                return;
+            }
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.title = c.title;
+            btn.className = 'w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:bg-white hover:text-brand-dark hover:shadow-sm transition-all';
+            btn.innerHTML = `<i class="fa-solid ${c.icon} text-xs"></i>`;
+            btn.onclick = () => {
+                document.execCommand(c.cmd, false, null);
+                editor.focus();
+            };
+            toolbar.appendChild(btn);
+        });
+
+        // Editable Area
+        const editor = document.createElement('div');
+        editor.contentEditable = true;
+        editor.className = 'p-4 min-h-[200px] max-h-[500px] overflow-y-auto outline-none prose prose-sm max-w-none text-slate-700';
+        editor.innerHTML = textarea.value;
+
+        // Update textarea on input
+        editor.oninput = () => {
+            textarea.value = editor.innerHTML;
+        };
+
+        // Handle focus/blur for container styling
+        editor.onfocus = () => container.classList.add('ring-2', 'ring-brand-dark/5');
+        editor.onblur = () => container.classList.remove('ring-2', 'ring-brand-dark/5');
+
+        container.appendChild(toolbar);
+        container.appendChild(editor);
+        
+        // Hide original textarea and insert editor
+        textarea.style.display = 'none';
+        textarea.parentNode.insertBefore(container, textarea);
+
+        return {
+            setContent: (content) => { editor.innerHTML = content || ''; textarea.value = content || ''; }
+        };
+    }
+
+    // Initialize editors
+    window.editors = {};
+    document.addEventListener('DOMContentLoaded', () => {
+        window.editors['add_page_editor'] = initNativeEditor('add_page_editor');
+        window.editors['edit_page_editor'] = initNativeEditor('edit_page_editor');
+        window.editors['study_overview_editor'] = initNativeEditor('study_overview_editor');
+    });
+</script>
+<style>
+    .native-editor-container [contenteditable]:empty:before {
+        content: "Enter page content...";
+        color: #cbd5e1;
+    }
+    .prose ul { list-style-type: disc !important; padding-left: 1.5rem !important; }
+    .prose ol { list-style-type: decimal !important; padding-left: 1.5rem !important; }
+</style>
+@endpush
 @endsection

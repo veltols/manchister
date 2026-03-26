@@ -33,4 +33,9 @@ class StrategicPlanKpi extends Model
     {
         return $this->belongsTo(StrategicPlanTheme::class, 'theme_id', 'theme_id');
     }
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class, 'department_id', 'department_id');
+    }
 }
