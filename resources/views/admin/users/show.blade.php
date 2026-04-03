@@ -543,7 +543,6 @@
                                  </div>
                             </div>
                         </div>
-                    </div>
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Log Remark</label>
                         <textarea name="log_remark" required rows="3" class="premium-input w-full px-4 py-3" placeholder="Reason for password reset..."></textarea>
