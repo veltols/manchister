@@ -124,6 +124,18 @@ class DesignationController extends Controller
         return redirect()->route($prefix . '.designations.index')->with('success', 'Designation deleted successfully.');
     }
 
+    public function toggleStatus($id)
+    {
+        $designation = Designation::findOrFail($id);
+        $designation->is_active = $designation->is_active ? 0 : 1;
+        $designation->save();
+
+        $status = $designation->is_active ? 'activated' : 'deactivated';
+        $this->logAction($designation->designation_id, 'Designation_' . ucfirst($status), 'Designation ' . $status);
+
+        return redirect()->back()->with('success', 'Designation ' . $status . ' successfully.');
+    }
+
     private function logAction($id, $action, $remark)
     {
         \App\Models\SystemLog::create([

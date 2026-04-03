@@ -58,19 +58,28 @@
                     <h3 class="text-lg font-semibold text-premium mb-4 border-b border-slate-100 pb-2">Access & Security</h3>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">Department <span class="text-red-500">*</span></label>
-                    <select name="department_id" class="premium-input w-full px-4 py-3 text-sm" required>
-                        <option value="">Select Department</option>
-                        @foreach($departments as $dept)
-                            <option value="{{ $dept->department_id }}" {{ old('department_id') == $dept->department_id ? 'selected' : '' }}>
-                                {{ $dept->department_name }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('department_id')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Department <span class="text-red-500">*</span></label>
+                        <select name="department_id" class="premium-input w-full px-4 py-3 text-sm" required>
+                            <option value="">Select Department</option>
+                            @foreach($departments as $dept)
+                                <option value="{{ $dept->department_id }}" {{ old('department_id') == $dept->department_id ? 'selected' : '' }}>
+                                    {{ $dept->department_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('department_id')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="flex items-center gap-3 p-3 rounded-xl bg-indigo-50 border border-indigo-100">
+                        <input type="checkbox" name="is_line_manager" id="is_line_manager" value="1" class="w-5 h-5 rounded border-indigo-300 text-indigo-600 focus:ring-indigo-500">
+                        <label for="is_line_manager" class="text-sm font-bold text-indigo-900 cursor-pointer">
+                             Set as Line Manager for this Department
+                        </label>
+                    </div>
                 </div>
 
                 <div>
@@ -79,6 +88,15 @@
                     @error('login_identifier')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">User Type (Portal Role) <span class="text-red-500">*</span></label>
+                    <select name="user_type" class="premium-input w-full px-4 py-3 text-sm" required>
+                        <option value="emp" {{ old('user_type') == 'emp' ? 'selected' : '' }}>Employee (Standard)</option>
+                        <option value="hr" {{ old('user_type') == 'hr' ? 'selected' : '' }}>HR Manager</option>
+                        <option value="eqa" {{ old('user_type') == 'eqa' ? 'selected' : '' }}>EQA Officer</option>
+                    </select>
                 </div>
 
                 <div>

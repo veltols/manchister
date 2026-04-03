@@ -48,14 +48,15 @@
                         @endif
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="flex justify-between items-baseline mb-1">
+                        <div class="flex justify-between items-baseline mb-0.5">
                             <h4 class="font-bold text-slate-700 truncate {{ $isActive ? 'text-brand' : '' }}">
                                 {{ $otherUser->first_name ?? 'Unknown' }} {{ $otherUser->last_name ?? '' }}
                             </h4>
-                            <span class="text-[10px] text-slate-400 font-medium whitespace-nowrap">
+                            <span class="text-[10px] text-slate-400 font-medium whitespace-nowrap ml-2">
                                 {{ $conv->messages->last() ? \Carbon\Carbon::parse($conv->messages->last()->added_date)->format('h:i A') : '' }}
                             </span>
                         </div>
+                        <div class="text-[10px] text-slate-400 font-medium mb-1"><i class="fa-solid fa-building mr-1"></i>{{ $otherUser->department->department_name ?? 'N/A' }}</div>
                         <p class="text-xs text-slate-500 truncate">
                             {{ $conv->messages->last()->post_text ?? 'Start a conversation...' }}
                         </p>
@@ -85,7 +86,10 @@
                         @endif
                     </div>
                     <div>
-                        <h3 class="font-bold text-slate-800">{{ $activeOtherUser->first_name ?? 'Unknown' }} {{ $activeOtherUser->last_name ?? '' }}</h3>
+                        <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                            {{ $activeOtherUser->first_name ?? 'Unknown' }} {{ $activeOtherUser->last_name ?? '' }}
+                            <span class="text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full"><i class="fa-solid fa-building mr-1 text-slate-400"></i>{{ $activeOtherUser->department->department_name ?? 'N/A' }}</span>
+                        </h3>
                         @if($activeOtherUser && $activeOtherUser->status)
                             <div class="flex items-center gap-1.5">
                                 <div class="w-2 h-2 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.1)]" style="background-color: {{ $activeOtherUser->status->staus_color }}"></div>
@@ -443,7 +447,7 @@
                     <select name="employee_id" class="w-full premium-input pl-12 h-12 text-sm" required>
                         <option value="">Choose a colleague...</option>
                         @foreach($employees as $emp)
-                            <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                            <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }} - {{ $emp->department->department_name ?? 'N/A' }}</option>
                         @endforeach
                     </select>
                 </div>

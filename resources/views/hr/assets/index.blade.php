@@ -193,7 +193,7 @@
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-2">Asset Reference</label>
-                    <input type="text" name="asset_ref" class="premium-input w-full px-4 py-3 text-sm" placeholder="e.g. LAP-001" required>
+                    <input type="text" name="asset_ref" class="premium-input w-full px-4 py-3 text-sm" placeholder="Auto-generated if empty">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-2">Asset Name</label>
@@ -211,6 +211,14 @@
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-2">Serial Number</label>
                     <input type="text" name="asset_serial" class="premium-input w-full px-4 py-3 text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Tracking Number</label>
+                    <input type="text" name="tracking_number" class="premium-input w-full px-4 py-3 text-sm" placeholder="Optional tracking #">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">SKU</label>
+                    <input type="text" name="asset_sku" class="premium-input w-full px-4 py-3 text-sm" placeholder="Auto-generated if empty">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-2">Description</label>

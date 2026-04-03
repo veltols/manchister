@@ -49,15 +49,19 @@ class AssetController extends Controller
             'asset_name' => 'required|string|max:255|unique:z_assets_list,asset_name',
             'category_id' => 'required|exists:z_assets_list_cats,category_id',
             'asset_serial' => 'nullable|string|max:100',
+            'tracking_number' => 'nullable|string|max:100',
             'status_id' => 'required|exists:z_assets_list_status,status_id',
             'description' => 'required|string',
             'purchase_date' => 'nullable|date',
+            'alert_days' => 'nullable|integer|min:0',
+            'alert_description' => 'nullable|string',
+            'asset_sku' => 'nullable|string|max:100',
             'expiry_date' => 'nullable|date',
         ]);
 
         $asset = new Asset();
         $asset->asset_ref = 'AST-' . strtoupper(uniqid());
-        $asset->asset_sku = '132'; // Legacy default
+        $asset->asset_sku = $request->asset_sku ?: 'SKU-' . date('Ym') . '-' . strtoupper(substr(md5(uniqid()), 0, 6));
         $asset->asset_name = $request->asset_name;
         $asset->category_id = $request->category_id;
         $asset->asset_description = $request->description;
@@ -71,16 +75,19 @@ class AssetController extends Controller
         } else {
             $asset->asset_serial = $request->asset_serial;
         }
+        $asset->tracking_number = $request->tracking_number;
 
         $asset->purchase_date = $request->purchase_date;
+        $asset->alert_days = $request->alert_days;
+        $asset->alert_description = $request->alert_description;
         $asset->expiry_date = $request->expiry_date;
         $asset->status_id = $request->status_id;
         
-        $asset->added_date = now();
+        $asset->added_date = \Carbon\Carbon::today();
         $asset->added_by = 1; // Default admin
         $asset->department_id = 0; // Default
         $asset->assigned_by = 0; // Default
-        $asset->assigned_date = now(); // Required field
+        $asset->assigned_date = \Carbon\Carbon::today(); // Required field
         // assigned_to is 0 by default in DB usually, or null. Legacy uses 0.
         $asset->assigned_to = 0; 
         
@@ -224,6 +231,38 @@ class AssetController extends Controller
         $this->logAction($id, 'Description Updated', 'Asset description was updated.');
 
         return redirect()->back()->with('success', 'Asset description updated successfully.');
+    }
+
+    public function updateDetails(Request $request, $id)
+    {
+        $request->validate([
+            'asset_name' => 'required|string|max:255|unique:z_assets_list,asset_name,' . $id . ',asset_id',
+            'category_id' => 'required|exists:z_assets_list_cats,category_id',
+            'asset_serial' => 'nullable|string|max:100',
+            'tracking_number' => 'nullable|string|max:100',
+            'asset_sku' => 'nullable|string|max:100',
+            'purchase_date' => 'nullable|date',
+            'alert_days' => 'nullable|integer|min:0',
+            'alert_description' => 'nullable|string',
+            'expiry_date' => 'nullable|date',
+        ]);
+
+        $asset = Asset::findOrFail($id);
+        $asset->asset_name = $request->asset_name;
+        $asset->category_id = $request->category_id;
+        $asset->asset_serial = $request->asset_serial;
+        $asset->tracking_number = $request->tracking_number;
+        $asset->asset_sku = $request->asset_sku;
+        $asset->purchase_date = $request->purchase_date;
+        $asset->alert_days = $request->alert_days;
+        $asset->alert_description = $request->alert_description;
+        $asset->expiry_date = $request->expiry_date;
+        
+        $asset->save();
+
+        $this->logAction($id, 'Details Updated', 'Core asset details were updated.');
+
+        return redirect()->back()->with('success', 'Asset details updated successfully.');
     }
 
     private function logAction($refId, $action, $remark)

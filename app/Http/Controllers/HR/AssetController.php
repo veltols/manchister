@@ -48,20 +48,24 @@ class AssetController extends Controller
         $request->validate([
             'asset_name' => 'required|string|max:255|unique:z_assets_list,asset_name',
             'category_id' => 'required|exists:z_assets_list_cats,category_id',
-            'asset_ref' => 'required|string|max:50',
+            'asset_ref' => 'nullable|string|max:50',
             'asset_serial' => 'nullable|string',
+            'tracking_number' => 'nullable|string|max:100',
+            'asset_sku' => 'nullable|string|max:100',
         ]);
 
         $asset = new Asset();
         $asset->asset_name = $request->asset_name;
         $asset->category_id = $request->category_id;
-        $asset->asset_ref = $request->asset_ref;
+        $asset->asset_ref = $request->asset_ref ?: 'AST-' . strtoupper(substr(uniqid(), -6));
         $asset->asset_serial = $request->asset_serial;
+        $asset->tracking_number = $request->tracking_number;
+        $asset->asset_sku = $request->asset_sku ?: 'SKU-' . date('Ym') . '-' . strtoupper(substr(md5(uniqid()), 0, 4));
         $asset->asset_description = $request->asset_description;
-        $asset->added_date = now();
+        $asset->added_date = now()->toDateString();
         $asset->added_by = 1; // Default admin
         $asset->assigned_by = 0; // Default
-        $asset->assigned_date = now();
+        $asset->assigned_date = now()->toDateString();
         $asset->assigned_to = 0; // Default unassigned
         $asset->status_id = 2; // Default Active/In Stock
         $asset->save();

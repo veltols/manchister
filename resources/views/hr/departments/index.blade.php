@@ -42,7 +42,8 @@
                             <th>Name</th>
                             <th>Parent Dept</th>
                             <th>Manager</th>
-                            <th class="w-20 text-center">Actions</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center w-20">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="departments-container">
@@ -77,13 +78,45 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <div class="flex items-center justify-center">
+                                    <div class="flex flex-col items-center gap-1">
+                                        @if($dept->is_active)
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold ring-1 ring-inset ring-emerald-600/10">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                                Active
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 text-xs font-bold ring-1 ring-inset ring-rose-600/10">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                                Inactive
+                                            </span>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="flex items-center justify-center gap-2">
                                         <button
-                                        onclick="editDepartment({{ $dept->department_id }}, '{{ $dept->department_code }}', '{{ $dept->department_name }}', {{ $dept->main_department_id }}, {{ $dept->line_manager_id ?? 'null' }})"
-                                        class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 hover:bg-brand hover:text-white transition-all duration-200 flex items-center justify-center"
-                                        title="Edit">
-                                        <i class="fa-solid fa-pen-to-square text-xs"></i>
-                                    </button>
+                                            onclick="editDepartment({{ $dept->department_id }}, '{{ addslashes($dept->department_code) }}', '{{ addslashes($dept->department_name) }}', {{ $dept->main_department_id }}, {{ $dept->line_manager_id ?? 'null' }})"
+                                            class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
+                                            title="Edit">
+                                            <i class="fa-solid fa-pen text-sm"></i>
+                                        </button>
+
+                                        <form action="{{ route('hr.departments.status', $dept->department_id) }}" method="POST" onsubmit="return confirmToggle(this, 'department')">
+                                            @csrf
+                                            @if($dept->is_active)
+                                                <button type="submit" 
+                                                    class="w-9 h-9 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all duration-200 flex items-center justify-center shadow-md"
+                                                    title="Deactivate">
+                                                    <i class="fa-solid fa-ban text-sm"></i>
+                                                </button>
+                                            @else
+                                                <button type="submit" 
+                                                    class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all duration-200 flex items-center justify-center shadow-md"
+                                                    title="Activate">
+                                                    <i class="fa-solid fa-check text-sm"></i>
+                                                </button>
+                                            @endif
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -231,7 +264,32 @@
     @push('scripts')
         <script src="{{ asset('js/ajax-pagination.js') }}"></script>
         <script>
+            function confirmToggle(form, type) {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: `You are about to change the status of this ${type}.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#004F68',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Yes, change it!',
+                    cancelButtonText: 'Cancel',
+                    background: '#ffffff',
+                    customClass: {
+                        popup: 'rounded-2xl',
+                        confirmButton: 'premium-button',
+                        cancelButton: 'px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+                return false;
+            }
+
             function editDepartment(id, code, name, mainId, managerId) {
+                console.log('Editing Department:', {id, code, name, mainId, managerId});
                 document.getElementById('edit_code').value = code;
                 document.getElementById('edit_name').value = name;
                 document.getElementById('edit_main').value = mainId;
@@ -302,13 +360,44 @@
                                         </div>
                                     ` : '<span class="text-red-400 text-sm">Not Assigned</span>'}
                                 </td>
-                                <td>
-                                    <div class="flex items-center justify-center">
+                                <td class="text-center px-6 py-4">
+                                     <div class="flex flex-col items-center gap-1">
+                                        ${dept.is_active ? `
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold ring-1 ring-inset ring-emerald-600/10">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                                Active
+                                            </span>
+                                        ` : `
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 text-xs font-bold ring-1 ring-inset ring-rose-600/10">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                                Inactive
+                                            </span>
+                                        `}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center justify-center gap-2">
                                         <button onclick="editDepartment(${dept.department_id}, '${dept.department_code.replace(/'/g, "\\'")}', '${dept.department_name.replace(/'/g, "\\'")}', ${dept.main_department_id}, ${dept.line_manager_id || 0})"
-                                                class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 hover:bg-brand hover:text-white transition-all duration-200 flex items-center justify-center"
+                                                class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
                                                 title="Edit">
-                                            <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                            <i class="fa-solid fa-pen text-sm"></i>
                                         </button>
+                                        <form action="/hr/departments/${dept.department_id}/status" method="POST" onsubmit="return confirmToggle(this, 'department')">
+                                            <input type="hidden" name="_token" value="${document.querySelector('meta[name=\"csrf-token\"]').content}">
+                                            ${dept.is_active ? `
+                                                <button type="submit" 
+                                                    class="w-9 h-9 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all duration-200 flex items-center justify-center shadow-md"
+                                                    title="Deactivate">
+                                                    <i class="fa-solid fa-ban text-sm"></i>
+                                                </button>
+                                            ` : `
+                                                <button type="submit" 
+                                                    class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all duration-200 flex items-center justify-center shadow-md"
+                                                    title="Activate">
+                                                    <i class="fa-solid fa-check text-sm"></i>
+                                                </button>
+                                            `}
+                                        </form>
                                     </div>
                                 </td>
                             </tr>

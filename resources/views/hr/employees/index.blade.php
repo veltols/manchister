@@ -15,25 +15,20 @@
         </div>
 
         <!-- Filters & Search -->
-        <div class="premium-card p-6">
+        <div class="premium-card p-6 border border-slate-100 shadow-sm">
             <div class="flex flex-wrap gap-4 items-center">
                 <div class="flex-1 min-w-[300px]">
-                    <div class="relative">
-                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" placeholder="Search employees..."
-                            class="premium-input pl-11 pr-4 py-2.5 w-full text-sm">
+                    <div class="relative group">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors"></i>
+                        <input type="text" id="employeeSearchInput" placeholder="Search by name, ID or email..."
+                            class="premium-input pl-11 pr-4 py-2.5 w-full text-sm focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all">
                     </div>
                 </div>
-                <select class="premium-input px-4 py-2.5 text-sm min-w-[150px]">
-                    <option>All Departments</option>
-                    <option>Engineering</option>
-                    <option>HR</option>
-                    <option>Sales</option>
-                </select>
-                <select class="premium-input px-4 py-2.5 text-sm min-w-[150px]">
-                    <option>All Status</option>
-                    <option>Active</option>
-                    <option>Inactive</option>
+                <select id="employeeDeptFilter" class="premium-input px-4 py-2.5 text-sm min-w-[220px] focus:ring-4 focus:ring-indigo-100 transition-all">
+                    <option value="">All Departments</option>
+                    @foreach($departments as $dept)
+                        <option value="{{ $dept->department_id }}">{{ $dept->department_name }}</option>
+                    @endforeach
                 </select>
             </div>
         </div>
@@ -49,6 +44,7 @@
                             <th class="text-left">Email</th>
                             <th class="text-left">Department</th>
                             <th class="text-left">Designation</th>
+                            <th class="text-center">Status</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
@@ -81,6 +77,12 @@
                                 <td>
                                     <span
                                         class="text-sm text-slate-600">{{ $employee->designation->designation_name ?? '-' }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full {{ $employee->systemUser && $employee->systemUser->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500' }} text-[10px] font-bold uppercase tracking-wider">
+                                        <i class="fa-solid fa-circle text-[6px] {{ $employee->systemUser && $employee->systemUser->is_active ? 'animate-pulse' : '' }}"></i>
+                                        {{ $employee->systemUser && $employee->systemUser->is_active ? 'Active' : 'Inactive' }}
+                                    </span>
                                 </td>
                                 <td>
                                     <div class="flex items-center justify-center gap-2">
@@ -133,6 +135,12 @@
             containerSelector: '#employees-container',
             paginationSelector: '#employees-pagination',
             perPage: 20,
+            getAdditionalParams: function() {
+                return {
+                    search: document.getElementById('employeeSearchInput').value,
+                    department_id: document.getElementById('employeeDeptFilter').value
+                };
+            },
             renderCallback: function(employees) {
                 const container = document.querySelector('#employees-container');
                 
@@ -154,9 +162,11 @@
                 
                 let html = '';
                 employees.forEach(employee => {
-                    const initials = (employee.first_name.charAt(0) + (employee.last_name ? employee.last_name.charAt(0) : '')).toUpperCase();
+                    const initials = ((employee.first_name || '').charAt(0) + (employee.last_name || '').charAt(0)).toUpperCase();
                     const showUrl = "{{ route('hr.employees.show', ':id') }}".replace(':id', employee.employee_id);
-                    
+                    const sysUser = employee.systemUser || employee.system_user;
+                    const isActive = sysUser ? sysUser.is_active : 0;
+
                     html += `
                         <tr>
                             <td>
@@ -186,6 +196,12 @@
                             </td>
                             <td>
                                 <span class="text-sm text-slate-600">${employee.designation ? employee.designation.designation_name : '-'}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'} text-[10px] font-bold uppercase tracking-wider">
+                                    <i class="fa-solid fa-circle text-[6px] ${isActive ? 'animate-pulse' : ''}"></i>
+                                    ${isActive ? 'Active' : 'Inactive'}
+                                </span>
                             </td>
                             <td>
                                 <div class="flex items-center justify-center gap-2">
@@ -219,6 +235,19 @@
                 total: {{ $employees->total() }}
             });
         @endif
+        // Filter Event Listeners
+        const hrSearchInput = document.getElementById('employeeSearchInput');
+        const hrDeptFilter = document.getElementById('employeeDeptFilter');
+
+        let hrSearchTimeout;
+        hrSearchInput.addEventListener('input', () => {
+            clearTimeout(hrSearchTimeout);
+            hrSearchTimeout = setTimeout(() => {
+                window.ajaxPagination.loadPage(1);
+            }, 500);
+        });
+
+        hrDeptFilter.addEventListener('change', () => window.ajaxPagination.loadPage(1));
     </script>
     @endpush
 @endsection

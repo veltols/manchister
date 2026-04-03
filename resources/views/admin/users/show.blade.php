@@ -4,7 +4,7 @@
 @section('subtitle', 'View system user details')
 
 @section('content')
-    <div class="space-y-6 animate-fade-in-up md:grid md:grid-cols-3 md:gap-6 md:space-y-0">
+    <div x-data="{ activeTab: 'assets' }" class="space-y-6 animate-fade-in-up md:grid md:grid-cols-3 md:gap-6 md:space-y-0">
         
         <!-- Left Column: Profile Card -->
         <div class="md:col-span-1 space-y-6">
@@ -65,8 +65,18 @@
                         </div>
                         <div>
                             <p class="text-xs text-slate-400 font-bold uppercase">Joined Date</p>
-                            <p class="font-medium">{{ $user->joined_date ? \Carbon\Carbon::parse($user->joined_date)->format('M d, Y') : 'N/A' }}</p>
+                            <p class="font-medium">{{ $user?->employee_join_date ? \Carbon\Carbon::parse($user->employee_join_date)->format('M d, Y') : 'N/A' }}</p>
+                        </div> 
+                    </div>
+
+                    <div class="flex items-center gap-3 text-sm text-slate-600">
+                         <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                            <i class="fa-solid fa-user-tag"></i>
                         </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-bold uppercase">User Type</p>
+                            <p class="font-bold text-indigo-600 uppercase italic text-[10px]">{{ str_replace('_', ' ', $user->employee_type ?? 'N/A') }}</p>
+                        </div> 
                     </div>
                 </div>
             </div>
@@ -75,9 +85,13 @@
             <div class="premium-card p-4">
                 <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Account Actions</h3>
                 <div class="space-y-3">
+                    <button onclick="openModal('editUserModal')" class="w-full py-2.5 px-4 rounded-xl bg-gradient-brand text-white font-semibold shadow-md hover:scale-[1.02] transition-all text-sm flex items-center justify-center gap-2 border border-white/10">
+                        <i class="fa-solid fa-user-pen"></i> Update Profile
+                    </button>
                     <button onclick="openModal('permissionsModal')" class="w-full py-2.5 px-4 rounded-xl bg-slate-50 text-slate-600 font-semibold hover:bg-slate-100 hover:text-slate-800 transition-colors text-sm flex items-center justify-center gap-2">
                         <i class="fa-solid fa-shield-halved"></i> Services
                     </button>
+                 
                     <button onclick="openModal('changeLoginIdModal')" class="w-full py-2.5 px-4 rounded-xl bg-indigo-50 text-indigo-600 font-semibold hover:bg-indigo-100 hover:text-indigo-800 transition-colors text-sm flex items-center justify-center gap-2">
                         <i class="fa-solid fa-envelope"></i> Change Login ID
                     </button>
@@ -104,7 +118,7 @@
         <!-- Right Column: Tabs/Details -->
         <div class="md:col-span-2 space-y-6">
             
-            <div x-data="{ activeTab: 'assets' }" class="premium-card overflow-hidden min-h-[500px]">
+            <div class="premium-card overflow-hidden min-h-[500px]">
                 <div class="flex items-center gap-4 p-4 border-b border-slate-100 bg-slate-50/30">
                     <button @click="activeTab = 'assets'"
                         :class="activeTab === 'assets' ? 'premium-button from-indigo-600 to-purple-600 text-white shadow-md' : 'bg-white text-slate-500 hover:bg-slate-100'"
@@ -121,6 +135,25 @@
                         class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300">
                         Activity Logs
                     </button>
+                    <button @click="activeTab = 'organization'"
+                        :class="activeTab === 'organization' ? 'premium-button from-emerald-600 to-teal-600 text-white shadow-md' : 'bg-white text-slate-500 hover:bg-slate-100'"
+                        class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300">
+                        Organization
+                    </button>
+                </div>
+
+                <!-- Organization Chart Panel -->
+                <div x-show="activeTab === 'organization'" class="animate-fade-in overflow-x-auto p-4">
+                    <div class="org-tree-container py-8 max-w-2xl mx-auto">
+                        @if($orgRoot)
+                            @include('admin.users.partials.org_node', ['dept' => $orgRoot, 'targetId' => $user->employee_id])
+                        @else
+                            <div class="flex flex-col items-center justify-center py-20 text-slate-400">
+                                <i class="fa-solid fa-sitemap text-6xl mb-4 opacity-20"></i>
+                                <p>Organization structure data not found.</p>
+                            </div>
+                        @endif
+                    </div>
                 </div>
 
                 <!-- Assets Tab -->
@@ -434,10 +467,11 @@
                                                 </div>
                                             @endif
 
-                                            <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2">
+                                            <!-- <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2">
                                                 <i class="fa-solid fa-user text-[8px] opacity-70"></i>
+                                               
                                                 {{ $log->logger->first_name ?? 'System' }}
-                                            </div>
+                                            </div> -->
                                         </div>
                                     </div>
                                 @endforeach
@@ -476,9 +510,39 @@
             <form action="{{ route('admin.users.reset-password', $user->employee_id) }}" method="POST">
                 @csrf
                 <div class="space-y-4">
-                    <div>
+                    <div class="relative group">
                         <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">New Password</label>
-                        <input type="text" name="password" required class="premium-input w-full px-4 py-3" placeholder="Enter new password">
+                        <div class="relative">
+                            <input type="password" id="reset-password" name="password" required 
+                                   class="premium-input w-full pl-4 pr-11 py-3 transition-all duration-200" 
+                                   placeholder="Enter new password">
+                            <button type="button" onclick="togglePasswordVisibility('reset-password', this)" 
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors">
+                                <i class="fa-solid fa-eye-slash text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                        
+                        <div id="reset-pass-criteria" class="mt-3 space-y-1.5 p-3 rounded-xl bg-slate-50 border border-slate-100 hidden">
+                             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Security Requirements:</p>
+                             <div class="grid grid-cols-1 gap-1">
+                                 <div id="rcrit-length" class="flex items-center gap-2 text-[10px] text-slate-400 transition-colors">
+                                     <i class="fa-solid fa-circle-check text-[8px]"></i> At least 8 characters
+                                 </div>
+                                 <div id="rcrit-upper" class="flex items-center gap-2 text-[10px] text-slate-400 transition-colors">
+                                     <i class="fa-solid fa-circle-check text-[8px]"></i> One uppercase letter
+                                 </div>
+                                 <div id="rcrit-lower" class="flex items-center gap-2 text-[10px] text-slate-400 transition-colors">
+                                     <i class="fa-solid fa-circle-check text-[8px]"></i> One lowercase letter
+                                 </div>
+                                 <div id="rcrit-num" class="flex items-center gap-2 text-[10px] text-slate-400 transition-colors">
+                                     <i class="fa-solid fa-circle-check text-[8px]"></i> One number
+                                 </div>
+                                 <div id="rcrit-special" class="flex items-center gap-2 text-[10px] text-slate-400 transition-colors">
+                                     <i class="fa-solid fa-circle-check text-[8px]"></i> One symbol (!@#$%^&*)
+                                 </div>
+                            </div>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Log Remark</label>
@@ -647,7 +711,7 @@
 
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">New Login Email <span class="text-rose-500">*</span></label>
-                        <input type="text" name="new_email" required class="premium-input w-full px-4 py-3" placeholder="e.g. john.doe or email@example.com">
+                        <input type="email" name="new_email" required class="premium-input w-full px-4 py-3" placeholder="e.g. email@example.com">
                     </div>
 
                     <div>
@@ -761,6 +825,114 @@
             </form>
         </div>
     </div>
+    
+    <!-- Edit Profile Modal -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-backdrop" onclick="closeModal('editUserModal')"></div>
+        <div class="modal-content max-w-2xl p-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-display font-bold text-premium">Update User Profile</h2>
+                    <p class="text-slate-500 text-sm">Modify biographical and organizational details</p>
+                </div>
+                <button onclick="closeModal('editUserModal')" class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form action="{{ route('admin.users.update', $user->employee_id) }}" method="POST">
+                @csrf
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="premium-label">First Name <span class="text-rose-500">*</span></label>
+                        <input type="text" name="first_name" value="{{ $user->first_name }}" required class="premium-input w-full px-4 py-2.5 text-sm">
+                    </div>
+                    <div>
+                        <label class="premium-label">Last Name <span class="text-rose-500">*</span></label>
+                        <input type="text" name="last_name" value="{{ $user->last_name }}" required class="premium-input w-full px-4 py-2.5 text-sm">
+                    </div>
+                    <div>
+                        <label class="premium-label">Date of Birth</label>
+                        <input type="date" name="employee_dob" value="{{ $user->employee_dob }}" class="premium-input w-full px-4 py-2.5 text-sm">
+                    </div>
+                    <div>
+                        <label class="premium-label">Joining Date</label>
+                        <input type="date" name="employee_join_date" value="{{ $user->employee_join_date }}" class="premium-input w-full px-4 py-2.5 text-sm">
+                    </div>
+                    
+                    <div class="col-span-1">
+                        <label class="premium-label">Department <span class="text-rose-500">*</span></label>
+                        <select name="department_id" required class="premium-input w-full px-4 py-2.5 text-sm">
+                            @foreach($departments as $dept)
+                                <option value="{{ $dept->department_id }}" {{ $user->department_id == $dept->department_id ? 'selected' : '' }}>
+                                    {{ $dept->department_name }} {{ $dept->is_active ? '' : '(Inactive)' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-span-1">
+                        <label class="premium-label">Designation <span class="text-rose-500">*</span></label>
+                        <select name="designation_id" required class="premium-input w-full px-4 py-2.5 text-sm">
+                            @foreach($designations as $desig)
+                                <option value="{{ $desig->designation_id }}" {{ $user->designation_id == $desig->designation_id ? 'selected' : '' }}>
+                                    {{ $desig->designation_name }} {{ $desig->is_active ? '' : '(Inactive)' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="premium-label">Nationality</label>
+                        <select name="nationality_id" class="premium-input w-full px-4 py-2.5 text-sm">
+                            <option value="">Select Nationality</option>
+                            @foreach($nationalities as $id => $name)
+                                <option value="{{ $id }}" {{ $user->nationality_id == $id ? 'selected' : '' }}>{{ $name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="premium-label">Employee Type</label>
+                        <select name="employee_type" class="premium-input w-full px-4 py-2.5 text-sm">
+                            @foreach(['full_time' => 'Full Time', 'part_time' => 'Part Time', 'contract' => 'Contract', 'intern' => 'Intern'] as $val => $lbl)
+                                <option value="{{ $val }}" {{ $user->employee_type == $val ? 'selected' : '' }}>{{ $lbl }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-span-2">
+                        <label class="premium-label">Portal Role (User Type) <span class="text-rose-500">*</span></label>
+                        <select name="user_type" required class="premium-input w-full px-4 py-2.5 text-sm">
+                            <option value="emp" {{ ($user->systemUser->user_type ?? '') == 'emp' ? 'selected' : '' }}>Employee (Standard)</option>
+                            <option value="hr" {{ ($user->systemUser->user_type ?? '') == 'hr' ? 'selected' : '' }}>HR Manager</option>
+                            <option value="eqa" {{ ($user->systemUser->user_type ?? '') == 'eqa' ? 'selected' : '' }}>EQA Officer</option>
+                        </select>
+                    </div>
+
+                    <div class="col-span-2">
+                        <label class="premium-label">Qualification / Certificate</label>
+                        <select name="certificate_id" class="premium-input w-full px-4 py-2.5 text-sm">
+                            <option value="">Select Qualification</option>
+                            @foreach($certificates as $id => $name)
+                                <option value="{{ $id }}" {{ $user->certificate_id == $id ? 'selected' : '' }}>{{ $name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-span-2">
+                        <label class="premium-label">Log Remark / Reason <span class="text-rose-500">*</span></label>
+                        <textarea name="log_remark" required rows="3" class="premium-input w-full px-4 py-3 text-sm" placeholder="Reason for updating profile..."></textarea>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('editUserModal')" class="px-6 py-2.5 rounded-xl font-bold text-slate-400 hover:text-slate-600 transition-colors">Cancel</button>
+                    <button type="submit" class="px-6 py-2.5 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:scale-105 transition-all border border-white/10">
+                        Update Profile
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
 
     @push('scripts')
@@ -846,6 +1018,18 @@
                 });
             }
 
+            function togglePasswordVisibility(inputId, btn) {
+                const input = document.getElementById(inputId);
+                const icon = btn.querySelector('i');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.replace('fa-eye-slash', 'fa-eye');
+                } else {
+                    input.type = 'password';
+                    icon.classList.replace('fa-eye', 'fa-eye-slash');
+                }
+            }
+
             function toggleService(serviceId, isChecked) {
                 const newVal  = isChecked ? 1 : 0;
                 const card    = document.getElementById('srv-card-'  + serviceId);
@@ -911,8 +1095,87 @@
                     Swal.fire({ icon: 'error', title: 'Network Error', text: 'Please try again.' });
                 });
             }
+        // Password Validation Logic for Reset
+        (function() {
+            const rPassInput = document.getElementById('reset-password');
+            const rPassCriteria = document.getElementById('reset-pass-criteria');
+            const resetForm = document.querySelector('form[action="{{ route("admin.users.reset-password", $user->employee_id) }}"]');
+
+            if (rPassInput) {
+                const crits = {
+                    length: document.getElementById('rcrit-length'),
+                    upper: document.getElementById('rcrit-upper'),
+                    lower: document.getElementById('rcrit-lower'),
+                    number: document.getElementById('rcrit-num'),
+                    special: document.getElementById('rcrit-special')
+                };
+
+                const validate = (val) => {
+                    const checks = {
+                        length: val.length >= 8,
+                        upper: /[A-Z]/.test(val),
+                        lower: /[a-z]/.test(val),
+                        number: /[0-9]/.test(val),
+                        special: /[^A-Za-z0-9]/.test(val)
+                    };
+
+                    Object.keys(checks).forEach(k => {
+                        const el = crits[k];
+                        if (checks[k]) {
+                            el.classList.remove('text-slate-400');
+                            el.classList.add('text-emerald-500', 'font-bold');
+                            el.querySelector('i').classList.replace('fa-circle-check', 'fa-check');
+                        } else {
+                            el.classList.add('text-slate-400');
+                            el.classList.remove('text-emerald-500', 'font-bold');
+                            el.querySelector('i').classList.replace('fa-check', 'fa-circle-check');
+                        }
+                    });
+
+                    return Object.values(checks).every(v => v);
+                };
+
+                rPassInput.addEventListener('focus', () => rPassCriteria.classList.remove('hidden'));
+                rPassInput.addEventListener('input', (e) => validate(e.target.value));
+
+                if (resetForm) {
+                    resetForm.addEventListener('submit', (e) => {
+                        if (!validate(rPassInput.value)) {
+                            e.preventDefault();
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Insecure Password',
+                                text: 'Please ensure the new password meets all security requirements.',
+                                confirmButtonColor: '#f59e0b'
+                            });
+                        }
+                    });
+                }
+            }
+        })();
         </script>
         <!-- Alpine.js -->
         <script src="{{ asset('libs/alpinejs/alpine.min.js') }}" defer></script>
     @endpush
 @endsection
+
+@push('styles')
+<style>
+    .org-tree-container {
+        padding: 2rem;
+        background: #fdfdfd;
+        border-radius: 24px;
+        border: 1px dashed #e2e8f0;
+    }
+
+    .org-node {
+        position: relative;
+    }
+
+    .org-node .border-l-2 {
+        border-color: #cbd5e1 !important;
+        margin-left: 20px;
+        padding-left: 24px;
+    }
+</style>
+@endpush

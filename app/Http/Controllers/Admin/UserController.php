@@ -14,6 +14,8 @@ use App\Models\Asset;
 use App\Models\AssetCategory;
 use App\Models\EmployeeListService;
 use App\Models\EmployeeService;
+use App\Models\Designation;
+use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
@@ -26,7 +28,7 @@ class UserController extends Controller
             ->orderBy('employee_id', 'desc');
 
         $users = $query->paginate(15);
-        $departments = Department::orderBy('department_name')->get();
+        $departments = Department::orderBy('department_name')->where('is_active', 1)->get();
 
         return view('admin.users.index', compact('users', 'departments'));
     }
@@ -40,50 +42,74 @@ class UserController extends Controller
             'department_id' => 'required|exists:employees_list_departments,department_id',
             'user_type' => 'required|in:emp,hr,eqa',
             'employee_email' => 'nullable|unique:employees_list,employee_email',
-            'password' => 'required|string|min:6',
+            'password' => [
+                'required',
+                'string',
+                Password::min(8)
+                    ->letters()
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols(),
+            ],
         ]);
 
-        // 1. Create Employee
-        $emp = new Employee();
-        $emp->employee_no = $request->employee_no;
-        $emp->first_name = $request->first_name;
-        $emp->last_name = $request->last_name;
-        $emp->department_id = $request->department_id;
-        $emp->employee_email = $request->employee_email;
-        $emp->employee_join_date = now();
-        $emp->employee_code = 'EMP-' . rand(1000, 9999);
-        $emp->designation_id = 0;
-        $emp->save();
+        DB::beginTransaction();
+        try {
+            // 1. Create Employee
+            $emp = new Employee();
+            $emp->employee_no = $request->employee_no;
+            $emp->first_name = $request->first_name;
+            $emp->last_name = $request->last_name;
+            $emp->department_id = $request->department_id;
+            $emp->employee_email = $request->employee_email;
+            $emp->employee_join_date = now();
+            $emp->employee_code = 'EMP-' . rand(1000, 9999);
+            $emp->designation_id = 0;
+            $emp->is_pass = 1;
+            $emp->emp_status_id = 1; // Assuming 1 is Active
+            $emp->save();
 
-        // 2. Save Password
-        $pass = new EmployeePass();
-        $pass->employee_id = $emp->employee_id;
-        $pass->pass_value = Hash::make($request->password);
-        $pass->is_active = 1;
-        $pass->save();
+            // 2. Save Password
+            $pass = new EmployeePass();
+            $pass->employee_id = $emp->employee_id;
+            $pass->pass_value = Hash::make($request->password);
+            $pass->is_active = 1;
+            $pass->save();
 
-        // 3. Use User Type from Request
-        $userType = $request->user_type;
+            // 3. User Type from Request
+            $userType = $request->user_type;
 
-        // 4. Create Credentials Record
-        $cred = new \App\Models\EmployeeCred();
-        $cred->employee_id = $emp->employee_id;
-        $cred->save();
+            // 4. Create Credentials Record
+            $cred = new \App\Models\EmployeeCred();
+            $cred->employee_id = $emp->employee_id;
+            $cred->save();
 
-        // 5. Create System User Record (users_list)
-        $sysUser = new \App\Models\User();
-        $sysUser->user_id = $emp->employee_id;
-        $sysUser->user_email = $request->employee_email;
-        $sysUser->user_type = $userType;
-        $sysUser->int_ext = 'int';
-        $sysUser->user_family = 'employees_list';
-        $sysUser->user_theme_id = 7;
-        $sysUser->save();
+            // 5. Create System User Record (users_list)
+            $sysUser = new \App\Models\User();
+            $sysUser->user_id = $emp->employee_id;
+            $sysUser->user_email = $request->employee_email;
+            $sysUser->user_type = $userType;
+            $sysUser->int_ext = 'int';
+            $sysUser->user_family = 'employees_list';
+            $sysUser->user_theme_id = 7;
+            $sysUser->save();
 
-        // Log
-        $this->logAction($emp->employee_id, 'User Created', "User {$emp->first_name} {$emp->last_name} created.");
+            // 6. Handle Line Manager Assignment
+            if ($request->is_line_manager == 1) {
+                Department::where('department_id', $request->department_id)
+                    ->update(['line_manager_id' => $emp->employee_id]);
+            }
 
-        return redirect()->back()->with('success', 'User created successfully.');
+            // Log
+            $this->logAction($emp->employee_id, 'User Created', "User [{$emp->full_name}] created and assigned to department [{$emp->department_id}].");
+
+            DB::commit();
+            return redirect()->back()->with('success', 'User created successfully.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Error creating user: ' . $e->getMessage());
+        }
     }
 
     public function show($id)
@@ -106,11 +132,75 @@ class UserController extends Controller
             ->where('assigned_to', 0)
             ->get();
 
+        // Lookups for edit modal
+        $departments = Department::where('is_active', 1)
+            ->orWhere('department_id', $user->department_id)
+            ->orderBy('department_name')
+            ->get();
+        $designations = Designation::where('is_active', 1)
+            ->orWhere('designation_id', $user->designation_id)
+            ->orderBy('designation_name')
+            ->get();
+        
+        $titles = DB::table('sys_lists')->where('item_category', 'title')->pluck('item_name', 'item_id');
+        $genders = DB::table('sys_lists')->where('item_category', 'gender')->pluck('item_name', 'item_id');
+        $nationalities = DB::table('sys_countries')->orderBy('country_name')->pluck('country_name', 'country_id');
+        $certificates = DB::table('hr_certificates')->orderBy('certificate_name')->pluck('certificate_name', 'certificate_id');
+
         // Fetch all services and which ones are enabled for this user
         $allServices = EmployeeListService::orderBy('service_id')->get();
         $enabledServiceIds = EmployeeService::where('employee_id', $id)->pluck('service_id')->toArray();
 
-        return view('admin.users.show', compact('user', 'assets', 'logs', 'availableAssets', 'allServices', 'enabledServiceIds'));
+        // Org Chart Data
+        $orgRoot = Department::where('main_department_id', 0)
+            ->with(['children.children.children', 'lineManager'])
+            ->first();
+
+        return view('admin.users.show', compact(
+            'user', 'assets', 'logs', 'availableAssets', 
+            'allServices', 'enabledServiceIds', 'departments', 
+            'designations', 'titles', 'genders', 'nationalities', 
+            'certificates', 'orgRoot'
+        ));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $user = Employee::findOrFail($id);
+
+        $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'employee_dob' => 'nullable|date',
+            'employee_join_date' => 'nullable|date',
+            'department_id' => 'required|exists:employees_list_departments,department_id',
+            'designation_id' => 'required|exists:employees_list_designations,designation_id',
+            'nationality_id' => 'nullable|integer',
+            'certificate_id' => 'nullable|integer',
+            'user_type' => 'required|in:emp,hr,eqa',
+            'employee_type' => 'nullable|string',
+            'log_remark' => 'required|string',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Update Employee details
+            $user->update($request->except(['log_remark', 'user_type', '_token']));
+
+            // Update System User Role
+            if ($user->systemUser) {
+                $user->systemUser->user_type = $request->user_type;
+                $user->systemUser->save();
+            }
+
+            $this->logAction($user->employee_id, 'User Profile Updated', $request->log_remark);
+
+            DB::commit();
+            return redirect()->back()->with('success', 'User profile updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to update profile: ' . $e->getMessage());
+        }
     }
 
     public function updateStatus(Request $request, $id)
@@ -143,6 +233,12 @@ class UserController extends Controller
             $systemUser->is_active = $newStatus;
             $systemUser->save();
 
+            // Sync with HR employee status
+            if ($systemUser->employee) {
+                $systemUser->employee->emp_status_id = $newStatus ? 1 : 2; // Assuming 2 is inactive/suspended
+                $systemUser->employee->save();
+            }
+
             $this->logAction($id, $action, $logRemark);
 
             return redirect()->back()->with('success', "User status updated successfully.");
@@ -154,16 +250,33 @@ class UserController extends Controller
     public function resetPassword(Request $request, $id)
     {
         $request->validate([
-            'password' => 'required|string|min:6',
+            'password' => [
+                'required',
+                'string',
+                Password::min(8)
+                    ->letters()
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols(),
+            ],
             'log_remark' => 'required|string'
         ]);
 
         $user = Employee::findOrFail($id);
-        $pass = EmployeePass::where('employee_id', $id)->first() ?? new EmployeePass();
+        
+        // 1. Deactivate all existing passwords for this employee
+        EmployeePass::where('employee_id', $id)->update(['is_active' => 0]);
+        
+        // 2. Insert new password record (keep history)
+        $pass = new EmployeePass();
         $pass->employee_id = $id;
         $pass->pass_value = Hash::make($request->password);
         $pass->is_active = 1;
         $pass->save();
+        
+        // 3. Mark employee as having a password set just in case
+        $user->is_pass = 1;
+        $user->save();
 
         $this->logAction($id, 'Password Reset', $request->log_remark);
 
@@ -310,8 +423,30 @@ class UserController extends Controller
         // Filter by user/email search if needed
         $query = Employee::with(['department', 'systemUser'])
             ->where('is_deleted', 0)
-            ->where('is_hidden', 0)
-            ->orderBy('employee_id', 'desc');
+            ->where('is_hidden', 0);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('first_name', 'LIKE', "%{$search}%")
+                  ->orWhere('last_name', 'LIKE', "%{$search}%")
+                  ->orWhere('employee_no', 'LIKE', "%{$search}%")
+                  ->orWhere('employee_email', 'LIKE', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('department_id')) {
+            $query->where('department_id', $request->department_id);
+        }
+
+        if ($request->has('status') && $request->status !== '') {
+            $status = $request->status;
+            $query->whereHas('systemUser', function($q) use ($status) {
+                $q->where('is_active', $status);
+            });
+        }
+
+        $query->orderBy('employee_id', 'desc');
 
         $users = $query->paginate($perPage);
 

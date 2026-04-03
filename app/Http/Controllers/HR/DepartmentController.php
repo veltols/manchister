@@ -116,6 +116,18 @@ class DepartmentController extends Controller
         return redirect()->back()->with('success', 'Department updated successfully.');
     }
 
+    public function toggleStatus($id)
+    {
+        $dept = Department::findOrFail($id);
+        $dept->is_active = $dept->is_active ? 0 : 1;
+        $dept->save();
+
+        $status = $dept->is_active ? 'activated' : 'deactivated';
+        $this->logAction($dept->department_id, 'Department_' . ucfirst($status), 'Department ' . $status);
+
+        return redirect()->back()->with('success', 'Department ' . $status . ' successfully.');
+    }
+
     private function logAction($id, $action, $remark)
     {
         \App\Models\SystemLog::create([

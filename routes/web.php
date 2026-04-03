@@ -244,6 +244,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/employees/{id}', [App\Http\Controllers\HR\EmployeeController::class, 'show'])->name('employees.show');
         Route::post('/employees/{id}/update', [App\Http\Controllers\HR\EmployeeController::class, 'update'])->name('employees.update');
         Route::post('/employees/{id}/update-credentials', [App\Http\Controllers\HR\EmployeeController::class, 'updateCredentials'])->name('employees.update-credentials');
+        Route::post('/employees/{id}/update-permissions', [App\Http\Controllers\HR\EmployeeController::class, 'updatePermissions'])->name('employees.update-permissions');
+        Route::post('/employees/{id}/update-service', [App\Http\Controllers\HR\EmployeeController::class, 'updateService'])->name('employees.update-service');
 
         // Leaves
         Route::get('/leaves', [App\Http\Controllers\HR\LeaveController::class, 'index'])->name('leaves.index');
@@ -266,6 +268,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/departments/chart', [App\Http\Controllers\HR\DepartmentController::class, 'orgChart'])->name('departments.chart');
         Route::post('/departments', [App\Http\Controllers\HR\DepartmentController::class, 'store'])->name('departments.store');
         Route::post('/departments/{id}/update', [App\Http\Controllers\HR\DepartmentController::class, 'update'])->name('departments.update');
+        Route::post('/departments/{id}/status', [App\Http\Controllers\HR\DepartmentController::class, 'toggleStatus'])->name('departments.status');
         Route::get('/departments/data', [App\Http\Controllers\HR\DepartmentController::class, 'getData'])->name('departments.data');
 
         // Assets
@@ -350,6 +353,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/designations', [App\Http\Controllers\HR\DesignationController::class, 'store'])->name('designations.store');
         Route::get('/designations/{id}/edit', [App\Http\Controllers\HR\DesignationController::class, 'edit'])->name('designations.edit');
         Route::post('/designations/{id}', [App\Http\Controllers\HR\DesignationController::class, 'update'])->name('designations.update'); // Using POST for update per legacy style or standard
+        Route::post('/designations/{id}/status', [App\Http\Controllers\HR\DesignationController::class, 'toggleStatus'])->name('designations.status');
         Route::get('/designations/data', [App\Http\Controllers\HR\DesignationController::class, 'getData'])->name('designations.data');
 
 
@@ -442,6 +446,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/assets/{id}/assign', [App\Http\Controllers\Admin\AssetController::class, 'assign'])->name('assets.assign');
         Route::post('/assets/{id}/status', [App\Http\Controllers\Admin\AssetController::class, 'updateStatus'])->name('assets.update_status');
         Route::post('/assets/{id}/description', [App\Http\Controllers\Admin\AssetController::class, 'updateDescription'])->name('assets.update_description');
+        Route::post('/assets/{id}/details', [App\Http\Controllers\Admin\AssetController::class, 'updateDetails'])->name('assets.update_details');
         Route::get('/assets/data', [App\Http\Controllers\Admin\AssetController::class, 'getData'])->name('assets.data');
 
         // Users
@@ -450,6 +455,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/users/create', [App\Http\Controllers\Admin\UserController::class, 'create'])->name('users.create');
         Route::post('/users', [App\Http\Controllers\Admin\UserController::class, 'store'])->name('users.store');
         Route::get('/users/{id}', [App\Http\Controllers\Admin\UserController::class, 'show'])->name('users.show');
+        Route::post('/users/{id}', [App\Http\Controllers\Admin\UserController::class, 'update'])->name('users.update');
         Route::post('/users/{id}/update-status', [App\Http\Controllers\Admin\UserController::class, 'updateStatus'])->name('users.update-status');
         Route::post('/users/{id}/reset-password', [App\Http\Controllers\Admin\UserController::class, 'resetPassword'])->name('users.reset-password');
         Route::post('/users/{id}/update-permissions', [App\Http\Controllers\Admin\UserController::class, 'updatePermissions'])->name('users.update-permissions');
@@ -469,6 +475,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/incidents/data', [App\Http\Controllers\Admin\IncidentController::class, 'getData'])->name('incidents.data');
         Route::post('/incidents', [App\Http\Controllers\Admin\IncidentController::class, 'store'])->name('incidents.store');
         Route::get('/incidents/{id}', [App\Http\Controllers\Admin\IncidentController::class, 'show'])->name('incidents.show');
+        
+        // System Logs
+        Route::get('/logs', [App\Http\Controllers\Admin\SystemLogController::class, 'index'])->name('system_logs.index');
+        Route::get('/logs/data', [App\Http\Controllers\Admin\SystemLogController::class, 'getData'])->name('system_logs.data');
 
     });
 

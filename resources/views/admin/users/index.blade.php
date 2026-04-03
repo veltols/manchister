@@ -14,10 +14,33 @@
             </div>
             <!-- Create Button -->
             <button onclick="openModal('newUserModal')" 
-                class="inline-flex items-center gap-2 px-6 py-3 premium-button bg-gradient-brand text-white font-semibold rounded-xl shadow-lg hover:shadow-brand/20 hover:scale-105 transition-all duration-200">
-                <i class="fa-solid fa-plus"></i>
+                class="inline-flex items-center gap-2 px-6 py-3 premium-button bg-brand text-white font-semibold rounded-xl shadow-lg hover:translate-y-[-2px] transition-all duration-200">
+                <i class="fa-solid fa-plus text-sm"></i>
                 <span>Add New User</span>
             </button>
+        </div>
+
+        <!-- Filters & Search (HR Style) -->
+        <div class="premium-card p-6 border border-slate-100 shadow-sm">
+            <div class="flex flex-wrap gap-4 items-center">
+                <div class="flex-1 min-w-[300px]">
+                    <div class="relative group">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors"></i>
+                        <input type="text" id="userListSearch" placeholder="Search by name, ID or email..."
+                            class="premium-input pl-11 pr-4 py-2.5 w-full text-sm focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400">
+                    </div>
+                </div>
+                <select id="filterDepartment" class="premium-input px-4 py-2.5 text-sm min-w-[220px] focus:ring-4 focus:ring-indigo-100">
+                    <option value="">All Departments</option>
+                    @foreach($departments as $dept)
+                        <option value="{{ $dept->department_id }}">{{ $dept->department_name }}</option>
+                    @endforeach
+                </select>
+                <!-- <button onclick="window.ajaxPagination.loadPage(1)" 
+                    class="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold shadow-lg hover:shadow-slate-200 transition-all active:scale-95">
+                    Search
+                </button> -->
+            </div>
         </div>
 
         <!-- Users List -->
@@ -106,6 +129,17 @@
             function openModal(id) {
                 document.getElementById(id).classList.add('active');
             }
+            function togglePasswordVisibility(inputId, btn) {
+                const input = document.getElementById(inputId);
+                const icon = btn.querySelector('i');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.replace('fa-eye-slash', 'fa-eye');
+                } else {
+                    input.type = 'password';
+                    icon.classList.replace('fa-eye', 'fa-eye-slash');
+                }
+            }
 
             // Status Badge Helper
             function getStatusBadge(isActive) {
@@ -150,6 +184,12 @@
                 containerSelector: '#users-container',
                 paginationSelector: '#users-pagination',
                 perPage: 15,
+                getAdditionalParams: function() {
+                    return {
+                        search: document.getElementById('userListSearch').value,
+                        department_id: document.getElementById('filterDepartment').value
+                    };
+                },
                 renderCallback: function(users) {
                     const container = document.querySelector('#users-container');
                     
@@ -221,6 +261,77 @@
                     total: {{ $users->total() }}
                 });
             @endif
+
+            // Filter Event Listeners
+            const searchInput = document.getElementById('userListSearch');
+            const deptFilter = document.getElementById('filterDepartment');
+
+            let searchTimeout;
+            searchInput.addEventListener('input', () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    window.ajaxPagination.loadPage(1);
+                }, 500);
+            });
+
+            deptFilter.addEventListener('change', () => window.ajaxPagination.loadPage(1));
+
+            // Password Validation Logic
+            const passInput = document.getElementById('user-password');
+            const passCriteria = document.getElementById('pass-criteria');
+            const createForm = document.querySelector('form[action="{{ route("admin.users.store") }}"]');
+
+            if (passInput) {
+                const crits = {
+                    length: document.getElementById('crit-length'),
+                    upper: document.getElementById('crit-upper'),
+                    lower: document.getElementById('crit-lower'),
+                    number: document.getElementById('crit-num'),
+                    special: document.getElementById('crit-special')
+                };
+
+                const validate = (val) => {
+                    const checks = {
+                        length: val.length >= 8,
+                        upper: /[A-Z]/.test(val),
+                        lower: /[a-z]/.test(val),
+                        number: /[0-9]/.test(val),
+                        special: /[^A-Za-z0-9]/.test(val)
+                    };
+
+                    Object.keys(checks).forEach(k => {
+                        const el = crits[k];
+                        if (checks[k]) {
+                            el.classList.remove('text-slate-400');
+                            el.classList.add('text-emerald-500', 'font-bold');
+                            el.querySelector('i').classList.replace('fa-circle-check', 'fa-check');
+                        } else {
+                            el.classList.add('text-slate-400');
+                            el.classList.remove('text-emerald-500', 'font-bold');
+                            el.querySelector('i').classList.replace('fa-check', 'fa-circle-check');
+                        }
+                    });
+
+                    return Object.values(checks).every(v => v);
+                };
+
+                passInput.addEventListener('focus', () => passCriteria.classList.remove('hidden'));
+                passInput.addEventListener('input', (e) => validate(e.target.value));
+
+                if (createForm) {
+                    createForm.addEventListener('submit', (e) => {
+                        if (!validate(passInput.value)) {
+                            e.preventDefault();
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Insecure Password',
+                                text: 'Please ensure your password meets all the security requirements.',
+                                confirmButtonColor: '#4f46e5'
+                            });
+                        }
+                    });
+                }
+            }
         </script>
     @endpush
 
@@ -267,6 +378,13 @@
                         </select>
                     </div>
 
+                    <div class="flex items-center gap-3 p-3 rounded-xl bg-indigo-50 border border-indigo-100 mt-2">
+                        <input type="checkbox" name="is_line_manager" id="modal_is_line_manager" value="1" class="w-5 h-5 rounded border-indigo-300 text-indigo-600 focus:ring-indigo-500">
+                        <label for="modal_is_line_manager" class="text-sm font-bold text-indigo-900 cursor-pointer">
+                             Set as Line Manager for this Department
+                        </label>
+                    </div>
+
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">First Name</label>
@@ -282,12 +400,40 @@
                         <h3 class="text-sm font-bold text-indigo-900 mb-4">Login Credentials</h3>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">Login ID / Username <span class="text-slate-400 font-normal">(Optional)</span></label>
-                                <input type="text" name="employee_email" class="premium-input w-full px-4 py-3 text-sm" placeholder="e.g. john.doe or email@example.com" required>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Login ID</label>
+                                <input type="email" name="employee_email" class="premium-input w-full px-4 py-3 text-sm" placeholder="e.g. email@example.com" required>
                             </div>
-                            <div>
+                            <div class="relative group">
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">Password</label>
-                                <input type="password" name="password" required class="premium-input w-full px-4 py-3 text-sm" placeholder="••••••••">
+                                <div class="relative">
+                                    <input type="password" id="user-password" name="password" required 
+                                           class="premium-input w-full pl-4 pr-11 py-3 text-sm transition-all duration-200" 
+                                           placeholder="••••••••">
+                                    <button type="button" onclick="togglePasswordVisibility('user-password', this)" 
+                                            class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors">
+                                        <i class="fa-solid fa-eye-slash text-sm"></i>
+                                    </button>
+                                </div>
+                                <div id="pass-criteria" class="mt-3 space-y-1.5 p-3 rounded-lg bg-slate-50/50 border border-slate-100 hidden">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Security Requirements:</p>
+                                    <div class="grid grid-cols-1 gap-1">
+                                        <div id="crit-length" class="flex items-center gap-2 text-[10px] text-slate-400 transition-colors">
+                                            <i class="fa-solid fa-circle-check text-[8px]"></i> At least 8 characters
+                                        </div>
+                                        <div id="crit-upper" class="flex items-center gap-2 text-[10px] text-slate-400 transition-colors">
+                                            <i class="fa-solid fa-circle-check text-[8px]"></i> One uppercase letter
+                                        </div>
+                                        <div id="crit-lower" class="flex items-center gap-2 text-[10px] text-slate-400 transition-colors">
+                                            <i class="fa-solid fa-circle-check text-[8px]"></i> One lowercase letter
+                                        </div>
+                                        <div id="crit-num" class="flex items-center gap-2 text-[10px] text-slate-400 transition-colors">
+                                            <i class="fa-solid fa-circle-check text-[8px]"></i> One number
+                                        </div>
+                                        <div id="crit-special" class="flex items-center gap-2 text-[10px] text-slate-400 transition-colors">
+                                            <i class="fa-solid fa-circle-check text-[8px]"></i> One symbol (!@#$%^&*)
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

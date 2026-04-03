@@ -36,7 +36,7 @@
                 <p class="px-4 py-2 text-xs font-bold text-slate-400 uppercase tracking-widest">Asset Config</p>
                  <a href="{{ route('admin.settings.index', ['type' => 'ac']) }}" 
                    class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium {{ $type == 'ac' ? 'bg-brand/10 text-brand' : 'text-slate-600 hover:bg-slate-50' }}">
-                    <i class="fa-solid fa-boxes-stacked w-5"></i> Asset Categories
+                    <i class="fa-solid fa-boxes-stacked w-5"></i> Asset Categories 
                 </a>
 
                  <div class="border-t border-slate-100 my-2 pt-2"></div>
@@ -71,10 +71,16 @@
                     <p class="text-sm text-slate-500">{{ $type === 'branding' ? 'Manage application branding and appearance' : 'Manage list items' }}</p>
                 </div>
                 @if($type !== 'branding')
-                <button onclick="openModal('addModal')" 
-                    class="premium-button bg-gradient-brand text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all w-full md:w-auto">
-                    <i class="fa-solid fa-plus mr-2"></i> Add New
-                </button>
+                <div class="flex items-center gap-3 w-full md:w-auto">
+                    <div class="relative group flex-1 md:w-64">
+                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand transition-colors"></i>
+                         <input type="text" id="settingsSearch" value="{{ $search ?? '' }}" placeholder="Search..." class="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brand transition-colors">
+                    </div>
+                    <button onclick="openModal('addModal')" 
+                        class="premium-button bg-gradient-brand text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all flex-shrink-0">
+                        <i class="fa-solid fa-plus mr-2"></i> Add New
+                    </button>
+                </div>
                 @endif
             </div>
 
@@ -421,6 +427,12 @@
             containerSelector: '#settings-container-desktop', // Primary container
             paginationSelector: '#settings-pagination',
             perPage: 15,
+            getAdditionalParams: function() {
+                const searchInput = document.getElementById('settingsSearch');
+                return {
+                    search: searchInput ? searchInput.value : ''
+                };
+            },
             renderCallback: function(records) {
                 const desktopContainer = document.querySelector('#settings-container-desktop');
                 
@@ -505,6 +517,18 @@
                 total: {{ $records->total() }}
             });
         @endif
+
+        // Add event listener for search
+        const searchInput = document.getElementById('settingsSearch');
+        if (searchInput) {
+            let debounceTimer;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    window.ajaxPagination.loadPage(1);
+                }, 400);
+            });
+        }
     </script>
     @endpush
 @endsection

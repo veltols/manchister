@@ -9,31 +9,50 @@ use App\Models\Department;
 use App\Models\Designation;
 use App\Models\EmployeeCred;
 use App\Models\SystemLog;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 
 class EmployeeController extends Controller
 {
     public function index()
     {
-        $employees = Employee::with(['department', 'designation'])
+        $employees = Employee::with(['department', 'designation', 'systemUser'])
             ->where('is_hidden', 0)
             ->where('is_deleted', 0)
             ->orderBy('employee_id', 'desc')
             ->paginate(20);
 
-        return view('hr.employees.index', compact('employees'));
+        $departments = Department::orderBy('department_name')->where('is_active', 1)->get();
+
+        return view('hr.employees.index', compact('employees', 'departments'));
     }
 
     public function getData(Request $request)
     {
         $perPage = $request->get('per_page', 20);
 
-        $employees = Employee::with(['department', 'designation'])
+        $query = Employee::with(['department', 'designation', 'systemUser'])
             ->where('is_hidden', 0)
-            ->where('is_deleted', 0)
-            ->orderBy('employee_id', 'desc')
-            ->paginate($perPage);
+            ->where('is_deleted', 0);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('first_name', 'LIKE', "%{$search}%")
+                  ->orWhere('last_name', 'LIKE', "%{$search}%")
+                  ->orWhere('employee_no', 'LIKE', "%{$search}%")
+                  ->orWhere('employee_email', 'LIKE', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('department_id')) {
+            $query->where('department_id', $request->department_id);
+        }
+
+        $employees = $query->orderBy('employee_id', 'desc')->paginate($perPage);
 
         return response()->json([
             'success' => true,
@@ -68,14 +87,29 @@ class EmployeeController extends Controller
             ->where('employee_id', $id)
             ->firstOrFail();
 
-        // Fetch lookup data for modals
-        $departments = Department::orderBy('department_name')->get();
-        $designations = Designation::orderBy('designation_name')->get();
+        // Fetch lookup data for modals (Include current even if inactive)
+        $departments = Department::where('is_active', 1)
+            ->orWhere('department_id', $employee->department_id)
+            ->orderBy('department_name')
+            ->get();
+        $designations = Designation::where('is_active', 1)
+            ->orWhere('designation_id', $employee->designation_id)
+            ->orderBy('designation_name')
+            ->get();
 
         $titles = DB::table('sys_lists')->where('item_category', 'title')->pluck('item_name', 'item_id');
         $genders = DB::table('sys_lists')->where('item_category', 'gender')->pluck('item_name', 'item_id');
         $nationalities = DB::table('sys_countries')->orderBy('country_name')->pluck('country_name', 'country_id');
         $certificates = DB::table('hr_certificates')->orderBy('certificate_name')->pluck('certificate_name', 'certificate_id');
+
+        // Fetch all services and which ones are enabled for this user
+        $allServices = \App\Models\EmployeeListService::orderBy('service_id')->get();
+        $enabledServiceIds = \App\Models\EmployeeService::where('employee_id', $id)->pluck('service_id')->toArray();
+
+        // Fetch Org Chart Root
+        $orgRoot = Department::where('main_department_id', 0)
+            ->with(['children.children.children', 'employees.designation'])
+            ->first();
 
         return view('hr.employees.show', compact(
             'employee',
@@ -84,8 +118,60 @@ class EmployeeController extends Controller
             'titles',
             'genders',
             'nationalities',
-            'certificates'
+            'certificates',
+            'allServices',
+            'enabledServiceIds',
+            'orgRoot'
         ));
+    }
+
+    public function updatePermissions(Request $request, $id)
+    {
+        $user = Employee::findOrFail($id);
+        $user->is_group = $request->has('is_group') ? 1 : 0;
+        $user->is_committee = $request->has('is_committee') ? 1 : 0;
+        $user->save();
+
+        $this->logAction($id, 'Permissions Updated', "Groups: {$user->is_group}, Committees: {$user->is_committee}. " . $request->log_remark);
+
+        return redirect()->back()->with('success', "Permissions updated successfully.");
+    }
+
+    public function updateService(Request $request, $id)
+    {
+        $request->validate([
+            'service_id' => 'required|integer',
+            'new_val' => 'required|in:0,1',
+        ]);
+
+        $serviceId = (int) $request->service_id;
+        $newVal = (int) $request->new_val;
+
+        if ($newVal === 0) {
+            // Disable: remove from employees_services
+            DB::table('employees_services')
+                ->where('employee_id', $id)
+                ->where('service_id', $serviceId)
+                ->delete();
+            $this->logAction($id, 'Service Removed', "Service #{$serviceId} disabled.");
+        } else {
+            // Enable: insert only if not already present
+            $exists = DB::table('employees_services')
+                ->where('employee_id', $id)
+                ->where('service_id', $serviceId)
+                ->exists();
+            if (!$exists) {
+                DB::table('employees_services')->insert([
+                    'employee_id' => $id,
+                    'service_id' => $serviceId,
+                    'added_by' => auth()->id() ?? 1,
+                    'added_date' => now()->format('Y-m-d H:i:s'),
+                ]);
+            }
+            $this->logAction($id, 'Service Added', "Service #{$serviceId} enabled.");
+        }
+
+        return response()->json(['success' => true, 'message' => 'Service updated.']);
     }
 
     public function update(Request $request, $id)
@@ -99,15 +185,33 @@ class EmployeeController extends Controller
             'employee_join_date' => 'required|date',
             'department_id' => 'required|exists:employees_list_departments,department_id',
             'designation_id' => 'required|exists:employees_list_designations,designation_id',
+            'nationality_id' => 'nullable|integer',
+            'certificate_id' => 'nullable|integer',
+            'user_type' => 'required|in:emp,hr,eqa',
+            'employee_type' => 'nullable|string',
             'leaves_open_balance' => 'required|numeric|min:0',
             'log_remark' => 'required|string',
         ]);
 
-        $employee->update($request->except(['log_remark', '_token']));
+        DB::beginTransaction();
+        try {
+            // Update Details
+            $employee->update($request->except(['log_remark', 'user_type', '_token']));
 
-        $this->logAction($employee->employee_id, 'Employee_Updated', $request->log_remark);
+            // Update System User Role
+            if ($employee->systemUser) {
+                $employee->systemUser->user_type = $request->user_type;
+                $employee->systemUser->save();
+            }
 
-        return redirect()->back()->with('success', 'Employee profile updated successfully.');
+            $this->logAction($id, 'Profile Details Updated', $request->log_remark);
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Profile updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to update profile: ' . $e->getMessage());
+        }
     }
 
     public function updateCredentials(Request $request, $id)
@@ -136,7 +240,7 @@ class EmployeeController extends Controller
             'log_date' => now(),
             'log_action' => $action,
             'log_remark' => $remark,
-            'logger_type' => 'employees_list',
+            'logger_type' => 'hr',
             'logged_by' => Auth::id() ?? 1,
             'log_type' => 'int'
         ]);
@@ -144,14 +248,14 @@ class EmployeeController extends Controller
 
     public function create()
     {
-        $departments = Department::all();
-        $designations = Designation::all();
+        $departments = Department::where('is_active', 1)->orderBy('department_name')->get();
+        $designations = Designation::where('is_active', 1)->orderBy('designation_name')->get();
         return view('hr.employees.create', compact('departments', 'designations'));
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'employee_email' => 'required|email|unique:employees_list,employee_email',
@@ -160,20 +264,67 @@ class EmployeeController extends Controller
             'employee_dob' => 'nullable|date',
             'employee_join_date' => 'nullable|date',
             'employee_type' => 'required|string',
+            'user_type' => 'required|in:emp,hr,eqa',
+            'password' => [
+                'required',
+                'string',
+                Password::min(8)->letters()->mixedCase()->numbers()->symbols(),
+            ],
         ]);
 
-        $employee = new Employee();
-        $employee->first_name = $request->first_name;
-        $employee->last_name = $request->last_name;
-        $employee->employee_email = $request->employee_email;
-        $employee->department_id = $request->department_id;
-        $employee->designation_id = $request->designation_id;
-        $employee->employee_dob = $request->employee_dob;
-        $employee->employee_join_date = $request->employee_join_date;
-        $employee->employee_type = $request->employee_type;
-        $employee->employee_code = 'EMP-' . rand(1000, 9999);
-        $employee->save();
+        DB::beginTransaction();
+        try {
+            // 1. Create Employee
+            $employee = new Employee();
+            $employee->first_name = $request->first_name;
+            $employee->last_name = $request->last_name;
+            $employee->employee_email = $request->employee_email;
+            $employee->department_id = $request->department_id;
+            $employee->designation_id = $request->designation_id;
+            $employee->employee_dob = $request->employee_dob;
+            $employee->employee_join_date = $request->employee_join_date;
+            $employee->employee_type = $request->employee_type;
+            $employee->employee_code = 'EMP-' . rand(1000, 9999);
+            $employee->employee_no = rand(10000, 99999); // Temporary or generated IQC ID
+            $employee->is_pass = 1;
+            $employee->emp_status_id = 1;
+            $employee->save();
 
-        return redirect()->route('hr.employees.index')->with('success', 'Employee created successfully.');
+            // 2. Create Password
+            $pass = new \App\Models\EmployeePass();
+            $pass->employee_id = $employee->employee_id;
+            $pass->pass_value = Hash::make($request->password);
+            $pass->is_active = 1;
+            $pass->save();
+
+            // 3. System User
+            $sysUser = new User();
+            $sysUser->user_id = $employee->employee_id;
+            $sysUser->user_email = $request->employee_email;
+            $sysUser->user_type = $request->user_type;
+            $sysUser->int_ext = 'int';
+            $sysUser->user_family = 'employees_list';
+            $sysUser->user_theme_id = 7;
+            $sysUser->save();
+
+            // 4. Creds
+            $cred = new \App\Models\EmployeeCred();
+            $cred->employee_id = $employee->employee_id;
+            $cred->save();
+
+            // 5. Handle Line Manager Assignment
+            if ($request->is_line_manager == 1) {
+                Department::where('department_id', $request->department_id)
+                    ->update(['line_manager_id' => $employee->employee_id]);
+            }
+
+            $this->logAction($employee->employee_id, 'Employee Created', "Full employee profile and credentials created via HR and assigned to department [{$employee->department_id}].");
+
+            DB::commit();
+            return redirect()->route('hr.employees.index')->with('success', 'Employee created successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to create employee: ' . $e->getMessage())->withInput();
+        }
     }
 }

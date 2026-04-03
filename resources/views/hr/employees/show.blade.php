@@ -39,6 +39,11 @@
                     <i class="fa-solid fa-shield-halved"></i>
                     <span>Security & Creds</span>
                 </button>
+                <button onclick="openModal('permissionsModal')"
+                    class="inline-flex items-center gap-2 px-6 py-2.5 premium-button bg-slate-800 text-white font-semibold rounded-xl shadow-lg shadow-slate-800/20 hover:shadow-slate-800/40 hover:scale-105 transition-all duration-200">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span>Services</span>
+                </button>
             </div>
         </div>
     </div>
@@ -46,8 +51,8 @@
     <!-- Quick Stats -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="premium-card p-5 border-l-4 border-indigo-500 bg-gradient-to-br from-white to-indigo-50/30">
-            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Employee Code</div>
-            <div class="text-2xl font-display font-bold text-indigo-900 mt-1">{{ $employee->employee_code }}</div>
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">IQC ID</div>
+            <div class="text-2xl font-display font-bold text-indigo-900 mt-1">{{ $employee->employee_no }}</div>
         </div>
         <div class="premium-card p-5 border-l-4 border-emerald-500 bg-gradient-to-br from-white to-emerald-50/30">
             <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Leaves Balance</div>
@@ -59,11 +64,13 @@
                 {{ $employee->employee_join_date ? \Carbon\Carbon::parse($employee->employee_join_date)->diffInYears(now()) . ' Years' : 'N/A' }}
             </div>
         </div>
-        <div class="premium-card p-5 border-l-4 border-purple-500 bg-gradient-to-br from-white to-purple-50/30">
+        <div class="premium-card p-5 border-l-4 {{ $employee->systemUser && $employee->systemUser->is_active ? 'border-indigo-500 bg-gradient-to-br from-white to-indigo-50/30' : 'border-slate-400 bg-gradient-to-br from-white to-slate-50/30' }}">
             <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Account Status</div>
             <div class="mt-1 flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span class="text-xl font-display font-bold text-slate-700">Active</span>
+                <span class="w-2.5 h-2.5 rounded-full {{ $employee->systemUser && $employee->systemUser->is_active ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400' }}"></span>
+                <span class="text-xl font-display font-bold {{ $employee->systemUser && $employee->systemUser->is_active ? 'text-indigo-900' : 'text-slate-600' }}">
+                    {{ $employee->systemUser && $employee->systemUser->is_active ? 'Active' : 'Inactive' }}
+                </span>
             </div>
         </div>
     </div>
@@ -114,6 +121,11 @@
                     class="px-4 py-2 rounded-lg font-medium text-sm transition-all whitespace-nowrap flex items-center">
                     <i class="fa-solid fa-clock-rotate-left mr-2"></i>History
                 </button>
+                <button @click="tab = 'organization'; window.location.hash = 'organization'" 
+                    :class="tab === 'organization' ? 'premium-button from-emerald-600 to-teal-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'"
+                    class="px-4 py-2 rounded-lg font-medium text-sm transition-all whitespace-nowrap flex items-center">
+                    <i class="fa-solid fa-sitemap mr-2"></i>Organization
+                </button>
             </div>
         </div>
 
@@ -153,6 +165,24 @@
                         <label>Employee Type</label>
                         <p class="inline-flex px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wider">{{ $employee->employee_type }}</p>
                     </div>
+                    <div class="info-group">
+                        <label>Portal Role</label>
+                        <p class="inline-flex px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-wider">{{ str_replace('_', ' ', $employee->systemUser->user_type ?? 'N/A') }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Organization Chart Panel -->
+            <div x-show="tab === 'organization'" class="animate-fade-in overflow-x-auto p-4">
+                <div class="org-tree-container py-8">
+                    @if($orgRoot)
+                        @include('hr.employees.partials.org_node', ['dept' => $orgRoot, 'targetId' => $employee->employee_id])
+                    @else
+                        <div class="flex flex-col items-center justify-center py-20 text-slate-400">
+                            <i class="fa-solid fa-sitemap text-6xl mb-4 opacity-20"></i>
+                            <p>Organization structure data not found.</p>
+                        </div>
+                    @endif
                 </div>
             </div>
 
@@ -350,7 +380,7 @@
                                 <div class="flex items-center gap-2 mb-1">
                                     <span class="text-xs font-bold text-indigo-600 uppercase">{{ str_replace('_', ' ', $log->log_action) }}</span>
                                     <span class="w-1 h-1 rounded-full bg-slate-200"></span>
-                                    <span class="text-[10px] font-bold text-slate-400">{{ \Carbon\Carbon::parse($log->log_date)->format('d M Y, h:i A') }}</span>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase">{{ \Carbon\Carbon::parse($log->log_date)->diffForHumans() }}</span>
                                 </div>
                                 <p class="text-sm text-slate-600">{{ $log->log_remark }}</p>
                             </div>
@@ -418,11 +448,47 @@
                     <label class="premium-label">Leaves Open Balance</label>
                     <input type="number" step="1" name="leaves_open_balance" value="{{ $employee->leaves_open_balance }}" class="premium-input w-full px-4 py-2.5 text-sm" required>
                 </div>
+                <div>
+                    <label class="premium-label">Nationality</label>
+                    <select name="nationality_id" class="premium-input w-full px-4 py-2.5 text-sm">
+                        <option value="">Select Nationality</option>
+                        @foreach($nationalities as $id => $name)
+                            <option value="{{ $id }}" {{ $employee->nationality_id == $id ? 'selected' : '' }}>{{ $name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <label class="premium-label">Qualification / Certificate</label>
+                    <select name="certificate_id" class="premium-input w-full px-4 py-2.5 text-sm">
+                        <option value="">Select Qualification</option>
+                        @foreach($certificates as $id => $name)
+                            <option value="{{ $id }}" {{ $employee->certificate_id == $id ? 'selected' : '' }}>{{ $name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <label class="premium-label">Employee Type</label>
+                    <select name="employee_type" class="premium-input w-full px-4 py-2.5 text-sm">
+                        @foreach(['full_time' => 'Full Time', 'part_time' => 'Part Time', 'contract' => 'Contract', 'intern' => 'Intern'] as $val => $lbl)
+                            <option value="{{ $val }}" {{ $employee->employee_type == $val ? 'selected' : '' }}>{{ $lbl }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <label class="premium-label">Portal Role (User Type) <span class="text-rose-500">*</span></label>
+                    <select name="user_type" class="premium-input w-full px-4 py-2.5 text-sm" required>
+                        <option value="emp" {{ ($employee->systemUser->user_type ?? '') == 'emp' ? 'selected' : '' }}>Employee (Standard)</option>
+                        <option value="hr" {{ ($employee->systemUser->user_type ?? '') == 'hr' ? 'selected' : '' }}>HR Manager</option>
+                        <option value="eqa" {{ ($employee->systemUser->user_type ?? '') == 'eqa' ? 'selected' : '' }}>EQA Officer</option>
+                    </select>
+                </div>
                 <div class="col-span-2">
                     <label class="premium-label">Department</label>
                     <select name="department_id" class="premium-input w-full px-4 py-2.5 text-sm">
                         @foreach($departments as $dept)
-                            <option value="{{ $dept->department_id }}" {{ $employee->department_id == $dept->department_id ? 'selected' : '' }}>{{ $dept->department_name }}</option>
+                            <option value="{{ $dept->department_id }}" {{ $employee->department_id == $dept->department_id ? 'selected' : '' }}>
+                                {{ $dept->department_name }} {{ $dept->is_active ? '' : '(Inactive)' }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -430,7 +496,9 @@
                     <label class="premium-label">Designation</label>
                     <select name="designation_id" class="premium-input w-full px-4 py-2.5 text-sm">
                         @foreach($designations as $desig)
-                            <option value="{{ $desig->designation_id }}" {{ $employee->designation_id == $desig->designation_id ? 'selected' : '' }}>{{ $desig->designation_name }}</option>
+                            <option value="{{ $desig->designation_id }}" {{ $employee->designation_id == $desig->designation_id ? 'selected' : '' }}>
+                                {{ $desig->designation_name }} {{ $desig->is_active ? '' : '(Inactive)' }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -543,6 +611,55 @@
     </div>
 </div>
 
+<!-- Permissions Modal -->
+<div id="permissionsModal" class="modal">
+    <div class="modal-backdrop" onclick="closeModal('permissionsModal')"></div>
+    <div class="modal-content max-w-lg p-6">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-2xl font-display font-bold text-premium">System Services</h2>
+                <p class="text-slate-500 text-sm">Manage group and committee access</p>
+            </div>
+            <button onclick="closeModal('permissionsModal')" class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400">
+                <i class="fa-solid fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <form action="{{ route('hr.employees.update-permissions', $employee->employee_id) }}" method="POST">
+            @csrf
+            <div class="space-y-6">
+                <label class="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100 cursor-pointer hover:bg-slate-100 transition-colors">
+                    <div>
+                        <span class="block font-bold text-slate-800">Groups Access</span>
+                        <span class="text-xs text-slate-400 italic">Allow user to manage and view departmental groups</span>
+                    </div>
+                    <input type="checkbox" name="is_group" value="1" {{ $employee->is_group ? 'checked' : '' }} class="w-6 h-6 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                </label>
+
+                <label class="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100 cursor-pointer hover:bg-slate-100 transition-colors">
+                    <div>
+                        <span class="block font-bold text-slate-800">Committees Access</span>
+                        <span class="text-xs text-slate-400 italic">Allow user to participate in organizational committees</span>
+                    </div>
+                    <input type="checkbox" name="is_committee" value="1" {{ $employee->is_committee ? 'checked' : '' }} class="w-6 h-6 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                </label>
+
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Log Remark</label>
+                    <textarea name="log_remark" required rows="3" class="premium-input w-full px-4 py-3" placeholder="Reason for change..."></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-100">
+                <button type="button" onclick="closeModal('permissionsModal')" class="px-6 py-2.5 rounded-xl font-bold text-slate-400 hover:text-slate-600 transition-colors">Cancel</button>
+                <button type="submit" class="px-6 py-2.5 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:scale-105 transition-all border border-white/10">
+                    Update Services
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <style>
     .tab-pill {
         @apply px-4 py-2 rounded-lg font-medium text-sm transition-all text-slate-600 hover:bg-slate-100 flex items-center whitespace-nowrap;
@@ -573,4 +690,63 @@
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 </style>
 
+
+
 @endsection
+
+@push('styles')
+<style>
+    .org-tree-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: #fdfdfd;
+        border-radius: 24px;
+        border: 1px dashed #e2e8f0;
+    }
+
+    .org-node {
+        position: relative;
+        width: 100%;
+        max-width: 600px;
+    }
+
+    /* Connection Lines */
+    .org-node::before {
+        content: '';
+        position: absolute;
+        top: -20px;
+        left: 50%;
+        width: 2px;
+        height: 20px;
+        background: #e2e8f0;
+    }
+
+    .org-node:first-child::before {
+        display: none;
+    }
+
+    /* Vertical Lines in children */
+    .org-node .border-l-2 {
+        border-color: #cbd5e1;
+        margin-left: 24px;
+        padding-left: 32px;
+    }
+
+    .info-group label {
+        display: block;
+        font-size: 10px;
+        font-weight: 700;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 4px;
+    }
+
+    .info-group p {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1e293b;
+    }
+</style>
+@endpush

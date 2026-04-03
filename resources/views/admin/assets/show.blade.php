@@ -145,13 +145,20 @@
                                 <div class="flex items-center justify-between mb-6">
                                     <h3 class="flex items-center gap-2 text-sm font-bold text-slate-400 uppercase tracking-widest">
                                         <i class="fa-solid fa-align-left text-brand"></i>
-                                        Asset Description
+                                        Asset Details & Description
                                     </h3>
-                                    <button onclick="openModal('editDescriptionModal')"
-                                        class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
-                                        title="Edit Description">
-                                        <i class="fa-solid fa-pen-to-square text-xs"></i>
-                                    </button>
+                                    <div class="flex gap-2">
+                                        <button onclick="openModal('editDetailsModal')"
+                                            class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                                            title="Edit Core Details">
+                                            <i class="fa-solid fa-pen text-xs"></i>
+                                        </button>
+                                        <button onclick="openModal('editDescriptionModal')"
+                                            class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                                            title="Edit Description">
+                                            <i class="fa-solid fa-file-pen text-xs"></i>
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="prose prose-slate max-w-none prose-p:font-medium prose-p:text-slate-600">
                                     {!! nl2br(e($asset->asset_description)) !!}
@@ -159,7 +166,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div class="premium-card p-6 flex items-center gap-4">
                                 <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
                                     <i class="fa-solid fa-hashtag text-xl"></i>
@@ -167,6 +174,15 @@
                                 <div>
                                     <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Serial Number</p>
                                     <p class="font-mono font-bold text-slate-700">{{ $asset->asset_serial ?: 'N/A' }}</p>
+                                </div>
+                            </div>
+                            <div class="premium-card p-6 flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+                                    <i class="fa-solid fa-truck-fast text-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Tracking Number</p>
+                                    <p class="font-mono font-bold text-slate-700">{{ $asset->tracking_number ?: 'N/A' }}</p>
                                 </div>
                             </div>
                             <div class="premium-card p-6 flex items-center gap-4">
@@ -234,7 +250,15 @@
                     <div class="space-y-4">
                         <div class="flex items-center justify-between py-3 border-b border-slate-50">
                             <span class="text-sm text-slate-500 font-medium">Purchase Date</span>
-                            <span class="text-sm font-bold text-slate-700">{{ $asset->purchase_date ? $asset->purchase_date->format('M d, Y') : 'N/A' }}</span>
+                            <span class="text-sm font-bold text-slate-700">{{ $asset->purchase_date ? \Carbon\Carbon::parse($asset->purchase_date)->format('M d, Y') : 'N/A' }}</span>
+                        </div>
+                        <div class="flex items-center justify-between py-3 border-b border-slate-50">
+                            <span class="text-sm text-slate-500 font-medium">Alert Days</span>
+                            <span class="text-sm font-bold text-slate-700">{{ $asset->alert_days !== null ? $asset->alert_days . ' Days' : 'N/A' }}</span>
+                        </div>
+                        <div class="flex items-center justify-between py-3 border-b border-slate-50">
+                            <span class="text-sm text-slate-500 font-medium">Alert Description</span>
+                            <span class="text-sm font-bold text-slate-700">{{ $asset->alert_description ?: 'N/A' }}</span>
                         </div>
                         <div class="flex items-center justify-between py-3 border-b border-slate-50">
                             <span class="text-sm text-slate-500 font-medium">Last Assigned</span>
@@ -386,6 +410,86 @@
                     <button type="submit"
                         class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
                         Update Description
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Details Modal -->
+    <div id="editDetailsModal" class="modal text-slate-900">
+        <div class="modal-backdrop" onclick="closeModal('editDetailsModal')"></div>
+        <div class="modal-content max-w-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-display font-bold text-premium">Edit Asset Details</h2>
+                <button onclick="closeModal('editDetailsModal')"
+                    class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form action="{{ route('admin.assets.update_details', $asset->asset_id) }}" method="POST">
+                @csrf
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Asset Name</label>
+                        <input type="text" name="asset_name" value="{{ $asset->asset_name }}" required class="premium-input w-full px-4 py-3 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Category</label>
+                        <select name="category_id" required class="premium-input w-full px-4 py-3 text-sm">
+                            <option value="">Select Category...</option>
+                            @php $categories = \App\Models\AssetCategory::all(); @endphp
+                            @foreach($categories as $cat)
+                                <option value="{{ $cat->category_id }}" {{ $asset->category_id == $cat->category_id ? 'selected' : '' }}>
+                                    {{ $cat->category_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Serial Number</label>
+                            <input type="text" name="asset_serial" value="{{ $asset->asset_serial }}" class="premium-input w-full px-4 py-3 text-sm" placeholder="S/N: XXXXXXXX">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Tracking Number</label>
+                            <input type="text" name="tracking_number" value="{{ $asset->tracking_number }}" class="premium-input w-full px-4 py-3 text-sm" placeholder="Optional tracking #">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">SKU</label>
+                            <input type="text" name="asset_sku" value="{{ $asset->asset_sku }}" class="premium-input w-full px-4 py-3 text-sm" placeholder="Auto-generated if empty">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Purchase Date</label>
+                            <input type="date" name="purchase_date" value="{{ $asset->purchase_date ? \Carbon\Carbon::parse($asset->purchase_date)->format('Y-m-d') : '' }}" class="premium-input w-full px-4 py-3 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Expiry Date</label>
+                            <input type="date" name="expiry_date" value="{{ $asset->expiry_date ? \Carbon\Carbon::parse($asset->expiry_date)->format('Y-m-d') : '' }}" class="premium-input w-full px-4 py-3 text-sm">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Alert Days</label>
+                            <input type="number" name="alert_days" value="{{ $asset->alert_days }}" class="premium-input w-full px-4 py-3 text-sm" placeholder="Days before expiry" min="0">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Alert Description</label>
+                            <input type="text" name="alert_description" value="{{ $asset->alert_description }}" class="premium-input w-full px-4 py-3 text-sm" placeholder="E.g., Renew Warranty">
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
+                    <button type="button" onclick="closeModal('editDetailsModal')"
+                        class="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
+                        Update Details
                     </button>
                 </div>
             </form>

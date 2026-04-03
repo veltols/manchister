@@ -34,7 +34,10 @@
                     {{ substr($otherUser->first_name, 0, 1) }}
                 </div>
                 <div>
-                    <h3 class="font-bold text-premium">{{ $otherUser->first_name }} {{ $otherUser->last_name }}</h3>
+                    <h3 class="font-bold text-premium flex items-center gap-2">
+                        {{ $otherUser->first_name }} {{ $otherUser->last_name }}
+                        <span class="text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full"><i class="fa-solid fa-building mr-1 text-slate-400"></i>{{ $otherUser->department->department_name ?? 'N/A' }}</span>
+                    </h3>
                     <div class="text-xs text-green-500 flex items-center gap-1">
                         <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                         Online

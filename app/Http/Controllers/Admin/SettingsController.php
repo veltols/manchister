@@ -42,7 +42,7 @@ class SettingsController extends Controller
                 'title' => 'Asset Categories',
                 'pk' => 'category_id',
                 'name_field' => 'category_name',
-                'fields' => ['category_name' => 'Name', 'category_alert_days' => 'Alert Days|number']
+                'fields' => ['category_name' => 'Name']
             ],
             'lt' => [
                 'model' => LeaveType::class,
@@ -127,9 +127,21 @@ class SettingsController extends Controller
         $conf = $this->config[$type];
         $model = new $conf['model'];
         
-        $records = $model->orderBy($conf['pk'], 'desc')->paginate(15);
+        $search = $request->input('search', '');
+        $query = $model->newQuery();
+
+        if (!empty($search)) {
+            $query->where(function($q) use ($conf, $search) {
+                foreach ($conf['fields'] as $field => $label) {
+                    $q->orWhere($field, 'LIKE', "%{$search}%");
+                }
+            });
+        }
+
+        $records = $query->orderBy($conf['pk'], 'desc')->paginate(15);
+        $records->appends(['type' => $type, 'search' => $search]);
         
-        return view('admin.settings.index', compact('records', 'type', 'conf', 'employees', 'logo', 'favicon', 'loginBackground'));
+        return view('admin.settings.index', compact('records', 'type', 'conf', 'employees', 'logo', 'favicon', 'loginBackground', 'search'));
     }
 
     public function getData(Request $request)
@@ -143,8 +155,19 @@ class SettingsController extends Controller
 
         $conf = $this->config[$type];
         $model = new $conf['model'];
+        $search = $request->input('search', '');
         
-        $records = $model->orderBy($conf['pk'], 'desc')->paginate($perPage);
+        $query = $model->newQuery();
+
+        if (!empty($search)) {
+            $query->where(function($q) use ($conf, $search) {
+                foreach ($conf['fields'] as $field => $label) {
+                    $q->orWhere($field, 'LIKE', "%{$search}%");
+                }
+            });
+        }
+
+        $records = $query->orderBy($conf['pk'], 'desc')->paginate($perPage);
 
         return response()->json([
             'success' => true,

@@ -43,10 +43,11 @@
                         <div class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></div>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="flex justify-between items-baseline mb-1">
+                        <div class="flex justify-between items-baseline mb-0.5">
                             <h4 class="font-bold text-slate-700 truncate {{ $isActive ? 'text-indigo-700' : '' }}">{{ $otherUser->first_name }} {{ $otherUser->last_name }}</h4>
-                            <span class="text-[10px] text-slate-400 font-medium">12:30 PM</span>
+                            <span class="text-[10px] text-slate-400 font-medium whitespace-nowrap ml-2">12:30 PM</span>
                         </div>
+                        <div class="text-[10px] text-slate-400 font-medium mb-1"><i class="fa-solid fa-building mr-1"></i>{{ $otherUser->department->department_name ?? 'N/A' }}</div>
                         <p class="text-xs text-slate-500 truncate">Click to view conversation...</p>
                     </div>
                 </a>
@@ -78,7 +79,10 @@
                         </div>
                     @endif
                     <div>
-                        <h3 class="font-bold text-slate-800">{{ $chatPartner->first_name }} {{ $chatPartner->last_name }}</h3>
+                        <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                            {{ $chatPartner->first_name }} {{ $chatPartner->last_name }}
+                            <span class="text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full"><i class="fa-solid fa-building mr-1 text-slate-400"></i>{{ $chatPartner->department->department_name ?? 'N/A' }}</span>
+                        </h3>
                         @if($chatPartner && $chatPartner->status)
                             <div class="flex items-center gap-1.5">
                                 <div class="w-2 h-2 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.1)]" style="background-color: {{ $chatPartner->status->staus_color }}"></div>
@@ -470,7 +474,7 @@
                     <select name="employee_id" class="w-full premium-input pl-12 h-12 text-sm" required>
                         <option value="">Choose a colleague...</option>
                         @foreach($employees as $emp)
-                            <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                            <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }} - {{ $emp->department->department_name ?? 'N/A' }}</option>
                         @endforeach
                     </select>
                 </div>

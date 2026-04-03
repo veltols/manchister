@@ -225,11 +225,22 @@
                         <textarea name="description" class="premium-input w-full px-4 py-3 text-sm" rows="3" required placeholder="Detailed description of the asset..."></textarea>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Serial Number</label>
-                            <input type="text" name="asset_serial" class="premium-input w-full px-4 py-3 text-sm" required placeholder="S/N: XXXXXXXX">
+                            <input type="text" name="asset_serial" class="premium-input w-full px-4 py-3 text-sm" placeholder="S/N: XXXXXXXX">
                         </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Tracking Number</label>
+                            <input type="text" name="tracking_number" class="premium-input w-full px-4 py-3 text-sm" placeholder="Optional tracking #">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">SKU</label>
+                            <input type="text" name="asset_sku" class="premium-input w-full px-4 py-3 text-sm" placeholder="Auto-generated if empty">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4">
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Status</label>
                             <select name="status_id" class="premium-input w-full px-4 py-3 text-sm" required>
@@ -248,6 +259,17 @@
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Expiry Date</label>
                             <input type="date" name="expiry_date" class="premium-input w-full px-4 py-3 text-sm">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Alert Days</label>
+                            <input type="number" name="alert_days" class="premium-input w-full px-4 py-3 text-sm" placeholder="Days before expiry" min="0">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Alert Description</label>
+                            <input type="text" name="alert_description" class="premium-input w-full px-4 py-3 text-sm" placeholder="E.g., Renew Warranty">
                         </div>
                     </div>
 

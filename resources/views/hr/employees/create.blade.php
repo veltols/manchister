@@ -52,14 +52,23 @@
                     <h3 class="text-lg font-semibold text-premium mb-4 border-b border-slate-100 pb-2">Professional Details</h3>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">Department</label>
-                    <select name="department_id" class="premium-input w-full px-4 py-3 text-sm" required>
-                        <option value="">Select Department</option>
-                        @foreach($departments as $dept)
-                            <option value="{{ $dept->department_id }}">{{ $dept->department_name }}</option>
-                        @endforeach
-                    </select>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Department</label>
+                        <select name="department_id" class="premium-input w-full px-4 py-3 text-sm" required>
+                            <option value="">Select Department</option>
+                            @foreach($departments as $dept)
+                                <option value="{{ $dept->department_id }}">{{ $dept->department_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="flex items-center gap-3 p-3 rounded-xl bg-indigo-50 border border-indigo-100">
+                        <input type="checkbox" name="is_line_manager" id="is_line_manager" value="1" class="w-5 h-5 rounded border-indigo-300 text-indigo-600 focus:ring-indigo-500">
+                        <label for="is_line_manager" class="text-sm font-bold text-indigo-900 cursor-pointer">
+                             Set as Line Manager for this Department
+                        </label>
+                    </div>
                 </div>
 
                 <div>
@@ -85,6 +94,21 @@
                         <option value="contract">Contract</option>
                         <option value="intern">Intern</option>
                     </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Portal Role (User Type) <span class="text-rose-500">*</span></label>
+                    <select name="user_type" class="premium-input w-full px-4 py-3 text-sm" required>
+                        <option value="emp">Employee (Standard)</option>
+                        <option value="hr">HR Manager</option>
+                        <option value="eqa">EQA Officer</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Initial Password <span class="text-rose-500">*</span></label>
+                    <input type="text" name="password" class="premium-input w-full px-4 py-3 text-sm" placeholder="e.g. Pass123!" required>
+                    <p class="text-[10px] text-slate-400 mt-1">Min 8 chars, mixed case, numbers & symbols.</p>
                 </div>
             </div>
 

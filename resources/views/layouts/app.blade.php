@@ -639,6 +639,18 @@
                 document.body.style.overflow = 'auto';
             }
         }
+
+        function togglePasswordVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            }
+        }
     </script>
     <script src="{{ asset('libs/alpinejs/alpine.min.js') }}" defer></script>
     <script src="{{ asset('libs/sweetalert2/sweetalert2.all.min.js') }}"></script>
@@ -957,29 +969,63 @@
                                                 <i class="fa-solid fa-xmark text-xl"></i>
                                             </button>
                                         </div>
-                                        <form action="{{ route('profile.change-password') }}" method="POST">
+                                        <form action="{{ route('profile.change-password') }}" method="POST" id="changePasswordForm">
                                             @csrf
                                             <div class="space-y-4">
                                                 <div>
-                                                    <label
-                                                        class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Current
-                                                        Password</label>
-                                                    <input type="password" name="current_password" required
-                                                        class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all">
+                                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Current Password</label>
+                                                    <div class="relative">
+                                                        <input type="password" id="current_header_password" name="current_password" required
+                                                            class="w-full pl-4 pr-11 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all">
+                                                        <button type="button" onclick="togglePasswordVisibility('current_header_password', this)" 
+                                                                class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors">
+                                                            <i class="fa-solid fa-eye-slash text-sm"></i>
+                                                        </button>
+                                                    </div>
                                                 </div>
                                                 <div>
-                                                    <label
-                                                        class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">New
-                                                        Password</label>
-                                                    <input type="password" name="new_password" required
-                                                        class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all">
+                                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">New Password</label>
+                                                    <div class="relative">
+                                                        <input type="password" name="new_password" id="new_header_password" required
+                                                            class="w-full pl-4 pr-11 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all">
+                                                        <button type="button" onclick="togglePasswordVisibility('new_header_password', this)" 
+                                                                class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors">
+                                                            <i class="fa-solid fa-eye-slash text-sm"></i>
+                                                        </button>
+                                                    </div>
+                                                    
+                                                    <!-- Password Requirements Checklist -->
+                                                    <div class="mt-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 hidden" id="passwordHeaderCriteria">
+                                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Security Requirements</p>
+                                                        <ul class="space-y-2">
+                                                            <li id="crit-header-length" class="flex items-center gap-2 text-xs text-slate-500 transition-all duration-300">
+                                                                <i class="fa-solid fa-circle-check text-[10px]"></i> Minimum 8 characters
+                                                            </li>
+                                                            <li id="crit-header-upper" class="flex items-center gap-2 text-xs text-slate-500 transition-all duration-300">
+                                                                <i class="fa-solid fa-circle-check text-[10px]"></i> One uppercase letter
+                                                            </li>
+                                                            <li id="crit-header-lower" class="flex items-center gap-2 text-xs text-slate-500 transition-all duration-300">
+                                                                <i class="fa-solid fa-circle-check text-[10px]"></i> One lowercase letter
+                                                            </li>
+                                                            <li id="crit-header-number" class="flex items-center gap-2 text-xs text-slate-500 transition-all duration-300">
+                                                                <i class="fa-solid fa-circle-check text-[10px]"></i> One number
+                                                            </li>
+                                                            <li id="crit-header-symbol" class="flex items-center gap-2 text-xs text-slate-500 transition-all duration-300">
+                                                                <i class="fa-solid fa-circle-check text-[10px]"></i> One special symbol (@$!%*?&)
+                                                            </li>
+                                                        </ul>
+                                                    </div>
                                                 </div>
                                                 <div>
-                                                    <label
-                                                        class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Confirm
-                                                        New Password</label>
-                                                    <input type="password" name="new_password_confirmation" required
-                                                        class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all">
+                                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Confirm New Password</label>
+                                                    <div class="relative">
+                                                        <input type="password" name="new_password_confirmation" id="new_header_password_confirmation" required
+                                                            class="w-full pl-4 pr-11 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all">
+                                                        <button type="button" onclick="togglePasswordVisibility('new_header_password_confirmation', this)" 
+                                                                class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors">
+                                                            <i class="fa-solid fa-eye-slash text-sm"></i>
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div class="mt-8 flex gap-3">
@@ -988,11 +1034,80 @@
                                                     Cancel
                                                 </button>
                                                 <button type="submit"
-                                                    class="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-white bg-[#004F68] hover:bg-[#00384a] shadow-lg transition-all">
+                                                    class="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-white bg-[#004F68] hover:bg-[#00384a] shadow-lg transition-all"
+                                                    id="btnHeaderUpdatePassword">
                                                     Update Password
                                                 </button>
                                             </div>
                                         </form>
+
+                                        <script>
+                                            (function() {
+                                                const passwordInput = document.getElementById('new_header_password');
+                                                const confirmInput = document.getElementById('new_header_password_confirmation');
+                                                const criteriaBox = document.getElementById('passwordHeaderCriteria');
+                                                const form = document.getElementById('changePasswordForm');
+                                                
+                                                const criteria = {
+                                                    length: { el: document.getElementById('crit-header-length'), regex: /.{8,}/ },
+                                                    upper: { el: document.getElementById('crit-header-upper'), regex: /[A-Z]/ },
+                                                    lower: { el: document.getElementById('crit-header-lower'), regex: /[a-z]/ },
+                                                    number: { el: document.getElementById('crit-header-number'), regex: /[0-9]/ },
+                                                    symbol: { el: document.getElementById('crit-header-symbol'), regex: /[@$!%*?&]/ }
+                                                };
+
+                                                const validatePassword = () => {
+                                                    const val = passwordInput.value;
+                                                    let allValid = true;
+
+                                                    for (const key in criteria) {
+                                                        const isValid = criteria[key].regex.test(val);
+                                                        const el = criteria[key].el;
+                                                        
+                                                        if (isValid) {
+                                                            el.classList.remove('text-slate-500');
+                                                            el.classList.add('text-emerald-600', 'font-bold');
+                                                            el.querySelector('i').classList.replace('fa-circle-check', 'fa-check-circle');
+                                                        } else {
+                                                            el.classList.add('text-slate-500');
+                                                            el.classList.remove('text-emerald-600', 'font-bold');
+                                                            el.querySelector('i').classList.replace('fa-check-circle', 'fa-circle-check');
+                                                            allValid = false;
+                                                        }
+                                                    }
+                                                    return allValid;
+                                                };
+
+                                                passwordInput.addEventListener('focus', () => criteriaBox.classList.remove('hidden'));
+                                                passwordInput.addEventListener('input', validatePassword);
+
+                                                form.addEventListener('submit', (e) => {
+                                                    const isCriteriaMet = validatePassword();
+                                                    const isMatch = passwordInput.value === confirmInput.value;
+
+                                                    if (!isCriteriaMet) {
+                                                        e.preventDefault();
+                                                        Swal.fire({
+                                                            icon: 'warning',
+                                                            title: 'Weak Password',
+                                                            text: 'Please ensure your new password meets all security requirements.',
+                                                            confirmButtonColor: '#004F68'
+                                                        });
+                                                        return;
+                                                    }
+
+                                                    if (!isMatch) {
+                                                        e.preventDefault();
+                                                        Swal.fire({
+                                                            icon: 'error',
+                                                            title: 'Password Mismatch',
+                                                            text: 'The new password and confirmation do not match.',
+                                                            confirmButtonColor: '#004F68'
+                                                        });
+                                                    }
+                                                });
+                                            })();
+                                        </script>
                                     </div>
                                 </div>
                             </div>

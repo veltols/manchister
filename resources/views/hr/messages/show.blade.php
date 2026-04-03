@@ -32,6 +32,7 @@
                             </div>
                             <div class="flex-1 min-w-0">
                                 <h4 class="text-sm font-bold text-slate-700 truncate {{ $conv->chat_id == $conversation->chat_id ? 'text-indigo-700' : '' }}">{{ $other->first_name ?? 'User' }}</h4>
+                                <div class="text-[10px] text-slate-400 font-medium truncate mt-0.5"><i class="fa-solid fa-building mr-1"></i>{{ $other->department->department_name ?? 'N/A' }}</div>
                             </div>
                         </div>
                     </a>
@@ -58,8 +59,10 @@
                         @endif
                     </div>
                     <div>
-                        <h3 class="font-bold text-premium">{{ $partner->first_name ?? 'User' }}
-                            {{ $partner->last_name ?? '' }}</h3>
+                        <h3 class="font-bold text-premium flex items-center gap-2">
+                            {{ $partner->first_name ?? 'User' }} {{ $partner->last_name ?? '' }}
+                            <span class="text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full"><i class="fa-solid fa-building mr-1 text-slate-400"></i>{{ $partner->department->department_name ?? 'N/A' }}</span>
+                        </h3>
                         <p class="text-xs text-slate-500 flex items-center gap-1">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Online
                         </p>
