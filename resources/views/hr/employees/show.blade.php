@@ -61,7 +61,10 @@
         <div class="premium-card p-5 border-l-4 border-blue-500 bg-gradient-to-br from-white to-blue-50/30">
             <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Service Duration</div>
             <div class="text-2xl font-display font-bold text-blue-900 mt-1">
-                {{ $employee->employee_join_date ? \Carbon\Carbon::parse($employee->employee_join_date)->diffInYears(now()) . ' Years' : 'N/A' }}
+  {{ $employee->employee_join_date 
+    ? \Carbon\Carbon::parse($employee->employee_join_date)->diffForHumans() 
+    : 'N/A' 
+}}
             </div>
         </div>
         <div class="premium-card p-5 border-l-4 {{ $employee->systemUser && $employee->systemUser->is_active ? 'border-indigo-500 bg-gradient-to-br from-white to-indigo-50/30' : 'border-slate-400 bg-gradient-to-br from-white to-slate-50/30' }}">
