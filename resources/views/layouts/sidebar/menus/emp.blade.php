@@ -65,7 +65,7 @@
         <span class="text-base font-semibold">Support</span>
     </a>
 
-    @if(!$hasSubmittedFeedback)
+    @if($authUser->feedback_enabled ?? 1)
         <a href="{{ route('emp.feedback.index') }}"
             class="nav-item {{ request()->routeIs('emp.feedback.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
             <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">

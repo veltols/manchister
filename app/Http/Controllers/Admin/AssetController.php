@@ -279,7 +279,7 @@ class AssetController extends Controller
         $log->log_action = $action;
         $log->log_remark = $remark;
         $log->logger_type = 'admin';
-        $log->logged_by = 1; // Auth user
+        $log->logged_by = auth()->user() ? auth()->user()->user_id : 1; 
         $log->save();
     }
 }

@@ -15,6 +15,8 @@ use App\Models\CommunicationType;
 use App\Models\Employee;
 use App\Models\UsersListTheme;
 use App\Models\IncidentType;
+use App\Models\SystemLog;
+use App\Models\AppSetting;
 
 class SettingsController extends Controller
 {
@@ -133,7 +135,26 @@ class SettingsController extends Controller
         if (!empty($search)) {
             $query->where(function($q) use ($conf, $search) {
                 foreach ($conf['fields'] as $field => $label) {
-                    $q->orWhere($field, 'LIKE', "%{$search}%");
+                    $parts = explode('|', $label);
+                    $mType = $parts[1] ?? 'text';
+
+                    if ($mType === 'employee') {
+                        $relName = null;
+                        if ($field === 'destination_id') $relName = 'receiver';
+                        elseif ($field === 'approval_id_1') $relName = 'approval1';
+                        elseif ($field === 'approval_id_2') $relName = 'approval2';
+
+                        if ($relName) {
+                            $q->orWhereHas($relName, function($sq) use ($search) {
+                                $sq->where('first_name', 'LIKE', "%{$search}%")
+                                   ->orWhere('last_name', 'LIKE', "%{$search}%");
+                            });
+                        }
+                        // Also search by ID
+                        $q->orWhere($field, 'LIKE', "%{$search}%");
+                    } else {
+                        $q->orWhere($field, 'LIKE', "%{$search}%");
+                    }
                 }
             });
         }
@@ -162,7 +183,26 @@ class SettingsController extends Controller
         if (!empty($search)) {
             $query->where(function($q) use ($conf, $search) {
                 foreach ($conf['fields'] as $field => $label) {
-                    $q->orWhere($field, 'LIKE', "%{$search}%");
+                    $parts = explode('|', $label);
+                    $mType = $parts[1] ?? 'text';
+
+                    if ($mType === 'employee') {
+                        $relName = null;
+                        if ($field === 'destination_id') $relName = 'receiver';
+                        elseif ($field === 'approval_id_1') $relName = 'approval1';
+                        elseif ($field === 'approval_id_2') $relName = 'approval2';
+
+                        if ($relName) {
+                            $q->orWhereHas($relName, function($sq) use ($search) {
+                                $sq->where('first_name', 'LIKE', "%{$search}%")
+                                   ->orWhere('last_name', 'LIKE', "%{$search}%");
+                            });
+                        }
+                        // Also search by ID
+                        $q->orWhere($field, 'LIKE', "%{$search}%");
+                    } else {
+                        $q->orWhere($field, 'LIKE', "%{$search}%");
+                    }
                 }
             });
         }
@@ -194,13 +234,22 @@ class SettingsController extends Controller
         $modelClass = $conf['model'];
         $modelInstance = new $modelClass();
         $table = $modelInstance->getTable();
+        $pk = $conf['pk'];
         $nameField = $conf['name_field'];
 
-        $request->validate([
-            $nameField => "required|string|max:255|unique:{$table},{$nameField}",
-        ], [
-            "{$nameField}.unique" => 'This entry already exists.',
-        ]);
+        try {
+            $request->validate([
+                $nameField => "required|string|max:255|unique:{$table},{$nameField}",
+            ], [
+                "{$nameField}.unique" => 'This entry already exists. Please use a different name.',
+                "{$nameField}.required" => 'Name is required.',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()
+                ->route('admin.settings.index', ['type' => $type])
+                ->with('error', $e->validator->errors()->first($nameField) ?: 'This entry already exists.')
+                ->withInput();
+        }
 
         $item = new $modelClass();
 
@@ -210,6 +259,8 @@ class SettingsController extends Controller
 
         // Handle specific logic if needed, e.g. check checkboxes
         $item->save();
+
+        $this->logAction($item->$pk, 'Setting Created', "New {$conf['title']} entry: " . $item->$nameField, $table);
 
         return redirect()->route('admin.settings.index', ['type' => $type])->with('success', 'Record added successfully.');
     }
@@ -242,7 +293,27 @@ class SettingsController extends Controller
 
         $item->save();
 
+        $this->logAction($id, 'Setting Updated', "Updated {$conf['title']} entry: " . $item->$nameField, $table);
+
         return redirect()->route('admin.settings.index', ['type' => $type])->with('success', 'Record updated successfully.');
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        $type = $request->input('_type');
+        if (!array_key_exists($type, $this->config)) {
+            abort(404);
+        }
+
+        $conf = $this->config[$type];
+        $modelClass = $conf['model'];
+        $item = $modelClass::findOrFail($id);
+        
+        $item->delete();
+
+        $this->logAction($id, 'Setting Deleted', "Deleted {$conf['title']} entry: " . $item->{$conf['name_field']}, $item->getTable());
+
+        return redirect()->route('admin.settings.index', ['type' => $type])->with('success', 'Record deleted successfully.');
     }
 
     public function updateBranding(Request $request)
@@ -257,22 +328,48 @@ class SettingsController extends Controller
             $file = $request->file('logo');
             $fileName = 'logo_' . time() . '.' . $file->getClientOriginalExtension();
             $file->move(public_path('uploads'), $fileName);
-            \App\Models\AppSetting::updateOrCreate(
+            AppSetting::updateOrCreate(
                 ['key' => 'logo_path'],
                 ['value' => $fileName]
             );
+            $this->logAction(0, 'Branding Updated', 'Website logo was updated.', 'app_settings');
         }
 
         if ($request->hasFile('favicon')) {
             $file = $request->file('favicon');
             $fileName = 'favicon_' . time() . '.' . $file->getClientOriginalExtension();
             $file->move(public_path('uploads'), $fileName);
-            \App\Models\AppSetting::updateOrCreate(
+            AppSetting::updateOrCreate(
                 ['key' => 'favicon_path'],
                 ['value' => $fileName]
             );
+            $this->logAction(0, 'Branding Updated', 'Website favicon was updated.', 'app_settings');
+        }
+
+        if ($request->hasFile('login_background')) {
+            $file = $request->file('login_background');
+            $fileName = 'bg_' . time() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads'), $fileName);
+            AppSetting::updateOrCreate(
+                ['key' => 'login_background_path'],
+                ['value' => $fileName]
+            );
+            $this->logAction(0, 'Branding Updated', 'Login background image was updated.', 'app_settings');
         }
 
         return redirect()->back()->with('success', 'Branding updated successfully.');
+    }
+    
+    private function logAction($refId, $action, $remark, $table = 'settings')
+    {
+        $log = new SystemLog();
+        $log->related_id = $refId;
+        $log->related_table = $table;
+        $log->log_date = now();
+        $log->log_action = $action;
+        $log->log_remark = $remark;
+        $log->logger_type = 'admin';
+        $log->logged_by = auth()->user() ? auth()->user()->user_id : 1;
+        $log->save();
     }
 }

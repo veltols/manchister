@@ -193,11 +193,16 @@
                                         </td>
                                     @endforeach
 
-                                    <td class="text-center">
+                                    <td class="text-center flex justify-center gap-2">
                                         <button onclick="openEditModal({{ json_encode($record) }}, {{ json_encode($conf['pk']) }})" 
                                             class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
                                             title="Edit Record">
                                             <i class="fa-solid fa-pen text-sm"></i>
+                                        </button>
+                                        <button onclick="deleteRecord('{{ $record->{$conf['pk']} }}')" 
+                                            class="w-9 h-9 rounded-lg bg-gradient-to-br from-red-500 to-rose-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
+                                            title="Delete Record">
+                                            <i class="fa-solid fa-trash text-sm"></i>
                                         </button>
                                     </td>
                                 </tr>
@@ -422,6 +427,45 @@
             document.getElementById(id).classList.add('active');
         }
 
+        function deleteRecord(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This will remove the category from selection lists.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = "{{ route('admin.settings.index') }}/" + id + "/destroy";
+                    
+                    const csrfToken = document.createElement('input');
+                    csrfToken.type = 'hidden';
+                    csrfToken.name = '_token';
+                    csrfToken.value = "{{ csrf_token() }}";
+                    form.appendChild(csrfToken);
+                    
+                    const methodField = document.createElement('input');
+                    methodField.type = 'hidden';
+                    methodField.name = '_method';
+                    methodField.value = 'DELETE';
+                    form.appendChild(methodField);
+                    
+                    const typeField = document.createElement('input');
+                    typeField.type = 'hidden';
+                    typeField.name = '_type';
+                    typeField.value = settingType;
+                    form.appendChild(typeField);
+
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
+
         window.ajaxPagination = new AjaxPagination({
             endpoint: "{{ route('admin.settings.data', ['type' => $type]) }}",
             containerSelector: '#settings-container-desktop', // Primary container
@@ -491,11 +535,16 @@
                     }
                     
                     desktopHtml += `
-                        <td class="text-center">
+                        <td class="text-center flex justify-center gap-2">
                             <button onclick="openEditModal(${recordJson}, '${pkName}')" 
                                 class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
                                 title="Edit Record">
                                 <i class="fa-solid fa-pen text-sm"></i>
+                            </button>
+                            <button onclick="deleteRecord('${record[pkName]}')" 
+                                class="w-9 h-9 rounded-lg bg-gradient-to-br from-red-500 to-rose-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
+                                title="Delete Record">
+                                <i class="fa-solid fa-trash text-sm"></i>
                             </button>
                         </td>
                     `;
@@ -529,6 +578,7 @@
                 }, 400);
             });
         }
+
     </script>
     @endpush
 @endsection

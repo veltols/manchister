@@ -54,6 +54,7 @@
                             <th class="text-left">Email / Login ID</th>
                             <th class="text-left">Department</th>
                             <th class="text-center">Status</th>
+                            <th class="text-center">Feedback</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
@@ -88,10 +89,21 @@
                                     @endif
                                 </td>
                                 <td class="text-center">
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full {{ $user->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500' }} text-xs font-bold">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full {{ ($user->systemUser?->is_active ?? 1) ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500' }} text-xs font-bold">
                                         <i class="fa-solid fa-circle text-[8px]"></i>
-                                        {{ $user->is_active ? 'Active' : 'Inactive' }}
+                                        {{ ($user->systemUser?->is_active ?? 1) ? 'Active' : 'Inactive' }}
                                     </span>
+                                </td>
+                                <td class="text-center">
+                                    @php $fbEnabled = $user->systemUser?->feedback_enabled ?? 1; @endphp
+                                    <button class="feedback-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all hover:scale-105
+                                        {{ $fbEnabled ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-400 border border-slate-200' }}"
+                                        data-id="{{ $user->employee_id }}"
+                                        data-enabled="{{ $fbEnabled }}"
+                                        title="{{ $fbEnabled ? 'Click to disable feedback' : 'Click to enable feedback' }}">
+                                        <i class="fa-solid {{ $fbEnabled ? 'fa-comment-dots' : 'fa-comment-slash' }} text-[10px]"></i>
+                                        {{ $fbEnabled ? 'Enabled' : 'Disabled' }}
+                                    </button>
                                 </td>
                                 <td class="text-center">
                                     <div class="flex items-center justify-center gap-2">
@@ -106,7 +118,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-12 text-slate-500">
+                                <td colspan="7" class="text-center py-12 text-slate-500">
                                     No users found.
                                 </td>
                             </tr>
@@ -176,6 +188,17 @@
                 `;
             }
 
+            // Feedback Toggle Badge Helper
+            function getFeedbackToggle(userId, enabled) {
+                const cls = enabled
+                    ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                    : 'bg-slate-100 text-slate-400 border-slate-200';
+                const icon = enabled ? 'fa-comment-dots' : 'fa-comment-slash';
+                const label = enabled ? 'Enabled' : 'Disabled';
+                const title = enabled ? 'Click to disable feedback' : 'Click to enable feedback';
+                return `<button class="feedback-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all hover:scale-105 ${cls}" data-id="${userId}" data-enabled="${enabled ? 1 : 0}" title="${title}"><i class="fa-solid ${icon} text-[10px]"></i> ${label}</button>`;
+            }
+
             // Initialize AJAX Pagination
             const prefix = "{{ route('admin.users.index') }}".replace('/users', ''); // Get base admin URL
             
@@ -196,7 +219,7 @@
                     if (users.length === 0) {
                         container.innerHTML = `
                             <tr>
-                                <td colspan="6" class="text-center py-12 text-slate-500">
+                                <td colspan="7" class="text-center py-12 text-slate-500">
                                     No users found.
                                 </td>
                             </tr>
@@ -235,6 +258,9 @@
                                     ${getStatusBadge(user.is_active)}
                                 </td>
                                 <td class="text-center">
+                                    ${getFeedbackToggle(user.employee_id, user.system_user?.feedback_enabled ?? 1)}
+                                </td>
+                                <td class="text-center">
                                     <div class="flex items-center justify-center gap-2">
                                         <a href="${showUrl}" 
                                            class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
@@ -262,6 +288,37 @@
                 });
             @endif
 
+            // Feedback Toggle — delegated click handler
+            const toggleFbBase = "{{ url('admin/users') }}";
+            const csrfToken    = "{{ csrf_token() }}";
+
+            document.addEventListener('click', function (e) {
+                const btn = e.target.closest('.feedback-toggle-btn');
+                if (!btn) return;
+
+                const userId  = btn.dataset.id;
+                const enabled = parseInt(btn.dataset.enabled);
+
+                fetch(`${toggleFbBase}/${userId}/toggle-feedback`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        const isNowEnabled = data.feedback_enabled;
+                        // Update button in-place
+                        btn.dataset.enabled = isNowEnabled ? '1' : '0';
+                        btn.className = `feedback-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all hover:scale-105 ${isNowEnabled ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-400 border-slate-200'}`;
+                        btn.title = isNowEnabled ? 'Click to disable feedback' : 'Click to enable feedback';
+                        btn.innerHTML = `<i class="fa-solid ${isNowEnabled ? 'fa-comment-dots' : 'fa-comment-slash'} text-[10px]"></i> ${isNowEnabled ? 'Enabled' : 'Disabled'}`;
+                        Toast.fire({ icon: isNowEnabled ? 'success' : 'info', title: data.message });
+                    } else {
+                        Toast.fire({ icon: 'error', title: 'Failed to update feedback setting.' });
+                    }
+                })
+                .catch(() => Toast.fire({ icon: 'error', title: 'An error occurred.' }));
+            });
             // Filter Event Listeners
             const searchInput = document.getElementById('userListSearch');
             const deptFilter = document.getElementById('filterDepartment');
@@ -336,7 +393,7 @@
     @endpush
 
     <!-- New User Modal -->
-    <div id="newUserModal" class="modal">
+    <div id="newUserModal" class="modal {{ $errors->has('employee_no') || $errors->has('employee_email') || $errors->has('first_name') ? 'active' : '' }}">
         <div class="modal-backdrop" onclick="closeModal('newUserModal')"></div>
         <div class="modal-content max-w-2xl p-6">
             <div class="flex justify-between items-center mb-6">
@@ -356,7 +413,10 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">IQC ID</label>
-                            <input type="text" name="employee_no" required class="premium-input w-full px-4 py-3 text-sm" placeholder="e.g. 1045">
+                            <input type="text" name="employee_no" value="{{ old('employee_no') }}" required class="premium-input w-full px-4 py-3 text-sm {{ $errors->has('employee_no') ? 'border-rose-500' : '' }}" placeholder="e.g. 1045">
+                            @error('employee_no')
+                                <p class="text-rose-500 text-[11px] mt-1 font-semibold">{{ $message }}</p>
+                            @enderror
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">User Type</label>
@@ -388,11 +448,11 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">First Name</label>
-                            <input type="text" name="first_name" required class="premium-input w-full px-4 py-3 text-sm" placeholder="John">
+                            <input type="text" name="first_name" value="{{ old('first_name') }}" required class="premium-input w-full px-4 py-3 text-sm" placeholder="John">
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Last Name</label>
-                            <input type="text" name="last_name" required class="premium-input w-full px-4 py-3 text-sm" placeholder="Doe">
+                            <input type="text" name="last_name" value="{{ old('last_name') }}" required class="premium-input w-full px-4 py-3 text-sm" placeholder="Doe">
                         </div>
                     </div>
 
@@ -401,7 +461,10 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">Login ID</label>
-                                <input type="email" name="employee_email" class="premium-input w-full px-4 py-3 text-sm" placeholder="e.g. email@example.com" required>
+                                <input type="email" name="employee_email" value="{{ old('employee_email') }}" class="premium-input w-full px-4 py-3 text-sm {{ $errors->has('employee_email') ? 'border-rose-500' : '' }}" placeholder="e.g. email@example.com" required>
+                                @error('employee_email')
+                                    <p class="text-rose-500 text-[11px] mt-1 font-semibold">{{ $message }}</p>
+                                @enderror
                             </div>
                             <div class="relative group">
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">Password</label>

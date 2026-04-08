@@ -22,7 +22,7 @@
         </div>
 
         <!-- Filter Tabs -->
-        <div class="premium-card p-2">
+        <div class="premium-card p-2 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div class="flex gap-2">
                 <a href="{{ route('hr.tickets.index') }}"
                     class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 0 ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
@@ -41,10 +41,19 @@
                     Resolved
                 </a>
                 <a href="{{ route('hr.tickets.index', ['stt' => 4]) }}"
-                    class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 4 ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
-                    Unassigned
+                    class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 4 ? 'bg-slate-700 text-white shadow-lg' : 'text-slate-500 hover:text-slate-700' }}">
+                    Cancelled
                 </a>
             </div>
+            <form action="{{ route('hr.tickets.index') }}" method="GET" class="flex gap-2 w-full sm:w-auto">
+                @if(request('stt'))
+                    <input type="hidden" name="stt" value="{{ request('stt') }}">
+                @endif
+                <input type="text" name="search" placeholder="Search Reference No..." value="{{ request('search') }}" class="premium-input px-4 py-2 text-sm max-w-[250px] w-full" />
+                <button type="submit" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-colors">
+                    <i class="fa-solid fa-search"></i>
+                </button>
+            </form>
         </div>
 
         <!-- Monthly Resolved Filter Slider -->
@@ -99,28 +108,8 @@
 
         <!-- Tickets Area -->
         <div class="space-y-4">
-            @if($stt == 3 && !request('month'))
-                <!-- Initial State for Resolved Tickets: Show Message -->
-                <div class="premium-card py-20 flex flex-col items-center justify-center gap-6 animate-fade-in-up">
-                    <div class="w-24 h-24 rounded-full bg-indigo-50 flex items-center justify-center relative">
-                        <div class="absolute inset-0 rounded-full bg-indigo-100 animate-pulse"></div>
-                        <i class="fa-solid fa-calendar-check text-4xl text-indigo-600 relative z-10 transition-transform hover:scale-110"></i>
-                    </div>
-                    <div class="text-center max-w-md mx-auto px-6">
-                        <h3 class="text-xl font-display font-bold text-slate-800 mb-2">Monthly Resolved Archives</h3>
-                        <p class="text-slate-500 text-sm leading-relaxed mb-6">
-                            Select a specific month from the blocks above to view the resolved tickets for that period. 
-                            This helps in organized auditing and performance review.
-                        </p>
-                        <div class="flex items-center justify-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-widest">
-                            <i class="fa-solid fa-arrow-up animate-bounce"></i>
-                            <span>Select a Month Above</span>
-                        </div>
-                    </div>
-                </div>
-            @endif
 
-            @if($stt != 3 || request('month'))
+            @if(true)
                 @if($stt == 3)
                     <!-- Grid/Box View for Resolved Tickets -->
                     <div id="tickets-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -298,7 +287,7 @@
 
             // Initialize AJAX Pagination
             window.ajaxPagination = new AjaxPagination({
-                endpoint: "{{ route('hr.tickets.data', ['stt' => $stt]) }}", // Pass current filter
+                endpoint: "{{ route('hr.tickets.data', ['stt' => $stt, 'search' => request('search')]) }}", // Pass current filter
                 containerSelector: '#tickets-container',
                 paginationSelector: '#tickets-pagination',
                 perPage: 10,
@@ -515,7 +504,7 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">
-                                <i class="fa-solid fa-user text-indigo-600 mr-2"></i>Added By (Employee)
+                                <i class="fa-solid fa-user text-indigo-600 mr-2"></i>Reported By
                             </label>
                             <select name="added_by" class="premium-input w-full px-4 py-3 text-sm" required>
                                 <option value="">Select Employee</option>
@@ -528,6 +517,27 @@
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                <i class="fa-solid fa-user-shield text-indigo-600 mr-2"></i>Assigned To
+                            </label>
+                            <select name="assigned_to" class="premium-input w-full px-4 py-3 text-sm" required>
+                                <option value="">Select Assignee...</option>
+                                <optgroup label="IT Department Staff">
+                                    @foreach($itEmployees as $emp)
+                                        <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                                    @endforeach
+                                </optgroup>
+                                <optgroup label="All Employees">
+                                    @foreach($employees as $emp)
+                                        <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                                    @endforeach
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
                                 <i class="fa-solid fa-tag text-indigo-600 mr-2"></i>Category
                             </label>
                             <select name="category_id" class="premium-input w-full px-4 py-3 text-sm" required>
@@ -536,9 +546,6 @@
                                 @endforeach
                             </select>
                         </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">
                                 <i class="fa-solid fa-flag text-indigo-600 mr-2"></i>Priority
@@ -548,13 +555,6 @@
                                     <option value="{{ $pri->priority_id }}">{{ $pri->priority_name }}</option>
                                 @endforeach
                             </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">
-                                <i class="fa-solid fa-heading text-indigo-600 mr-2"></i>Subject
-                            </label>
-                            <input type="text" name="ticket_subject" class="premium-input w-full px-4 py-3 text-sm"
-                                placeholder="Brief description" required>
                         </div>
                     </div>
 

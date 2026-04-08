@@ -25,6 +25,14 @@ class SystemLogController extends Controller
             $query->where('logger_type', $request->type);
         }
 
+        if ($request->filled('start_date')) {
+            $query->whereDate('log_date', '>=', $request->start_date);
+        }
+
+        if ($request->filled('end_date')) {
+            $query->whereDate('log_date', '<=', $request->end_date);
+        }
+
         $logs = $query->paginate(30);
 
         return view('admin.system_logs.index', compact('logs'));
@@ -46,6 +54,14 @@ class SystemLogController extends Controller
 
         if ($request->filled('type')) {
             $query->where('logger_type', $request->type);
+        }
+
+        if ($request->filled('start_date')) {
+            $query->whereDate('log_date', '>=', $request->start_date);
+        }
+
+        if ($request->filled('end_date')) {
+            $query->whereDate('log_date', '<=', $request->end_date);
         }
 
         $logs = $query->paginate($perPage);

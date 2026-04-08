@@ -28,11 +28,18 @@
                     <span>Reopen Ticket</span>
                 </button>
             @else
-                <button onclick="openModal('updateStatusModal')"
-                    class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200 flex items-center gap-2">
-                    <i class="fa-solid fa-pen text-sm"></i>
-                    <span>Update Status</span>
-                </button>
+                <div class="flex items-center gap-3">
+                    <button onclick="openModal('editDetailsModal')"
+                        class="px-6 py-3 bg-white text-slate-700 font-bold rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 hover:shadow transition-all duration-200 flex items-center gap-2">
+                        <i class="fa-solid fa-pen-to-square text-sm"></i>
+                        <span>Edit Details</span>
+                    </button>
+                    <button onclick="openModal('updateStatusModal')"
+                        class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200 flex items-center gap-2">
+                        <i class="fa-solid fa-pen text-sm"></i>
+                        <span>Update Status</span>
+                    </button>
+                </div>
             @endif
         </div>
 
@@ -246,6 +253,80 @@
                     <button type="submit"
                         class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
                         Update Status
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Ticket Details Modal -->
+    <div id="editDetailsModal" class="modal">
+        <div class="modal-backdrop" onclick="closeModal('editDetailsModal')"></div>
+        <div class="modal-content max-w-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-display font-bold text-premium">Edit Ticket Details</h2>
+                    <p class="text-slate-500 text-sm mt-1">Update subject, priority or reporter</p>
+                </div>
+                <button onclick="closeModal('editDetailsModal')"
+                    class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form action="{{ route('emp.tickets.update_details', $ticket->ticket_id) }}" method="POST">
+                @csrf
+                <div class="space-y-4">
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-heading text-indigo-500 mr-1.5"></i>Subject
+                        </label>
+                        <input type="text" name="ticket_subject"
+                            class="premium-input w-full px-4 py-3 text-sm"
+                            value="{{ old('ticket_subject', $ticket->ticket_subject) }}" required>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                <i class="fa-solid fa-flag text-indigo-500 mr-1.5"></i>Priority
+                            </label>
+                            <select name="priority_id" class="premium-input w-full px-4 py-3 text-sm" required>
+                                @foreach($priorities as $pri)
+                                    <option value="{{ $pri->priority_id }}"
+                                        {{ $ticket->priority_id == $pri->priority_id ? 'selected' : '' }}>
+                                        {{ $pri->priority_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                <i class="fa-solid fa-user text-indigo-500 mr-1.5"></i>Reported By
+                            </label>
+                            <select name="added_by" class="premium-input w-full px-4 py-3 text-sm" required>
+                                @foreach($allEmployees as $emp)
+                                    <option value="{{ $emp->employee_id }}"
+                                        {{ $ticket->added_by == $emp->employee_id ? 'selected' : '' }}>
+                                        {{ $emp->first_name }} {{ $emp->last_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
+                    <button type="button" onclick="closeModal('editDetailsModal')"
+                        class="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
+                        <i class="fa-solid fa-floppy-disk mr-2"></i>Save Changes
                     </button>
                 </div>
             </form>

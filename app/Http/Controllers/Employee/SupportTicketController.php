@@ -28,7 +28,10 @@ class SupportTicketController extends Controller
             )
             ->where('status_id', \App\Models\SupportTicketStatus::RESOLVED)
             ->whereYear('ticket_added_date', $currentYear)
-            ->where('added_by', Auth::user()->user_id)
+            ->where(function($q) use ($user) {
+                $q->where('added_by', $user->user_id)
+                  ->orWhere('assigned_to', $user->user_id);
+            })
             ->groupBy('month_value')
             ->get()
             ->pluck('total', 'month_value');
@@ -47,7 +50,10 @@ class SupportTicketController extends Controller
         }
 
         $query = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'latestLog.logger'])
-            ->where('added_by', $user->user_id);
+            ->where(function($q) use ($user) {
+                $q->where('added_by', $user->user_id)
+                  ->orWhere('assigned_to', $user->user_id);
+            });
 
         // Filter by Status
         if ($stt == \App\Models\SupportTicketStatus::OPEN) {
@@ -60,10 +66,12 @@ class SupportTicketController extends Controller
             if ($request->filled('month')) {
                 $query->where(DB::raw("DATE_FORMAT(ticket_added_date, '%Y-%m')"), $request->month);
             }
-        } elseif ($stt == 4) { // 4 is a custom UI filter for Unassigned
-            // Unassigned (Open and assigned_to = 0)
-            $query->where('status_id', \App\Models\SupportTicketStatus::OPEN)
-                ->where('assigned_to', 0);
+        } elseif ($stt == \App\Models\SupportTicketStatus::CANCELLED) { // Cancelled
+            $query->where('status_id', \App\Models\SupportTicketStatus::CANCELLED);
+        }
+
+        if ($request->filled('search')) {
+            $query->where('ticket_ref', 'like', '%' . $request->search . '%');
         }
 
         // Order by latest
@@ -72,26 +80,32 @@ class SupportTicketController extends Controller
         // Data for "Create Ticket" Modal
         $categories = SupportTicketCategory::all();
         $priorities = Priority::all();
-
-        // Employees in same department
-        $myDeptId = $user->employee ? $user->employee->department_id : 0;
-        $deptEmployees = Employee::where('department_id', $myDeptId)
+        
+        $user = Auth::user();
+        $deptId = $user->employee ? $user->employee->department_id : 0;
+        
+        $deptEmployees = Employee::where('department_id', $deptId)
             ->where('is_deleted', 0)
             ->where('is_hidden', 0)
+            ->orderBy('first_name')
             ->get();
+            
+        $employees = \App\Models\Employee::where('is_deleted', 0)->where('is_hidden', 0)->orderBy('first_name')->get();
+        $itEmployees = \App\Models\Employee::where('department_id', 4)->where('is_deleted', 0)->where('is_hidden', 0)->orderBy('first_name')->get();
 
-        return view('emp.tickets.index', compact('tickets', 'stt', 'categories', 'priorities', 'deptEmployees', 'resolvedMonths'));
+        return view('emp.tickets.index', compact('tickets', 'stt', 'categories', 'priorities', 'deptEmployees', 'employees', 'itEmployees', 'resolvedMonths'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'added_by' => 'required|integer',
-            'ticket_subject' => 'required|string|max:255',
+            'added_by'           => 'required|exists:employees_list,employee_id',
+            'assigned_to'        => 'required|exists:employees_list,employee_id',
+            'ticket_subject'     => 'required|string|max:255',
             'ticket_description' => 'required|string',
-            'category_id' => 'required|integer',
-            'priority_id' => 'required|integer',
-            'ticket_attachment' => 'nullable|file|max:8192', // 8MB max
+            'category_id'        => 'required|integer',
+            'priority_id'        => 'required|integer',
+            'ticket_attachment'  => 'nullable|file|max:8192',
         ]);
 
         $user = Auth::user();
@@ -110,8 +124,10 @@ class SupportTicketController extends Controller
             $file = $request->file('ticket_attachment');
             $extension = $file->getClientOriginalExtension();
             $filename = \Illuminate\Support\Str::random(64) . '.' . $extension;
-            $file->move(public_path('uploads'), $filename);
-            $attachmentName = $filename;
+            $uploadDir = public_path('uploads/tickets');
+            if (!file_exists($uploadDir)) { mkdir($uploadDir, 0755, true); }
+            $file->move($uploadDir, $filename);
+            $attachmentName = 'uploads/tickets/' . $filename;
         }
 
         // Generate Ticket REF (Legacy style: T-timestamp)
@@ -130,7 +146,8 @@ class SupportTicketController extends Controller
         $ticket->ticket_added_date = now();
 
         $ticket->status_id = \App\Models\SupportTicketStatus::OPEN;
-        $ticket->assigned_to = 0;
+        $ticket->assigned_to = (int) $request->assigned_to;
+        $ticket->assigned_date = now();
         $ticket->save();
 
         // Create Initial Log
@@ -164,13 +181,69 @@ class SupportTicketController extends Controller
 
     public function show($id)
     {
+        $userId = Auth::user()->user_id;
         $ticket = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'logs.logger', 'latestLog.logger'])
-            ->where('added_by', Auth::user()->user_id)
+            ->where(function($q) use ($userId) {
+                $q->where('added_by', $userId)
+                  ->orWhere('assigned_to', $userId);
+            })
             ->findOrFail($id);
 
         $statuses = \App\Models\SupportTicketStatus::all();
+        $priorities = \App\Models\Priority::all();
+        
+        $myDeptId = Auth::user()->employee ? Auth::user()->employee->department_id : 0;
+        $employees = \App\Models\Employee::where('department_id', $myDeptId)
+            ->where('is_deleted', 0)
+            ->where('is_hidden', 0)
+            ->orderBy('first_name')
+            ->get();
+            
+        $allEmployees = \App\Models\Employee::where('is_deleted', 0)->where('is_hidden', 0)->orderBy('first_name')->get();
+        $itEmployees = \App\Models\Employee::where('department_id', 4)->where('is_deleted', 0)->where('is_hidden', 0)->orderBy('first_name')->get();
 
-        return view('emp.tickets.show', compact('ticket', 'statuses'));
+        return view('emp.tickets.show', compact('ticket', 'statuses', 'priorities', 'employees', 'allEmployees', 'itEmployees'));
+    }
+
+    public function updateDetails(Request $request, $id)
+    {
+        $request->validate([
+            'ticket_subject' => 'required|string|max:255',
+            'priority_id'    => 'required|exists:sys_list_priorities,priority_id',
+            'added_by'       => 'required|exists:employees_list,employee_id',
+        ]);
+
+        $userId = Auth::user()->user_id;
+        $ticket = SupportTicket::where(function($q) use ($userId) {
+                $q->where('added_by', $userId)
+                  ->orWhere('assigned_to', $userId);
+            })->findOrFail($id);
+
+        $ticket->ticket_subject = $request->ticket_subject;
+        $ticket->priority_id    = $request->priority_id;
+        $ticket->added_by       = $request->added_by;
+
+        // Update department if the reporter changed
+        $employee = \App\Models\Employee::find($request->added_by);
+        if ($employee) {
+            $ticket->department_id = $employee->department_id;
+        }
+
+        $ticket->save();
+
+        // Create Log
+        $log = new \App\Models\SystemLog();
+        $log->related_table = 'support_tickets_list';
+        $log->related_id = $ticket->ticket_id;
+        $log->log_action = 'Ticket Details Updated';
+        $log->log_remark = 'Subject, Priority or Reporter was updated by Employee.';
+        $log->log_date = now();
+        $log->logged_by = Auth::user()->employee->employee_id ?? 0;
+        $log->logger_type = 'employees_list';
+        $log->log_type = 'int';
+        $log->save();
+
+        return redirect()->back()->with('success', 'Ticket details updated successfully.');
     }
 
     public function updateStatus(Request $request, $id)
@@ -182,8 +255,12 @@ class SupportTicketController extends Controller
 
         $user = Auth::user();
         $employeeId = $user->employee ? $user->employee->employee_id : 0;
+        $userId = $user->user_id;
 
-        $ticket = SupportTicket::where('added_by', $user->user_id)->findOrFail($id);
+        $ticket = SupportTicket::where(function($q) use ($userId) {
+                $q->where('added_by', $userId)
+                  ->orWhere('assigned_to', $userId);
+            })->findOrFail($id);
         $currentStatusId = (int)$ticket->status_id;
         $newStatusId = (int)$request->status_id;
 
@@ -242,7 +319,10 @@ class SupportTicketController extends Controller
         $perPage = $request->get('per_page', 10);
 
         $query = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'latestLog.logger'])
-            ->where('added_by', $user->user_id);
+            ->where(function($q) use ($user) {
+                $q->where('added_by', $user->user_id)
+                  ->orWhere('assigned_to', $user->user_id);
+            });
 
         if ($stt == \App\Models\SupportTicketStatus::OPEN) {
             $query->where('status_id', \App\Models\SupportTicketStatus::OPEN);
@@ -252,6 +332,10 @@ class SupportTicketController extends Controller
             $query->where('status_id', \App\Models\SupportTicketStatus::RESOLVED);
         } elseif ($stt == 4) {
             $query->where('status_id', \App\Models\SupportTicketStatus::OPEN)->where('assigned_to', 0);
+        }
+
+        if ($request->filled('search')) {
+            $query->where('ticket_ref', 'like', '%' . $request->search . '%');
         }
 
         $tickets = $query->orderBy('ticket_id', 'desc')->paginate($perPage);

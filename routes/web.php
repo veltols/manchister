@@ -133,6 +133,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/tickets', [App\Http\Controllers\Employee\SupportTicketController::class, 'store'])->name('tickets.store');
         Route::get('/tickets/{id}', [App\Http\Controllers\Employee\SupportTicketController::class, 'show'])->name('tickets.show');
         Route::post('/tickets/{id}/status', [App\Http\Controllers\Employee\SupportTicketController::class, 'updateStatus'])->name('tickets.update_status');
+        Route::post('/tickets/{id}/details', [App\Http\Controllers\Employee\SupportTicketController::class, 'updateDetails'])->name('tickets.update_details');
         Route::get('/tickets/data', [App\Http\Controllers\Employee\SupportTicketController::class, 'getData'])->name('tickets.data');
 
         // Request Center Hub
@@ -363,6 +364,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/tickets', [App\Http\Controllers\HR\SupportTicketController::class, 'store'])->name('tickets.store');
         Route::get('/tickets/{id}', [App\Http\Controllers\HR\SupportTicketController::class, 'show'])->name('tickets.show');
         Route::post('/tickets/{id}/status', [App\Http\Controllers\HR\SupportTicketController::class, 'updateStatus'])->name('tickets.update_status');
+        Route::post('/tickets/{id}/details', [App\Http\Controllers\HR\SupportTicketController::class, 'updateDetails'])->name('tickets.update_details');
         Route::get('/tickets/data', [App\Http\Controllers\HR\SupportTicketController::class, 'getData'])->name('tickets.data');
 
 
@@ -435,6 +437,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/tickets', [App\Http\Controllers\Admin\SupportTicketController::class, 'store'])->name('tickets.store');
         Route::post('/tickets/{id}/assign', [App\Http\Controllers\Admin\SupportTicketController::class, 'assign'])->name('tickets.assign');
         Route::post('/tickets/{id}/status', [App\Http\Controllers\Admin\SupportTicketController::class, 'updateStatus'])->name('tickets.update_status');
+        Route::post('/tickets/{id}/details', [App\Http\Controllers\Admin\SupportTicketController::class, 'updateDetails'])->name('tickets.update_details');
         Route::get('/tickets/{id}', [App\Http\Controllers\Admin\SupportTicketController::class, 'show'])->name('tickets.show');
         Route::get('/tickets/data', [App\Http\Controllers\Admin\SupportTicketController::class, 'getData'])->name('tickets.data');
 
@@ -463,17 +466,21 @@ Route::middleware('auth')->group(function () {
         Route::post('/users/{id}/assign-asset', [App\Http\Controllers\Admin\UserController::class, 'assignAsset'])->name('users.assign-asset');
         Route::post('/users/{id}/revoke-asset', [App\Http\Controllers\Admin\UserController::class, 'revokeAsset'])->name('users.revoke-asset');
         Route::post('/users/{id}/update-login-id', [App\Http\Controllers\Admin\UserController::class, 'updateLoginId'])->name('users.update-login-id');
+        Route::post('/users/{id}/toggle-feedback', [App\Http\Controllers\Admin\UserController::class, 'toggleFeedback'])->name('users.toggle-feedback');
 
         // Settings (Dynamics Lists)
         Route::get('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');
         Route::get('/settings/data', [App\Http\Controllers\Admin\SettingsController::class, 'getData'])->name('settings.data');
         Route::post('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'store'])->name('settings.store');
         Route::post('/settings/{id}', [App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('settings.update');
+        Route::delete('/settings/{id}/destroy', [App\Http\Controllers\Admin\SettingsController::class, 'destroy'])->name('settings.destroy');
         Route::post('/settings/branding/update', [App\Http\Controllers\Admin\SettingsController::class, 'updateBranding'])->name('settings.branding');
         // Incidents
         Route::get('/incidents', [App\Http\Controllers\Admin\IncidentController::class, 'index'])->name('incidents.index');
         Route::get('/incidents/data', [App\Http\Controllers\Admin\IncidentController::class, 'getData'])->name('incidents.data');
         Route::post('/incidents', [App\Http\Controllers\Admin\IncidentController::class, 'store'])->name('incidents.store');
+        Route::post('/incidents/{id}/update', [App\Http\Controllers\Admin\IncidentController::class, 'update'])->name('incidents.update');
+        Route::delete('/incidents/{id}', [App\Http\Controllers\Admin\IncidentController::class, 'destroy'])->name('incidents.destroy');
         Route::get('/incidents/{id}', [App\Http\Controllers\Admin\IncidentController::class, 'show'])->name('incidents.show');
         
         // System Logs

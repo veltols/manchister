@@ -28,7 +28,7 @@ class HrLeave extends Model
 
     public function type()
     {
-        return $this->belongsTo(LeaveType::class, 'leave_type_id', 'leave_type_id');
+        return $this->belongsTo(LeaveType::class, 'leave_type_id', 'leave_type_id')->withTrashed();
     }
 
     public function approvals()

@@ -24,7 +24,7 @@ class Asset extends Model
 
     public function category()
     {
-        return $this->belongsTo(AssetCategory::class, 'category_id', 'category_id');
+        return $this->belongsTo(AssetCategory::class, 'category_id', 'category_id')->withTrashed();
     }
 
 
@@ -35,7 +35,7 @@ class Asset extends Model
 
     public function status()
     {
-        return $this->belongsTo(AssetStatus::class, 'status_id', 'status_id');
+        return $this->belongsTo(AssetStatus::class, 'status_id', 'status_id')->withTrashed();
     }
 
     public function assignedBy()

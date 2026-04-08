@@ -17,17 +17,17 @@ class SupportTicket extends Model
 
     public function category()
     {
-        return $this->belongsTo(SupportTicketCategory::class, 'category_id', 'category_id');
+        return $this->belongsTo(SupportTicketCategory::class, 'category_id', 'category_id')->withTrashed();
     }
 
     public function priority()
     {
-        return $this->belongsTo(Priority::class, 'priority_id', 'priority_id');
+        return $this->belongsTo(Priority::class, 'priority_id', 'priority_id')->withTrashed();
     }
 
     public function status()
     {
-        return $this->belongsTo(SupportTicketStatus::class, 'status_id', 'status_id');
+        return $this->belongsTo(SupportTicketStatus::class, 'status_id', 'status_id')->withTrashed();
     }
 
     public function addedBy()

@@ -17,7 +17,7 @@ class CommunicationRequest extends Model
 
     public function type()
     {
-        return $this->belongsTo(CommunicationType::class, 'communication_type_id', 'communication_type_id');
+        return $this->belongsTo(CommunicationType::class, 'communication_type_id', 'communication_type_id')->withTrashed();
     }
 
     public function status()

@@ -31,6 +31,14 @@
                     <option value="hr" {{ request('type') == 'hr' ? 'selected' : '' }}>HR</option>
                     <option value="emp" {{ request('type') == 'emp' ? 'selected' : '' }}>Employee</option>
                 </select>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-slate-400 uppercase">From:</span>
+                    <input type="date" id="startDate" class="premium-input px-3 py-2.5 text-xs focus:ring-4 focus:ring-indigo-100" value="{{ request('start_date') }}">
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-slate-400 uppercase">To:</span>
+                    <input type="date" id="endDate" class="premium-input px-3 py-2.5 text-xs focus:ring-4 focus:ring-indigo-100" value="{{ request('end_date') }}">
+                </div>
             </div>
         </div>
 
@@ -117,7 +125,9 @@
                 getAdditionalParams: function() {
                     return {
                         search: document.getElementById('logSearch').value,
-                        type: document.getElementById('filterType').value
+                        type: document.getElementById('filterType').value,
+                        start_date: document.getElementById('startDate').value,
+                        end_date: document.getElementById('endDate').value
                     };
                 },
                 renderCallback: function(logs) {
@@ -209,6 +219,8 @@
             });
 
             document.getElementById('filterType').addEventListener('change', () => window.ajaxPagination.loadPage(1));
+            document.getElementById('startDate').addEventListener('change', () => window.ajaxPagination.loadPage(1));
+            document.getElementById('endDate').addEventListener('change', () => window.ajaxPagination.loadPage(1));
         </script>
     @endpush
 @endsection

@@ -17,7 +17,8 @@ class SupportTicketController extends Controller
 {
     public function index(Request $request)
     {
-        $stt = $request->input('stt', 0); // 0=All, 1=Open, 2=In Progress, 3=Resolved
+        $stt = $request->input('stt', 0); // 0=All, 1=Open, 2=In Progress, 3=Resolved, 4=Cancelled
+        $search = $request->input('search', '');
 
         // Monthly Resolved Stats (Current Year - January to December)
         $resolvedMonths = [];
@@ -54,14 +55,18 @@ class SupportTicketController extends Controller
         } elseif ($stt == \App\Models\SupportTicketStatus::IN_PROGRESS) { // In Progress
             $query->where('status_id', \App\Models\SupportTicketStatus::IN_PROGRESS);
         } elseif ($stt == \App\Models\SupportTicketStatus::RESOLVED) { // Resolved/Closed
-            $query->whereIn('status_id', [\App\Models\SupportTicketStatus::RESOLVED, \App\Models\SupportTicketStatus::CANCELLED]);
+            $query->where('status_id', \App\Models\SupportTicketStatus::RESOLVED);
             
             // Filter by Month if selected
             if ($request->filled('month')) {
                 $query->where(\Illuminate\Support\Facades\DB::raw("DATE_FORMAT(ticket_added_date, '%Y-%m')"), $request->month);
             }
-        } elseif ($stt == 4) { // Unassigned
-            $query->where('assigned_to', 0)->whereIn('status_id', [\App\Models\SupportTicketStatus::OPEN, \App\Models\SupportTicketStatus::IN_PROGRESS]); // Open or In Progress but unassigned
+        } elseif ($stt == \App\Models\SupportTicketStatus::CANCELLED) { // Cancelled
+            $query->where('status_id', \App\Models\SupportTicketStatus::CANCELLED);
+        }
+
+        if ($request->filled('search')) {
+            $query->where('ticket_ref', 'like', '%' . $request->search . '%');
         }
 
         $tickets = $query->orderBy('ticket_id', 'desc')->paginate(15);
@@ -101,18 +106,21 @@ class SupportTicketController extends Controller
             ->orderBy('first_name')
             ->get();
 
-        return view('admin.tickets.show', compact('ticket', 'itEmployees', 'allEmployees'));
+        $priorities = \App\Models\Priority::all();
+
+        return view('admin.tickets.show', compact('ticket', 'itEmployees', 'allEmployees', 'priorities'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'added_by' => 'required|exists:employees_list,employee_id',
-            'category_id' => 'required|exists:support_tickets_list_cats,category_id',
-            'priority_id' => 'required|exists:sys_list_priorities,priority_id',
-            'ticket_subject' => 'required|string|max:255',
+            'added_by'           => 'required|exists:employees_list,employee_id',
+            'assigned_to'        => 'required|exists:employees_list,employee_id',
+            'category_id'        => 'required|exists:support_tickets_list_cats,category_id',
+            'priority_id'        => 'required|exists:sys_list_priorities,priority_id',
+            'ticket_subject'     => 'required|string|max:255',
             'ticket_description' => 'required|string',
-            'ticket_attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:8192'
+            'ticket_attachment'  => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:8192'
         ]);
 
         $attachmentPath = '';
@@ -120,7 +128,11 @@ class SupportTicketController extends Controller
             $file = $request->file('ticket_attachment');
             $extension = $file->getClientOriginalExtension();
             $filename = Str::random(64) . '.' . $extension;
-            $file->move(public_path('uploads/tickets'), $filename);
+            $uploadDir = public_path('uploads/tickets');
+            if (!file_exists($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            $file->move($uploadDir, $filename);
             $attachmentPath = 'uploads/tickets/' . $filename;
         } else {
              $attachmentPath = 'no-img.png';
@@ -143,7 +155,11 @@ class SupportTicketController extends Controller
         $ticket->department_id = $departmentId;
         $ticket->ticket_added_date = now();
         $ticket->status_id = \App\Models\SupportTicketStatus::OPEN; // Open
-        $ticket->assigned_to = 0; // Unassigned initially
+        // Assign immediately if provided in form
+        $ticket->assigned_to = ($request->filled('assigned_to')) ? (int) $request->assigned_to : 0;
+        if ($ticket->assigned_to) {
+            $ticket->assigned_date = now();
+        }
         $ticket->save();
         
         // Log Action
@@ -157,6 +173,32 @@ class SupportTicketController extends Controller
         );
 
         return redirect()->back()->with('success', 'Ticket created successfully.');
+    }
+
+    public function updateDetails(Request $request, $id)
+    {
+        $request->validate([
+            'ticket_subject' => 'required|string|max:255',
+            'priority_id'    => 'required|exists:sys_list_priorities,priority_id',
+            'added_by'       => 'required|exists:employees_list,employee_id',
+        ]);
+
+        $ticket = SupportTicket::findOrFail($id);
+        $ticket->ticket_subject = $request->ticket_subject;
+        $ticket->priority_id    = $request->priority_id;
+        $ticket->added_by       = $request->added_by;
+
+        // Update department if the reporter changed
+        $employee = Employee::find($request->added_by);
+        if ($employee) {
+            $ticket->department_id = $employee->department_id;
+        }
+
+        $ticket->save();
+
+        $this->logAction($ticket->ticket_id, 'Ticket Details Updated', 'Subject, Priority or Reporter was updated by Admin.');
+
+        return redirect()->back()->with('success', 'Ticket details updated successfully.');
     }
 
     public function assign(Request $request, $id)
@@ -299,6 +341,10 @@ class SupportTicketController extends Controller
 
         $query = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'assignedTo']);
 
+        if ($request->has('search') && $request->search != '') {
+            $query->where('ticket_ref', 'LIKE', '%' . $request->search . '%');
+        }
+
         if ($stt == \App\Models\SupportTicketStatus::OPEN) {
             $query->where('status_id', \App\Models\SupportTicketStatus::OPEN);
         } elseif ($stt == \App\Models\SupportTicketStatus::IN_PROGRESS) {
@@ -308,8 +354,14 @@ class SupportTicketController extends Controller
             if ($request->filled('month')) {
                 $query->where(\Illuminate\Support\Facades\DB::raw("DATE_FORMAT(ticket_added_date, '%Y-%m')"), $request->month);
             }
+        } elseif ($stt == \App\Models\SupportTicketStatus::CANCELLED) {
+            $query->where('status_id', \App\Models\SupportTicketStatus::CANCELLED);
         } elseif ($stt == 4) {
              $query->where('assigned_to', 0)->whereIn('status_id', [\App\Models\SupportTicketStatus::OPEN, \App\Models\SupportTicketStatus::IN_PROGRESS]);
+        }
+
+        if ($request->filled('search')) {
+            $query->where('ticket_ref', 'like', '%' . $request->search . '%');
         }
 
         $tickets = $query->orderBy('ticket_id', 'desc')->paginate($perPage);

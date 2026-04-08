@@ -402,6 +402,28 @@ class UserController extends Controller
         }
     }
 
+    public function toggleFeedback($id)
+    {
+        $systemUser = \App\Models\User::where('user_id', $id)->first();
+
+        if (!$systemUser) {
+            return response()->json(['success' => false, 'message' => 'User not found.'], 404);
+        }
+
+        $systemUser->feedback_enabled = $systemUser->feedback_enabled ? 0 : 1;
+        $systemUser->save();
+
+        $state  = $systemUser->feedback_enabled ? 'enabled' : 'disabled';
+        $action = $systemUser->feedback_enabled ? 'Feedback Enabled' : 'Feedback Disabled';
+        $this->logAction($id, $action, "Feedback access {$state} by admin.");
+
+        return response()->json([
+            'success'          => true,
+            'feedback_enabled' => $systemUser->feedback_enabled,
+            'message'          => "Feedback {$state} for this user.",
+        ]);
+    }
+
     private function logAction($refId, $action, $remark)
     {
         SystemLog::create([

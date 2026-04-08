@@ -668,21 +668,7 @@
             }
         });
 
-        // Handle Laravel Session Flashes with SweetAlert
-        window.addEventListener('DOMContentLoaded', () => {
-            @if(session('success'))
-                Toast.fire({ icon: 'success', title: '{{ session('success') }}' });
-            @endif
-            @if(session('error'))
-                Toast.fire({ icon: 'error', title: '{{ session('error') }}' });
-            @endif
-            @if(session('warning'))
-                Toast.fire({ icon: 'warning', title: '{{ session('warning') }}' });
-            @endif
-            @if($errors->any())
-                Toast.fire({ icon: 'error', title: '{{ $errors->first() }}' });
-            @endif
-        });
+
     </script>
     @stack('styles')
     <style>
@@ -1220,6 +1206,22 @@
     </script>
 
     @stack('scripts')
+
+    <script>
+        // Handle Laravel Session Flashes — runs after all page scripts are loaded
+        @if(session('success'))
+            Toast.fire({ icon: 'success', title: '{{ session('success') }}' });
+        @endif
+        @if(session('error'))
+            Toast.fire({ icon: 'error', title: '{{ session('error') }}' });
+        @endif
+        @if(session('warning'))
+            Toast.fire({ icon: 'warning', title: '{{ session('warning') }}' });
+        @endif
+        @if($errors->any())
+            Toast.fire({ icon: 'error', title: '{{ $errors->first() }}' });
+        @endif
+    </script>
 </body>
 
 </html>

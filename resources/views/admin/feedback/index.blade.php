@@ -39,11 +39,11 @@
                     <tbody id="feedback-container">
                         @forelse($feedbacks as $fb)
                             @php
-                                // Calculate a quick average of the first 3 UI questions if they are numeric
+                                $ratingMap = ['excellent' => 5, 'good' => 4, 'average' => 3, 'poor' => 2, 'very_poor' => 1];
                                 $uiSum = 0; $uiCount = 0;
                                 foreach(['a1', 'a2', 'a3'] as $q) {
-                                    $val = (int)$fb->$q;
-                                    if($val > 0) { $uiSum += $val; $uiCount++; }
+                                    $key = strtolower(str_replace(' ', '_', $fb->$q ?? ''));
+                                    if (isset($ratingMap[$key])) { $uiSum += $ratingMap[$key]; $uiCount++; }
                                 }
                                 $uiAvg = $uiCount > 0 ? round($uiSum / $uiCount, 1) : null;
                             @endphp
@@ -349,11 +349,12 @@
                     const initials = (fb.first_name?.[0] || '') + (fb.last_name?.[0] || '');
                     const dateInfo = formatDate(fb.added_date);
                     
-                    // Setup UI Avg
+                    // Map text ratings to scores and compute UI avg
+                    const ratingMap = { 'excellent': 5, 'good': 4, 'average': 3, 'poor': 2, 'very_poor': 1 };
                     let uiSum = 0, uiCount = 0;
                     ['a1', 'a2', 'a3'].forEach(q => {
-                        const val = parseInt(fb[q]);
-                        if (val > 0) { uiSum += val; uiCount++; }
+                        const key = (fb[q] || '').toLowerCase().replace(/ /g, '_');
+                        if (ratingMap[key] !== undefined) { uiSum += ratingMap[key]; uiCount++; }
                     });
                     const uiAvg = uiCount > 0 ? (uiSum / uiCount).toFixed(1) : null;
                     
