@@ -44,6 +44,8 @@
                             <th class="text-left first:pl-6">Date &amp; Time</th>
                             <th class="text-left">Type</th>
                             <th class="text-left">Description</th>
+                            <th class="text-left">Status</th>
+                            <th class="text-left">Assigned To</th>
                             <th class="text-left">Attachment</th>
                             <th class="text-left">Reported By</th>
                             <th class="text-center last:pr-6">Actions</th>
@@ -55,6 +57,11 @@
                                 $reporterName = optional(optional($incident->reporter)->employee)->first_name
                                     ?? optional($incident->reporter)->user_email
                                     ?? 'System';
+                                $getName = fn($emp) => $emp ? trim($emp->first_name . ' ' . $emp->last_name) : null;
+                                $ap1 = $incident->assigned_person_1 ? $getName(\App\Models\EmployeesList::find($incident->assigned_person_1)) : null;
+                                $ap2 = $incident->assigned_person_2 ? $getName(\App\Models\EmployeesList::find($incident->assigned_person_2)) : null;
+                                $ap3 = $incident->assigned_person_3 ? $getName(\App\Models\EmployeesList::find($incident->assigned_person_3)) : null;
+                                $assignees = array_filter([$ap1, $ap2, $ap3]);
                             @endphp
                             <tr class="group hover:bg-slate-50 transition-colors">
                                 <td class="first:pl-6">
@@ -72,6 +79,28 @@
                                     <p class="text-sm text-slate-600 truncate" title="{{ $incident->description }}">
                                         {{ $incident->description }}
                                     </p>
+                                </td>
+                                <td>
+                                    @if(($incident->status ?? 'pending') === 'resolved')
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700">
+                                            <i class="fa-solid fa-circle-check text-[10px]"></i> Resolved
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700">
+                                            <i class="fa-solid fa-clock text-[10px]"></i> Pending
+                                        </span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if(count($assignees) > 0)
+                                        <div class="flex flex-col gap-0.5">
+                                            @foreach($assignees as $name)
+                                                <span class="text-xs text-slate-600 font-medium">{{ $name }}</span>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <span class="text-xs text-slate-400 italic">Unassigned</span>
+                                    @endif
                                 </td>
                                 <td>
                                     @if($incident->attachment)
@@ -98,7 +127,11 @@
                                             data-type="{{ e($incident->incident_type) }}"
                                             data-date="{{ \Carbon\Carbon::parse($incident->incident_date)->format('Y-m-d\TH:i') }}"
                                             data-description="{{ e($incident->description) }}"
-                                            data-attachment="{{ $incident->attachment ? e(asset($incident->attachment)) : '' }}">
+                                            data-attachment="{{ $incident->attachment ? e(asset($incident->attachment)) : '' }}"
+                                            data-ap1="{{ $incident->assigned_person_1 ?? '' }}"
+                                            data-ap2="{{ $incident->assigned_person_2 ?? '' }}"
+                                            data-ap3="{{ $incident->assigned_person_3 ?? '' }}"
+                                            data-status="{{ $incident->status ?? 'pending' }}">
                                             <i class="fa-solid fa-pen text-xs"></i>
                                         </button>
                                         <button class="delete-incident-btn w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-red-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md" title="Delete"
@@ -110,7 +143,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-12">
+                                <td colspan="8" class="text-center py-12">
                                     <div class="flex flex-col items-center justify-center">
                                         <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
                                             <i class="fa-solid fa-shield-virus text-3xl text-slate-300"></i>
@@ -167,6 +200,52 @@
                         </select>
                     </div>
                 </div>
+
+                <!-- Status -->
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Status</label>
+                    <select name="status" class="premium-input w-full appearance-none">
+                        <option value="pending" selected>Pending</option>
+                        <option value="resolved">Resolved</option>
+                    </select>
+                </div>
+
+                <!-- Assignment -->
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">
+                        <i class="fa-solid fa-users text-indigo-500 mr-1"></i> Assign Persons <span class="text-slate-400 font-normal normal-case">(Optional)</span>
+                    </label>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-500 mb-1">Assigned Person 1</label>
+                            <select name="assigned_person_1" class="premium-input w-full appearance-none text-sm">
+                                <option value="">— None —</option>
+                                @foreach($employees as $emp)
+                                    <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-500 mb-1">Assigned Person 2</label>
+                            <select name="assigned_person_2" class="premium-input w-full appearance-none text-sm">
+                                <option value="">— None —</option>
+                                @foreach($employees as $emp)
+                                    <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-500 mb-1">Assigned Person 3</label>
+                            <select name="assigned_person_3" class="premium-input w-full appearance-none text-sm">
+                                <option value="">— None —</option>
+                                @foreach($employees as $emp)
+                                    <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="mb-6">
                     <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Description <span class="text-rose-500">*</span></label>
                     <textarea name="description" required rows="4" class="premium-input w-full" placeholder="Describe the incident in detail..."></textarea>
@@ -227,6 +306,52 @@
                         </select>
                     </div>
                 </div>
+
+                <!-- Status -->
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Status</label>
+                    <select name="status" id="edit_status" class="premium-input w-full appearance-none">
+                        <option value="pending">Pending</option>
+                        <option value="resolved">Resolved</option>
+                    </select>
+                </div>
+
+                <!-- Assignment -->
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">
+                        <i class="fa-solid fa-users text-indigo-500 mr-1"></i> Assign Persons <span class="text-slate-400 font-normal normal-case">(Optional)</span>
+                    </label>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-500 mb-1">Assigned Person 1</label>
+                            <select name="assigned_person_1" id="edit_ap1" class="premium-input w-full appearance-none text-sm">
+                                <option value="">— None —</option>
+                                @foreach($employees as $emp)
+                                    <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-500 mb-1">Assigned Person 2</label>
+                            <select name="assigned_person_2" id="edit_ap2" class="premium-input w-full appearance-none text-sm">
+                                <option value="">— None —</option>
+                                @foreach($employees as $emp)
+                                    <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-500 mb-1">Assigned Person 3</label>
+                            <select name="assigned_person_3" id="edit_ap3" class="premium-input w-full appearance-none text-sm">
+                                <option value="">— None —</option>
+                                @foreach($employees as $emp)
+                                    <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="mb-6">
                     <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Description <span class="text-rose-500">*</span></label>
                     <textarea name="description" id="edit_description" required rows="4" class="premium-input w-full"></textarea>
@@ -262,11 +387,12 @@
     <script src="{{ asset('js/ajax-pagination.js') }}"></script>
     <script>
         const incidentTypes = @json($types->pluck('type_name'));
+        const employeeOptions = @json($employees->map(fn($e) => ['id' => $e->employee_id, 'name' => trim($e->first_name . ' ' . $e->last_name)]));
         const deleteUrl = "{{ url('admin/incidents') }}";
         const csrfToken = "{{ csrf_token() }}";
 
-        // ─── Edit Modal (via event delegation — avoids onclick escaping issues) ────
-        function openEditModal(id, type, date, description, attachmentUrl) {
+        // ─── Edit Modal ────────────────────────────────────────────────
+        function openEditModal(id, type, date, description, attachmentUrl, ap1, ap2, ap3, status) {
             document.getElementById('editIncidentForm').action = deleteUrl + '/' + id + '/update';
             document.getElementById('edit_incident_date').value = date;
             document.getElementById('edit_description').value = description;
@@ -276,6 +402,21 @@
             for (let i = 0; i < sel.options.length; i++) {
                 sel.options[i].selected = (sel.options[i].value === type);
             }
+
+            // populate status
+            const statusSel = document.getElementById('edit_status');
+            for (let i = 0; i < statusSel.options.length; i++) {
+                statusSel.options[i].selected = (statusSel.options[i].value === status);
+            }
+
+            // populate assigned persons
+            ['edit_ap1', 'edit_ap2', 'edit_ap3'].forEach((selId, idx) => {
+                const apVal = [ap1, ap2, ap3][idx];
+                const apSel = document.getElementById(selId);
+                for (let i = 0; i < apSel.options.length; i++) {
+                    apSel.options[i].selected = (apSel.options[i].value == apVal);
+                }
+            });
 
             // current attachment
             const wrap = document.getElementById('edit_current_attachment_wrap');
@@ -299,7 +440,11 @@
                     editBtn.dataset.type,
                     editBtn.dataset.date,
                     editBtn.dataset.description,
-                    editBtn.dataset.attachment || null
+                    editBtn.dataset.attachment || null,
+                    editBtn.dataset.ap1 || '',
+                    editBtn.dataset.ap2 || '',
+                    editBtn.dataset.ap3 || '',
+                    editBtn.dataset.status || 'pending'
                 );
             }
             const delBtn = e.target.closest('.delete-incident-btn');
@@ -341,6 +486,25 @@
             });
         }
 
+        // ─── Helper: status badge HTML ───────────────────────────────────
+        function statusBadge(status) {
+            if (status === 'resolved') {
+                return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700">
+                            <i class="fa-solid fa-circle-check text-[10px]"></i> Resolved
+                        </span>`;
+            }
+            return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700">
+                        <i class="fa-solid fa-clock text-[10px]"></i> Pending
+                    </span>`;
+        }
+
+        // ─── Helper: build assigned persons cell HTML ─────────────────
+        function assignedCell(inc) {
+            const names = [inc.assigned_person_1_name, inc.assigned_person_2_name, inc.assigned_person_3_name].filter(Boolean);
+            if (names.length === 0) return `<span class="text-xs text-slate-400 italic">Unassigned</span>`;
+            return `<div class="flex flex-col gap-0.5">${names.map(n => `<span class="text-xs text-slate-600 font-medium">${n}</span>`).join('')}</div>`;
+        }
+
         // ─── AJAX Pagination ──────────────────────────────────────────
         window.ajaxPagination = new AjaxPagination({
             endpoint: '{{ route('admin.incidents.data') }}',
@@ -364,7 +528,7 @@
 
                 if (incidents.length === 0) {
                     container.innerHTML = `
-                        <tr><td colspan="6" class="text-center py-12">
+                        <tr><td colspan="8" class="text-center py-12">
                             <div class="flex flex-col items-center justify-center">
                                 <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
                                     <i class="fa-solid fa-shield-virus text-3xl text-slate-300"></i>
@@ -377,10 +541,6 @@
 
                 let html = '';
                 incidents.forEach(incident => {
-                    const typeOptions = incidentTypes.map(t =>
-                        `<option value="${t}"${t === incident.incident_type ? ' selected' : ''}>${t}</option>`
-                    ).join('');
-
                     const attachmentBtn = incident.attachment_url
                         ? `<a href="${incident.attachment_url}" target="_blank" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors"><i class="fa-solid fa-paperclip"></i> View File</a>`
                         : `<span class="text-xs text-slate-400 italic">None</span>`;
@@ -399,6 +559,8 @@
                             </td>
                             <td><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium w-fit bg-indigo-50 text-indigo-700">${incident.incident_type}</span></td>
                             <td class="max-w-xs"><p class="text-sm text-slate-600 truncate" title="${escapedDesc}">${incident.description}</p></td>
+                            <td>${statusBadge(incident.status)}</td>
+                            <td>${assignedCell(incident)}</td>
                             <td>${attachmentBtn}</td>
                             <td>
                                 <div class="flex items-center gap-2">
@@ -413,7 +575,11 @@
                                         data-type="${incident.incident_type.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"
                                         data-date="${incident.raw_date}"
                                         data-description="${incident.description.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"
-                                        data-attachment="${incident.attachment_url || ''}">
+                                        data-attachment="${incident.attachment_url || ''}"
+                                        data-ap1="${incident.assigned_person_1 || ''}"
+                                        data-ap2="${incident.assigned_person_2 || ''}"
+                                        data-ap3="${incident.assigned_person_3 || ''}"
+                                        data-status="${incident.status || 'pending'}">
                                         <i class="fa-solid fa-pen text-xs"></i>
                                     </button>
                                     <button class="delete-incident-btn w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-red-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md" title="Delete"

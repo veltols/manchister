@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Incident;
 use App\Models\IncidentType;
+use App\Models\EmployeesList;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use App\Models\SystemLog;
@@ -14,24 +15,33 @@ class IncidentController extends Controller
 {
     public function index()
     {
-        $incidents = Incident::with('reporter.employee')->latest()->paginate(10);
-        $types = IncidentType::orderBy('type_name')->get();
-        return view('admin.incidents.index', compact('incidents', 'types'));
+        $incidents  = Incident::with('reporter.employee')->latest()->paginate(10);
+        $types      = IncidentType::orderBy('type_name')->get();
+        $employees  = EmployeesList::orderBy('first_name')->get();
+        return view('admin.incidents.index', compact('incidents', 'types', 'employees'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'incident_date' => 'required|date',
-            'incident_type' => 'required|string',
-            'description'   => 'required|string',
-            'attachment'    => 'nullable|file|max:10240',
+            'incident_date'      => 'required|date',
+            'incident_type'      => 'required|string',
+            'description'        => 'required|string',
+            'attachment'         => 'nullable|file|max:10240',
+            'assigned_person_1'  => 'nullable|integer',
+            'assigned_person_2'  => 'nullable|integer',
+            'assigned_person_3'  => 'nullable|integer',
+            'status'             => 'nullable|in:pending,resolved',
         ]);
 
         $incident = new Incident();
-        $incident->incident_date = $request->incident_date;
-        $incident->incident_type = $request->incident_type;
-        $incident->description   = $request->description;
+        $incident->incident_date    = $request->incident_date;
+        $incident->incident_type    = $request->incident_type;
+        $incident->description      = $request->description;
+        $incident->assigned_person_1 = $request->assigned_person_1 ?: null;
+        $incident->assigned_person_2 = $request->assigned_person_2 ?: null;
+        $incident->assigned_person_3 = $request->assigned_person_3 ?: null;
+        $incident->status            = $request->status ?? 'pending';
 
         if ($request->hasFile('attachment')) {
             $file = $request->file('attachment');
@@ -43,7 +53,7 @@ class IncidentController extends Controller
         $incident->reported_by = Auth::id();
         $incident->save();
 
-        $this->logAction($incident->incident_id, 'Incident Created', "New incident reported: " . $incident->incident_type);
+        $this->logAction($incident->incident_id, 'Incident Created', $this->buildLogRemark($incident));
 
         return redirect()->back()->with('success', 'Incident recorded successfully.');
     }
@@ -51,16 +61,24 @@ class IncidentController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'incident_date' => 'required|date',
-            'incident_type' => 'required|string',
-            'description'   => 'required|string',
-            'attachment'    => 'nullable|file|max:10240',
+            'incident_date'      => 'required|date',
+            'incident_type'      => 'required|string',
+            'description'        => 'required|string',
+            'attachment'         => 'nullable|file|max:10240',
+            'assigned_person_1'  => 'nullable|integer',
+            'assigned_person_2'  => 'nullable|integer',
+            'assigned_person_3'  => 'nullable|integer',
+            'status'             => 'nullable|in:pending,resolved',
         ]);
 
         $incident = Incident::findOrFail($id);
-        $incident->incident_date = $request->incident_date;
-        $incident->incident_type = $request->incident_type;
-        $incident->description   = $request->description;
+        $incident->incident_date     = $request->incident_date;
+        $incident->incident_type     = $request->incident_type;
+        $incident->description       = $request->description;
+        $incident->assigned_person_1 = $request->assigned_person_1 ?: null;
+        $incident->assigned_person_2 = $request->assigned_person_2 ?: null;
+        $incident->assigned_person_3 = $request->assigned_person_3 ?: null;
+        $incident->status            = $request->status ?? 'pending';
 
         if ($request->hasFile('attachment')) {
             $file = $request->file('attachment');
@@ -71,7 +89,7 @@ class IncidentController extends Controller
 
         $incident->save();
 
-        $this->logAction($incident->incident_id, 'Incident Updated', "Incident updated: " . $incident->incident_type);
+        $this->logAction($incident->incident_id, 'Incident Updated', $this->buildLogRemark($incident));
 
         return redirect()->route('admin.incidents.index')->with('success', 'Incident updated successfully.');
     }
@@ -98,10 +116,11 @@ class IncidentController extends Controller
         $page    = $request->get('page', 1);
         $perPage = $request->get('per_page', 10);
         $search  = $request->get('search');
-        $date    = $request->get('date');       // YYYY-MM-DD
-        $reporter = $request->get('reporter');   // name search
+        $date    = $request->get('date');
+        $reporter = $request->get('reporter');
 
-        $query = Incident::with('reporter.employee')->latest('incident_date');
+        $query = Incident::with('reporter.employee', 'assignedPerson1', 'assignedPerson2', 'assignedPerson3')
+                         ->latest('incident_date');
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -110,12 +129,10 @@ class IncidentController extends Controller
             });
         }
 
-        // Filter by date
         if ($date) {
             $query->whereDate('incident_date', $date);
         }
 
-        // Filter by reporter name
         if ($reporter) {
             $query->where(function ($q) use ($reporter) {
                 $q->whereHas('reporter.employee', function ($sq) use ($reporter) {
@@ -129,16 +146,21 @@ class IncidentController extends Controller
 
         $incidents = $query->paginate($perPage);
 
-        // Transform data
         $incidents->getCollection()->transform(function ($incident) {
             $reporterName = optional(optional($incident->reporter)->employee)->first_name
                 ?? optional($incident->reporter)->user_email
                 ?? 'System';
-            $incident->reporter_name   = $reporterName;
-            $incident->formatted_date  = \Carbon\Carbon::parse($incident->incident_date)->format('M d, Y');
-            $incident->formatted_time  = \Carbon\Carbon::parse($incident->incident_date)->format('h:i A');
-            $incident->raw_date        = \Carbon\Carbon::parse($incident->incident_date)->format('Y-m-d\TH:i');
-            $incident->attachment_url  = $incident->attachment ? asset($incident->attachment) : null;
+
+            $getName = fn($emp) => $emp ? trim($emp->first_name . ' ' . $emp->last_name) : null;
+
+            $incident->reporter_name        = $reporterName;
+            $incident->formatted_date       = \Carbon\Carbon::parse($incident->incident_date)->format('M d, Y');
+            $incident->formatted_time       = \Carbon\Carbon::parse($incident->incident_date)->format('h:i A');
+            $incident->raw_date             = \Carbon\Carbon::parse($incident->incident_date)->format('Y-m-d\TH:i');
+            $incident->attachment_url       = $incident->attachment ? asset($incident->attachment) : null;
+            $incident->assigned_person_1_name = $getName($incident->assignedPerson1);
+            $incident->assigned_person_2_name = $getName($incident->assignedPerson2);
+            $incident->assigned_person_3_name = $getName($incident->assignedPerson3);
             return $incident;
         });
 
@@ -154,6 +176,30 @@ class IncidentController extends Controller
                 'to'           => $incidents->lastItem(),
             ]
         ]);
+    }
+
+    /**
+     * Build a descriptive remark for the system log including
+     * incident type, status, and all assigned persons.
+     */
+    private function buildLogRemark(Incident $incident): string
+    {
+        $getName = function ($empId) {
+            if (!$empId) return null;
+            $emp = EmployeesList::find($empId);
+            return $emp ? trim($emp->first_name . ' ' . $emp->last_name) : "Employee #{$empId}";
+        };
+
+        $assignees = array_filter([
+            $getName($incident->assigned_person_1),
+            $getName($incident->assigned_person_2),
+            $getName($incident->assigned_person_3),
+        ]);
+
+        $status    = ucfirst($incident->status ?? 'pending');
+        $assignStr = count($assignees) > 0 ? implode(', ', $assignees) : 'Unassigned';
+
+        return "Type: {$incident->incident_type} | Status: {$status} | Assigned To: {$assignStr}";
     }
 
     private function logAction($refId, $action, $remark, $table = 'incidents')

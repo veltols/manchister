@@ -19,4 +19,20 @@ class Incident extends Model
     {
         return $this->belongsTo(User::class, 'reported_by', 'user_id');
     }
+
+    // Relationships to assigned persons (via EmployeesList)
+    public function assignedPerson1()
+    {
+        return $this->belongsTo(EmployeesList::class, 'assigned_person_1', 'employee_id');
+    }
+
+    public function assignedPerson2()
+    {
+        return $this->belongsTo(EmployeesList::class, 'assigned_person_2', 'employee_id');
+    }
+
+    public function assignedPerson3()
+    {
+        return $this->belongsTo(EmployeesList::class, 'assigned_person_3', 'employee_id');
+    }
 }
