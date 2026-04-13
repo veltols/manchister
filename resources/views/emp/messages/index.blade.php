@@ -51,14 +51,19 @@
                         <div class="flex justify-between items-baseline mb-0.5">
                             <h4 class="font-bold text-slate-700 truncate {{ $isActive ? 'text-brand' : '' }}">
                                 {{ $otherUser->first_name ?? 'Unknown' }} {{ $otherUser->last_name ?? '' }}
+                                <span class="text-[9px] text-slate-400 ml-1">#{{ $otherUser->employee_no }}</span>
                             </h4>
                             <span class="text-[10px] text-slate-400 font-medium whitespace-nowrap ml-2">
-                                {{ $conv->messages->last() ? \Carbon\Carbon::parse($conv->messages->last()->added_date)->format('h:i A') : '' }}
+                                {{ $conv->lastMessage ? \Carbon\Carbon::parse($conv->lastMessage->added_date)->format('h:i A') : '' }}
                             </span>
                         </div>
-                        <div class="text-[10px] text-slate-400 font-medium mb-1"><i class="fa-solid fa-building mr-1"></i>{{ $otherUser->department->department_name ?? 'N/A' }}</div>
+                        <div class="text-[10px] text-slate-400 font-bold mb-1">
+                            <span class="text-brand/70">{{ $otherUser->designation->designation_name ?? 'Employee' }}</span>
+                            <span class="mx-1 text-slate-300">•</span>
+                            <span>{{ $otherUser->department->department_name ?? 'N/A' }}</span>
+                        </div>
                         <p class="text-xs text-slate-500 truncate">
-                            {{ $conv->messages->last()->post_text ?? 'Start a conversation...' }}
+                            {{ $conv->lastMessage->post_text ?? 'Start a conversation...' }}
                         </p>
                     </div>
                 </a>
@@ -88,7 +93,9 @@
                     <div>
                         <h3 class="font-bold text-slate-800 flex items-center gap-2">
                             {{ $activeOtherUser->first_name ?? 'Unknown' }} {{ $activeOtherUser->last_name ?? '' }}
-                            <span class="text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full"><i class="fa-solid fa-building mr-1 text-slate-400"></i>{{ $activeOtherUser->department->department_name ?? 'N/A' }}</span>
+                            <span class="text-[10px] text-slate-400 font-mono">#{{ $activeOtherUser->employee_no }}</span>
+                            <span class="text-[11px] font-bold text-brand bg-brand/5 px-2.5 py-0.5 rounded-full border border-brand/10">{{ $activeOtherUser->designation->designation_name ?? 'Employee' }}</span>
+                            <span class="text-[11px] font-medium text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200/50">{{ $activeOtherUser->department->department_name ?? 'N/A' }}</span>
                         </h3>
                         @if($activeOtherUser && $activeOtherUser->status)
                             <div class="flex items-center gap-1.5">
@@ -395,6 +402,20 @@
                                             // Remove badge if count is 0
                                             if (badgeContainer) {
                                                 console.log(`Removing badge for conversation ${conv.chat_id}`);
+                                                // Update time and preview
+                                                const lastMsg = conv.last_message;
+                                                if (lastMsg) {
+                                                    const timeEl = convLink.querySelector('.whitespace-nowrap');
+                                                    const previewEl = convLink.querySelector('p.truncate');
+                                                    
+                                                    if (timeEl) {
+                                                        const date = new Date(lastMsg.added_date);
+                                                        timeEl.textContent = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                                                    }
+                                                    if (previewEl) {
+                                                        previewEl.textContent = lastMsg.post_text || 'Click to view...';
+                                                    }
+                                                }
                                                 badgeContainer.remove();
                                             }
                                         }
@@ -447,7 +468,7 @@
                     <select name="employee_id" class="w-full premium-input pl-12 h-12 text-sm" required>
                         <option value="">Choose a colleague...</option>
                         @foreach($employees as $emp)
-                            <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }} - {{ $emp->department->department_name ?? 'N/A' }}</option>
+                            <option value="{{ $emp->employee_id }}">[{{ $emp->employee_no }}] {{ $emp->first_name }} {{ $emp->last_name }} - {{ $emp->designation->designation_name ?? 'Employee' }} ({{ $emp->department->department_name ?? 'N/A' }})</option>
                         @endforeach
                     </select>
                 </div>

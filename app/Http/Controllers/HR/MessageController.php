@@ -19,7 +19,7 @@ class MessageController extends Controller
         // Fetch conversations where user is a participant
         $conversations = Conversation::where('a_id', $employeeId)
             ->orWhere('b_id', $employeeId)
-            ->with(['participantA.status', 'participantB.status'])
+            ->with(['participantA.status', 'participantA.designation', 'participantB.status', 'participantB.designation', 'lastMessage'])
             ->get();
 
         // Calculate unread counts for each conversation
@@ -38,6 +38,7 @@ class MessageController extends Controller
         $employees = Employee::where('employee_id', '!=', $employeeId)
             ->where('is_deleted', 0)
             ->where('is_hidden', 0)
+            ->with(['designation', 'department'])
             ->orderBy('first_name')
             ->get();
 
@@ -52,7 +53,7 @@ class MessageController extends Controller
             ->where(function ($q) use ($employeeId) {
                 $q->where('a_id', $employeeId)->orWhere('b_id', $employeeId);
             })
-            ->with(['participantA.status', 'participantB.status'])
+            ->with(['participantA.status', 'participantA.designation', 'participantB.status', 'participantB.designation'])
             ->firstOrFail();
 
         // Mark messages as read
@@ -78,7 +79,7 @@ class MessageController extends Controller
         // If not ajax, return full view (fallback)
         $conversations = Conversation::where('a_id', $employeeId)
             ->orWhere('b_id', $employeeId)
-            ->with(['participantA.status', 'participantB.status'])
+            ->with(['participantA.status', 'participantA.designation', 'participantB.status', 'participantB.designation'])
             ->get();
 
         foreach ($conversations as $conv) {
@@ -91,6 +92,7 @@ class MessageController extends Controller
         $employees = Employee::where('employee_id', '!=', $employeeId)
             ->where('is_deleted', 0)
             ->where('is_hidden', 0)
+            ->with(['designation', 'department'])
             ->orderBy('first_name')
             ->get();
 
@@ -156,7 +158,11 @@ class MessageController extends Controller
             }
 
             $fileName = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
-            $file->move(public_path('uploads'), $fileName);
+            $targetDir = public_path('uploads');
+            if (!file_exists($targetDir)) {
+                mkdir($targetDir, 0777, true);
+            }
+            $file->move($targetDir, $fileName);
 
             $msg->post_text = $fileName;
             $msg->post_type = 'document'; // Default document
@@ -243,7 +249,7 @@ class MessageController extends Controller
         // Fetch conversations with unread counts
         $conversations = Conversation::where('a_id', $employeeId)
             ->orWhere('b_id', $employeeId)
-            ->with(['participantA.status', 'participantB.status'])
+            ->with(['participantA.status', 'participantA.designation', 'participantB.status', 'participantB.designation', 'lastMessage'])
             ->get();
 
         // Calculate unread counts for each conversation

@@ -99,6 +99,14 @@ class FeedbackController extends Controller
             ->orderBy('feedback_forms.added_date', 'desc')
             ->paginate($perPage);
 
+        $feedbacks->getCollection()->transform(function($fb) {
+            $carbonDate = \Carbon\Carbon::parse($fb->added_date);
+            $fb->formatted_date = $carbonDate->format('M d, Y');
+            $fb->formatted_time = $carbonDate->format('h:i A');
+            $fb->full_formatted_date = $carbonDate->format('M d, Y h:i A');
+            return $fb;
+        });
+
         return response()->json([
             'success' => true,
             'data' => $feedbacks->items(),

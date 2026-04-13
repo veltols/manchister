@@ -38,7 +38,12 @@ class AssetController extends Controller
         // Data for Modals
         $categories = AssetCategory::all();
         $statuses = AssetStatus::all();
-        $employees = Employee::where('is_deleted', 0)->where('is_hidden', 0)->orderBy('first_name')->get();
+        $employees = Employee::where('is_deleted', 0)
+            ->where('is_hidden', 0)
+            ->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })
+            ->orderBy('first_name')->get();
 
         return view('admin.assets.index', compact('assets', 'stt', 'categories', 'statuses', 'employees'));
     }

@@ -17,7 +17,7 @@ class Incident extends Model
     // Relationship to reporter (User)
     public function reporter()
     {
-        return $this->belongsTo(User::class, 'reported_by', 'user_id');
+        return $this->belongsTo(User::class, 'reported_by', 'record_id');
     }
 
     // Relationships to assigned persons (via EmployeesList)

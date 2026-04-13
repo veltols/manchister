@@ -60,7 +60,17 @@ class DepartmentController extends Controller
 
     public function orgChart()
     {
-        $departments = Department::orderBy('department_name')->get();
+        $departments = Department::whereHas('lineManager', function ($query) {
+                $query->whereHas('systemUser', function ($q) {
+                    $q->where('is_active', 1);
+                });
+            })
+            ->with(['lineManager' => function ($query) {
+                $query->with('designation');
+            }])
+            ->where('is_active', 1)
+            ->orderBy('department_name')
+            ->get();
         return view('hr.departments.chart', compact('departments'));
     }
 

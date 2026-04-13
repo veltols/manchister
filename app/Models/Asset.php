@@ -35,7 +35,7 @@ class Asset extends Model
 
     public function status()
     {
-        return $this->belongsTo(AssetStatus::class, 'status_id', 'status_id')->withTrashed();
+        return $this->belongsTo(AssetStatus::class, 'status_id', 'status_id');
     }
 
     public function assignedBy()

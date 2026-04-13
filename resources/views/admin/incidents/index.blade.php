@@ -179,8 +179,12 @@
                 @csrf
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Incident Date &amp; Time <span class="text-rose-500">*</span></label>
-                        <input type="datetime-local" name="incident_date" required class="premium-input w-full">
+                        <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Incident Date <span class="text-rose-500">*</span></label>
+                        <input type="date" name="incident_date_only" required class="premium-input w-full" value="{{ date('Y-m-d') }}">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Incident Time <span class="text-rose-500">*</span></label>
+                        <input type="time" name="incident_time_only" required class="premium-input w-full" value="{{ date('H:i') }}">
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Incident Type <span class="text-rose-500">*</span></label>
@@ -285,8 +289,12 @@
                 @csrf
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Incident Date &amp; Time <span class="text-rose-500">*</span></label>
-                        <input type="datetime-local" name="incident_date" id="edit_incident_date" required class="premium-input w-full">
+                        <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Incident Date <span class="text-rose-500">*</span></label>
+                        <input type="date" name="incident_date_only" id="edit_incident_date_only" required class="premium-input w-full">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Incident Time <span class="text-rose-500">*</span></label>
+                        <input type="time" name="incident_time_only" id="edit_incident_time_only" required class="premium-input w-full">
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Incident Type <span class="text-rose-500">*</span></label>
@@ -394,7 +402,14 @@
         // ─── Edit Modal ────────────────────────────────────────────────
         function openEditModal(id, type, date, description, attachmentUrl, ap1, ap2, ap3, status) {
             document.getElementById('editIncidentForm').action = deleteUrl + '/' + id + '/update';
-            document.getElementById('edit_incident_date').value = date;
+            
+            // Split Y-m-dTH:i into date and time
+            if (date && date.includes('T')) {
+                const parts = date.split('T');
+                document.getElementById('edit_incident_date_only').value = parts[0];
+                document.getElementById('edit_incident_time_only').value = parts[1];
+            }
+            
             document.getElementById('edit_description').value = description;
 
             // populate type select

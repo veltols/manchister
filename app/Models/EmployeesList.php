@@ -28,4 +28,8 @@ class EmployeesList extends Model
             ->where('is_active', '1')
             ->latest('pass_id');
     }
+    public function systemUser()
+    {
+        return $this->hasOne(User::class, 'user_id', 'employee_id');
+    }
 }

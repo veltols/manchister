@@ -36,6 +36,11 @@
                         <option value="{{ $dept->department_id }}">{{ $dept->department_name }}</option>
                     @endforeach
                 </select>
+                <select id="filterStatus" class="premium-input px-4 py-2.5 text-sm min-w-[150px] focus:ring-4 focus:ring-indigo-100">
+                    <option value="">All Status</option>
+                    <option value="1" selected>Active</option>
+                    <option value="0">Inactive</option>
+                </select>
                 <!-- <button onclick="window.ajaxPagination.loadPage(1)" 
                     class="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold shadow-lg hover:shadow-slate-200 transition-all active:scale-95">
                     Search
@@ -210,7 +215,8 @@
                 getAdditionalParams: function() {
                     return {
                         search: document.getElementById('userListSearch').value,
-                        department_id: document.getElementById('filterDepartment').value
+                        department_id: document.getElementById('filterDepartment').value,
+                        status: document.getElementById('filterStatus').value
                     };
                 },
                 renderCallback: function(users) {
@@ -233,6 +239,8 @@
                         const lastInitial = user.last_name ? user.last_name.substring(0, 1) : '';
                         const designationName = user.designation ? user.designation.designation_name : 'Employee';
                         const showUrl = `{{ route('admin.users.show', ':id') }}`.replace(':id', user.employee_id);
+                        const sysUser = user.systemUser || user.system_user;
+                        const isActive = sysUser ? sysUser.is_active : 1; // Default to 1 if not joined
 
                         html += `
                             <tr>
@@ -255,7 +263,7 @@
                                     ${getDeptBadge(user.department)}
                                 </td>
                                 <td class="text-center">
-                                    ${getStatusBadge(user.is_active)}
+                                    ${getStatusBadge(isActive)}
                                 </td>
                                 <td class="text-center">
                                     ${getFeedbackToggle(user.employee_id, user.system_user?.feedback_enabled ?? 1)}
@@ -332,6 +340,7 @@
             });
 
             deptFilter.addEventListener('change', () => window.ajaxPagination.loadPage(1));
+            document.getElementById('filterStatus').addEventListener('change', () => window.ajaxPagination.loadPage(1));
 
             // Password Validation Logic
             const passInput = document.getElementById('user-password');

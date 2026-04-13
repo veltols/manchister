@@ -95,11 +95,13 @@
                             if($dept->lineManager) {
                                 $initial = substr($dept->lineManager->first_name, 0, 1);
                                 $mName = e($dept->lineManager->first_name . ' ' . $dept->lineManager->last_name);
+                                $mDesignation = e($dept->lineManager->designation->designation_name ?? 'Line Manager');
                                 $managerHtml = '<div class="mt-4 pt-4 border-t border-slate-100/80 flex items-center gap-2.5 text-left">
                                                     <div class="shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-[11px] font-bold shadow-indigo-200 shadow-lg">'.$initial.'</div>
                                                     <div class="min-w-0">
-                                                        <div class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter leading-none mb-1">line manager</div>
-                                                        <div class="text-[11px] text-slate-700 font-bold truncate">'.$mName.'</div>
+                                                        <div class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter leading-none mb-1">Line Manager</div>
+                                                        <div class="text-[11px] text-slate-700 font-bold truncate mb-0.5">'.$mName.'</div>
+                                                        <div class="text-[10px] text-slate-500 font-medium truncate italic">'.$mDesignation.'</div>
                                                     </div>
                                                 </div>';
                             } else {

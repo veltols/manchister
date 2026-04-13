@@ -24,10 +24,17 @@ class UserController extends Controller
         // Filter by user/email search if needed
         $query = Employee::with(['department', 'systemUser'])
             ->where('is_deleted', 0)
-            ->where('is_hidden', 0)
-            ->orderBy('employee_id', 'desc');
+            ->where('is_hidden', 0);
 
-        $users = $query->paginate(15);
+        // Filter by Active status (1) by default to match view dropdown
+        $status = $request->get('status', '1');
+        if ($status !== '') {
+            $query->whereHas('systemUser', function($q) use ($status) {
+                $q->where('is_active', $status);
+            });
+        }
+
+        $users = $query->orderBy('employee_id', 'desc')->paginate(15);
         $departments = Department::orderBy('department_name')->where('is_active', 1)->get();
 
         return view('admin.users.index', compact('users', 'departments'));
@@ -152,8 +159,29 @@ class UserController extends Controller
         $enabledServiceIds = EmployeeService::where('employee_id', $id)->pluck('service_id')->toArray();
 
         // Org Chart Data
+        $activeManagerCheck = fn($q) => $q->whereHas('lineManager', fn($lm) => $lm->whereHas('systemUser', fn($u) => $u->where('is_active', 1)));
+        $activeManagerQuery  = fn($q) => $q->whereHas('systemUser', fn($u) => $u->where('is_active', 1))->with('designation');
+        $activeEmployeesQuery = fn($q) => $q->whereHas('systemUser', fn($u) => $u->where('is_active', 1))->with('designation');
+        
         $orgRoot = Department::where('main_department_id', 0)
-            ->with(['children.children.children', 'lineManager'])
+            ->where('is_active', 1)
+            ->where($activeManagerCheck)
+            ->with([
+                'lineManager'  => $activeManagerQuery,
+                'employees'    => $activeEmployeesQuery,
+                'children' => fn($q) => $q->where('is_active', 1)->where($activeManagerCheck)->with([
+                    'lineManager'  => $activeManagerQuery,
+                    'employees'    => $activeEmployeesQuery,
+                    'children' => fn($q) => $q->where('is_active', 1)->where($activeManagerCheck)->with([
+                        'lineManager'  => $activeManagerQuery,
+                        'employees'    => $activeEmployeesQuery,
+                        'children' => fn($q) => $q->where('is_active', 1)->where($activeManagerCheck)->with([
+                            'lineManager' => $activeManagerQuery,
+                            'employees'   => $activeEmployeesQuery,
+                        ]),
+                    ]),
+                ]),
+            ])
             ->first();
 
         return view('admin.users.show', compact(
@@ -443,7 +471,7 @@ class UserController extends Controller
         $perPage = $request->get('per_page', 15);
 
         // Filter by user/email search if needed
-        $query = Employee::with(['department', 'systemUser'])
+        $query = Employee::with(['department', 'designation', 'systemUser'])
             ->where('is_deleted', 0)
             ->where('is_hidden', 0);
 

@@ -144,7 +144,7 @@
                         </div>
                         <div>
                             <h3 class="text-xl font-display font-bold text-premium">Feedback Report #<span x-text="currentData?.record_id"></span></h3>
-                            <p class="text-sm text-slate-500" x-text="'Submitted by ' + (currentData?.first_name || '') + ' ' + (currentData?.last_name || '') + ' on ' + formatDate(currentData?.added_date).full"></p>
+                            <p class="text-sm text-slate-500" x-text="'Submitted by ' + (currentData?.first_name || '') + ' ' + (currentData?.last_name || '') + ' on ' + (currentData?.full_formatted_date || '')"></p>
                         </div>
                     </div>
                     <button @click="closeModal" class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-500 flex items-center justify-center transition-colors">
@@ -347,7 +347,8 @@
                 let html = '';
                 feedbacks.forEach(fb => {
                     const initials = (fb.first_name?.[0] || '') + (fb.last_name?.[0] || '');
-                    const dateInfo = formatDate(fb.added_date);
+                    const dateFull = fb.formatted_date || 'N/A';
+                    const dateTime = fb.formatted_time || '';
                     
                     // Map text ratings to scores and compute UI avg
                     const ratingMap = { 'excellent': 5, 'good': 4, 'average': 3, 'poor': 2, 'very_poor': 1 };
@@ -388,8 +389,8 @@
                             </td>
                             <td>
                                 <div class="flex flex-col">
-                                    <span class="text-sm text-slate-600 font-medium">${dateInfo.full}</span>
-                                    <span class="text-[10px] text-slate-400 font-bold">${dateInfo.time}</span>
+                                    <span class="text-sm text-slate-600 font-medium">${dateFull}</span>
+                                    <span class="text-[10px] text-slate-400 font-bold">${dateTime}</span>
                                 </div>
                             </td>
                             <td class="text-center">${uiHtml}</td>

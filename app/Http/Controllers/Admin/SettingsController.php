@@ -27,7 +27,7 @@ class SettingsController extends Controller
         $this->config = [
             'tc' => [
                 'model' => SupportTicketCategory::class,
-                'title' => 'Ticket Categories',
+                'title' => 'Ticket Category',
                 'pk' => 'category_id',
                 'name_field' => 'category_name',
                 'fields' => ['category_name' => 'Name']
@@ -41,7 +41,7 @@ class SettingsController extends Controller
             ],
             'ac' => [
                 'model' => AssetCategory::class,
-                'title' => 'Asset Categories',
+                'title' => 'Asset Category',
                 'pk' => 'category_id',
                 'name_field' => 'category_name',
                 'fields' => ['category_name' => 'Name']
@@ -55,7 +55,7 @@ class SettingsController extends Controller
             ],
             'pp' => [
                 'model' => Priority::class,
-                'title' => 'Priorities',
+                'title' => 'Priority',
                 'pk' => 'priority_id', // Note: Legacy says theme_id in loop but priority_name. Assuming PK might be priority_id based on Model I saw, or theme_id. The Model I viewed said priority_id is PK.
                 'name_field' => 'priority_name',
                 'fields' => ['priority_name' => 'Name']

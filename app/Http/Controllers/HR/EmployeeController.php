@@ -19,11 +19,19 @@ class EmployeeController extends Controller
 {
     public function index()
     {
-        $employees = Employee::with(['department', 'designation', 'systemUser'])
+        $query = Employee::with(['department', 'designation', 'systemUser'])
             ->where('is_hidden', 0)
-            ->where('is_deleted', 0)
-            ->orderBy('employee_id', 'desc')
-            ->paginate(20);
+            ->where('is_deleted', 0);
+
+        // Filter by Active status (1) by default to match view dropdown
+        $status = request()->get('status', '1');
+        if ($status !== '') {
+            $query->whereHas('systemUser', function($q) use ($status) {
+                $q->where('is_active', $status);
+            });
+        }
+
+        $employees = $query->orderBy('employee_id', 'desc')->paginate(20);
 
         $departments = Department::orderBy('department_name')->where('is_active', 1)->get();
 
@@ -50,6 +58,13 @@ class EmployeeController extends Controller
 
         if ($request->filled('department_id')) {
             $query->where('department_id', $request->department_id);
+        }
+
+        if ($request->has('status') && $request->status !== '') {
+            $status = $request->status;
+            $query->whereHas('systemUser', function($q) use ($status) {
+                $q->where('is_active', $status);
+            });
         }
 
         $employees = $query->orderBy('employee_id', 'desc')->paginate($perPage);
@@ -106,9 +121,30 @@ class EmployeeController extends Controller
         $allServices = \App\Models\EmployeeListService::orderBy('service_id')->get();
         $enabledServiceIds = \App\Models\EmployeeService::where('employee_id', $id)->pluck('service_id')->toArray();
 
-        // Fetch Org Chart Root
+        // Fetch Org Chart Root (exclude deactivated users)
+        $activeManagerCheck = fn($q) => $q->whereHas('lineManager', fn($lm) => $lm->whereHas('systemUser', fn($u) => $u->where('is_active', 1)));
+        $activeManagerQuery = fn($q) => $q->whereHas('systemUser', fn($u) => $u->where('is_active', 1))->with('designation');
+        $activeEmployeesQuery = fn($q) => $q->whereHas('systemUser', fn($u) => $u->where('is_active', 1))->with('designation');
+        
         $orgRoot = Department::where('main_department_id', 0)
-            ->with(['children.children.children', 'employees.designation'])
+            ->where('is_active', 1)
+            ->where($activeManagerCheck)
+            ->with([
+                'lineManager'  => $activeManagerQuery,
+                'employees'    => $activeEmployeesQuery,
+                'children' => fn($q) => $q->where('is_active', 1)->where($activeManagerCheck)->with([
+                    'lineManager'  => $activeManagerQuery,
+                    'employees'    => $activeEmployeesQuery,
+                    'children' => fn($q) => $q->where('is_active', 1)->where($activeManagerCheck)->with([
+                        'lineManager'  => $activeManagerQuery,
+                        'employees'    => $activeEmployeesQuery,
+                        'children' => fn($q) => $q->where('is_active', 1)->where($activeManagerCheck)->with([
+                            'lineManager' => $activeManagerQuery,
+                            'employees'   => $activeEmployeesQuery,
+                        ]),
+                    ]),
+                ]),
+            ])
             ->first();
 
         return view('hr.employees.show', compact(

@@ -17,14 +17,17 @@ class IncidentController extends Controller
     {
         $incidents  = Incident::with('reporter.employee')->latest()->paginate(10);
         $types      = IncidentType::orderBy('type_name')->get();
-        $employees  = EmployeesList::orderBy('first_name')->get();
+        $employees  = EmployeesList::whereHas('systemUser', function($q) {
+            $q->where('is_active', 1);
+        })->where('is_deleted', 0)->where('is_hidden', 0)->orderBy('first_name')->get();
         return view('admin.incidents.index', compact('incidents', 'types', 'employees'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'incident_date'      => 'required|date',
+            'incident_date_only' => 'required|date',
+            'incident_time_only' => 'required',
             'incident_type'      => 'required|string',
             'description'        => 'required|string',
             'attachment'         => 'nullable|file|max:10240',
@@ -35,7 +38,7 @@ class IncidentController extends Controller
         ]);
 
         $incident = new Incident();
-        $incident->incident_date    = $request->incident_date;
+        $incident->incident_date    = $request->incident_date_only . ' ' . $request->incident_time_only;
         $incident->incident_type    = $request->incident_type;
         $incident->description      = $request->description;
         $incident->assigned_person_1 = $request->assigned_person_1 ?: null;
@@ -46,7 +49,11 @@ class IncidentController extends Controller
         if ($request->hasFile('attachment')) {
             $file = $request->file('attachment');
             $filename = 'incident_' . time() . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('uploads/incidents'), $filename);
+            $targetDir = public_path('uploads/incidents');
+            if (!file_exists($targetDir)) {
+                mkdir($targetDir, 0777, true);
+            }
+            $file->move($targetDir, $filename);
             $incident->attachment = 'uploads/incidents/' . $filename;
         }
 
@@ -61,7 +68,8 @@ class IncidentController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'incident_date'      => 'required|date',
+            'incident_date_only' => 'required|date',
+            'incident_time_only' => 'required',
             'incident_type'      => 'required|string',
             'description'        => 'required|string',
             'attachment'         => 'nullable|file|max:10240',
@@ -72,7 +80,7 @@ class IncidentController extends Controller
         ]);
 
         $incident = Incident::findOrFail($id);
-        $incident->incident_date     = $request->incident_date;
+        $incident->incident_date     = $request->incident_date_only . ' ' . $request->incident_time_only;
         $incident->incident_type     = $request->incident_type;
         $incident->description       = $request->description;
         $incident->assigned_person_1 = $request->assigned_person_1 ?: null;
@@ -83,7 +91,11 @@ class IncidentController extends Controller
         if ($request->hasFile('attachment')) {
             $file = $request->file('attachment');
             $filename = 'incident_' . time() . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('uploads/incidents'), $filename);
+            $targetDir = public_path('uploads/incidents');
+            if (!file_exists($targetDir)) {
+                mkdir($targetDir, 0777, true);
+            }
+            $file->move($targetDir, $filename);
             $incident->attachment = 'uploads/incidents/' . $filename;
         }
 
@@ -125,7 +137,11 @@ class IncidentController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('description', 'like', "%{$search}%")
-                  ->orWhere('incident_type', 'like', "%{$search}%");
+                  ->orWhere('incident_type', 'like', "%{$search}%")
+                  ->orWhereHas('reporter.employee', function ($sq) use ($search) {
+                      $sq->where(\Illuminate\Support\Facades\DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$search}%")
+                         ->orWhere('employee_no', 'like', "%{$search}%");
+                  });
             });
         }
 
@@ -136,8 +152,10 @@ class IncidentController extends Controller
         if ($reporter) {
             $query->where(function ($q) use ($reporter) {
                 $q->whereHas('reporter.employee', function ($sq) use ($reporter) {
-                    $sq->where('first_name', 'like', "%{$reporter}%")
-                       ->orWhere('last_name', 'like', "%{$reporter}%");
+                    $sq->where(\Illuminate\Support\Facades\DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$reporter}%")
+                       ->orWhere('first_name', 'like', "%{$reporter}%")
+                       ->orWhere('last_name', 'like', "%{$reporter}%")
+                       ->orWhere('employee_no', 'like', "%{$reporter}%");
                 })->orWhereHas('reporter', function ($sq) use ($reporter) {
                     $sq->where('user_email', 'like', "%{$reporter}%");
                 });

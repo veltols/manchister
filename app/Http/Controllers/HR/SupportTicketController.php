@@ -75,8 +75,19 @@ class SupportTicketController extends Controller
         // Data for "Create Ticket" Modal
         $categories = SupportTicketCategory::all();
         $priorities = Priority::all();
-        $employees = \App\Models\Employee::where('is_deleted', 0)->where('is_hidden', 0)->orderBy('first_name')->get();
-        $itEmployees = \App\Models\Employee::where('department_id', 4)->where('is_deleted', 0)->where('is_hidden', 0)->orderBy('first_name')->get();
+        $employees = \App\Models\Employee::where('is_deleted', 0)
+            ->where('is_hidden', 0)
+            ->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })
+            ->orderBy('first_name')->get();
+        $itEmployees = \App\Models\Employee::where('department_id', 4)
+            ->where('is_deleted', 0)
+            ->where('is_hidden', 0)
+            ->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })
+            ->orderBy('first_name')->get();
 
         return view('hr.tickets.index', compact('tickets', 'stt', 'categories', 'priorities', 'employees', 'itEmployees', 'resolvedMonths'));
     }
@@ -177,9 +188,20 @@ class SupportTicketController extends Controller
 
         $statuses = \App\Models\SupportTicketStatus::all();
         $priorities = \App\Models\Priority::all();
-        $allEmployees = \App\Models\Employee::where('is_deleted', 0)->where('is_hidden', 0)->orderBy('first_name')->get();
+        $allEmployees = \App\Models\Employee::where('is_deleted', 0)
+            ->where('is_hidden', 0)
+            ->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })
+            ->orderBy('first_name')->get();
         $employees = $allEmployees; // HR can see all employees
-        $itEmployees = \App\Models\Employee::where('department_id', 4)->where('is_deleted', 0)->where('is_hidden', 0)->orderBy('first_name')->get();
+        $itEmployees = \App\Models\Employee::where('department_id', 4)
+            ->where('is_deleted', 0)
+            ->where('is_hidden', 0)
+            ->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })
+            ->orderBy('first_name')->get();
 
         return view('hr.tickets.show', compact('ticket', 'statuses', 'priorities', 'employees', 'allEmployees', 'itEmployees'));
     }

@@ -74,8 +74,8 @@
                             <i class="fa-solid fa-user-tag"></i>
                         </div>
                         <div>
-                            <p class="text-xs text-slate-400 font-bold uppercase">User Type</p>
-                            <p class="font-bold text-indigo-600 uppercase italic text-[10px]">{{ str_replace('_', ' ', $user->employee_type ?? 'N/A') }}</p>
+                            <p class="text-xs text-slate-400 font-bold uppercase">Employee Type</p>
+                            <p class="font-bold text-indigo-600 uppercase italic text-[10px]">{{ str_replace('_', ' ', $user->employee_type == "local" ? "N/A" : $user->employee_type) }}</p>
                         </div> 
                     </div>
                 </div>

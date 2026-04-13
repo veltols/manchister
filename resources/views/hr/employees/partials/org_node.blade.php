@@ -19,8 +19,9 @@
                     <i class="fa-solid fa-user-tie"></i>
                 </div>
                 <div>
-                    <h5 class="text-sm font-bold text-premium group-hover:text-indigo-600">{{ $dept->lineManager->full_name }}</h5>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase">HOD / Line Manager</p>
+                    <h5 class="text-sm font-bold text-premium group-hover:text-indigo-600 leading-tight">{{ $dept->lineManager->full_name }}</h5>
+                    <p class="text-[10px] text-slate-500 font-medium italic mt-0.5">{{ $dept->lineManager->designation->designation_name ?? 'Line Manager' }}</p>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1">HOD / Line Manager</p>
                 </div>
                 @if($dept->line_manager_id == $targetId)
                     <span class="ml-auto px-2 py-0.5 rounded-full bg-indigo-600 text-white text-[9px] font-bold">CURRENT</span>

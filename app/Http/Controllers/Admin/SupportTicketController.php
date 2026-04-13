@@ -75,6 +75,9 @@ class SupportTicketController extends Controller
         $itEmployees = Employee::where('department_id', 4)
             ->where('is_deleted', 0)
             ->where('is_hidden', 0)
+            ->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })
             ->orderBy('first_name')
             ->get();
 
@@ -83,6 +86,9 @@ class SupportTicketController extends Controller
         $priorities = Priority::all();
         $allEmployees = Employee::where('is_deleted', 0)
             ->where('is_hidden', 0)
+            ->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })
             ->orderBy('first_name')
             ->get();
 

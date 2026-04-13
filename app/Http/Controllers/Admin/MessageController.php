@@ -22,7 +22,7 @@ class MessageController extends Controller
 
         $conversations = Conversation::where('a_id', $adminId)
             ->orWhere('b_id', $adminId)
-            ->with(['participantA.status', 'participantB.status'])
+            ->with(['participantA.status', 'participantA.designation', 'participantA.department', 'participantB.status', 'participantB.designation', 'participantB.department', 'lastMessage'])
             ->orderBy('chat_id', 'desc') // Legacy order
             ->get();
 
@@ -31,6 +31,7 @@ class MessageController extends Controller
         $employees = Employee::where('employee_id', '!=', $adminId)
             ->where('is_deleted', 0)
             ->where('is_hidden', 0)
+            ->with(['designation', 'department'])
             ->orderBy('first_name')
             ->get();
 
@@ -40,7 +41,7 @@ class MessageController extends Controller
 
         if ($request->has('chat_id')) {
             $chatId = $request->chat_id;
-            $activeChat = Conversation::with(['participantA.status', 'participantB.status'])
+            $activeChat = Conversation::with(['participantA.status', 'participantA.designation', 'participantA.department', 'participantB.status', 'participantB.designation', 'participantB.department'])
                 ->where('chat_id', $chatId)
                 ->where(function ($q) use ($adminId) {
                     $q->where('a_id', $adminId)->orWhere('b_id', $adminId);
@@ -127,7 +128,11 @@ class MessageController extends Controller
             }
 
             $fileName = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
-            $file->move(public_path('uploads'), $fileName);
+            $targetDir = public_path('uploads');
+            if (!file_exists($targetDir)) {
+                mkdir($targetDir, 0777, true);
+            }
+            $file->move($targetDir, $fileName);
 
             $msg->post_text = $fileName;
             $msg->post_type = 'document';
@@ -213,7 +218,7 @@ class MessageController extends Controller
         // Fetch conversations with unread counts
         $conversations = Conversation::where('a_id', $adminId)
             ->orWhere('b_id', $adminId)
-            ->with(['participantA.status', 'participantB.status'])
+            ->with(['participantA.status', 'participantA.designation', 'participantA.department', 'participantB.status', 'participantB.designation', 'participantB.department', 'lastMessage'])
             ->get();
 
         // Calculate unread counts for each conversation

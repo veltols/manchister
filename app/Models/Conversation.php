@@ -30,4 +30,9 @@ class Conversation extends Model
     {
         return $this->hasMany(Message::class, 'chat_id', 'chat_id');
     }
+
+    public function lastMessage()
+    {
+        return $this->hasOne(Message::class, 'chat_id', 'chat_id')->latest('post_id');
+    }
 }

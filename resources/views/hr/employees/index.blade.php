@@ -30,6 +30,11 @@
                         <option value="{{ $dept->department_id }}">{{ $dept->department_name }}</option>
                     @endforeach
                 </select>
+                <select id="employeeStatusFilter" class="premium-input px-4 py-2.5 text-sm min-w-[150px] focus:ring-4 focus:ring-indigo-100 transition-all">
+                    <option value="">All Status</option>
+                    <option value="1" selected>Active</option>
+                    <option value="0">Inactive</option>
+                </select>
             </div>
         </div>
 
@@ -138,7 +143,8 @@
             getAdditionalParams: function() {
                 return {
                     search: document.getElementById('employeeSearchInput').value,
-                    department_id: document.getElementById('employeeDeptFilter').value
+                    department_id: document.getElementById('employeeDeptFilter').value,
+                    status: document.getElementById('employeeStatusFilter').value
                 };
             },
             renderCallback: function(employees) {
@@ -248,6 +254,7 @@
         });
 
         hrDeptFilter.addEventListener('change', () => window.ajaxPagination.loadPage(1));
+        document.getElementById('employeeStatusFilter').addEventListener('change', () => window.ajaxPagination.loadPage(1));
     </script>
     @endpush
 @endsection
