@@ -334,7 +334,7 @@
                             <i class="fa-solid fa-user-slash text-white relative z-10"></i>
                         </div>
                         <h3 class="text-4xl font-black leading-none" style="color:#d97706;">{{ $totalUnassigned }}</h3>
-                        <p class="text-[10px] font-bold uppercase tracking-widest" style="color:#f59e0b;">Unassigned</p>
+                        <p class="text-[10px] font-bold uppercase tracking-widest" style="color:#f59e0b;">Cancelled</p>
                         <div class="w-full rounded-full overflow-hidden" style="height:4px; background:rgba(245,158,11,0.15);">
                             <div class="h-full rounded-full" style="width:{{ $totalTickets > 0 ? ($totalUnassigned/$totalTickets)*100 : 0 }}%; background:linear-gradient(90deg,#f59e0b,#d97706);"></div>
                         </div>
@@ -447,7 +447,7 @@
                                             @elseif($ticket->status_id == 3)
                                                 <span class="px-3 py-1.5 text-xs font-bold text-green-700 bg-green-50 border border-green-100 rounded-full">Resolved</span>
                                             @else
-                                                <span class="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 border border-slate-200 rounded-full">Unknown</span>
+                                                <span class="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 border border-slate-200 rounded-full">Cancelled</span>
                                             @endif
                                         </td>
                                     </tr>

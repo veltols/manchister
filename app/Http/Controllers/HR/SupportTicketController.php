@@ -27,7 +27,6 @@ class SupportTicketController extends Controller
             )
             ->where('status_id', SupportTicketStatus::RESOLVED)
             ->whereYear('ticket_added_date', $currentYear)
-            ->where('added_by', Auth::user()->user_id)
             ->groupBy('month_value')
             ->get()
             ->pluck('total', 'month_value');
@@ -45,11 +44,7 @@ class SupportTicketController extends Controller
             }
         }
 
-        $query = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'latestLog.logger'])
-            ->where(function($q) use ($user) {
-                $q->where('added_by', $user->user_id)
-                  ->orWhere('assigned_to', $user->user_id);
-            });
+        $query = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'latestLog.logger']);
 
         // Filter by Status
         if ($stt == SupportTicketStatus::OPEN) {
@@ -68,6 +63,10 @@ class SupportTicketController extends Controller
 
         if ($request->filled('search')) {
             $query->where('ticket_ref', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->filled('priority_id')) {
+            $query->where('priority_id', $request->priority_id);
         }
 
         $tickets = $query->orderBy('ticket_id', 'desc')->paginate(10);
@@ -212,6 +211,8 @@ class SupportTicketController extends Controller
             'ticket_subject' => 'required|string|max:255',
             'priority_id'    => 'required|exists:sys_list_priorities,priority_id',
             'added_by'       => 'required|exists:employees_list,employee_id',
+            'status_id'      => 'required|integer',
+            'ticket_remarks' => 'nullable|string',
         ]);
 
         $userId = Auth::user()->user_id;
@@ -219,6 +220,10 @@ class SupportTicketController extends Controller
                 $q->where('added_by', $userId)
                   ->orWhere('assigned_to', $userId);
             })->findOrFail($id);
+
+        $currentStatusId = (int)$ticket->status_id;
+        $newStatusId = (int)$request->status_id;
+        $statusResolved = \App\Models\SupportTicketStatus::RESOLVED;
 
         $ticket->ticket_subject = $request->ticket_subject;
         $ticket->priority_id    = $request->priority_id;
@@ -230,21 +235,34 @@ class SupportTicketController extends Controller
             $ticket->department_id = $employee->department_id;
         }
 
+        $ticket->status_id = $newStatusId;
+        
+        $logAction = 'Ticket Updated';
+        if ($request->has('assigned_to') && $request->assigned_to != "" && $request->assigned_to != $ticket->assigned_to) {
+            $ticket->assigned_to = $request->assigned_to;
+            $ticket->assigned_date = now();
+            $logAction = 'Ticket Assigned & Updated';
+        }
+        
+        if ($currentStatusId != $newStatusId && $newStatusId == $statusResolved) {
+            $ticket->ticket_end_date = now();
+        }
+
         $ticket->save();
 
         // Create Log
         $log = new \App\Models\SystemLog();
         $log->related_table = 'support_tickets_list';
         $log->related_id = $ticket->ticket_id;
-        $log->log_action = 'Ticket Details Updated';
-        $log->log_remark = 'Subject, Priority or Reporter was updated by HR.';
+        $log->log_action = $logAction;
+        $log->log_remark = $request->ticket_remarks ?? 'Subject, Priority, Status or Reporter was updated by HR.';
         $log->log_date = now();
         $log->logged_by = Auth::user()->employee->employee_id ?? 0;
         $log->logger_type = 'employees_list';
         $log->log_type = 'int';
         $log->save();
 
-        return redirect()->back()->with('success', 'Ticket details updated successfully.');
+        return redirect()->back()->with('success', 'Ticket updated successfully.');
     }
 
     public function updateStatus(Request $request, $id)
@@ -354,8 +372,7 @@ class SupportTicketController extends Controller
         $stt = $request->input('stt', 0);
         $perPage = $request->get('per_page', 10);
 
-        $query = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'latestLog.logger'])
-            ->where('added_by', Auth::user()->user_id);
+        $query = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'latestLog.logger']);
 
         if ($stt == SupportTicketStatus::OPEN) {
             $query->where('status_id', SupportTicketStatus::OPEN);
@@ -369,6 +386,10 @@ class SupportTicketController extends Controller
 
         if ($request->filled('search')) {
             $query->where('ticket_ref', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->filled('priority_id')) {
+            $query->where('priority_id', $request->priority_id);
         }
 
         $tickets = $query->orderBy('ticket_id', 'desc')->paginate($perPage);

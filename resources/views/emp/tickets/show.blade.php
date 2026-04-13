@@ -28,16 +28,10 @@
                     <span>Reopen Ticket</span>
                 </button>
             @else
-                <div class="flex items-center gap-3">
                     <button onclick="openModal('editDetailsModal')"
                         class="px-6 py-3 bg-white text-slate-700 font-bold rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 hover:shadow transition-all duration-200 flex items-center gap-2">
-                        <i class="fa-solid fa-pen-to-square text-sm"></i>
-                        <span>Edit Details</span>
-                    </button>
-                    <button onclick="openModal('updateStatusModal')"
-                        class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200 flex items-center gap-2">
-                        <i class="fa-solid fa-pen text-sm"></i>
-                        <span>Update Status</span>
+                        <i class="fa-solid fa-pen-to-square text-sm text-indigo-500"></i>
+                        <span>Edit Ticket / Status</span>
                     </button>
                 </div>
             @endif
@@ -86,6 +80,18 @@
                                 <p class="text-sm font-bold flex items-center gap-2">
                                     <span class="w-2 h-2 rounded-full" style="background-color: #{{ $ticket->priority->priority_color ?? 'ccc' }}"></span>
                                     {{ $ticket->priority->priority_name ?? 'Normal' }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="w-px h-8 bg-white/10"></div>
+                        <div class="flex items-center gap-3">
+                             <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
+                                <i class="fa-solid fa-user-shield text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-white/40 uppercase tracking-wider">Assigned To</p>
+                                <p class="text-sm font-bold">
+                                    {{ $ticket->assignedTo ? $ticket->assignedTo->first_name . ' ' . $ticket->assignedTo->last_name : 'Unassigned' }}
                                 </p>
                             </div>
                         </div>
@@ -207,58 +213,6 @@
         </div>
     </div>
 
-    <!-- Update Status Modal -->
-    <div id="updateStatusModal" class="modal">
-        <div class="modal-backdrop" onclick="closeModal('updateStatusModal')"></div>
-        <div class="modal-content max-w-lg p-6">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-display font-bold text-premium">Update Ticket Status</h2>
-                <button onclick="closeModal('updateStatusModal')"
-                    class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
-                    <i class="fa-solid fa-times text-xl"></i>
-                </button>
-            </div>
-
-            <form action="{{ route('emp.tickets.update_status', $ticket->ticket_id) }}" method="POST">
-                @csrf
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">New Status</label>
-                        <select name="status_id" class="premium-input w-full px-4 py-3 text-sm" required>
-                            <option value="">Select Status...</option>
-                            @if($ticket->status_id == $statusOpen)
-                                <option value="{{ $statusInProgress }}">In Progress</option>
-                                <option value="{{ $statusCancelled }}">Cancelled</option>
-                            @elseif($ticket->status_id == $statusInProgress)
-                                <option value="{{ $statusResolved }}">Resolved</option>
-                                <option value="{{ $statusCancelled }}">Cancelled</option>
-                            @elseif($ticket->status_id == $statusCancelled)
-                                <option value="{{ $statusOpen }}">Reopen (Move to Open)</option>
-                            @endif
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">Activity Remark</label>
-                        <textarea name="log_remark" class="premium-input w-full px-4 py-3 text-sm" rows="4"
-                            placeholder="Briefly describe the update or action taken..." required></textarea>
-                    </div>
-                </div>
-
-                <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
-                    <button type="button" onclick="closeModal('updateStatusModal')"
-                        class="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">
-                        Cancel
-                    </button>
-                    <button type="submit"
-                        class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
-                        Update Status
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <!-- Edit Ticket Details Modal -->
     <div id="editDetailsModal" class="modal">
         <div class="modal-backdrop" onclick="closeModal('editDetailsModal')"></div>
@@ -316,7 +270,52 @@
                             </select>
                         </div>
                     </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                <i class="fa-solid fa-spinner text-indigo-500 mr-1.5"></i>Status
+                            </label>
+                            <select name="status_id" class="premium-input w-full px-4 py-3 text-sm" required>
+                                <option value="{{ $statusOpen }}" {{ $ticket->status_id == $statusOpen ? 'selected' : '' }}>Open</option>
+                                <option value="{{ $statusInProgress }}" {{ $ticket->status_id == $statusInProgress ? 'selected' : '' }}>In Progress</option>
+                                <option value="{{ $statusResolved }}" {{ $ticket->status_id == $statusResolved ? 'selected' : '' }}>Resolved</option>
+                                <option value="{{ $statusCancelled }}" {{ $ticket->status_id == $statusCancelled ? 'selected' : '' }}>Cancelled</option>
+                            </select>
+                        </div>
 
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                <i class="fa-solid fa-user-shield text-indigo-500 mr-1.5"></i>Assign To (Optional)
+                            </label>
+                            <select name="assigned_to" class="premium-input w-full px-4 py-3 text-sm">
+                                <option value="">-- Keep Current --</option>
+                                <optgroup label="IT Department Staff">
+                                    @foreach($itEmployees as $emp)
+                                        <option value="{{ $emp->employee_id }}" {{ $ticket->assigned_to == $emp->employee_id ? 'selected' : '' }}>
+                                            {{ $emp->first_name }} {{ $emp->last_name }} (IT)
+                                        </option>
+                                    @endforeach
+                                </optgroup>
+                                <optgroup label="All Employees">
+                                    @foreach($allEmployees as $emp)
+                                        <option value="{{ $emp->employee_id }}" {{ $ticket->assigned_to == $emp->employee_id ? 'selected' : '' }}>
+                                            {{ $emp->first_name }} {{ $emp->last_name }}
+                                        </option>
+                                    @endforeach
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+                    
+                </div>
+
+                <div class="mt-6 pt-6 border-t border-slate-100">
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        <i class="fa-solid fa-comment-dots text-indigo-500 mr-1.5"></i>Activity Remark
+                    </label>
+                    <textarea name="log_remark" class="premium-input w-full px-4 py-3 text-sm" rows="3"
+                        placeholder="Add an optional remark about these changes..."></textarea>
                 </div>
 
                 <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">

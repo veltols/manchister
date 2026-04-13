@@ -463,7 +463,7 @@
                                 <i class="fa-solid fa-user-slash text-white text-xl relative z-10"></i>
                             </div>
                             <h3 class="text-4xl font-black leading-none count" style="color:#d97706;" data-target="{{ $ticketStats->unassigned }}">0</h3>
-                            <p class="text-[10px] font-bold uppercase tracking-widest" style="color:#f59e0b;">Unassigned</p>
+                            <p class="text-[10px] font-bold uppercase tracking-widest" style="color:#f59e0b;">Cancelled</p>
                         </a>
 
                         {{-- In Progress --}}

@@ -42,27 +42,18 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
+        $employeeId = $user->employee ? $user->employee->employee_id : 0;
+
         // --- 2. Tickets Stats ---
         // Status IDs: 1=Open, 2=In Progress, 3=Resolved
         // Unassigned: assigned_to = 0
-        $totalTickets = SupportTicket::whereBetween('ticket_added_date', [$startDate, $endDate])->count();
+        $myTicketsQuery = SupportTicket::where('added_by', $employeeId);
 
-        $openTickets = SupportTicket::where('status_id', 1)
-            ->whereBetween('ticket_added_date', [$startDate, $endDate])
-            ->count();
-
-        $unassignedTickets = SupportTicket::where('assigned_to', 0)
-            ->where('status_id', 1)
-            ->whereBetween('ticket_added_date', [$startDate, $endDate])
-            ->count();
-
-        $progressTickets = SupportTicket::where('status_id', 2)
-            ->whereBetween('ticket_added_date', [$startDate, $endDate])
-            ->count();
-
-        $resolvedTickets = SupportTicket::where('status_id', 3)
-            ->whereBetween('ticket_added_date', [$startDate, $endDate])
-            ->count();
+        $totalTickets = (clone $myTicketsQuery)->count();
+        $openTickets = (clone $myTicketsQuery)->where('status_id', 1)->count();
+        $unassignedTickets = (clone $myTicketsQuery)->where('status_id', 1)->where('assigned_to', 0)->count();
+        $progressTickets = (clone $myTicketsQuery)->where('status_id', 2)->count();
+        $resolvedTickets = (clone $myTicketsQuery)->where('status_id', 3)->count();
 
         $ticketStats = compile_stats(
             total: $totalTickets,
@@ -82,8 +73,6 @@ class DashboardController extends Controller
             ->get();
 
         // --- 4. HR Stats (Real Data) ---
-        $employeeId = $user->employee ? $user->employee->employee_id : 0;
-
         $hrStats = [
             'leave_balance' => 0, // Need logic for balance
             'remaining_leaves' => 0,

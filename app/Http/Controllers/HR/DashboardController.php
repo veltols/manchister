@@ -9,7 +9,9 @@ use App\Models\Employee;
 use App\Models\Department;
 use App\Models\Certificate;
 use App\Models\SysList;
+use App\Models\SupportTicket;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
@@ -79,13 +81,28 @@ class DashboardController extends Controller
             }
         }
 
+        // 5. My Activity (Tickets Assigned to HR)
+        $user = Auth::user();
+        $employeeId = $user->employee ? $user->employee->employee_id : ($user->hr_employee_id ?? 0);
+        $myTickets = DB::table('support_tickets_list')
+            ->leftJoin('employees_list', 'support_tickets_list.added_by', '=', 'employees_list.employee_id')
+            ->where('support_tickets_list.assigned_to', $employeeId)
+            ->select(
+                'support_tickets_list.*',
+                DB::raw("CONCAT(employees_list.first_name, ' ', employees_list.last_name) as added_employee")
+            )
+            ->orderBy('support_tickets_list.ticket_id', 'desc')
+            ->take(10)
+            ->get();
+
         return view('hr.dashboard.index', compact(
             'totalEmps', 
             'averageAge', 
             'diversityStat',
             'deptDataLabels', 'deptDataCounts',
             'genderDataLabels', 'genderDataCounts',
-            'certDataLabels', 'certDataCounts'
+            'certDataLabels', 'certDataCounts',
+            'myTickets'
         ));
     }
 }

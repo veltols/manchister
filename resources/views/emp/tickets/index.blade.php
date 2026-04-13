@@ -57,6 +57,14 @@
                 @if(request('stt'))
                     <input type="hidden" name="stt" value="{{ request('stt') }}">
                 @endif
+                <select name="priority_id" class="premium-input px-4 py-2 text-sm w-full max-w-[150px]" onchange="this.form.submit()">
+                    <option value="">All Priorities</option>
+                    @foreach($priorities as $priority)
+                        <option value="{{ $priority->priority_id }}" {{ request('priority_id') == $priority->priority_id ? 'selected' : '' }}>
+                            {{ $priority->priority_name }}
+                        </option>
+                    @endforeach
+                </select>
                 <input type="text" name="search" placeholder="Search Reference No..." value="{{ request('search') }}" class="premium-input px-4 py-2 text-sm max-w-[250px] w-full" />
                 <button type="submit" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-colors">
                     <i class="fa-solid fa-search"></i>
@@ -320,7 +328,7 @@
 
             // Initialize AJAX Pagination
             window.ajaxPagination = new AjaxPagination({
-                endpoint: "{{ route('emp.tickets.data', ['stt' => $stt, 'search' => request('search')]) }}", // Pass current filter
+                endpoint: "{{ route('emp.tickets.data', ['stt' => $stt, 'search' => request('search'), 'priority_id' => request('priority_id')]) }}", // Pass current filter
                 containerSelector: '#tickets-container',
                 paginationSelector: '#tickets-pagination',
                 perPage: 10,
@@ -510,13 +518,35 @@
                                 <i class="fa-solid fa-user text-indigo-600 mr-2"></i>Reported By
                             </label>
                             <select name="added_by" class="premium-input w-full px-4 py-3 text-sm" required>
-                                @foreach($deptEmployees as $emp)
+                                <option value="">Select Employee</option>
+                                @foreach($employees as $emp)
                                     <option value="{{ $emp->employee_id }}" {{ Auth::user()->employee && Auth::user()->employee->employee_id == $emp->employee_id ? 'selected' : '' }}>
                                         {{ $emp->first_name }} {{ $emp->last_name }}
                                     </option>
                                 @endforeach
                             </select>
                         </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                <i class="fa-solid fa-user-shield text-indigo-600 mr-2"></i>Assigned To
+                            </label>
+                            <select name="assigned_to" class="premium-input w-full px-4 py-3 text-sm" required>
+                                <option value="">Select Assignee...</option>
+                                <optgroup label="IT Department Staff">
+                                    @foreach($itEmployees as $emp)
+                                        <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                                    @endforeach
+                                </optgroup>
+                                <optgroup label="All Employees">
+                                    @foreach($employees as $emp)
+                                        <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                                    @endforeach
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">
                                 <i class="fa-solid fa-tag text-indigo-600 mr-2"></i>Category
@@ -527,9 +557,6 @@
                                 @endforeach
                             </select>
                         </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">
                                 <i class="fa-solid fa-flag text-indigo-600 mr-2"></i>Priority
@@ -540,13 +567,14 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">
-                                <i class="fa-solid fa-heading text-indigo-600 mr-2"></i>Subject
-                            </label>
-                            <input type="text" name="ticket_subject" class="premium-input w-full px-4 py-3 text-sm"
-                                placeholder="Brief description" required>
-                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-heading text-indigo-600 mr-2"></i>Subject
+                        </label>
+                        <input type="text" name="ticket_subject" class="premium-input w-full px-4 py-3 text-sm"
+                            placeholder="Brief description" required>
                     </div>
 
                     <div>

@@ -69,6 +69,10 @@ class SupportTicketController extends Controller
             $query->where('ticket_ref', 'like', '%' . $request->search . '%');
         }
 
+        if ($request->filled('priority_id')) {
+            $query->where('priority_id', $request->priority_id);
+        }
+
         $tickets = $query->orderBy('ticket_id', 'desc')->paginate(15);
 
         // IT Employees for Assignment (Legacy Dept ID 4)
@@ -104,11 +108,17 @@ class SupportTicketController extends Controller
         $itEmployees = Employee::where('department_id', 4)
             ->where('is_deleted', 0)
             ->where('is_hidden', 0)
+            ->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })
             ->orderBy('first_name')
             ->get();
 
         $allEmployees = Employee::where('is_deleted', 0)
             ->where('is_hidden', 0)
+            ->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })
             ->orderBy('first_name')
             ->get();
 
@@ -187,24 +197,43 @@ class SupportTicketController extends Controller
             'ticket_subject' => 'required|string|max:255',
             'priority_id'    => 'required|exists:sys_list_priorities,priority_id',
             'added_by'       => 'required|exists:employees_list,employee_id',
+            'status_id'      => 'required|integer',
+            'ticket_remarks' => 'nullable|string',
         ]);
 
         $ticket = SupportTicket::findOrFail($id);
+
+        $currentStatusId = (int)$ticket->status_id;
+        $newStatusId = (int)$request->status_id;
+        $statusResolved = \App\Models\SupportTicketStatus::RESOLVED;
+
         $ticket->ticket_subject = $request->ticket_subject;
         $ticket->priority_id    = $request->priority_id;
         $ticket->added_by       = $request->added_by;
 
-        // Update department if the reporter changed
         $employee = Employee::find($request->added_by);
         if ($employee) {
             $ticket->department_id = $employee->department_id;
         }
 
+        $ticket->status_id = $newStatusId;
+        
+        $logAction = 'Ticket Updated';
+        if ($request->has('assigned_to') && $request->assigned_to != "" && $request->assigned_to != $ticket->assigned_to) {
+            $ticket->assigned_to = $request->assigned_to;
+            $ticket->assigned_date = now();
+            $logAction = 'Ticket Assigned & Updated';
+        }
+        
+        if ($currentStatusId != $newStatusId && $newStatusId == $statusResolved) {
+            $ticket->ticket_end_date = now();
+        }
+
         $ticket->save();
 
-        $this->logAction($ticket->ticket_id, 'Ticket Details Updated', 'Subject, Priority or Reporter was updated by Admin.');
+        $this->logAction($ticket->ticket_id, $logAction, $request->ticket_remarks ?? 'Ticket details updated by Admin.');
 
-        return redirect()->back()->with('success', 'Ticket details updated successfully.');
+        return redirect()->back()->with('success', 'Ticket updated successfully.');
     }
 
     public function assign(Request $request, $id)
@@ -368,6 +397,10 @@ class SupportTicketController extends Controller
 
         if ($request->filled('search')) {
             $query->where('ticket_ref', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->filled('priority_id')) {
+            $query->where('priority_id', $request->priority_id);
         }
 
         $tickets = $query->orderBy('ticket_id', 'desc')->paginate($perPage);
