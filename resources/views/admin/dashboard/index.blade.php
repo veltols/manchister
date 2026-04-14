@@ -153,7 +153,7 @@
                     <i class="fa-solid fa-shield-halved text-white text-2xl relative z-10 drop-shadow-sm"></i>
                 </div>
                 <h1 class="text-3xl md:text-4xl font-display font-extrabold text-white tracking-tight drop-shadow-sm">
-                    System Overview
+                    System Overviews
                 </h1>
             </div>
             <p class="text-sky-100 text-sm md:text-base font-medium max-w-md leading-relaxed">
