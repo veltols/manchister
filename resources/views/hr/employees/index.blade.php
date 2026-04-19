@@ -66,7 +66,9 @@
                                             class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-semibold shadow-md">
                                             {{ strtoupper(substr($employee->first_name, 0, 1)) }}{{ strtoupper(substr($employee->last_name, 0, 1)) }}
                                         </div>
-                                       
+                                        <div>
+                                            <span class="font-semibold text-slate-800">{{ $employee->first_name }} {{ $employee->last_name }}</span>
+                                        </div>
                                     </div>
                                 </td>
                                 <td>
