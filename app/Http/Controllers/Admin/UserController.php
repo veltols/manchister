@@ -22,10 +22,23 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        // Filter by user/email search if needed
         $query = Employee::with(['department', 'systemUser'])
             ->where('is_deleted', 0)
             ->where('is_hidden', 0);
+
+        $search = $request->get('search');
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('first_name', 'LIKE', "%{$search}%")
+                  ->orWhere('last_name', 'LIKE', "%{$search}%")
+                  ->orWhere('employee_no', 'LIKE', "%{$search}%")
+                  ->orWhere('employee_email', 'LIKE', "%{$search}%")
+                  ->orWhereHas('systemUser', function($sq) use ($search) {
+                      $sq->where('user_type', 'LIKE', "%{$search}%")
+                        ->orWhere('user_email', 'LIKE', "%{$search}%");
+                  });
+            });
+        }
 
         // Filter by Active status (1) by default to match view dropdown
         $status = $request->get('status', '1');
@@ -484,7 +497,8 @@ class UserController extends Controller
                   ->orWhere('employee_no', 'LIKE', "%{$search}%")
                   ->orWhere('employee_email', 'LIKE', "%{$search}%")
                   ->orWhereHas('systemUser', function($sq) use ($search) {
-                      $sq->where('user_type', 'LIKE', "%{$search}%");
+                      $sq->where('user_type', 'LIKE', "%{$search}%")
+                        ->orWhere('user_email', 'LIKE', "%{$search}%");
                   });
             });
         }
