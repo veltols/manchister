@@ -10,6 +10,13 @@ use App\Models\Designation;
 use App\Models\EmployeeCred;
 use App\Models\SystemLog;
 use App\Models\User;
+use App\Models\HrLeave;
+use App\Models\LeaveType;
+use App\Models\Permission;
+use App\Models\PermissionStatus;
+use App\Models\DisciplinaryAction;
+use App\Models\DisciplinaryActionWarning;
+use App\Models\DisciplinaryActionStatus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -121,6 +128,11 @@ class EmployeeController extends Controller
         $allServices = \App\Models\EmployeeListService::orderBy('service_id')->get();
         $enabledServiceIds = \App\Models\EmployeeService::where('employee_id', $id)->pluck('service_id')->toArray();
 
+        $leaveTypes = LeaveType::all();
+        $permissionStatuses = PermissionStatus::all();
+        $warningLevels = DisciplinaryActionWarning::all();
+        $daStatuses = DisciplinaryActionStatus::all();
+
         // Fetch Org Chart Root (exclude deactivated users)
         $activeManagerCheck = fn($q) => $q->whereHas('lineManager', fn($lm) => $lm->whereHas('systemUser', fn($u) => $u->where('is_active', 1)));
         $activeManagerQuery = fn($q) => $q->whereHas('systemUser', fn($u) => $u->where('is_active', 1))->with('designation');
@@ -157,8 +169,139 @@ class EmployeeController extends Controller
             'certificates',
             'allServices',
             'enabledServiceIds',
+            'leaveTypes',
+            'permissionStatuses',
+            'warningLevels',
+            'daStatuses',
             'orgRoot'
         ));
+    }
+
+    public function getLeavesData(Request $request, $id)
+    {
+        $perPage = $request->get('per_page', 10);
+        $search = $request->input('search');
+        $typeId = $request->input('type_id');
+        $statusId = $request->input('status_id');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        $query = HrLeave::with('type')
+            ->where('employee_id', $id)
+            ->orderBy('leave_id', 'desc');
+
+        if ($search) {
+            $query->where('leave_id', 'LIKE', "%$search%");
+        }
+        if ($typeId) {
+            $query->where('leave_type_id', $typeId);
+        }
+        if ($statusId) {
+            $query->where('leave_status_id', $statusId);
+        }
+        if ($startDate) {
+            $query->whereDate('start_date', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->whereDate('end_date', '<=', $endDate);
+        }
+
+        $leaves = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $leaves->items(),
+            'pagination' => [
+                'current_page' => $leaves->currentPage(),
+                'last_page' => $leaves->lastPage(),
+                'per_page' => $leaves->perPage(),
+                'total' => $leaves->total(),
+                'from' => $leaves->firstItem(),
+                'to' => $leaves->lastItem(),
+            ]
+        ]);
+    }
+
+    public function getPermissionsData(Request $request, $id)
+    {
+        $perPage = $request->get('per_page', 10);
+        $search = $request->input('search');
+        $statusId = $request->input('status_id');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        $query = Permission::with('status')
+            ->where('employee_id', $id)
+            ->orderBy('permission_id', 'desc');
+
+        if ($search) {
+            $query->where('permission_id', 'LIKE', "%$search%");
+        }
+        if ($statusId) {
+            $query->where('permission_status_id', $statusId);
+        }
+        if ($startDate) {
+            $query->whereDate('start_date', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->whereDate('start_date', '<=', $endDate);
+        }
+
+        $permissions = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $permissions->items(),
+            'pagination' => [
+                'current_page' => $permissions->currentPage(),
+                'last_page' => $permissions->lastPage(),
+                'per_page' => $permissions->perPage(),
+                'total' => $permissions->total(),
+                'from' => $permissions->firstItem(),
+                'to' => $permissions->lastItem(),
+            ]
+        ]);
+    }
+
+    public function getDisciplinaryData(Request $request, $id)
+    {
+        $perPage = $request->get('per_page', 10);
+        $search = $request->input('search');
+        $warningId = $request->input('warning_id');
+        $statusId = $request->input('status_id');
+        $date = $request->input('date');
+
+        $query = DisciplinaryAction::with(['type', 'warning', 'status'])
+            ->where('employee_id', $id)
+            ->orderBy('da_id', 'desc');
+
+        if ($search) {
+            $query->where('da_id', 'LIKE', "%$search%");
+        }
+        if ($warningId) {
+            $query->where('da_warning_id', $warningId);
+        }
+        if ($statusId) {
+            $query->where('da_status_id', $statusId);
+        }
+        if ($date) {
+            $query->whereDate('da_date', $date);
+        }
+
+        $actions = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $actions->items(),
+            'pagination' => [
+                'current_page' => $actions->currentPage(),
+                'last_page' => $actions->lastPage(),
+                'per_page' => $actions->perPage(),
+                'total' => $actions->total(),
+                'from' => $actions->firstItem(),
+                'to' => $actions->lastItem(),
+            ]
+        ]);
     }
 
     public function updatePermissions(Request $request, $id)
@@ -200,7 +343,7 @@ class EmployeeController extends Controller
                 DB::table('employees_services')->insert([
                     'employee_id' => $id,
                     'service_id' => $serviceId,
-                    'added_by' => auth()->id() ?? 1,
+                    'added_by' => Auth::user()->user_id,
                     'added_date' => now()->format('Y-m-d H:i:s'),
                 ]);
             }
@@ -255,7 +398,21 @@ class EmployeeController extends Controller
         $employee = Employee::findOrFail($id);
 
         $request->validate([
-            'log_remark' => 'required|string',
+            'passport_no'          => 'required|string|max:50',
+            'passport_issue_date'  => 'required|date',
+            'passport_expiry_date' => 'required|date|after:passport_issue_date',
+            'visa_no'              => 'required|string|max:50',
+            'visa_issue_date'      => 'required|date',
+            'visa_expiry_date'     => 'required|date|after:visa_issue_date',
+            'eid_no'               => ['required', 'string', 'regex:/^784-\d{4}-\d{7}-\d{1}$/'],
+            'eid_issue_date'       => 'required|date',
+            'eid_expiry_date'      => 'required|date|after:eid_issue_date',
+            'log_remark'           => 'required|string',
+        ], [
+            'eid_no.regex' => 'The Emirates ID must follow the format: 784-XXXX-XXXXXXX-X',
+            'passport_expiry_date.after' => 'Passport expiry must be after issue date.',
+            'visa_expiry_date.after' => 'Visa expiry must be after issue date.',
+            'eid_expiry_date.after' => 'Emirates ID expiry must be after issue date.',
         ]);
 
         $creds = EmployeeCred::updateOrCreate(
@@ -277,7 +434,7 @@ class EmployeeController extends Controller
             'log_action' => $action,
             'log_remark' => $remark,
             'logger_type' => 'hr',
-            'logged_by' => Auth::id() ?? 1,
+            'logged_by' => auth()->user()->user_id,
             'log_type' => 'int'
         ]);
     }

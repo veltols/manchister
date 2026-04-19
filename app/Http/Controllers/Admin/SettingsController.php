@@ -17,7 +17,7 @@ use App\Models\UsersListTheme;
 use App\Models\IncidentType;
 use App\Models\SystemLog;
 use App\Models\AppSetting;
-
+use Illuminate\Support\Facades\Auth;
 class SettingsController extends Controller
 {
     private $config;
@@ -111,7 +111,9 @@ class SettingsController extends Controller
         $type = $request->input('type', 'tc');
 
         // Employees for dropdowns (Used in Modals)
-        $employees = Employee::where('is_deleted', 0)->where('is_hidden', 0)->orderBy('first_name')->get();
+        $employees = Employee::where('is_deleted', 0)->where('is_hidden', 0)->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })->orderBy('first_name')->get();
 
         // Branding Settings
         $logo = \App\Models\AppSetting::where('key', 'logo_path')->value('value');
@@ -369,7 +371,7 @@ class SettingsController extends Controller
         $log->log_action = $action;
         $log->log_remark = $remark;
         $log->logger_type = 'admin';
-        $log->logged_by = auth()->user() ? auth()->user()->user_id : 1;
+        $log->logged_by = Auth::user()->user_id ?? 1;
         $log->save();
     }
 }

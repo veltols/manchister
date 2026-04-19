@@ -23,7 +23,7 @@
             </div>
             <div>
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Available Staff</p>
-                <p class="text-2xl font-bold text-slate-700">{{ $employees->count() }}</p>
+                <p class="text-2xl font-bold text-slate-700">{{ $lineManagerStaff->count() }}</p>
             </div>
         </div>
         <div class="premium-card p-5 flex items-center gap-4 group">

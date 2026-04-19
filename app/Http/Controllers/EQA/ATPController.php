@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Atp;
 use App\Models\AtpStatus;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class ATPController extends Controller
 {
@@ -57,7 +58,7 @@ class ATPController extends Controller
         $atp->atp_email = $request->atp_email;
         $atp->atp_phone = $request->atp_phone;
         $atp->status_id = 1; // Default status (e.g. New)
-        $atp->added_by = auth()->id() ?? 0;
+        $atp->added_by = Auth::user()->user_id;
         $atp->added_date = now();
         $atp->atp_emirate = 'AD'; // Default per legacy
         $atp->save();

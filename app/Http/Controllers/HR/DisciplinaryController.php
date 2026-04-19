@@ -10,20 +10,45 @@ use App\Models\DisciplinaryActionStatus;
 use App\Models\DisciplinaryActionWarning;
 use App\Models\Employee;
 use Illuminate\Support\Facades\Auth;
+use App\Services\NotificationService;
 
 class DisciplinaryController extends Controller
 {
     public function index(Request $request)
     {
+        $employeeId = $request->input('employee_id');
+        $warningId = $request->input('warning_id');
+        $statusId = $request->input('status_id');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $search = $request->input('search'); // Ref No
+
         $query = DisciplinaryAction::with(['employee', 'type', 'status', 'warning'])
             ->orderBy('da_id', 'desc');
 
-        if ($request->has('employee_id') && $request->employee_id != '') {
-            $query->where('employee_id', $request->employee_id);
+        if ($employeeId) {
+            $query->where('employee_id', $employeeId);
+        }
+        if ($warningId) {
+            $query->where('da_warning_id', $warningId);
+        }
+        if ($statusId) {
+            $query->where('da_status_id', $statusId);
+        }
+        if ($startDate) {
+            $query->whereDate('added_date', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->whereDate('added_date', '<=', $endDate);
+        }
+        if ($search) {
+            $query->where('da_id', 'LIKE', "%$search%");
         }
 
         $actions = $query->paginate(15);
-        $employees = Employee::where('is_deleted', 0)->orderBy('first_name')->get();
+        $employees = Employee::where('is_deleted', 0)->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })->orderBy('first_name')->get();
         $types = DisciplinaryActionType::all();
         $statuses = DisciplinaryActionStatus::all();
         $warnings = DisciplinaryActionWarning::all();
@@ -34,11 +59,33 @@ class DisciplinaryController extends Controller
     public function getData(Request $request)
     {
         $perPage = $request->get('per_page', 15);
+        $employeeId = $request->input('employee_id');
+        $warningId = $request->input('warning_id');
+        $statusId = $request->input('status_id');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $search = $request->input('search');
+
         $query = DisciplinaryAction::with(['employee', 'type', 'status', 'warning'])
             ->orderBy('da_id', 'desc');
 
-        if ($request->has('employee_id') && $request->employee_id != '') {
-            $query->where('employee_id', $request->employee_id);
+        if ($employeeId) {
+            $query->where('employee_id', $employeeId);
+        }
+        if ($warningId) {
+            $query->where('da_warning_id', $warningId);
+        }
+        if ($statusId) {
+            $query->where('da_status_id', $statusId);
+        }
+        if ($startDate) {
+            $query->whereDate('added_date', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->whereDate('added_date', '<=', $endDate);
+        }
+        if ($search) {
+            $query->where('da_id', 'LIKE', "%$search%");
         }
 
         $actions = $query->paginate($perPage);
@@ -74,11 +121,17 @@ class DisciplinaryController extends Controller
         $da->da_status_id = 1; // Default to 'Pending' or similar? Legacy used hardcoded values or dropdown? View shows dropdown starts with 'Please Select' but code implies creation defaults?
         // In legacy `addNewDA` JS: `$('.new-da_id').val(1);` ... actually `addNewController` usually inserts.
         // Let's assume Status 1 is "Draft" or "Issued". We'll default to 1 if not specified.
-        $da->added_by = Auth::id();
+        $da->added_by = auth()->user()->user_id;
         $da->added_date = now();
         $da->save();
 
-        return redirect()->back()->with('success', 'Disciplinary Action Record created.');
+        // Notify Employee
+        $type = DisciplinaryActionType::find($da->da_type_id);
+        $warning = DisciplinaryActionWarning::find($da->da_warning_id);
+        $msg = "New disciplinary record has been issued: " . ($type->da_type_code ?? 'Formal Action') . " - " . ($warning->da_warning_name ?? 'Level');
+        NotificationService::send($msg, 'emp.da.index#da-container', $da->employee_id);
+
+        return redirect()->back()->with('success', 'Disciplinary Action Record created and employee notified.');
     }
 
     public function update(Request $request, $id)
@@ -95,6 +148,11 @@ class DisciplinaryController extends Controller
 
         $da->save();
 
-        return redirect()->back()->with('success', 'Disciplinary Action updated.');
+        // Notify Employee of update
+        $status = DisciplinaryActionStatus::find($da->da_status_id);
+        $msg = "Disciplinary Record Update: Action #" . $da->da_id . " status changed to " . ($status->da_status_name ?? 'Updated');
+        NotificationService::send($msg, 'emp.da.show?id=' . $da->da_id, $da->employee_id);
+
+        return redirect()->back()->with('success', 'Disciplinary Action updated and employee notified.');
     }
 }

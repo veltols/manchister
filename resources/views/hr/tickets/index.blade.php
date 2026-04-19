@@ -152,7 +152,7 @@
                                     <div class="flex flex-col">
                                         <span class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Resolved on</span>
                                         <span class="text-xs text-slate-600 font-medium">
-                                            {{ $ticket->last_updated_date ? \Carbon\Carbon::parse($ticket->last_updated_date)->format('M d, Y') : '-' }}
+                                            {{ $ticket->ticket_end_date ? \Carbon\Carbon::parse($ticket->ticket_end_date)->format('M d, Y') : '-' }}
                                         </span>
                                     </div>
                                     <a href="{{ route('hr.tickets.show', $ticket->ticket_id) }}" 
@@ -529,16 +529,10 @@
                             </label>
                             <select name="assigned_to" class="premium-input w-full px-4 py-3 text-sm" required>
                                 <option value="">Select Assignee...</option>
-                                <optgroup label="IT Department Staff">
-                                    @foreach($itEmployees as $emp)
-                                        <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
-                                    @endforeach
-                                </optgroup>
-                                <optgroup label="All Employees">
+                               
                                     @foreach($employees as $emp)
                                         <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
                                     @endforeach
-                                </optgroup>
                             </select>
                         </div>
                     </div>

@@ -241,8 +241,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/employees', [App\Http\Controllers\HR\EmployeeController::class, 'index'])->name('employees.index');
         Route::get('/employees/data', [App\Http\Controllers\HR\EmployeeController::class, 'getData'])->name('employees.data');
         Route::get('/employees/create', [App\Http\Controllers\HR\EmployeeController::class, 'create'])->name('employees.create');
-        Route::post('/employees', [App\Http\Controllers\HR\EmployeeController::class, 'store'])->name('employees.store');
         Route::get('/employees/{id}', [App\Http\Controllers\HR\EmployeeController::class, 'show'])->name('employees.show');
+        Route::get('/employees/{id}/leaves-data', [App\Http\Controllers\HR\EmployeeController::class, 'getLeavesData'])->name('employees.leaves_data');
+        Route::get('/employees/{id}/permissions-data', [App\Http\Controllers\HR\EmployeeController::class, 'getPermissionsData'])->name('employees.permissions_data');
+        Route::get('/employees/{id}/disciplinary-data', [App\Http\Controllers\HR\EmployeeController::class, 'getDisciplinaryData'])->name('employees.disciplinary_data');
+        Route::post('/employees', [App\Http\Controllers\HR\EmployeeController::class, 'store'])->name('employees.store');
         Route::post('/employees/{id}/update', [App\Http\Controllers\HR\EmployeeController::class, 'update'])->name('employees.update');
         Route::post('/employees/{id}/update-credentials', [App\Http\Controllers\HR\EmployeeController::class, 'updateCredentials'])->name('employees.update-credentials');
         Route::post('/employees/{id}/update-permissions', [App\Http\Controllers\HR\EmployeeController::class, 'updatePermissions'])->name('employees.update-permissions');
@@ -257,6 +260,7 @@ Route::middleware('auth')->group(function () {
 
         // Permissions (Short Leaves)
         Route::get('/permissions', [App\Http\Controllers\HR\PermissionController::class, 'index'])->name('permissions.index');
+        Route::get('/permissions/data', [App\Http\Controllers\HR\PermissionController::class, 'getData'])->name('permissions.data');
         Route::post('/permissions', [App\Http\Controllers\HR\PermissionController::class, 'store'])->name('permissions.store');
 
         // Attendance
@@ -334,6 +338,7 @@ Route::middleware('auth')->group(function () {
         // Exit Interviews
         Route::get('/exit-interviews', [App\Http\Controllers\HR\ExitInterviewController::class, 'index'])->name('exit_interviews.index');
         Route::get('/exit-interviews/data', [App\Http\Controllers\HR\ExitInterviewController::class, 'getData'])->name('exit_interviews.data');
+        Route::get('/exit-interviews/{id}', [App\Http\Controllers\HR\ExitInterviewController::class, 'show'])->name('exit_interviews.show');
         Route::post('/exit-interviews', [App\Http\Controllers\HR\ExitInterviewController::class, 'store'])->name('exit_interviews.store');
 
         // Performance
@@ -443,10 +448,12 @@ Route::middleware('auth')->group(function () {
 
         // Assets
         Route::get('/assets', [App\Http\Controllers\Admin\AssetController::class, 'index'])->name('assets.index');
+        Route::get('/assets/check-now', [App\Http\Controllers\Admin\AssetController::class, 'runAlerts'])->name('assets.check_now');
         Route::post('/assets', [App\Http\Controllers\Admin\AssetController::class, 'store'])->name('assets.store');
         Route::get('/assets/{id}', [App\Http\Controllers\Admin\AssetController::class, 'show'])->name('assets.show');
         Route::get('/assets/{id}/print', [App\Http\Controllers\Admin\AssetController::class, 'print'])->name('assets.print');
         Route::post('/assets/{id}/assign', [App\Http\Controllers\Admin\AssetController::class, 'assign'])->name('assets.assign');
+        Route::post('/assets/{id}/revoke', [App\Http\Controllers\Admin\AssetController::class, 'revoke'])->name('assets.revoke');
         Route::post('/assets/{id}/status', [App\Http\Controllers\Admin\AssetController::class, 'updateStatus'])->name('assets.update_status');
         Route::post('/assets/{id}/description', [App\Http\Controllers\Admin\AssetController::class, 'updateDescription'])->name('assets.update_description');
         Route::post('/assets/{id}/details', [App\Http\Controllers\Admin\AssetController::class, 'updateDetails'])->name('assets.update_details');

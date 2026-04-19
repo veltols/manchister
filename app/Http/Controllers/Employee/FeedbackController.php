@@ -19,9 +19,9 @@ class FeedbackController extends Controller
         // Check if already submitted
         $alreadySubmitted = FeedbackForm::where('employee_id', $employeeId)->exists();
 
-        if ($alreadySubmitted) {
-            return redirect()->route('emp.dashboard')->with('info', 'You have already submitted the feedback form. Thank you!');
-        }
+        // if ($alreadySubmitted) {
+        //     return redirect()->route('emp.dashboard')->with('info', 'You have already submitted the feedback form. Thank you!');
+        // }
 
         return view('emp.feedback.index');
     }

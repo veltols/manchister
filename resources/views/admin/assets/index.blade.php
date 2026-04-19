@@ -94,7 +94,7 @@
                                             <span class="text-sm font-medium text-indigo-700">{{ $asset->assignee->first_name }} {{ $asset->assignee->last_name }}</span>
                                         </div>
                                     @else
-                                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-100 px-2 py-1 rounded">In Stock</span>
+                                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-100 px-2 py-1 rounded">Assigned to</span>
                                     @endif
                                 </td>
                                 <td>
@@ -135,12 +135,23 @@
                                 <td class="text-center">
                                     <div class="flex items-center justify-center gap-2">
                                         
-                                        <!-- Assign -->
-                                        <button onclick="openAssignModal('{{ $asset->asset_id }}')" 
-                                                class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
-                                                title="Assign Asset">
-                                            <i class="fa-solid fa-user-plus text-sm"></i>
-                                        </button>
+                                        <!-- Assign / Revoke -->
+                                        @if($asset->assigned_to)
+                                            <form action="{{ route('admin.assets.revoke', $asset->asset_id) }}" method="POST" class="inline" onsubmit="revokeAsset(event, this);">
+                                                @csrf
+                                                <button type="submit"
+                                                        class="w-9 h-9 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+                                                        title="Revoke Asset">
+                                                    <i class="fa-solid fa-user-minus text-sm"></i>
+                                                </button>
+                                            </form>
+                                        @else
+                                            <button onclick="openAssignModal('{{ $asset->asset_id }}')" 
+                                                    class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                                                    title="Assign Asset">
+                                                <i class="fa-solid fa-user-plus text-sm"></i>
+                                            </button>
+                                        @endif
 
                                         <!-- Status -->
                                         <button onclick="openStatusModal('{{ $asset->asset_id }}', '{{ $asset->status_id }}')" 
@@ -473,11 +484,22 @@
                         </td>
                         <td class="text-center">
                             <div class="flex items-center justify-center gap-2">
-                                <button onclick="openAssignModal('${asset.asset_id}')" 
-                                        class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
-                                        title="Assign Asset">
-                                    <i class="fa-solid fa-user-plus text-sm"></i>
-                                </button>
+                                ${asset.assigned_to ? `
+                                    <form action="/admin/assets/${asset.asset_id}/revoke" method="POST" class="inline" onsubmit="revokeAsset(event, this);">
+                                        <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                                        <button type="submit"
+                                                class="w-9 h-9 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+                                                title="Revoke Asset">
+                                            <i class="fa-solid fa-user-minus text-sm"></i>
+                                        </button>
+                                    </form>
+                                ` : `
+                                    <button onclick="openAssignModal('${asset.asset_id}')" 
+                                            class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                                            title="Assign Asset">
+                                        <i class="fa-solid fa-user-plus text-sm"></i>
+                                    </button>
+                                `}
                                 <button onclick="openStatusModal('${asset.asset_id}', '${asset.status_id}')" 
                                         class="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center hover:bg-amber-600 hover:text-white transition-all shadow-sm"
                                         title="Update Status">
@@ -519,6 +541,23 @@
                 url.searchParams.delete('status_id');
             }
             window.location.href = url.toString();
+        }
+
+        function revokeAsset(event, form) {
+            event.preventDefault();
+            Swal.fire({
+                title: 'Revoke Asset?',
+                text: "This will unassign the asset and return it to stock.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#f43f5e',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Yes, Revoke Asset'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
         }
     </script>
     @endpush

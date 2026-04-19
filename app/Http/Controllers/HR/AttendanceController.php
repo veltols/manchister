@@ -16,7 +16,9 @@ class AttendanceController extends Controller
             ->orderBy('checkin_time', 'desc')
             ->paginate(20);
 
-        $employees = Employee::where('is_deleted', 0)->where('is_hidden', 0)->orderBy('first_name')->get();
+        $employees = Employee::where('is_deleted', 0)->where('is_hidden', 0)->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })->orderBy('first_name')->get();
 
         return view('hr.attendance.index', compact('attendances', 'employees'));
     }
@@ -58,7 +60,7 @@ class AttendanceController extends Controller
         $attendance->checkin_time = $request->checkin_time;
         $attendance->attendance_remarks = $request->attendance_remarks;
         $attendance->added_date = now();
-        $attendance->added_by = \Illuminate\Support\Facades\Auth::id() ?? 0;
+        $attendance->added_by = auth()->user()->user_id;
         
         $attendance->save();
 

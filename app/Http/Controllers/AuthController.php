@@ -58,6 +58,9 @@ class AuthController extends Controller
                 // Check if 2FA is enabled
                 if (env('ENABLE_2FA', true) === false) {
                     Auth::login($user);
+                    if ($user->employee) {
+                        $user->employee->update(['emp_status_id' => 1]);
+                    }
                     Log::info('2FA is disabled. Direct login for: ' . $username);
 
                     if (in_array($user->user_type, ['hr', 'admin_hr'])) {
@@ -189,6 +192,11 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        $user = Auth::user();
+        if ($user && $user->employee) {
+            $user->employee->update(['emp_status_id' => 4]);
+        }
+
         Auth::logout();
 
         // Clear ATP portal session data
@@ -343,6 +351,11 @@ class AuthController extends Controller
 
         // Complete the login
         Auth::login($user);
+        
+        if ($user->employee) {
+            $user->employee->update(['emp_status_id' => 1]);
+        }
+        
         $request->session()->regenerate();
 
         // Clear 2FA session data

@@ -163,7 +163,7 @@
                                         <div class="flex flex-col">
                                             <span class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Resolved on</span>
                                             <span class="text-xs text-slate-600 font-medium">
-                                                {{ $ticket->last_updated_date ? \Carbon\Carbon::parse($ticket->last_updated_date)->format('M d, Y') : '-' }}
+                                                {{ $ticket->ticket_end_date ? \Carbon\Carbon::parse($ticket->ticket_end_date)->format('M d, Y') : '-' }}
                                             </span>
                                         </div>
                                         <a href="{{ route('admin.tickets.show', $ticket->ticket_id) }}" 
@@ -193,6 +193,7 @@
                                 <tr>
                                     <th class="text-left">REF</th>
                                     <th class="text-left">Subject</th>
+                                    <th class="text-left whitespace-nowrap">Category</th>
                                     <th class="text-left">Added By</th>
                                     <th class="text-left">Assigned To</th>
                                     <th class="text-center">Priority</th>
@@ -207,14 +208,14 @@
                                             <span class="font-mono text-sm font-semibold text-slate-600">{{ $ticket->ticket_ref }}</span>
                                         </td>
                                         <td class="max-w-xs">
-                                            <div class="flex flex-col">
-                                                <span class="font-semibold text-slate-800 block truncate" title="{{ $ticket->ticket_subject }}">
-                                                    {{ $ticket->ticket_subject }}
-                                                </span>
-                                                <span class="text-xs text-slate-500">
-                                                    {{ $ticket->category->category_name ?? 'General' }}
-                                                </span>
-                                            </div>
+                                            <span class="font-semibold text-slate-800 block truncate" title="{{ $ticket->ticket_subject }}">
+                                                {{ $ticket->ticket_subject }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">
+                                                {{ $ticket->category->category_name ?? 'General' }}
+                                            </span>
                                         </td>
                                         <td>
                                             <div class="flex items-center gap-2">
@@ -262,7 +263,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center py-12">
+                                        <td colspan="8" class="text-center py-12">
                                             <div class="flex flex-col items-center gap-3">
                                                 <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
                                                     <i class="fa-solid fa-ticket text-2xl text-slate-400"></i>
@@ -320,16 +321,10 @@
                             </label>
                             <select name="assigned_to" class="premium-input w-full px-4 py-3 text-sm" required>
                                 <option value="">Select Assignee...</option>
-                                <optgroup label="IT Department Staff">
-                                    @foreach($itEmployees as $emp)
-                                        <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
-                                    @endforeach
-                                </optgroup>
-                                <optgroup label="All Employees">
+                                
                                     @foreach($allEmployees as $emp)
                                         <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
                                     @endforeach
-                                </optgroup>
                             </select>
                         </div>
                     </div>
@@ -468,6 +463,7 @@
 
     @push('scripts')
     <script src="{{ asset('libs/mammoth/mammoth.browser.min.js') }}"></script>
+    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
     <script src="{{ asset('js/attachment-preview.js') }}"></script>
     <script>
         // Initialize Attachment Preview
@@ -574,7 +570,7 @@
                     } else {
                         container.innerHTML = `
                             <tr>
-                                <td colspan="7" class="text-center py-12">
+                                <td colspan="8" class="text-center py-12">
                                     <div class="flex flex-col items-center gap-3">
                                         <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
                                             <i class="fa-solid fa-ticket text-2xl text-slate-400"></i>
@@ -647,14 +643,14 @@
                                     <span class="font-mono text-sm font-semibold text-slate-600">${ticket.ticket_ref}</span>
                                 </td>
                                 <td class="max-w-xs">
-                                    <div class="flex flex-col">
-                                        <span class="font-semibold text-slate-800 block truncate" title="${ticket.ticket_subject}">
-                                            ${ticket.ticket_subject}
-                                        </span>
-                                        <span class="text-xs text-slate-500">
-                                            ${categoryName}
-                                        </span>
-                                    </div>
+                                    <span class="font-semibold text-slate-800 block truncate" title="${ticket.ticket_subject}">
+                                        ${ticket.ticket_subject}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">
+                                        ${categoryName}
+                                    </span>
                                 </td>
                                 <td>
                                     ${getAddedByBadge(ticket.added_by)}

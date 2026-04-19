@@ -66,7 +66,7 @@ class OperationalProjectController extends Controller
             'project_recommendations' => $request->project_recommendations,
             'department_id'           => $deptId,
             'project_status_id'       => 1,
-            'added_by'                => Auth::id() ?? 0,
+            'added_by'                => auth()->user()->user_id,
             'added_date'              => now(),
         ]);
 
@@ -131,7 +131,7 @@ class OperationalProjectController extends Controller
                 'plan_id'       => $kpi->plan_id,
                 'theme_id'      => $kpi->theme_id,
                 'objective_id'  => $kpi->objective_id,
-                'added_by'      => Auth::id() ?? 0,
+                'added_by'      => auth()->user()->user_id,
                 'added_date'    => now(),
             ]);
         }
@@ -167,8 +167,8 @@ class OperationalProjectController extends Controller
             'plan_id'               => $kpi->plan_id,
             'project_id'            => $projectId,
             'order_no'              => $count,
-            'employee_id'           => Auth::user()->employee->employee_id ?? Auth::id(),
-            'added_by'              => Auth::id() ?? 0,
+            'employee_id'           => auth()->user()->user_id,
+            'added_by'              => auth()->user()->user_id,
             'added_date'            => now(),
         ]);
 

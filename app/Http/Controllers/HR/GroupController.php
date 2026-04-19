@@ -54,7 +54,7 @@ class GroupController extends Controller
             'group_desc' => $request->group_desc,
             'group_color_id' => $request->group_color_id,
             'is_commity' => $request->is_com,
-            'added_by' => 1, // Defaulting to 1 for now, should be Auth::id() if integrated
+            'added_by' => 1, // Defaulting to 1 for now, should be auth()->user()->user_id; if integrated
             'added_date' => now(),
             'is_deleted' => 0,
             'is_archieve' => 0,

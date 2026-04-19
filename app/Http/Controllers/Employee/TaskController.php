@@ -98,7 +98,9 @@ class TaskController extends Controller
 
         $deptId = $user->employee ? $user->employee->department_id : null;
         $employees = Employee::where('is_deleted', 0)
-            ->when($deptId, fn($q) => $q->where('department_id', $deptId))
+            ->when($deptId, fn($q) => $q->where('department_id', $deptId))->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })
             ->orderBy('first_name')->get();
 
         $pendingCount = Task::where('pending_line_manager_id', $employeeId)->count();
@@ -255,15 +257,22 @@ class TaskController extends Controller
     public function pendingTasks(Request $request)
     {
         $employeeId = Auth::user()->employee ? Auth::user()->employee->employee_id : 0;
-
+        $deptId = Auth::user()->employee ? Auth::user()->employee->department_id : null;
+        $lineManagerStaff = Employee::where('is_deleted', 0)
+            ->when($deptId, fn($q) => $q->where('department_id', $deptId))->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })
+            ->orderBy('first_name')->get();
         $tasks = Task::with(['status', 'priority', 'assignedBy', 'assignedTo'])
             ->where('pending_line_manager_id', $employeeId)
             ->orderBy('task_id', 'desc')
             ->get();
 
-        $employees = Employee::where('is_deleted', 0)->orderBy('first_name')->get();
+        $employees = Employee::where('is_deleted', 0)->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })->orderBy('first_name')->get();
 
-        return view('emp.tasks.pending_assignments', compact('tasks', 'employees'));
+        return view('emp.tasks.pending_assignments', compact('tasks', 'employees', 'lineManagerStaff'));
     }
 
     /**

@@ -10,6 +10,7 @@ use App\Models\AssetStatus;
 use App\Models\Employee;
 use App\Models\SystemLog;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Artisan;
 use Carbon\Carbon;
 
 class AssetController extends Controller
@@ -107,7 +108,9 @@ class AssetController extends Controller
     {
         $asset = Asset::with(['category', 'assignee', 'status', 'assignedBy'])->findOrFail($id);
         $statuses = AssetStatus::all();
-        $employees = Employee::where('is_deleted', 0)->where('is_hidden', 0)->orderBy('first_name')->get();
+        $employees = Employee::where('is_deleted', 0)->where('is_hidden', 0)->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })->orderBy('first_name')->get();
         
         // Logs are not related to Asset model in legacy directly via relationship usually, 
         // they are in system_logs with ref_type = 'asset' (implied) or similar.
@@ -121,6 +124,28 @@ class AssetController extends Controller
             ->get();
 
         return view('admin.assets.show', compact('asset', 'employees', 'logs', 'statuses'));
+    }
+
+    public function runAlerts()
+    {
+        // Only run for authorized users (Admins)
+        if (!in_array(Auth::user()->user_type, ['sys_admin', 'root', 'admin_hr'])) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        try {
+            Artisan::call('assets:check-alerts');
+            return response()->json([
+                'success' => true, 
+                'message' => 'Alert check completed.',
+                'output' => Artisan::output()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false, 
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function print($id)
@@ -140,8 +165,9 @@ class AssetController extends Controller
         $oldAssignee = $asset->assigned_to;
         
         $asset->assigned_to = $request->assigned_to;
+        $asset->status_id = 2;
         $asset->assigned_date = now();
-        $asset->assigned_by = 1; // Auth::id() if possible
+        $asset->assigned_by = 1; // auth()->user()->user_id; if possible
         $asset->save();
 
         $emp = Employee::find($request->assigned_to);
@@ -150,6 +176,25 @@ class AssetController extends Controller
         $this->logAction($id, 'Asset Assigned', "Assigned to $empName. " . $request->remarks);
 
         return redirect()->back()->with('success', 'Asset assigned successfully.');
+    }
+
+    public function revoke(Request $request, $id)
+    {
+        $asset = Asset::findOrFail($id);
+        
+        $oldAssigneeId = $asset->assigned_to;
+        $emp = Employee::find($oldAssigneeId);
+        $empName = $emp ? $emp->first_name . ' ' . $emp->last_name : 'Unknown';
+
+        $asset->assigned_to = 0;
+        $asset->status_id = 1; // Assuming 1 is Available/In Stock
+        $asset->assigned_date = now();
+        $asset->assigned_by = Auth::user()->user_id ?? 1;
+        $asset->save();
+
+        $this->logAction($id, 'Asset Revoked', "Revoked from $empName.");
+
+        return redirect()->back()->with('success', 'Asset revoked successfully.');
     }
 
     public function updateStatus(Request $request, $id)
@@ -284,7 +329,7 @@ class AssetController extends Controller
         $log->log_action = $action;
         $log->log_remark = $remark;
         $log->logger_type = 'admin';
-        $log->logged_by = auth()->user() ? auth()->user()->user_id : 1; 
+        $log->logged_by = Auth::user()->user_id ?? 1;
         $log->save();
     }
 }

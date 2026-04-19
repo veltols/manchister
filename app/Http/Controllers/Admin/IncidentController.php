@@ -25,6 +25,7 @@ class IncidentController extends Controller
 
     public function store(Request $request)
     {
+
         $request->validate([
             'incident_date_only' => 'required|date',
             'incident_time_only' => 'required',
@@ -57,7 +58,7 @@ class IncidentController extends Controller
             $incident->attachment = 'uploads/incidents/' . $filename;
         }
 
-        $incident->reported_by = Auth::id();
+        $incident->reported_by = auth()->user()->user_id;
         $incident->save();
 
         $this->logAction($incident->incident_id, 'Incident Created', $this->buildLogRemark($incident));
@@ -229,7 +230,7 @@ class IncidentController extends Controller
         $log->log_action    = $action;
         $log->log_remark    = $remark;
         $log->logger_type   = 'admin';
-        $log->logged_by     = auth()->user() ? auth()->user()->user_id : 1;
+        $log->logged_by     = Auth::user()->user_id ?? 1;
         $log->save();
     }
 }

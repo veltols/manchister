@@ -174,18 +174,41 @@
                                             <th>Ref</th>
                                             <th>Asset Name</th>
                                             <th>Category</th>
+                                            <th>Status</th>
                                             <th>Assigned Date</th>
                                             <th class="text-center">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach($assets as $asset)
+                                        @php
+                                        $statusName = $asset->status->status_name ?? 'Active';
+                                        $gradient = 'from-emerald-500 to-green-600';
+                                        $icon = 'fa-circle-check';
+                                        
+                                        $lowerName = strtolower($statusName);
+                                        if (str_contains($lowerName, 'repair') || str_contains($lowerName, 'progress')) {
+                                            $gradient = 'from-amber-500 to-orange-600';
+                                            $icon = 'fa-screwdriver-wrench';
+                                        } elseif (str_contains($lowerName, 'lost') || str_contains($lowerName, 'damage') || str_contains($lowerName, 'broken')) {
+                                            $gradient = 'from-rose-500 to-red-600';
+                                            $icon = 'fa-circle-xmark';
+                                        } elseif (str_contains($lowerName, 'stock') || str_contains($lowerName, 'available')) {
+                                            $gradient = 'from-indigo-500 to-purple-600';
+                                            $icon = 'fa-box-archive';
+                                        }
+                                    @endphp
                                             <tr>
                                                 <td class="font-mono text-xs font-bold text-slate-500">#{{ $asset->asset_ref }}</td>
                                                 <td class="font-semibold text-slate-700">{{ $asset->asset_name }}</td>
                                                 <td>
                                                     <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold uppercase">
                                                         {{ $asset->category->category_name ?? 'General' }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold uppercase">
+                                                        {{$statusName}}
                                                     </span>
                                                 </td>
                                                 <td class="text-sm text-slate-500 italic">{{ \Carbon\Carbon::parse($asset->assigned_date)->format('M d, Y') }}</td>

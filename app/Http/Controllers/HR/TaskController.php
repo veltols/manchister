@@ -356,7 +356,7 @@ class TaskController extends Controller
             'related_table' => 'tasks_list',
             'related_id' => $task->task_id,
             'log_date' => now(),
-            'logged_by' => Auth::id(),
+            'logged_by' => auth()->user()->user_id,
             'logger_type' => 'employees_list',
             'log_type' => 'int'
         ]);
@@ -422,7 +422,7 @@ class TaskController extends Controller
             'related_table' => 'tasks_list',
             'related_id' => $task->task_id,
             'log_date' => now(),
-            'logged_by' => Auth::id(),
+            'logged_by' => auth()->user()->user_id,
             'logger_type' => 'employees_list',
             'log_type' => 'int'
         ]);
@@ -554,7 +554,7 @@ class TaskController extends Controller
                 'related_table' => 'tasks_list',
                 'related_id' => $task->task_id,
                 'log_date' => now(),
-                'logged_by' => Auth::id(),
+                'logged_by' => auth()->user()->user_id,
                 'logger_type' => 'employees_list',
                 'log_type' => 'int'
             ]);

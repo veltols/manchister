@@ -18,12 +18,55 @@
             </button>
         </div>
 
+        <!-- Filters -->
+        <div class="premium-card p-4 animate-fade-in">
+            <div class="flex flex-col md:flex-row items-end gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1">
+                    <div class="relative">
+                        <i class="fa-solid fa-hashtag absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="search-filter" placeholder="Search Request#..." 
+                            class="premium-input w-full pl-11 py-2.5 text-sm">
+                    </div>
+                    <div class="relative">
+                        <i class="fa-solid fa-signal absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <select id="status-filter" class="premium-input w-full pl-11 py-2.5 text-sm appearance-none">
+                            <option value="">All Statuses</option>
+                            @foreach($statuses as $status)
+                                <option value="{{ $status->permission_status_id }}">{{ $status->permission_status_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="relative">
+                        <i class="fa-solid fa-calendar absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="date" id="start-date-filter" class="premium-input w-full pl-11 py-2.5 text-sm"
+                            placeholder="From Date">
+                    </div>
+                    <div class="relative">
+                        <i class="fa-solid fa-calendar-check absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="date" id="end-date-filter" class="premium-input w-full pl-11 py-2.5 text-sm"
+                            placeholder="To Date">
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="applyFilters()" class="px-6 py-2.5 bg-slate-800 text-white font-bold rounded-xl shadow-lg hover:bg-slate-900 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-search"></i>
+                        <span>Search</span>
+                    </button>
+                    <button onclick="resetFilters()" class="px-6 py-2.5 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>Reset</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Permissions List -->
         <div class="premium-card overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="premium-table w-full">
                     <thead>
                         <tr>
+                            <th>Request#</th>
                             <th class="text-left">Date</th>
                             <th class="text-left">Time Range</th>
                             <th class="text-center">Hours</th>
@@ -34,8 +77,9 @@
                     <tbody id="permissions-container">
                         @forelse($permissions as $perm)
                             <tr>
+                                <td>{{ $perm->permission_id }}</td>
                                 <td class="font-bold text-slate-700">
-                                    {{ $perm->permission_date ? $perm->permission_date->format('M d, Y') : '-' }}
+                                    {{ $perm->submission_date ? $perm->submission_date->format('M d, Y') : '-' }}
                                 </td>
                                 <td>
                                     <div class="flex items-center gap-2 text-sm text-slate-600">
@@ -145,12 +189,35 @@
             endpoint: "{{ route('emp.permissions.data') }}",
             containerSelector: '#permissions-container',
             paginationSelector: '#permissions-pagination',
+            getAdditionalParams: () => ({
+                search: document.getElementById('search-filter').value,
+                status: document.getElementById('status-filter').value,
+                start_date: document.getElementById('start-date-filter').value,
+                end_date: document.getElementById('end-date-filter').value
+            }),
             renderCallback: function(data) {
+                const container = document.querySelector('#permissions-container');
                 let html = '';
+                if (data.length === 0) {
+                    container.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center py-12">
+                                <div class="flex flex-col items-center gap-3">
+                                    <div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center text-slate-300">
+                                        <i class="fa-solid fa-clock text-2xl"></i>
+                                    </div>
+                                    <p class="text-slate-400 font-medium">No permissions found</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
                 data.forEach(perm => {
                     const statusColor = perm.status ? perm.status.status_color : '64748b';
-                    const statusName = perm.status ? perm.status.status_name : 'Pending';
-                    const permDate = perm.permission_date ? new Date(perm.permission_date).toLocaleDateString(undefined, {
+                    const statusName = perm.status ? (perm.status.status_name || perm.status.permission_status_name) : 'Pending';
+                    const submissionDate = perm.submission_date ? new Date(perm.submission_date).toLocaleDateString(undefined, {
                         month: 'short',
                         day: 'numeric',
                         year: 'numeric'
@@ -158,8 +225,9 @@
 
                     html += `
                         <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="font-bold text-slate-500 text-xs">#${perm.permission_id}</td>
                             <td class="font-bold text-slate-700">
-                                ${permDate}
+                                ${submissionDate}
                             </td>
                             <td>
                                 <div class="flex items-center gap-2 text-sm text-slate-600">
@@ -172,8 +240,8 @@
                                 <span class="font-bold text-indigo-600">${perm.total_hours}h</span>
                             </td>
                             <td class="max-w-xs">
-                                <p class="text-sm text-slate-500 truncate" title="${perm.permission_remarks}">
-                                    ${perm.permission_remarks}
+                                <p class="text-sm text-slate-500 truncate" title="${perm.permission_remarks || ''}">
+                                    ${perm.permission_remarks || '---'}
                                 </p>
                             </td>
                             <td class="text-center">
@@ -186,8 +254,29 @@
                         </tr>
                     `;
                 });
-                return html;
+                container.innerHTML = html;
             }
         });
+
+        // Initialize pagination metrics on load
+        @if($permissions->hasPages())
+            window.ajaxPagination.renderPagination({
+                current_page: {{ $permissions->currentPage() }},
+                last_page: {{ $permissions->lastPage() }},
+                from: {{ $permissions->firstItem() }},
+                to: {{ $permissions->lastItem() }},
+                total: {{ $permissions->total() }}
+            });
+        @endif
+
+        // Manual Filter Application
+        function applyFilters() {
+            window.ajaxPagination.loadPage(1);
+        }
+
+        // Reset All Filters (Performs full page reload to clear state)
+        function resetFilters() {
+            window.location.href = "{{ route('emp.permissions.index') }}";
+        }
     </script>
 @endsection

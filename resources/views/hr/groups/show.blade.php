@@ -27,7 +27,7 @@
     <div class="glass-panel flex-1 flex flex-col overflow-hidden relative">
         <div class="flex-1 overflow-y-auto p-4 space-y-4" id="chatContainer">
             @forelse($group->posts as $post)
-                @php $isMe = ($post->added_by == (Auth::user()->employee_id ?? Auth::id())); @endphp
+                @php $isMe = ($post->added_by == (auth()->user()->user_id;)); @endphp
                 <div class="flex {{ $isMe ? 'justify-end' : 'justify-start' }}">
                     <div class="max-w-[70%] {{ $isMe ? 'bg-blue-100' : 'bg-gray-100' }} rounded-lg p-3">
                         <div class="flex justify-between items-center mb-1 gap-4">

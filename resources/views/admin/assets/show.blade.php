@@ -15,11 +15,22 @@
             </a>
             
             <div class="flex gap-2">
-                <button onclick="openModal('assignModal')"
-                    class="px-6 py-3 bg-amber-500 text-white font-bold rounded-xl shadow-lg hover:shadow-amber-500/40 hover:scale-105 transition-all duration-200 flex items-center gap-2">
-                    <i class="fa-solid fa-user-plus text-sm"></i>
-                    <span>Assign Asset</span>
-                </button>
+                @if($asset->assigned_to)
+                    <form action="{{ route('admin.assets.revoke', $asset->asset_id) }}" method="POST" class="inline m-0" onsubmit="revokeAsset(event, this);">
+                        @csrf
+                        <button type="submit"
+                            class="px-6 py-3 bg-rose-500 text-white font-bold rounded-xl shadow-lg hover:shadow-rose-500/40 hover:scale-105 transition-all duration-200 flex items-center gap-2">
+                            <i class="fa-solid fa-user-minus text-sm"></i>
+                            <span>Revoke Asset</span>
+                        </button>
+                    </form>
+                @else
+                    <button onclick="openModal('assignModal')"
+                        class="px-6 py-3 bg-amber-500 text-white font-bold rounded-xl shadow-lg hover:shadow-amber-500/40 hover:scale-105 transition-all duration-200 flex items-center gap-2">
+                        <i class="fa-solid fa-user-plus text-sm"></i>
+                        <span>Assign Asset</span>
+                    </button>
+                @endif
                 <button onclick="openModal('statusModal')"
                     class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200 flex items-center gap-2">
                     <i class="fa-solid fa-arrows-rotate text-sm"></i>
@@ -278,10 +289,20 @@
                             <i class="fa-solid fa-list-check opacity-50"></i>
                             <span class="text-[10px] font-bold uppercase tracking-wider">All Assets</span>
                         </a>
-                        <button onclick="openModal('assignModal')" class="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex flex-col items-center gap-2 text-center text-white">
-                            <i class="fa-solid fa-user-plus opacity-50"></i>
-                            <span class="text-[10px] font-bold uppercase tracking-wider">Assign</span>
-                        </button>
+                        @if($asset->assigned_to)
+                            <form action="{{ route('admin.assets.revoke', $asset->asset_id) }}" method="POST" class="w-full" onsubmit="revokeAsset(event, this);">
+                                @csrf
+                                <button type="submit" class="p-3 w-full rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex flex-col items-center gap-2 text-center text-rose-400">
+                                    <i class="fa-solid fa-user-minus opacity-50"></i>
+                                    <span class="text-[10px] font-bold uppercase tracking-wider">Revoke</span>
+                                </button>
+                            </form>
+                        @else
+                            <button onclick="openModal('assignModal')" class="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex flex-col items-center gap-2 text-center text-white">
+                                <i class="fa-solid fa-user-plus opacity-50"></i>
+                                <span class="text-[10px] font-bold uppercase tracking-wider">Assign</span>
+                            </button>
+                        @endif
                         <button onclick="openModal('statusModal')" class="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex flex-col items-center gap-2 text-center text-white">
                             <i class="fa-solid fa-arrows-rotate opacity-50"></i>
                             <span class="text-[10px] font-bold uppercase tracking-wider">Status</span>
@@ -512,6 +533,23 @@
                 modal.classList.remove('active');
                 document.body.style.overflow = '';
             }
+        }
+
+        function revokeAsset(event, form) {
+            event.preventDefault();
+            Swal.fire({
+                title: 'Revoke Asset?',
+                text: "This will unassign the asset and return it to stock.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#f43f5e',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Yes, Revoke Asset'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
         }
     </script>
 @endsection

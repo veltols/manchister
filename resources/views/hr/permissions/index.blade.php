@@ -19,7 +19,53 @@
                 <span>Request Permission</span>
             </button>
         </div>
-
+        <!-- Filters -->
+        <div class="premium-card p-4 animate-fade-in-up">
+            <div class="flex flex-col gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <select id="employee-filter" class="premium-input w-full pl-11 py-2.5 text-sm appearance-none">
+                            <option value="">All Employees</option>
+                            @foreach($employees as $emp)
+                                <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="relative">
+                        <i class="fa-solid fa-hashtag absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="search-filter" placeholder="Ref No..." class="premium-input w-full pl-11 py-2.5 text-sm">
+                    </div>
+                    <div class="relative">
+                        <i class="fa-solid fa-signal absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <select id="status-filter" class="premium-input w-full pl-11 py-2.5 text-sm appearance-none">
+                            <option value="">All Statuses</option>
+                            @foreach($statuses as $s)
+                                <option value="{{ $s->permission_status_id }}">{{ $s->permission_status_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="relative">
+                        <i class="fa-solid fa-calendar absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="date" id="start-date-filter" class="premium-input w-full pl-11 py-2.5 text-sm" placeholder="From Date">
+                    </div>
+                    <div class="relative">
+                        <i class="fa-solid fa-calendar-check absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="date" id="end-date-filter" class="premium-input w-full pl-11 py-2.5 text-sm" placeholder="To Date">
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button onclick="applyFilters()" class="px-6 py-2.5 bg-slate-800 text-white font-bold rounded-xl shadow-lg hover:bg-slate-900 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-search text-xs"></i>
+                        <span>Search</span>
+                    </button>
+                    <button onclick="resetFilters()" class="px-6 py-2.5 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-rotate-left text-xs"></i>
+                        <span>Reset</span>
+                    </button>
+                </div>
+            </div>
+        </div>
         <!-- Permissions Table -->
         <div class="premium-card overflow-hidden">
             <div class="overflow-x-auto">
@@ -33,7 +79,7 @@
                             <th class="text-left">Remarks</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="permissions-container">
                         @forelse($permissions as $p)
                             <tr>
                                 <td>
@@ -42,7 +88,7 @@
                                             class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-semibold shadow-md">
                                             {{ strtoupper(substr($p->employee->first_name ?? 'M', 0, 1)) }}
                                         </div>
-                                        <span class="font-semibold text-slate-800">{{ $p->employee->first_name ?? 'Me' }}</span>
+                                        <span class="font-semibold text-slate-800">{{ $p->employee->first_name ?? 'Unknown' }} {{ $p->employee->last_name ?? '' }}</span>
                                     </div>
                                 </td>
                                 <td><span class="text-sm text-slate-600">{{ $p->start_date }}</span></td>
@@ -78,11 +124,9 @@
                 </table>
             </div>
 
-            @if($permissions->hasPages())
-                <div class="px-6 py-4 border-t border-slate-100">
-                    {{ $permissions->links('pagination::bootstrap-5') }}
-                </div>
-            @endif
+
+            <!-- AJAX Pagination -->
+            <div id="permissions-pagination"></div>
         </div>
 
     </div>
@@ -146,5 +190,94 @@
             </form>
         </div>
     </div>
+
+    @push('scripts')
+    <script src="{{ asset('js/ajax-pagination.js') }}"></script>
+    <script>
+        window.ajaxPagination = new AjaxPagination({
+            endpoint: "{{ route('hr.permissions.data') }}",
+            containerSelector: '#permissions-container',
+            paginationSelector: '#permissions-pagination',
+            getAdditionalParams: () => ({
+                employee_id: document.getElementById('employee-filter').value,
+                search: document.getElementById('search-filter').value,
+                status_id: document.getElementById('status-filter').value,
+                start_date: document.getElementById('start-date-filter').value,
+                end_date: document.getElementById('end-date-filter').value
+            }),
+            renderCallback: function(permissions) {
+                const container = document.querySelector('#permissions-container');
+                if (permissions.length === 0) {
+                    container.innerHTML = `
+                         <tr>
+                             <td colspan="5" class="text-center py-12">
+                                 <div class="flex flex-col items-center gap-3">
+                                     <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+                                         <i class="fa-solid fa-clock text-2xl text-slate-400"></i>
+                                     </div>
+                                     <p class="text-slate-500 font-medium">No permission requests found matching filters</p>
+                                 </div>
+                             </td>
+                         </tr>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                permissions.forEach(p => {
+                    const initials = p.employee ? p.employee.first_name.charAt(0).toUpperCase() : 'U';
+                    const fullName = p.employee ? `${p.employee.first_name} ${p.employee.last_name || ''}` : 'Unknown';
+                    
+                    html += `
+                        <tr>
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-semibold shadow-md">
+                                        ${initials}
+                                    </div>
+                                    <span class="font-semibold text-slate-800">${fullName}</span>
+                                </div>
+                            </td>
+                            <td><span class="text-sm text-slate-600">${p.start_date}</span></td>
+                            <td>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium font-mono">
+                                    <i class="fa-solid fa-clock text-xs"></i>
+                                    ${p.start_time} - ${p.end_time}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-yellow-500 to-amber-600 text-white text-xs font-bold shadow-md">
+                                    <i class="fa-solid fa-clock"></i>
+                                    ${p.status ? p.status.permission_status_name : 'Pending'}
+                                </span>
+                            </td>
+                            <td><span class="text-sm text-slate-600">${p.permission_remarks || ''}</span></td>
+                        </tr>
+                    `;
+                });
+                container.innerHTML = html;
+            }
+        });
+
+        // Initial pagination setup
+        @if($permissions->hasPages())
+            window.ajaxPagination.renderPagination({
+                current_page: {{ $permissions->currentPage() }},
+                last_page: {{ $permissions->lastPage() }},
+                from: {{ $permissions->firstItem() }},
+                to: {{ $permissions->lastItem() }},
+                total: {{ $permissions->total() }}
+            });
+        @endif
+
+        function applyFilters() {
+            window.ajaxPagination.loadPage(1);
+        }
+
+        function resetFilters() {
+            window.location.href = "{{ route('hr.permissions.index') }}";
+        }
+    </script>
+    @endpush
 
 @endsection

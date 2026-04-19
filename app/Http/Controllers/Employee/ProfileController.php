@@ -12,8 +12,8 @@ class ProfileController extends Controller
     public function index()
     {
         $user = Auth::user();
-        // Assuming LegacyUser maps to Employee via employee_id (users_list has employee_id? or we use Auth::id() if they match)
-        // In this system, it seems Auth::id() is the employee_id based on previous LoginSeeder logic.
+        // Assuming LegacyUser maps to Employee via employee_id (users_list has employee_id? or we use auth()->user()->user_id; if they match)
+        // In this system, it seems auth()->user()->user_id; is the employee_id based on previous LoginSeeder logic.
         $employee = Employee::with(['department', 'jobTitle', 'designation'])->find($user->employee_id);
         
         // If relationship not set up or direct mapping

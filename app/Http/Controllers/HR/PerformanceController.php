@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Performance;
 use App\Models\Employee;
 use Illuminate\Support\Facades\Auth;
+use App\Services\NotificationService;
 
 class PerformanceController extends Controller
 {
@@ -19,7 +20,9 @@ class PerformanceController extends Controller
         }
 
         $records = $query->paginate(15);
-        $employees = Employee::where('is_deleted', 0)->orderBy('first_name')->get();
+        $employees = Employee::where('is_deleted', 0)->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })->orderBy('first_name')->get();
 
         return view('hr.performance.index', compact('records', 'employees'));
     }
@@ -64,14 +67,18 @@ class PerformanceController extends Controller
         $perf->performance_kpi = $request->performance_kpi;
         $perf->performance_remark = $request->performance_remark ?? '';
         $perf->added_date = now();
-        $perf->added_by = Auth::id(); // Assuming added_by exists in schema from serv_list check? 
+        $perf->added_by = auth()->user()->user_id; // Assuming added_by exists in schema from serv_list check? 
         // serv_list doesn't explicitly select added_by but it's common in this legacy db. 
         // Logic: serv_list usually selects * so it should be there. 
         // We'll trust the pattern.
         
         $perf->save();
 
-        return redirect()->back()->with('success', 'Performance record added.');
+        // Notify Employee
+        $msg = "A new performance evaluation record has been added for your review.";
+        NotificationService::send($msg, 'emp.dashboard.index', $perf->employee_id);
+
+        return redirect()->back()->with('success', 'Performance record added and employee notified.');
     }
     
     public function update(Request $request, $id)
@@ -91,7 +98,11 @@ class PerformanceController extends Controller
         $perf->performance_remark = $request->performance_remark ?? '';
         
         $perf->save();
+
+        // Notify Employee
+        $msg = "Your performance evaluation record has been updated.";
+        NotificationService::send($msg, 'emp.dashboard.index', $perf->employee_id);
         
-        return redirect()->back()->with('success', 'Performance record updated.');
+        return redirect()->back()->with('success', 'Performance record updated and employee notified.');
     }
 }

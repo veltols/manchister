@@ -836,7 +836,7 @@
                     <div class="w-px h-8 bg-slate-200/60 mx-2 hidden sm:block"></div>
 
                     <!-- User Profile Dropdown -->
-                    <div class="relative" x-data="{ open: false, showPasswordModal: false }" @click.away="open = false">
+                    <div class="relative" x-data="{ open: false, showPasswordModal: false, showProfileModal: false }" @click.away="open = false">
                         <button @click="open = !open"
                             class="flex items-center gap-3 px-2 py-1.5 rounded-2xl hover:bg-slate-50 transition-all group border border-transparent hover:border-slate-100">
 
@@ -906,6 +906,20 @@
                             @endif
 
                             <div class="px-3 space-y-1">
+                                {{-- My Profile --}}
+                                <button @click="showProfileModal = true; open = false"
+                                    class="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-brand transition-all group text-left">
+                                    <div class="w-9 h-9 rounded-xl flex items-center justify-center shadow-sm relative overflow-hidden transition-transform group-hover:scale-110"
+                                        style="background:linear-gradient(135deg,#e0f2fe,#bae6fd); box-shadow:0 4px 12px rgba(14,165,233,0.15), inset 0 1px 0 rgba(255,255,255,0.8);">
+                                        <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl"
+                                            style="background:rgba(255,255,255,0.4);"></div>
+                                        <i class="fa-solid fa-user-gear text-sm text-sky-600 relative z-10"></i>
+                                    </div>
+                                    <span class="text-sm font-semibold">My Profile</span>
+                                    <i
+                                        class="fa-solid fa-angle-right text-[10px] text-slate-300 ml-auto group-hover:text-brand group-hover:translate-x-0.5 transition-all"></i>
+                                </button>
+
                                 {{-- Change Password --}}
                                 <button @click="showPasswordModal = true; open = false"
                                     class="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-indigo-700 transition-all group text-left">
@@ -1098,6 +1112,82 @@
                                 </div>
                             </div>
                         </template>
+
+                        <!-- User Profile Info Modal -->
+                        <template x-teleport="body">
+                            <div x-show="showProfileModal"
+                                class="fixed inset-0 z-[100] flex items-center justify-center px-4"
+                                style="display: none;" x-transition:enter="transition ease-out duration-300"
+                                x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+                                <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
+                                    @click="showProfileModal = false"></div>
+                                <div class="bg-white rounded-[32px] shadow-2xl w-full max-w-lg relative z-10 overflow-hidden transform"
+                                    x-transition:enter="transition ease-out duration-300"
+                                    x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+                                    x-transition:enter-end="opacity-100 scale-100 translate-y-0">
+                                    
+                                    <div class="relative h-32 bg-gradient-brand">
+                                        <div class="absolute inset-0 opacity-10" style="background: url('{{ asset('images/pattern.png') }}') repeat; background-size: 60px;"></div>
+                                        <button @click="showProfileModal = false" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-black/10 hover:bg-black/20 text-white flex items-center justify-center transition-all">
+                                            <i class="fa-solid fa-times"></i>
+                                        </button>
+                                    </div>
+
+                                    <div class="px-8 pb-8 -mt-12 relative">
+                                        <div class="flex items-end justify-between mb-6">
+                                            <div class="w-24 h-24 rounded-3xl bg-white p-1.5 shadow-xl">
+                                                <div class="w-full h-full rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center border border-slate-100">
+                                                    <i class="fa-solid fa-user text-4xl text-slate-400"></i>
+                                                </div>
+                                            </div>
+                                            <div class="pb-2">
+                                                <span class="px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest border border-indigo-100">
+                                                    {{ $user->user_type ?? 'User' }}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-8">
+                                            <h2 class="text-2xl font-display font-bold text-slate-900">{{ $user->employee ? $user->employee->full_name : 'System User' }}</h2>
+                                            <p class="text-slate-500 font-medium">{{ $user->user_email }}</p>
+                                        </div>
+
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 group hover:bg-white hover:shadow-md transition-all">
+                                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Department</p>
+                                                <p class="text-sm font-bold text-slate-700 leading-snug group-hover:text-brand transition-colors">
+                                                    {{ $user->employee && $user->employee->department ? $user->employee->department->department_name : 'General' }}
+                                                </p>
+                                            </div>
+                                            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 group hover:bg-white hover:shadow-md transition-all">
+                                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Designation</p>
+                                                <p class="text-sm font-bold text-slate-700 leading-snug group-hover:text-brand transition-colors">
+                                                    {{ $user->employee && $user->employee->designation ? $user->employee->designation->designation_name : 'System Profile' }}
+                                                </p>
+                                            </div>
+                                            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 group hover:bg-white hover:shadow-md transition-all">
+                                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">IQC ID</p>
+                                                <p class="text-sm font-bold text-slate-700 leading-snug group-hover:text-brand transition-colors">
+                                                    #{{ $user->employee ? $user->employee->employee_no : $user->user_id }}
+                                                </p>
+                                            </div>
+                                            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 group hover:bg-white hover:shadow-md transition-all">
+                                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Join Date</p>
+                                                <p class="text-sm font-bold text-slate-700 leading-snug group-hover:text-brand transition-colors">
+                                                    {{ $user->employee && $user->employee->employee_join_date ? \Carbon\Carbon::parse($user->employee->employee_join_date)->format('d M Y') : '---' }}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-8 flex justify-center">
+                                            <button @click="showProfileModal = false" class="px-8 py-3 rounded-2xl bg-slate-900 text-white font-bold text-sm hover:scale-105 transition-all shadow-lg active:scale-95">
+                                                Close Profile
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
                     </div>
                 </div>
             </div>
@@ -1220,6 +1310,24 @@
         @endif
         @if($errors->any())
             Toast.fire({ icon: 'error', title: '{{ $errors->first() }}' });
+        @endif
+
+        @php $user = Auth::user(); @endphp
+        @if($user && in_array($user->user_type, ['sys_admin', 'root', 'admin_hr']))
+            // Asset Alert Ticker - Runs every 5 minutes
+            function triggerAssetCheck() {
+                axios.get('{{ route('admin.assets.check_now') }}')
+                    .then(response => {
+                        console.log('Asset alert check triggered automatically.');
+                    })
+                    .catch(error => {
+                        console.error('Asset check failed:', error);
+                    });
+            }
+            
+            // Execute on load and then every 5 minutes
+            setTimeout(triggerAssetCheck, 5000); // Wait 5 seconds after load
+            setInterval(triggerAssetCheck, 300000); // 5 minutes (300,000 ms)
         @endif
     </script>
 </body>

@@ -186,7 +186,7 @@
                                     <div>
                                         <div class="flex items-center gap-2">
                                             <span class="font-semibold text-slate-800">${employee.first_name} ${employee.last_name}</span>
-                                            ${employee.is_new == 1 ? '<span class="px-2 py-0.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold">NEW</span>' : ''}
+                                           
                                         </div>
                                     </div>
                                 </div>

@@ -230,49 +230,152 @@
             </div>
 
             <!-- Leaves Panel -->
-            <div x-show="tab === 'leaves'" class="animate-fade-in">
-                <div class="flex justify-between items-center mb-6">
+            <div x-show="tab === 'leaves'" class="animate-fade-in space-y-6">
+                <div class="flex justify-between items-center">
                     <h3 class="text-lg font-bold text-slate-700">Leave Records</h3>
                 </div>
+
+                <!-- Filters -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div class="relative">
+                            <i class="fa-solid fa-hashtag absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" id="leave-search-filter" placeholder="Ref No..." class="premium-input w-full pl-11 py-2 text-xs">
+                        </div>
+                        <div class="relative">
+                            <i class="fa-solid fa-tag absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <select id="leave-type-filter" class="premium-input w-full pl-11 py-2 text-xs appearance-none">
+                                <option value="">All Types</option>
+                                @foreach($leaveTypes as $type)
+                                    <option value="{{ $type->leave_type_id }}">{{ $type->leave_type_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="relative">
+                            <i class="fa-solid fa-signal absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <select id="leave-status-filter" class="premium-input w-full pl-11 py-2 text-xs appearance-none">
+                                <option value="">All Statuses</option>
+                                <option value="{{ \App\Models\HrLeave::STATUS_PENDING }}">Pending HR</option>
+                                <option value="{{ \App\Models\HrLeave::STATUS_PENDING_APPROVAL }}">Pending Manager</option>
+                                <option value="{{ \App\Models\HrLeave::STATUS_APPROVED }}">Approved</option>
+                                <option value="{{ \App\Models\HrLeave::STATUS_REJECTED }}">Rejected</option>
+                                <option value="{{ \App\Models\HrLeave::STATUS_ACTION_REQUIRED }}">Action Required</option>
+                            </select>
+                        </div>
+                        <div class="relative">
+                            <i class="fa-solid fa-calendar absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="date" id="leave-start-filter" class="premium-input w-full pl-11 py-2 text-xs" placeholder="From">
+                        </div>
+                        <div class="relative">
+                            <i class="fa-solid fa-calendar-check absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="date" id="leave-end-filter" class="premium-input w-full pl-11 py-2 text-xs" placeholder="To">
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-2 mt-4">
+                        <button onclick="applyLeaveFilters()" class="px-4 py-2 bg-slate-800 text-white font-bold rounded-lg text-xs hover:bg-slate-900 transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-search"></i> Search
+                        </button>
+                        <button onclick="resetLeaveFilters()" class="px-4 py-2 bg-white text-slate-600 font-bold rounded-lg text-xs hover:bg-slate-100 border border-slate-200 transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-rotate-left"></i> Reset
+                        </button>
+                    </div>
+                </div>
+
                 <div class="overflow-x-auto">
                     <table class="premium-table w-full">
                         <thead>
                             <tr>
                                 <th>REF</th>
                                 <th>Type</th>
-                                <th>Submission</th>
-                                <th>Start</th>
-                                <th>End</th>
+                                <th>Duration</th>
                                 <th>Days</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            @forelse($employee->leaves as $leave)
+                        <tbody id="employee-leaves-container">
+                            <!-- Populated by AJAX -->
+                            @foreach($employee->leaves->take(10) as $leave)
                                 <tr>
                                     <td class="font-bold">#{{ $leave->leave_id }}</td>
-                                    <td>{{ $leave->type->leave_type_name ?? 'N/A' }}</td>
-                                    <td>{{ $leave->submission_date ? $leave->submission_date->format('d M Y') : '---' }}</td>
-                                    <td>{{ $leave->start_date ? $leave->start_date->format('d M Y') : '---' }}</td>
-                                    <td>{{ $leave->end_date ? $leave->end_date->format('d M Y') : '---' }}</td>
-                                    <td>{{ $leave->total_days }}</td>
                                     <td>
-                                        <span class="px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wider">Approved</span>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-medium">
+                                            <i class="fa-solid fa-tag text-[10px]"></i>
+                                            {{ $leave->type->leave_type_name ?? 'N/A' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="text-[11px] font-medium text-slate-600">
+                                            {{ $leave->start_date ? $leave->start_date->format('d M Y') : '---' }} - 
+                                            {{ $leave->end_date ? $leave->end_date->format('d M Y') : '---' }}
+                                        </div>
+                                    </td>
+                                    <td class="font-bold text-slate-700">{{ $leave->total_days }}</td>
+                                    <td>
+                                        @php
+                                            $statusConfig = match ($leave->leave_status_id) {
+                                                \App\Models\HrLeave::STATUS_PENDING => ['bg' => 'from-yellow-400 to-amber-500', 'text' => 'Pending HR', 'icon' => 'clock'],
+                                                \App\Models\HrLeave::STATUS_PENDING_APPROVAL => ['bg' => 'from-blue-500 to-cyan-600', 'text' => 'Pending Manager', 'icon' => 'user-check'],
+                                                \App\Models\HrLeave::STATUS_APPROVED => ['bg' => 'from-green-500 to-emerald-600', 'text' => 'Approved', 'icon' => 'check-double'],
+                                                \App\Models\HrLeave::STATUS_REJECTED => ['bg' => 'from-red-500 to-rose-600', 'text' => 'Rejected', 'icon' => 'times-circle'],
+                                                \App\Models\HrLeave::STATUS_ACTION_REQUIRED => ['bg' => 'from-purple-500 to-indigo-600', 'text' => 'Action Required', 'icon' => 'user-edit'],
+                                                default => ['bg' => 'from-slate-400 to-slate-500', 'text' => 'Unknown', 'icon' => 'question']
+                                            };
+                                        @endphp
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gradient-to-r {{ $statusConfig['bg'] }} text-white text-[10px] font-bold uppercase tracking-wider shadow-sm">
+                                            <i class="fa-solid fa-{{ $statusConfig['icon'] }}"></i>
+                                            {{ $statusConfig['text'] }}
+                                        </span>
                                     </td>
                                 </tr>
-                            @empty
-                                <tr><td colspan="7" class="text-center py-8 text-slate-400 italic">No leave records found.</td></tr>
-                            @endforelse
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
+
+                <div id="employee-leaves-pagination"></div>
             </div>
 
             <!-- Permissions Panel -->
-            <div x-show="tab === 'permissions'" class="animate-fade-in">
-                <div class="flex justify-between items-center mb-6">
+            <div x-show="tab === 'permissions'" class="animate-fade-in space-y-6">
+                <div class="flex justify-between items-center">
                     <h3 class="text-lg font-bold text-slate-700">Permission History</h3>
                 </div>
+
+                <!-- Filters -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="relative">
+                            <i class="fa-solid fa-hashtag absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" id="perm-search-filter" placeholder="Ref No..." class="premium-input w-full pl-11 py-2 text-xs">
+                        </div>
+                        <div class="relative">
+                            <i class="fa-solid fa-signal absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <select id="perm-status-filter" class="premium-input w-full pl-11 py-2 text-xs appearance-none">
+                                <option value="">All Statuses</option>
+                                @foreach($permissionStatuses as $status)
+                                    <option value="{{ $status->permission_status_id }}">{{ $status->permission_status_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="relative">
+                            <i class="fa-solid fa-calendar absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="date" id="perm-start-filter" class="premium-input w-full pl-11 py-2 text-xs" placeholder="From">
+                        </div>
+                        <div class="relative">
+                            <i class="fa-solid fa-calendar-check absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="date" id="perm-end-filter" class="premium-input w-full pl-11 py-2 text-xs" placeholder="To">
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-2 mt-4">
+                        <button onclick="applyPermFilters()" class="px-4 py-2 bg-slate-800 text-white font-bold rounded-lg text-xs hover:bg-slate-900 transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-search"></i> Search
+                        </button>
+                        <button onclick="resetPermFilters()" class="px-4 py-2 bg-white text-slate-600 font-bold rounded-lg text-xs hover:bg-slate-100 border border-slate-200 transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-rotate-left"></i> Reset
+                        </button>
+                    </div>
+                </div>
+
                 <div class="overflow-x-auto">
                     <table class="premium-table w-full">
                         <thead>
@@ -284,23 +387,32 @@
                                 <th>Status</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            @forelse($employee->permissions as $perm)
+                        <tbody id="employee-perms-container">
+                            <!-- Populated by AJAX -->
+                            @foreach($employee->permissions->take(10) as $perm)
                                 <tr>
                                     <td class="font-bold">#{{ $perm->permission_id }}</td>
-                                    <td>{{ $perm->start_date ? $perm->start_date->format('d M Y') : '---' }}</td>
-                                    <td>{{ $perm->start_time }} - {{ $perm->end_time }}</td>
-                                    <td>{{ $perm->submission_date ? $perm->submission_date->format('d M Y') : '---' }}</td>
+                                    <td class="font-semibold text-slate-700">{{ $perm->start_date ? $perm->start_date->format('d M Y') : '---' }}</td>
                                     <td>
-                                        <span class="px-2 py-1 rounded-lg bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wider">{{ $perm->status->permission_status_name ?? 'Approved' }}</span>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-medium">
+                                            <i class="fa-solid fa-clock text-[10px]"></i>
+                                            {{ $perm->start_time }} - {{ $perm->end_time }}
+                                        </span>
+                                    </td>
+                                    <td class="text-xs text-slate-500">{{ $perm->submission_date ? $perm->submission_date->format('d M Y') : '---' }}</td>
+                                    <td>
+                                        <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wider border border-emerald-100">
+                                            <i class="fa-solid fa-check-circle mr-1"></i>
+                                            {{ $perm->status->permission_status_name ?? 'Approved' }}
+                                        </span>
                                     </td>
                                 </tr>
-                            @empty
-                                <tr><td colspan="5" class="text-center py-8 text-slate-400 italic">No permission records found.</td></tr>
-                            @endforelse
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
+
+                <div id="employee-perms-pagination"></div>
             </div>
 
             <!-- Attendance Panel -->
@@ -334,23 +446,75 @@
             </div>
 
             <!-- Disciplinary Panel -->
-            <div x-show="tab === 'da'" class="animate-fade-in">
-                <div class="grid grid-cols-1 gap-4">
-                    @forelse($employee->disciplinaryActions as $da)
-                        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex justify-between items-center group">
-                            <div>
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="px-2 py-0.5 rounded-lg bg-rose-100 text-rose-700 text-[10px] font-bold uppercase">{{ $da->type->da_type_name ?? 'DA' }}</span>
-                                    <h4 class="font-bold text-slate-700">{{ $da->warning->da_warning_name ?? 'Warning' }}</h4>
-                                </div>
-                                <p class="text-xs text-slate-500">{{ $da->da_date }} - {{ $da->da_description }}</p>
-                            </div>
-                            <span class="text-sm font-bold text-slate-400 group-hover:text-slate-600 transition-colors">#{{ $da->da_id }}</span>
-                        </div>
-                    @empty
-                        <div class="text-center py-8 text-slate-400 italic">No disciplinary actions recorded.</div>
-                    @endforelse
+            <div x-show="tab === 'da'" class="animate-fade-in space-y-6">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-slate-700">Disciplinary History</h3>
                 </div>
+
+                <!-- Filters -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="relative">
+                            <i class="fa-solid fa-hashtag absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" id="da-search-filter" placeholder="Ref No..." class="premium-input w-full pl-11 py-2 text-xs">
+                        </div>
+                        <div class="relative">
+                            <i class="fa-solid fa-triangle-exclamation absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <select id="da-warning-filter" class="premium-input w-full pl-11 py-2 text-xs appearance-none">
+                                <option value="">All Warnings</option>
+                                @foreach($warningLevels as $warning)
+                                    <option value="{{ $warning->da_warning_id }}">{{ $warning->da_warning_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="relative">
+                            <i class="fa-solid fa-signal absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <select id="da-status-filter" class="premium-input w-full pl-11 py-2 text-xs appearance-none">
+                                <option value="">All Statuses</option>
+                                @foreach($daStatuses as $status)
+                                    <option value="{{ $status->da_status_id }}">{{ $status->da_status_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="relative">
+                            <i class="fa-solid fa-calendar absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="date" id="da-date-filter" class="premium-input w-full pl-11 py-2 text-xs">
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-2 mt-4">
+                        <button onclick="applyDaFilters()" class="px-4 py-2 bg-slate-800 text-white font-bold rounded-lg text-xs hover:bg-slate-900 transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-search"></i> Search
+                        </button>
+                        <button onclick="resetDaFilters()" class="px-4 py-2 bg-white text-slate-600 font-bold rounded-lg text-xs hover:bg-slate-100 border border-slate-200 transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-rotate-left"></i> Reset
+                        </button>
+                    </div>
+                </div>
+
+                <div id="employee-da-container" class="grid grid-cols-1 gap-4">
+                    <!-- Populated by AJAX -->
+                    @foreach($employee->disciplinaryActions->take(5) as $da)
+                        <div class="p-5 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all flex justify-between items-start group relative overflow-hidden">
+                            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500"></div>
+                            <div class="flex-1 pl-2">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <span class="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 text-[10px] font-black uppercase tracking-widest border border-rose-100 italic">{{ $da->type->da_type_name ?? 'DA' }}</span>
+                                    <h4 class="font-bold text-slate-800 text-sm tracking-tight">{{ $da->warning->da_warning_name ?? 'Warning' }}</h4>
+                                    <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[9px] font-bold uppercase">{{ $da->status->da_status_name ?? 'Open' }}</span>
+                                </div>
+                                <div class="flex items-center gap-3 text-[11px] text-slate-400 font-medium mb-3">
+                                    <span class="flex items-center gap-1"><i class="fa-solid fa-calendar"></i> {{ $da->da_date }}</span>
+                                </div>
+                                <p class="text-xs text-slate-600 leading-relaxed max-w-2xl bg-slate-50/50 p-2.5 rounded-xl">{{ $da->da_description }}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs font-black text-slate-200 group-hover:text-slate-300 transition-colors">#{{ $da->da_id }}</span>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                <div id="employee-da-pagination"></div>
             </div>
 
             <!-- Performance Panel -->
@@ -544,15 +708,15 @@
                         <i class="fa-solid fa-passport"></i> PASSPORT DETAILS
                     </h3>
                     <div class="space-y-3">
-                        <input type="text" name="passport_no" placeholder="Passport Number" value="{{ optional($employee->credentials)->passport_no ?? '' }}" class="premium-input w-full px-4 py-2.5 text-sm">
+                        <input type="text" name="passport_no" placeholder="Passport Number" value="{{ optional($employee->credentials)->passport_no ?? '' }}" class="premium-input w-full px-4 py-2.5 text-sm" required>
                         <div class="grid grid-cols-2 gap-3">
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Issue Date</label>
-                                <input type="date" name="passport_issue_date" value="{{ optional($employee->credentials)->passport_issue_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs">
+                                <input type="date" name="passport_issue_date" value="{{ optional($employee->credentials)->passport_issue_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs" required>
                             </div>
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Expiry Date</label>
-                                <input type="date" name="passport_expiry_date" value="{{ optional($employee->credentials)->passport_expiry_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs">
+                                <input type="date" name="passport_expiry_date" value="{{ optional($employee->credentials)->passport_expiry_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs" required>
                             </div>
                         </div>
                     </div>
@@ -564,15 +728,15 @@
                         <i class="fa-solid fa-plane"></i> VISA DETAILS
                     </h3>
                     <div class="space-y-3">
-                        <input type="text" name="visa_no" placeholder="Visa Number" value="{{ optional($employee->credentials)->visa_no ?? '' }}" class="premium-input w-full px-4 py-2.5 text-sm">
+                        <input type="text" name="visa_no" placeholder="Visa Number" value="{{ optional($employee->credentials)->visa_no ?? '' }}" class="premium-input w-full px-4 py-2.5 text-sm" required>
                         <div class="grid grid-cols-2 gap-3">
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Issue Date</label>
-                                <input type="date" name="visa_issue_date" value="{{ optional($employee->credentials)->visa_issue_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs">
+                                <input type="date" name="visa_issue_date" value="{{ optional($employee->credentials)->visa_issue_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs" required>
                             </div>
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Expiry Date</label>
-                                <input type="date" name="visa_expiry_date" value="{{ optional($employee->credentials)->visa_expiry_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs">
+                                <input type="date" name="visa_expiry_date" value="{{ optional($employee->credentials)->visa_expiry_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs" required>
                             </div>
                         </div>
                     </div>
@@ -584,15 +748,22 @@
                         <i class="fa-solid fa-id-card-clip"></i> EMIRATES ID DETAILS
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <input type="text" name="eid_no" placeholder="Emirates ID (784-XXXX-XXXXXXX-X)" value="{{ optional($employee->credentials)->eid_no ?? '' }}" class="premium-input w-full px-4 py-2.5 text-sm self-center">
+                        <div>
+                            <input type="text" name="eid_no" placeholder="784-XXXX-XXXXXXX-X" 
+                                pattern="784-\d{4}-\d{7}-\d{1}"
+                                title="Format: 784-XXXX-XXXXXXX-X"
+                                value="{{ optional($employee->credentials)->eid_no ?? '' }}" 
+                                class="premium-input w-full px-4 py-2.5 text-sm self-center" required>
+                            <p class="text-[9px] text-slate-400 mt-1 pl-1">Required Format: 784-XXXX-XXXXXXX-X</p>
+                        </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Issue Date</label>
-                                <input type="date" name="eid_issue_date" value="{{ optional($employee->credentials)->eid_issue_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs">
+                                <input type="date" name="eid_issue_date" value="{{ optional($employee->credentials)->eid_issue_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs" required>
                             </div>
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Expiry Date</label>
-                                <input type="date" name="eid_expiry_date" value="{{ optional($employee->credentials)->eid_expiry_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs">
+                                <input type="date" name="eid_expiry_date" value="{{ optional($employee->credentials)->eid_expiry_date ?? '' }}" class="premium-input w-full px-4 py-2 text-xs" required>
                             </div>
                         </div>
                     </div>
@@ -696,6 +867,242 @@
 
 
 @endsection
+
+@push('scripts')
+<script src="{{ asset('js/ajax-pagination.js') }}"></script>
+<script>
+    // Leave Tab Pagination
+    window.leavePagination = new AjaxPagination({
+        endpoint: "{{ route('hr.employees.leaves_data', $employee->employee_id) }}",
+        containerSelector: '#employee-leaves-container',
+        paginationSelector: '#employee-leaves-pagination',
+        getAdditionalParams: () => ({
+            search: document.getElementById('leave-search-filter').value,
+            type_id: document.getElementById('leave-type-filter').value,
+            status_id: document.getElementById('leave-status-filter').value,
+            start_date: document.getElementById('leave-start-filter').value,
+            end_date: document.getElementById('leave-end-filter').value
+        }),
+        renderCallback: function(leaves) {
+            const container = document.querySelector('#employee-leaves-container');
+            if (leaves.length === 0) {
+                container.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-slate-400 italic">No leave records found matching filters.</td></tr>';
+                return;
+            }
+
+            let html = '';
+            leaves.forEach(leave => {
+                const startDate = leave.start_date ? new Date(leave.start_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '---';
+                const endDate = leave.end_date ? new Date(leave.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '---';
+                
+                let statusConfig = { bg: 'from-slate-400 to-slate-500', text: 'Unknown', icon: 'question' };
+                switch(parseInt(leave.leave_status_id)) {
+                    case {{ \App\Models\HrLeave::STATUS_PENDING }}: statusConfig = { bg: 'from-yellow-400 to-amber-500', text: 'Pending HR', icon: 'clock' }; break;
+                    case {{ \App\Models\HrLeave::STATUS_PENDING_APPROVAL }}: statusConfig = { bg: 'from-blue-500 to-cyan-600', text: 'Pending Manager', icon: 'user-check' }; break;
+                    case {{ \App\Models\HrLeave::STATUS_APPROVED }}: statusConfig = { bg: 'from-green-500 to-emerald-600', text: 'Approved', icon: 'check-double' }; break;
+                    case {{ \App\Models\HrLeave::STATUS_REJECTED }}: statusConfig = { bg: 'from-red-500 to-rose-600', text: 'Rejected', icon: 'times-circle' }; break;
+                    case {{ \App\Models\HrLeave::STATUS_ACTION_REQUIRED }}: statusConfig = { bg: 'from-purple-500 to-indigo-600', text: 'Action Required', icon: 'user-edit' }; break;
+                }
+
+                html += `
+                    <tr>
+                        <td class="font-bold">#${leave.leave_id}</td>
+                        <td>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-medium">
+                                <i class="fa-solid fa-tag text-[10px]"></i>
+                                ${leave.type ? leave.type.leave_type_name : 'N/A'}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="text-[11px] font-medium text-slate-600">
+                                ${startDate} - ${endDate}
+                            </div>
+                        </td>
+                        <td class="font-bold text-slate-700">${leave.total_days}</td>
+                        <td>
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gradient-to-r ${statusConfig.bg} text-white text-[10px] font-bold uppercase tracking-wider shadow-sm">
+                                <i class="fa-solid fa-${statusConfig.icon}"></i>
+                                ${statusConfig.text}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+            container.innerHTML = html;
+        }
+    });
+
+    function applyLeaveFilters() {
+        window.leavePagination.loadPage(1);
+    }
+
+    function resetLeaveFilters() {
+        document.getElementById('leave-search-filter').value = '';
+        document.getElementById('leave-type-filter').value = '';
+        document.getElementById('leave-status-filter').value = '';
+        document.getElementById('leave-start-filter').value = '';
+        document.getElementById('leave-end-filter').value = '';
+        window.leavePagination.loadPage(1);
+    }
+
+    // Permission Tab Pagination
+    window.permPagination = new AjaxPagination({
+        endpoint: "{{ route('hr.employees.permissions_data', $employee->employee_id) }}",
+        containerSelector: '#employee-perms-container',
+        paginationSelector: '#employee-perms-pagination',
+        getAdditionalParams: () => ({
+            search: document.getElementById('perm-search-filter').value,
+            status_id: document.getElementById('perm-status-filter').value,
+            start_date: document.getElementById('perm-start-filter').value,
+            end_date: document.getElementById('perm-end-filter').value
+        }),
+        renderCallback: function(permissions) {
+            const container = document.querySelector('#employee-perms-container');
+            if (permissions.length === 0) {
+                container.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-slate-400 italic">No permission records found matching filters.</td></tr>';
+                return;
+            }
+
+            let html = '';
+            permissions.forEach(perm => {
+                const startDate = perm.start_date ? new Date(perm.start_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '---';
+                const submissionDate = perm.submission_date ? new Date(perm.submission_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '---';
+                
+                html += `
+                    <tr>
+                        <td class="font-bold">#${perm.permission_id}</td>
+                        <td class="font-semibold text-slate-700">${startDate}</td>
+                        <td>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-medium">
+                                <i class="fa-solid fa-clock text-[10px]"></i>
+                                ${perm.start_time} - ${perm.end_time}
+                            </span>
+                        </td>
+                        <td class="text-xs text-slate-500">${submissionDate}</td>
+                        <td>
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wider border border-emerald-100">
+                                <i class="fa-solid fa-check-circle mr-1"></i>
+                                ${perm.status ? perm.status.permission_status_name : 'Approved'}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+            container.innerHTML = html;
+        }
+    });
+
+    function applyPermFilters() {
+        window.permPagination.loadPage(1);
+    }
+
+    function resetPermFilters() {
+        document.getElementById('perm-search-filter').value = '';
+        document.getElementById('perm-status-filter').value = '';
+        document.getElementById('perm-start-filter').value = '';
+        document.getElementById('perm-end-filter').value = '';
+        window.permPagination.loadPage(1);
+    }
+
+    // Disciplinary Tab Pagination
+    window.daPagination = new AjaxPagination({
+        endpoint: "{{ route('hr.employees.disciplinary_data', $employee->employee_id) }}",
+        containerSelector: '#employee-da-container',
+        paginationSelector: '#employee-da-pagination',
+        getAdditionalParams: () => ({
+            search: document.getElementById('da-search-filter').value,
+            warning_id: document.getElementById('da-warning-filter').value,
+            status_id: document.getElementById('da-status-filter').value,
+            date: document.getElementById('da-date-filter').value
+        }),
+        renderCallback: function(actions) {
+            const container = document.querySelector('#employee-da-container');
+            if (actions.length === 0) {
+                container.innerHTML = '<div class="text-center py-8 text-slate-400 italic">No disciplinary actions found matching filters.</div>';
+                return;
+            }
+
+            let html = '';
+            actions.forEach(da => {
+                html += `
+                    <div class="p-5 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all flex justify-between items-start group relative overflow-hidden animate-fade-in">
+                        <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500"></div>
+                        <div class="flex-1 pl-2">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 text-[10px] font-black uppercase tracking-widest border border-rose-100 italic">${da.type ? da.type.da_type_name : 'DA'}</span>
+                                <h4 class="font-bold text-slate-800 text-sm tracking-tight">${da.warning ? da.warning.da_warning_name : 'Warning'}</h4>
+                                <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[9px] font-bold uppercase">${da.status ? da.status.da_status_name : 'Open'}</span>
+                            </div>
+                            <div class="flex items-center gap-3 text-[11px] text-slate-400 font-medium mb-3">
+                                <span class="flex items-center gap-1"><i class="fa-solid fa-calendar"></i> ${da.da_date}</span>
+                            </div>
+                            <p class="text-xs text-slate-600 leading-relaxed max-w-2xl bg-slate-50/50 p-2.5 rounded-xl">${da.da_description}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-black text-slate-200 group-hover:text-slate-300 transition-colors">#${da.da_id}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+    });
+
+    function applyDaFilters() {
+        window.daPagination.loadPage(1);
+    }
+
+    function resetDaFilters() {
+        document.getElementById('da-search-filter').value = '';
+        document.getElementById('da-warning-filter').value = '';
+        document.getElementById('da-status-filter').value = '';
+        document.getElementById('da-date-filter').value = '';
+        window.daPagination.loadPage(1);
+    }
+
+    // Initial render setup for partial load
+    document.addEventListener('DOMContentLoaded', () => {
+        // Leaves Initial
+        const initialLeaves = @json($employee->leaves->take(10));
+        if(initialLeaves.length > 0) {
+            window.leavePagination.renderPagination({
+                current_page: 1,
+                last_page: Math.ceil({{ $employee->leaves->count() }} / 10),
+                from: 1,
+                to: Math.min(10, {{ $employee->leaves->count() }}),
+                total: {{ $employee->leaves->count() }}
+            });
+        }
+
+        // Permissions Initial
+        const initialPerms = @json($employee->permissions->take(10));
+        if(initialPerms.length > 0) {
+            window.permPagination.renderPagination({
+                current_page: 1,
+                last_page: Math.ceil({{ $employee->permissions->count() }} / 10),
+                from: 1,
+                to: Math.min(10, {{ $employee->permissions->count() }}),
+                total: {{ $employee->permissions->count() }}
+            });
+        }
+
+        // Disciplinary Initial
+        const initialDa = @json($employee->disciplinaryActions->take(5));
+        if(initialDa.length > 0) {
+            window.daPagination.renderPagination({
+                current_page: 1,
+                last_page: Math.ceil({{ $employee->disciplinaryActions->count() }} / 10),
+                from: 1,
+                to: Math.min(10, {{ $employee->disciplinaryActions->count() }}),
+                total: {{ $employee->disciplinaryActions->count() }}
+            });
+        }
+    });
+</script>
+@endpush
+@section('content-extra')
+@endsection
+
 
 @push('styles')
 <style>

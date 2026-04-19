@@ -5,12 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\SystemLog;
+use Illuminate\Support\Facades\Auth;
 
 class SystemLogController extends Controller
 {
     public function index(Request $request)
     {
-        $query = SystemLog::with(['logger'])->where('logger_type','admin')->where('logged_by',auth()->id())->orderBy('log_id', 'desc');
+        $query = SystemLog::with(['logger'])->where('logger_type','admin')->where('logged_by',Auth::user()->user_id)->orderBy('log_id', 'desc');
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -41,7 +42,7 @@ class SystemLogController extends Controller
     public function getData(Request $request)
     {
         $perPage = $request->get('per_page', 30);
-        $query = SystemLog::with(['logger'])->where('logger_type','admin')->where('logged_by',auth()->id())->orderBy('log_id', 'desc');
+        $query = SystemLog::with(['logger'])->where('logger_type','admin')->where('logged_by',Auth::user()->user_id)->orderBy('log_id', 'desc');
 
         if ($request->filled('search')) {
             $search = $request->search;

@@ -22,7 +22,9 @@ class DepartmentController extends Controller
         $departments = $query->orderBy('department_id', 'desc')
             ->paginate(15);
 
-        $employees = Employee::where('is_deleted', 0)->where('is_hidden', 0)->orderBy('first_name')->get();
+        $employees = Employee::where('is_deleted', 0)->where('is_hidden', 0)->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })->orderBy('first_name')->get();
         // For parent department selection, exclude those that shouldn't be parents if needed, or just list clear ones
         $allDepartments = Department::orderBy('department_name')->get();
 
@@ -147,7 +149,7 @@ class DepartmentController extends Controller
             'log_action' => $action,
             'log_remark' => $remark,
             'logger_type' => 'employees_list',
-            'logged_by' => Auth::id() ?? 1,
+            'logged_by' => auth()->user()->user_id,
             'log_type' => 'int'
         ]);
     }

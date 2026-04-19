@@ -4,7 +4,7 @@
 @section('subtitle', 'View details for ticket #' . $ticket->ticket_ref)
 
 @section('content')
-    <div class="space-y-8 animate-fade-in-up" x-data="{ activeTab: 'details' }">
+    <div class="space-y-12 animate-fade-in-up" x-data="{ activeTab: 'details' }">
 
         <!-- Back Button & Tools -->
         <div class="flex items-center justify-between">
@@ -23,26 +23,25 @@
 
             @if($ticket->status_id == $statusResolved)
                 <button onclick="reopenTicket()"
-                    class="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 hover:scale-105 transition-all duration-200 flex items-center gap-2">
+                    class="px-6 py-3 bg-brand text-white font-bold rounded-xl shadow-lg hover:bg-brand-dark hover:scale-105 transition-all duration-200 flex items-center gap-2">
                     <i class="fa-solid fa-rotate-left text-sm"></i>
                     <span>Reopen Ticket</span>
                 </button>
             @else
                     <button onclick="openModal('editDetailsModal')"
-                        class="px-6 py-3 bg-white text-slate-700 font-bold rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 hover:shadow transition-all duration-200 flex items-center gap-2">
-                        <i class="fa-solid fa-pen-to-square text-sm text-indigo-500"></i>
+                        class="px-6 py-3 bg-white text-slate-700 font-bold rounded-xl shadow-sm border border-slate-200 hover:border-brand-light hover:text-brand-dark hover:scale-105 transition-all duration-200 flex items-center gap-2">
+                        <i class="fa-solid fa-pen-to-square text-sm text-brand"></i>
                         <span>Edit Ticket / Status</span>
                     </button>
-                </div>
             @endif
         </div>
 
         <!-- Premium Hero Banner -->
-        <div class="rounded-[2.5rem] bg-gradient-to-br from-indigo-900 via-indigo-800 to-purple-900 p-8 md:p-12 text-white shadow-2xl shadow-indigo-900/20 relative overflow-hidden isolate">
+        <div class="rounded-[2.5rem] bg-brand p-8 md:p-12 text-white shadow-2xl shadow-brand/20 relative overflow-hidden isolate">
             <!-- Decorative Background Elements -->
             <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-white/5 rounded-full blur-3xl -z-10"></div>
-            <div class="absolute bottom-0 left-1/3 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl -z-10"></div>
-            <div class="absolute top-1/2 left-0 w-32 h-64 bg-indigo-400/10 rounded-full blur-2xl -z-10"></div>
+            <div class="absolute bottom-0 left-1/3 w-96 h-96 bg-white/10 rounded-full blur-3xl -z-10"></div>
+            <div class="absolute top-1/2 left-0 w-32 h-64 bg-white/5 rounded-full blur-2xl -z-10"></div>
 
             <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
                 <div class="space-y-4">
@@ -118,11 +117,11 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Left Column: Details -->
-            <div class="lg:col-span-2 space-y-8">
+            <div class="lg:col-span-2 space-y-12">
                 
                 <!-- Description Card -->
                 <div class="premium-card p-1">
-                    <div class="bg-indigo-50/50 p-8 rounded-[1.25rem]">
+                    <div class="bg-brand/5 p-8 rounded-[1.25rem]">
                         <h3 class="flex items-center gap-2 text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">
                             <i class="fa-solid fa-align-left text-brand"></i>
                             Subject & Description
@@ -143,16 +142,16 @@
                         Activity Timeline
                     </h3>
                     
-                    <div class="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-indigo-100 before:via-slate-200 before:to-transparent">
+                    <div class="relative space-y-10 before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-brand-light/30 before:via-slate-200 before:to-transparent">
                         @forelse($ticket->logs as $log)
                             <div class="relative flex items-start gap-4 group">
-                                <div class="absolute left-0 mt-1 ml-5 w-4 h-0.5 bg-indigo-200 group-hover:bg-brand transition-colors"></div>
+                                <div class="absolute left-0 mt-1 ml-5 w-4 h-0.5 bg-brand-light/50 group-hover:bg-brand transition-colors"></div>
                                 
-                                <div class="relative z-10 flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-indigo-50 text-indigo-600 shadow-sm group-hover:scale-110 group-hover:bg-brand group-hover:text-white transition-all duration-300">
+                                <div class="relative z-10 flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-brand/10 text-brand shadow-sm group-hover:scale-110 group-hover:bg-brand group-hover:text-white transition-all duration-300">
                                     <i class="fa-solid fa-check text-[10px]"></i>
                                 </div>
                                 
-                                <div class="flex-1 bg-white rounded-2xl border border-slate-100 p-5 shadow-sm group-hover:shadow-md group-hover:border-indigo-100 transition-all">
+                                <div class="flex-1 bg-white rounded-2xl border border-slate-100 p-5 shadow-sm group-hover:shadow-md group-hover:border-brand-light transition-all">
                                     <div class="flex flex-wrap justify-between gap-2 mb-2">
                                         <span class="font-bold text-slate-800">{{ $log->log_action }}</span>
                                         <span class="text-xs font-mono text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
@@ -187,12 +186,12 @@
                     <div class="premium-card p-6">
                          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Files</h4>
                          <a href="{{ asset('uploads/' . $ticket->ticket_attachment) }}" target="_blank" class="group block">
-                            <div class="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 group-hover:border-indigo-200 group-hover:bg-indigo-50/30 transition-all">
-                                <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
+                            <div class="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 group-hover:border-brand-light group-hover:bg-brand/5 transition-all">
+                                <div class="w-10 h-10 rounded-lg bg-brand/10 text-brand flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
                                     <i class="fa-solid fa-file-image"></i>
                                 </div>
                                 <div class="overflow-hidden">
-                                    <p class="text-sm font-bold text-slate-700 truncate group-hover:text-indigo-700 transition-colors">Evidence File</p>
+                                    <p class="text-sm font-bold text-slate-700 truncate group-hover:text-brand-dark transition-colors">Evidence File</p>
                                     <p class="text-[10px] text-slate-400 uppercase tracking-wider">Click to View</p>
                                 </div>
                             </div>
@@ -216,7 +215,7 @@
     <!-- Edit Ticket Details Modal -->
     <div id="editDetailsModal" class="modal">
         <div class="modal-backdrop" onclick="closeModal('editDetailsModal')"></div>
-        <div class="modal-content max-w-lg p-6">
+        <div class="modal-content max-w-2xl p-6 max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div class="flex justify-between items-center mb-6">
                 <div>
                     <h2 class="text-2xl font-display font-bold text-premium">Edit Ticket Details</h2>
@@ -228,9 +227,36 @@
                 </button>
             </div>
 
-            <form action="{{ route('emp.tickets.update_details', $ticket->ticket_id) }}" method="POST">
+            <form action="{{ route('emp.tickets.update_details', $ticket->ticket_id) }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                <div class="space-y-4">
+                <div class="space-y-8">
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                <i class="fa-solid fa-tag text-indigo-500 mr-1.5"></i>Category
+                            </label>
+                            <select name="category_id" class="premium-input w-full px-4 py-3 text-sm" required>
+                                @foreach($categories as $cat)
+                                    <option value="{{ $cat->category_id }}" {{ $ticket->category_id == $cat->category_id ? 'selected' : '' }}>
+                                        {{ $cat->category_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                <i class="fa-solid fa-flag text-indigo-500 mr-1.5"></i>Priority
+                            </label>
+                            <select name="priority_id" class="premium-input w-full px-4 py-3 text-sm" required>
+                                @foreach($priorities as $pri)
+                                    <option value="{{ $pri->priority_id }}" {{ $ticket->priority_id == $pri->priority_id ? 'selected' : '' }}>
+                                        {{ $pri->priority_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
 
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">
@@ -241,34 +267,34 @@
                             value="{{ old('ticket_subject', $ticket->ticket_subject) }}" required>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">
-                                <i class="fa-solid fa-flag text-indigo-500 mr-1.5"></i>Priority
-                            </label>
-                            <select name="priority_id" class="premium-input w-full px-4 py-3 text-sm" required>
-                                @foreach($priorities as $pri)
-                                    <option value="{{ $pri->priority_id }}"
-                                        {{ $ticket->priority_id == $pri->priority_id ? 'selected' : '' }}>
-                                        {{ $pri->priority_name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-align-left text-indigo-500 mr-1.5"></i>Description
+                        </label>
+                        <textarea name="ticket_description" class="premium-input w-full px-4 py-3 text-sm" rows="3" required>{{ old('ticket_description', $ticket->ticket_description) }}</textarea>
+                    </div>
 
-                        <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">
-                                <i class="fa-solid fa-user text-indigo-500 mr-1.5"></i>Reported By
-                            </label>
-                            <select name="added_by" class="premium-input w-full px-4 py-3 text-sm" required>
-                                @foreach($allEmployees as $emp)
-                                    <option value="{{ $emp->employee_id }}"
-                                        {{ $ticket->added_by == $emp->employee_id ? 'selected' : '' }}>
-                                        {{ $emp->first_name }} {{ $emp->last_name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-paperclip text-indigo-500 mr-1.5"></i>Attachment (Optional)
+                        </label>
+                        <input type="file" name="ticket_attachment" id="ticket_attachment"
+                            class="premium-input w-full px-4 py-3 text-sm">
+                        <div id="ticket-attachment-preview"></div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-user text-indigo-500 mr-1.5"></i>Reported By
+                        </label>
+                        <select name="added_by" class="premium-input w-full px-4 py-3 text-sm" required>
+                            @foreach($allEmployees as $emp)
+                                <option value="{{ $emp->employee_id }}"
+                                    {{ $ticket->added_by == $emp->employee_id ? 'selected' : '' }}>
+                                    {{ $emp->first_name }} {{ $emp->last_name }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                     
                     <div class="grid grid-cols-2 gap-4">
@@ -290,20 +316,12 @@
                             </label>
                             <select name="assigned_to" class="premium-input w-full px-4 py-3 text-sm">
                                 <option value="">-- Keep Current --</option>
-                                <optgroup label="IT Department Staff">
-                                    @foreach($itEmployees as $emp)
-                                        <option value="{{ $emp->employee_id }}" {{ $ticket->assigned_to == $emp->employee_id ? 'selected' : '' }}>
-                                            {{ $emp->first_name }} {{ $emp->last_name }} (IT)
-                                        </option>
-                                    @endforeach
-                                </optgroup>
-                                <optgroup label="All Employees">
+                               
                                     @foreach($allEmployees as $emp)
                                         <option value="{{ $emp->employee_id }}" {{ $ticket->assigned_to == $emp->employee_id ? 'selected' : '' }}>
                                             {{ $emp->first_name }} {{ $emp->last_name }}
                                         </option>
                                     @endforeach
-                                </optgroup>
                             </select>
                         </div>
                     </div>
@@ -318,16 +336,17 @@
                         placeholder="Add an optional remark about these changes..."></textarea>
                 </div>
 
-                <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
+                <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-200 pb-2">
                     <button type="button" onclick="closeModal('editDetailsModal')"
                         class="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">
                         Cancel
                     </button>
                     <button type="submit"
-                        class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
+                        class="px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
                         <i class="fa-solid fa-floppy-disk mr-2"></i>Save Changes
                     </button>
                 </div>
+                <div class="h-6"></div>
             </form>
         </div>
     </div>
@@ -340,7 +359,18 @@
     </form>
 
     @push('scripts')
+        <script src="{{ asset('libs/mammoth/mammoth.browser.min.js') }}"></script>
+        <script src="{{ asset('js/attachment-preview.js') }}"></script>
         <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                if (typeof window.initAttachmentPreview === 'function') {
+                    window.initAttachmentPreview({
+                        inputSelector: '#ticket_attachment',
+                        containerSelector: '#ticket-attachment-preview'
+                    });
+                }
+            });
+
             function reopenTicket() {
                 Swal.fire({
                     title: 'Reopen Ticket?',

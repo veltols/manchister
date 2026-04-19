@@ -11,28 +11,103 @@ use Illuminate\Support\Facades\Auth;
 
 class LeaveController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $leaves = HrLeave::with(['employee', 'type'])
-            ->orderBy('leave_id', 'desc')
-            ->paginate(15);
+        $employeeId = $request->input('employee_id');
+        $search = $request->input('search'); // Ref No
+        $typeId = $request->input('type_id');
+        $statusId = $request->input('status_id');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        $query = HrLeave::with(['employee', 'type'])
+            ->orderBy('leave_id', 'desc');
+
+        // Apply Filters
+        if ($employeeId) {
+            $query->where('employee_id', $employeeId);
+        }
+        if ($search) {
+            $query->where('leave_id', 'LIKE', "%$search%");
+        }
+        if ($typeId) {
+            $query->where('leave_type_id', $typeId);
+        }
+        if ($statusId) {
+            $query->where('leave_status_id', $statusId);
+        }
+        if ($startDate) {
+            $query->whereDate('start_date', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->whereDate('start_date', '<=', $endDate);
+        }
+
+        $leaves = $query->paginate(15);
 
         $employees = Employee::where('is_deleted', 0)
             ->where('is_hidden', 0)
+             ->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })
             ->orderBy('first_name')
             ->get();
 
         $types = LeaveType::all();
 
-        return view('hr.leaves.index', compact('leaves', 'employees', 'types'));
+        // Calculate Stats based on current filtered query
+        // Re-create query for stats to avoid pagination but keep filters
+        $statsQuery = HrLeave::query();
+        if ($employeeId) $statsQuery->where('employee_id', $employeeId);
+        if ($search) $statsQuery->where('leave_id', 'LIKE', "%$search%");
+        if ($typeId) $statsQuery->where('leave_type_id', $typeId);
+        if ($statusId) $statsQuery->where('leave_status_id', $statusId);
+        if ($startDate) $statsQuery->whereDate('start_date', '>=', $startDate);
+        if ($endDate) $statsQuery->whereDate('start_date', '<=', $endDate);
+
+        $stats = [
+            'pending' => (clone $statsQuery)->where('leave_status_id', HrLeave::STATUS_PENDING)->count(),
+            'approved' => (clone $statsQuery)->where('leave_status_id', HrLeave::STATUS_APPROVED)->count(),
+            'rejected' => (clone $statsQuery)->where('leave_status_id', HrLeave::STATUS_REJECTED)->count(),
+            'total' => $statsQuery->count()
+        ];
+
+        return view('hr.leaves.index', compact('leaves', 'employees', 'types', 'stats'));
     }
 
     public function getData(Request $request)
     {
         $perPage = $request->get('per_page', 15);
-        $leaves = HrLeave::with(['employee', 'type'])
-            ->orderBy('leave_id', 'desc')
-            ->paginate($perPage);
+        $employeeId = $request->input('employee_id');
+        $search = $request->input('search');
+        $typeId = $request->input('type_id');
+        $statusId = $request->input('status_id');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        $query = HrLeave::with(['employee', 'type'])
+            ->orderBy('leave_id', 'desc');
+
+        if ($employeeId) {
+            $query->where('employee_id', $employeeId);
+        }
+        if ($search) {
+            $query->where('leave_id', 'LIKE', "%$search%");
+        }
+        if ($typeId) {
+            $query->where('leave_type_id', $typeId);
+        }
+        if ($statusId) {
+            $query->where('leave_status_id', $statusId);
+        }
+        if ($startDate) {
+            $query->whereDate('start_date', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->whereDate('start_date', '<=', $endDate);
+        }
+
+        $leaves = $query->paginate($perPage);
 
         return response()->json([
             'success' => true,
@@ -78,7 +153,7 @@ class LeaveController extends Controller
         $leave->end_date = $request->end_date;
         $leave->leave_remarks = $request->leave_remarks;
         $leave->submission_date = now();
-        $leave->leave_status_id = 1; // Pending
+        $leave->leave_status_id = HrLeave::STATUS_PENDING; // Pending
 
         $totalDays = $this->calculateTotalDays($request->start_date, $request->end_date);
         $employee = Employee::find($request->employee_id);
@@ -136,10 +211,10 @@ class LeaveController extends Controller
         // 200 in request -> status 6 (Sent back to user)
         // Others used directly if provided
 
-        if ($newStatus == 100) {
-            $leave->leave_status_id = 2; // Sent for approval
-        } else if ($newStatus == 200) {
-            $leave->leave_status_id = 6; // Sent back to user
+        if ($newStatus == HrLeave::ACTION_SEND_FOR_APPROVAL) {
+            $leave->leave_status_id = HrLeave::STATUS_PENDING_APPROVAL; // Sent for approval
+        } else if ($newStatus == HrLeave::ACTION_SEND_BACK) {
+            $leave->leave_status_id = HrLeave::STATUS_ACTION_REQUIRED; // Sent back to user
         } else {
             $leave->leave_status_id = $newStatus;
         }
@@ -161,7 +236,7 @@ class LeaveController extends Controller
         ]);
 
         // Specific logic for "Sent for Approval"
-        if ($leave->leave_status_id == 2) {
+        if ($leave->leave_status_id == HrLeave::STATUS_PENDING_APPROVAL) {
             // Get line manager
             $department = $employee->department;
             $lineManagerId = $department ? $department->line_manager_id : 0;
@@ -188,9 +263,9 @@ class LeaveController extends Controller
 
         // Notify employee
         $statusMsg = "Your leave request status has been updated.";
-        if ($leave->leave_status_id == 2)
+        if ($leave->leave_status_id == HrLeave::STATUS_PENDING_APPROVAL)
             $statusMsg = "Your leave application has been sent for approval.";
-        if ($leave->leave_status_id == 6)
+        if ($leave->leave_status_id == HrLeave::STATUS_ACTION_REQUIRED)
             $statusMsg = "Your request is pending your action - " . $remark;
 
         \App\Services\NotificationService::send(

@@ -10,7 +10,7 @@ class NotificationController extends Controller
 {
     public function index()
     {
-        $userId = Auth::user()->employee_id ?? Auth::id();
+        $userId = Auth::user()->employee_id ?? auth()->user()->user_id;
         $notifications = Notification::where('employee_id', $userId)
                                      ->orderBy('notification_id', 'desc')
                                      ->paginate(15);
@@ -23,7 +23,7 @@ class NotificationController extends Controller
     
     public function markAsRead($id)
     {
-         $userId = Auth::user()->employee_id ?? Auth::id();
+         $userId = Auth::user()->employee_id ?? auth()->user()->user_id;
          $notif = Notification::where('notification_id', $id)->where('employee_id', $userId)->first();
          if($notif){
              $notif->is_seen = 1;

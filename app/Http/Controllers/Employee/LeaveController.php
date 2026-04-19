@@ -15,7 +15,12 @@ class LeaveController extends Controller
     {
         $user = Auth::user();
         $employeeId = $user->employee ? $user->employee->employee_id : 0;
+
         $statusId = $request->input('status');
+        $search = $request->input('search');
+        $typeId = $request->input('type_id');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
 
         // Get leaves for the logged-in employee only
         $query = HrLeave::with(['type', 'latestLog'])
@@ -24,13 +29,54 @@ class LeaveController extends Controller
         if ($statusId) {
             $query->where('leave_status_id', $statusId);
         }
+        
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                // If it's a number, try exact match on ID
+                if (is_numeric($search)) {
+                    $q->where('leave_id', $search);
+                }
+                // Also search in remarks
+                $q->orWhere('leave_remarks', 'like', "%{$search}%");
+            });
+        }
+        
+        if ($typeId) {
+            $query->where('leave_type_id', $typeId);
+        }
+        
+        if ($startDate) {
+            $query->where('start_date', '>=', $startDate);
+        }
+        
+        if ($endDate) {
+            $query->where('end_date', '<=', $endDate);
+        }
 
         $leaves = $query->orderBy('leave_id', 'desc')
             ->paginate(15);
 
         $leaveTypes = LeaveType::all();
+        $statuses = \Illuminate\Support\Facades\DB::table('hr_employees_leave_status')->get();
 
-        return view('emp.leaves.index', compact('leaves', 'leaveTypes', 'statusId'));
+        // Calculate Stats
+        $totalBalance = $user->employee ? $user->employee->leaves_open_balance : 0;
+        $availedLeaves = HrLeave::where('employee_id', $employeeId)
+            ->where('leave_status_id', HrLeave::STATUS_APPROVED) // Approved
+            ->sum('total_days');
+        
+        $pendingLeaves = HrLeave::where('employee_id', $employeeId)
+            ->whereIn('leave_status_id', [HrLeave::STATUS_PENDING, HrLeave::STATUS_PENDING_APPROVAL]) // Pending & Pending Approval
+            ->sum('total_days');
+
+        $leaveStats = [
+            'total' => $totalBalance,
+            'availed' => $availedLeaves,
+            'pending' => $pendingLeaves,
+            'remaining' => $totalBalance // In this system, open_balance seems to be the REMAINING balance already
+        ];
+
+        return view('emp.leaves.index', compact('leaves', 'leaveTypes', 'statusId', 'statuses', 'leaveStats'));
     }
 
     public function store(Request $request)
@@ -63,7 +109,7 @@ class LeaveController extends Controller
         $leave->end_date = $request->end_date;
         $leave->leave_remarks = $request->leave_remarks;
         $leave->submission_date = now();
-        $leave->leave_status_id = 1; // Pending HR
+        $leave->leave_status_id = HrLeave::STATUS_PENDING; // Pending HR
         $leave->total_days = $totalDays;
 
         if ($request->hasFile('leave_attachment')) {
@@ -95,12 +141,15 @@ class LeaveController extends Controller
             $employeeId
         );
 
-        // Notify HR (Always ID 1 in legacy/current system logic for alerts)
-        \App\Services\NotificationService::send(
-            "New leave request submitted by " . $user->employee->full_name,
-            "hr/leaves",
-            1
-        );
+        // Notify HR (all active HR users)
+        $hrUsers = \App\Models\User::where('user_type', 'hr')->where('is_active', 1)->get();
+        foreach ($hrUsers as $hr) {
+            \App\Services\NotificationService::send(
+                "New leave request submitted by " . $user->employee->full_name,
+                "hr/leaves",
+                $hr->user_id
+            );
+        }
 
         return redirect()->back()->with('success', 'Leave request submitted successfully.');
     }
@@ -128,7 +177,7 @@ class LeaveController extends Controller
         $leave->start_date = $request->start_date;
         $leave->end_date = $request->end_date;
         $leave->leave_remarks = $request->leave_remarks;
-        $leave->leave_status_id = 1; // Return to Pending HR
+        $leave->leave_status_id = HrLeave::STATUS_PENDING; // Return to Pending HR
 
         // Recalculate duration
         $totalDays = $this->calculateTotalDays($request->start_date, $request->end_date);
@@ -180,6 +229,10 @@ class LeaveController extends Controller
         $user = Auth::user();
         $employeeId = $user->employee ? $user->employee->employee_id : 0;
         $statusId = $request->input('status');
+        $search = $request->input('search');
+        $typeId = $request->input('type_id');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
         $perPage = $request->input('per_page', 15);
 
         $query = HrLeave::with(['type', 'latestLog'])
@@ -187,6 +240,27 @@ class LeaveController extends Controller
 
         if ($statusId) {
             $query->where('leave_status_id', $statusId);
+        }
+        
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                if (is_numeric($search)) {
+                    $q->where('leave_id', $search);
+                }
+                $q->orWhere('leave_remarks', 'like', "%{$search}%");
+            });
+        }
+        
+        if ($typeId) {
+            $query->where('leave_type_id', $typeId);
+        }
+        
+        if ($startDate) {
+            $query->where('start_date', '>=', $startDate);
+        }
+        
+        if ($endDate) {
+            $query->where('end_date', '<=', $endDate);
         }
 
         $leaves = $query->orderBy('leave_id', 'desc')->paginate($perPage);

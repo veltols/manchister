@@ -14,7 +14,7 @@ class MessageController extends Controller
 {
     public function index(Request $request)
     {
-        $adminId = Auth::id() ?? 550; // Fallback for dev
+        $adminId = auth()->user()->user_id; // Fallback for dev
 
         // Fetch Conversations
         // Logic from serv_list.php: `a_id` = USER OR `b_id` = USER
@@ -32,6 +32,9 @@ class MessageController extends Controller
             ->where('is_deleted', 0)
             ->where('is_hidden', 0)
             ->with(['designation', 'department'])
+             ->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })
             ->orderBy('first_name')
             ->get();
 
@@ -71,7 +74,7 @@ class MessageController extends Controller
             'employee_id' => 'required|exists:employees_list,employee_id',
         ]);
 
-        $adminId = Auth::id() ?? 550;
+        $adminId = auth()->user()->user_id;
         $targetEmployeeId = $request->employee_id;
 
         // Check if conversation already exists
@@ -107,7 +110,7 @@ class MessageController extends Controller
             'attachment' => 'nullable|file|max:10240' // Max 10MB
         ]);
 
-        $adminId = Auth::id() ?? 550;
+        $adminId = auth()->user()->user_id;
 
         $msg = new Message();
         $msg->chat_id = $request->chat_id;
@@ -159,7 +162,7 @@ class MessageController extends Controller
     // Real-time messaging API endpoints
     public function fetchNewMessages(Request $request, $chatId)
     {
-        $adminId = Auth::id() ?? 550;
+        $adminId = auth()->user()->user_id;
         $lastMessageId = $request->input('last_message_id', 0);
 
         // Verify user has access to this chat
@@ -195,7 +198,7 @@ class MessageController extends Controller
 
     public function getUnreadCount()
     {
-        $adminId = Auth::id() ?? 550;
+        $adminId = auth()->user()->user_id;
 
         // Count unread messages across all conversations
         $unreadCount = Message::whereHas('conversation', function ($q) use ($adminId) {
@@ -213,7 +216,7 @@ class MessageController extends Controller
 
     public function getConversationList()
     {
-        $adminId = Auth::id() ?? 550;
+        $adminId = auth()->user()->user_id;
 
         // Fetch conversations with unread counts
         $conversations = Conversation::where('a_id', $adminId)

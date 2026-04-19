@@ -11,14 +11,36 @@ use App\Models\SystemLog;
 
 class PermissionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
         $employeeId = $user->employee ? $user->employee->employee_id : 0;
 
-        $permissions = Permission::with('status')
-            ->where('employee_id', $employeeId)
-            ->orderBy('permission_id', 'desc')
+        $statusId = $request->input('status');
+        $search = $request->input('search');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        $query = Permission::with('status')
+            ->where('employee_id', $employeeId);
+
+        if ($statusId) {
+            $query->where('permission_status_id', $statusId);
+        }
+
+        if ($search) {
+            $query->where('permission_id', 'LIKE', "%$search%");
+        }
+
+        if ($startDate) {
+            $query->whereDate('start_date', '>=', $startDate);
+        }
+
+        if ($endDate) {
+            $query->whereDate('start_date', '<=', $endDate);
+        }
+
+        $permissions = $query->orderBy('permission_id', 'desc')
             ->paginate(10);
 
         $statuses = PermissionStatus::all();
@@ -107,10 +129,32 @@ class PermissionController extends Controller
         $user = Auth::user();
         $employeeId = $user->employee ? $user->employee->employee_id : 0;
         $perPage = $request->input('per_page', 10);
+        
+        $statusId = $request->input('status');
+        $search = $request->input('search');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
 
-        $permissions = Permission::with('status')
-            ->where('employee_id', $employeeId)
-            ->orderBy('permission_id', 'desc')
+        $query = Permission::with('status')
+            ->where('employee_id', $employeeId);
+
+        if ($statusId) {
+            $query->where('permission_status_id', $statusId);
+        }
+
+        if ($search) {
+            $query->where('permission_id', 'LIKE', "%$search%");
+        }
+
+        if ($startDate) {
+            $query->whereDate('start_date', '>=', $startDate);
+        }
+
+        if ($endDate) {
+            $query->whereDate('start_date', '<=', $endDate);
+        }
+
+        $permissions = $query->orderBy('permission_id', 'desc')
             ->paginate($perPage);
 
         return response()->json([

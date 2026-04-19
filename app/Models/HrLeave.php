@@ -12,6 +12,17 @@ class HrLeave extends Model
     protected $table = 'hr_employees_leaves';
     protected $primaryKey = 'leave_id';
     public $timestamps = false;
+    
+    // Status Constants
+    const STATUS_PENDING = 1;
+    const STATUS_PENDING_APPROVAL = 2;
+    const STATUS_APPROVED = 3;
+    const STATUS_REJECTED = 4;
+    const STATUS_ACTION_REQUIRED = 6;
+
+    // Action Triggers (UI specific)
+    const ACTION_SEND_FOR_APPROVAL = 100;
+    const ACTION_SEND_BACK = 200;
 
     protected $guarded = [];
 
@@ -42,5 +53,10 @@ class HrLeave extends Model
         return $this->hasOne(SystemLog::class, 'related_id', 'leave_id')
             ->where('related_table', 'hr_employees_leaves')
             ->orderBy('log_date', 'desc');
+    }
+
+    public function status()
+    {
+        return $this->belongsTo(LeaveStatus::class, 'leave_status_id', 'leave_status_id');
     }
 }

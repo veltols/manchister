@@ -39,6 +39,9 @@ class MessageController extends Controller
             ->where('is_deleted', 0)
             ->where('is_hidden', 0)
             ->with(['designation', 'department'])
+             ->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })
             ->orderBy('first_name')
             ->get();
 
@@ -93,6 +96,9 @@ class MessageController extends Controller
             ->where('is_deleted', 0)
             ->where('is_hidden', 0)
             ->with(['designation', 'department'])
+             ->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })
             ->orderBy('first_name')
             ->get();
 

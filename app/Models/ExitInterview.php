@@ -24,4 +24,9 @@ class ExitInterview extends Model
     {
         return $this->hasMany(ExitInterviewAnswer::class, 'interview_id', 'interview_id');
     }
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class, 'current_department_id', 'department_id');
+    }
 }

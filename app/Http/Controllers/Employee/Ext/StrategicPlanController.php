@@ -61,7 +61,7 @@ class StrategicPlanController extends Controller
         $plan->plan_values  = $request->plan_values;
         $plan->plan_status_id = 1; // Draft
         $plan->is_published   = 0;
-        $plan->added_by    = Auth::id() ?? 0;
+        $plan->added_by    = auth()->user()->user_id;
         $plan->added_date  = now();
         $plan->plan_ref    = 'SP-' . strtoupper(uniqid());
         $plan->save();
@@ -173,7 +173,7 @@ class StrategicPlanController extends Controller
         $theme->theme_description = $request->theme_description;
         $theme->theme_weight      = $request->theme_weight ?? 0;
         $theme->order_no          = StrategicPlanTheme::where('plan_id', $planId)->max('order_no') + 1;
-        $theme->added_by          = Auth::id() ?? 0;
+        $theme->added_by          = auth()->user()->user_id;
         $theme->added_date        = now();
         $theme->theme_ref         = 'TH-' . strtoupper(uniqid());
         $theme->save();
@@ -216,7 +216,7 @@ class StrategicPlanController extends Controller
         $obj->objective_type_id    = $request->objective_type_id ?? 1;
         $obj->objective_weight     = $request->objective_weight ?? 0;
         $obj->order_no             = StrategicPlanObjective::where('theme_id', $request->theme_id)->max('order_no') + 1;
-        $obj->added_by             = Auth::id() ?? 0;
+        $obj->added_by             = auth()->user()->user_id;
         $obj->added_date           = now();
         $obj->objective_ref        = 'OB-' . strtoupper(uniqid());
         $obj->save();
@@ -253,7 +253,7 @@ class StrategicPlanController extends Controller
         $kpi->kpi_weight       = $request->kpi_weight ?? 0;
         $kpi->kpi_progress     = 0;
         $kpi->order_no         = StrategicPlanKpi::where('objective_id', $request->objective_id)->max('order_no') + 1;
-        $kpi->added_by         = Auth::id() ?? 0;
+        $kpi->added_by         = auth()->user()->user_id;
         $kpi->added_date       = now();
         $kpi->kpi_ref          = 'KP-' . strtoupper(uniqid());
         $kpi->save();
@@ -284,7 +284,7 @@ class StrategicPlanController extends Controller
         $ms->milestone_description = $request->milestone_description;
         $ms->milestone_weight     = $request->milestone_weight ?? 0;
         $ms->order_no             = StrategicPlanMilestone::where('kpi_id', $request->kpi_id)->max('order_no') + 1;
-        $ms->added_by             = Auth::id() ?? 0;
+        $ms->added_by             = auth()->user()->user_id;
         $ms->added_date           = now();
         $ms->milestone_ref        = 'MS-' . strtoupper(uniqid());
         $ms->save();
@@ -313,7 +313,7 @@ class StrategicPlanController extends Controller
         $map->map_description      = $request->map_description;
         $map->start_date           = $request->start_date;
         $map->end_date             = $request->end_date;
-        $map->added_by             = Auth::id() ?? 0;
+        $map->added_by             = auth()->user()->user_id;
         $map->added_date           = now();
         $map->save();
 

@@ -157,7 +157,7 @@
                                     <div class="flex flex-col">
                                         <span class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Resolved on</span>
                                         <span class="text-xs text-slate-600 font-medium">
-                                            {{ $ticket->last_updated_date ? \Carbon\Carbon::parse($ticket->last_updated_date)->format('M d, Y') : '-' }}
+                                            {{ $ticket->ticket_end_date ? \Carbon\Carbon::parse($ticket->ticket_end_date)->format('M d, Y') : '-' }}
                                         </span>
                                     </div>
                                     <a href="{{ route('emp.tickets.show', $ticket->ticket_id) }}"
@@ -188,8 +188,8 @@
                                 <th class="text-left">REF</th>
                                 <th class="text-left">Subject</th>
                                 <th class="text-left">Category</th>
-                                <th class="text-left">Last Updated</th>
-                                <th class="text-left">Updated By</th>
+                                <th class="text-left">Added By</th>
+                                    <th class="text-left">Assigned To</th>
                                 <th class="text-center">Priority</th>
                                 <th class="text-center">Status</th>
                                 <th class="text-center">Actions</th>
@@ -212,20 +212,29 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="text-sm text-slate-600">
-                                            {{ $ticket->last_updated_date ? \Carbon\Carbon::parse($ticket->last_updated_date)->diffForHumans() : '-' }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="flex items-center gap-2">
-                                            <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border border-slate-200">
-                                                {{ $ticket->latestLog && $ticket->latestLog->logger ? strtoupper(substr($ticket->latestLog->logger->first_name, 0, 1) . substr($ticket->latestLog->logger->last_name, 0, 1)) : '-' }}
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border border-slate-200">
+                                                    {{ $ticket->addedBy ? substr($ticket->addedBy->first_name, 0, 1) : 'S' }}
+                                                </div>
+                                                <span class="text-sm text-slate-600 font-medium">
+                                                    {{ $ticket->addedBy ? $ticket->addedBy->first_name . ' ' . $ticket->addedBy->last_name : 'System' }}
+                                                </span>
                                             </div>
-                                            <span class="text-sm text-slate-600 font-medium">
-                                                {{ $ticket->latestLog && $ticket->latestLog->logger ? $ticket->latestLog->logger->first_name . ' ' . $ticket->latestLog->logger->last_name : '-' }}
-                                            </span>
-                                        </div>
-                                    </td>
+                                        </td>
+                                        <td>
+                                            @if($ticket->assignedTo)
+                                                <div class="flex items-center gap-2">
+                                                    <div class="w-7 h-7 rounded-full bg-indigo-50 flex items-center justify-center text-[10px] font-bold text-indigo-600 border border-indigo-100">
+                                                        {{ substr($ticket->assignedTo->first_name, 0, 1) }}
+                                                    </div>
+                                                    <span class="text-sm text-indigo-700 font-medium">
+                                                        {{ $ticket->assignedTo->first_name }} {{ $ticket->assignedTo->last_name }}
+                                                    </span>
+                                                </div>
+                                            @else
+                                                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-100 px-2 py-1 rounded">Unassigned</span>
+                                            @endif
+                                        </td>
                                     <td class="text-center">
                                         @php
                                             $priorityColor = $ticket->priority->priority_color ?? 'slate-500';
@@ -532,16 +541,10 @@
                             </label>
                             <select name="assigned_to" class="premium-input w-full px-4 py-3 text-sm" required>
                                 <option value="">Select Assignee...</option>
-                                <optgroup label="IT Department Staff">
-                                    @foreach($itEmployees as $emp)
-                                        <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
-                                    @endforeach
-                                </optgroup>
-                                <optgroup label="All Employees">
+                              
                                     @foreach($employees as $emp)
                                         <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
                                     @endforeach
-                                </optgroup>
                             </select>
                         </div>
                     </div>

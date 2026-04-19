@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\HrDocument;
 use App\Models\SupportTicket;
 use App\Models\Asset;
+use App\Models\HrLeave;
+
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -54,21 +56,23 @@ class DashboardController extends Controller
         $unassignedTickets = (clone $myTicketsQuery)->where('status_id', 1)->where('assigned_to', 0)->count();
         $progressTickets = (clone $myTicketsQuery)->where('status_id', 2)->count();
         $resolvedTickets = (clone $myTicketsQuery)->where('status_id', 3)->count();
+        $cancelledTickets = (clone $myTicketsQuery)->where('status_id', 4)->count();
 
         $ticketStats = compile_stats(
             total: $totalTickets,
             open: $openTickets,
             unassigned: $unassignedTickets,
             progress: $progressTickets,
-            resolved: $resolvedTickets
+            resolved: $resolvedTickets,
+            cancelled: $cancelledTickets
         );
 
         // --- 3. My Assets ---
         // Legacy query showed all, but we should tentatively try to filter or just show what legacy showed.
         // Legacy: SELECT ... FROM z_assets_list JOIN employees_list ... LIMIT 5
         // We will show 5 assets for now.
-        $assets = Asset::with('assignedBy')
-            ->orderBy('asset_id', 'asc')
+        $assets = Asset::with('assignedBy')->where('assigned_to', $employeeId)
+            ->orderBy('asset_id', 'desc')
             ->take(5)
             ->get();
 
@@ -88,7 +92,9 @@ class DashboardController extends Controller
             'todo' => (clone $myTasksQuery)->where('status_id', 1)->count(),
             'progress' => (clone $myTasksQuery)->where('status_id', 2)->count(),
             'done' => (clone $myTasksQuery)->where('status_id', 3)->count(),
+            'cancelled' => (clone $myTasksQuery)->where('status_id', 4)->count(),
             'overdue' => (clone $myTasksQuery)->where('status_id', '!=', 3)
+                ->where('status_id', '!=', 4)
                 ->where('task_due_date', '<', now())
                 ->count(),
         ];
@@ -99,6 +105,9 @@ class DashboardController extends Controller
             ->get();
 
         $employeeName = $user->employee ? ($user->employee->first_name . ' ' . $user->employee->last_name) : $user->user_email;
+  $pendingLeaves = HrLeave::where('employee_id', $employeeId)
+            ->whereIn('leave_status_id', [HrLeave::STATUS_PENDING, HrLeave::STATUS_PENDING_APPROVAL]) // Pending & Pending Approval
+            ->count();
 
         return view('emp.dashboard.index', compact(
             'user',
@@ -111,12 +120,13 @@ class DashboardController extends Controller
             'recentTasks',
             'mode',
             'startDate',
-            'endDate'
+            'endDate',
+            'pendingLeaves'
         ));
     }
 }
 
-function compile_stats($total, $open, $unassigned, $progress, $resolved)
+function compile_stats($total, $open, $unassigned, $progress, $resolved, $cancelled)
 {
-    return (object) compact('total', 'open', 'unassigned', 'progress', 'resolved');
+    return (object) compact('total', 'open', 'unassigned', 'progress', 'resolved', 'cancelled');
 }

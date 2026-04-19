@@ -101,6 +101,11 @@ class LoginController extends Controller
 
     public function logout(Request $request)
     {
+        $user = Auth::user();
+        if ($user && $user->employee) {
+            $user->employee->update(['emp_status_id' => 4]);
+        }
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -279,6 +284,12 @@ class LoginController extends Controller
 
         // Complete the login
         Auth::login($user);
+
+        // Update employee status to online
+        if ($user->employee) {
+            $user->employee->update(['emp_status_id' => 1]);
+        }
+
         $request->session()->regenerate();
         
         // Clear 2FA session data

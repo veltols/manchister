@@ -40,7 +40,7 @@
                             </div>
                         @endif
                         <!-- Status Indicator (Mockup) -->
-                        <div class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></div>
+                        <div class="absolute bottom-0 right-0 w-3 h-3  border-2 border-white rounded-full" style="background-color: {{ $otherUser?->status?->staus_color }}"></div>
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex justify-between items-baseline mb-0.5">

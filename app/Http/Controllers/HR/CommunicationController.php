@@ -67,7 +67,7 @@ class CommunicationController extends Controller
         $comm->communication_description = $request->communication_description ?? '';
         $comm->information_shared = $request->information_shared ?? '';
         $comm->communication_type_id = $request->communication_type_id;
-        $comm->requested_by = Auth::user()->employee_id ?? Auth::id(); // Use employee ID if available
+        $comm->requested_by = Auth::user()->employee_id ?? auth()->user()->user_id; // Use employee ID if available
         $comm->requested_date = now();
         
         // Default status? Legacy logic might set it. Assuming 1 (New/Pending)

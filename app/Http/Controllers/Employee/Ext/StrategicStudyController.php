@@ -36,7 +36,7 @@ class StrategicStudyController extends Controller
             'study_title'     => $request->study_title,
             'study_overview'  => $request->study_overview,
             'study_status_id' => 1,
-            'added_by'        => Auth::id() ?? 0,
+            'added_by'        => auth()->user()->user_id,
             'added_date'      => now(),
         ]);
 
@@ -79,7 +79,7 @@ class StrategicStudyController extends Controller
             'page_title'   => $request->page_title,
             'page_type'    => $request->page_type,
             'page_content' => $request->page_content ?? '',
-            'added_by'     => Auth::id() ?? 0,
+            'added_by'     => auth()->user()->user_id,
             'added_date'   => now(),
         ]);
 

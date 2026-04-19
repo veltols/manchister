@@ -57,6 +57,7 @@
                             <th class="text-left w-24">IQC ID</th>
                             <th class="text-left">Employee Name</th>
                             <th class="text-left">Email / Login ID</th>
+                            <th class="text-left">Role</th>
                             <th class="text-left">Department</th>
                             <th class="text-center">Status</th>
                             <th class="text-center">Feedback</th>
@@ -81,6 +82,28 @@
                                     </div>
                                 </td>
                                 <td class="text-slate-600">{{ $user->employee_email }}</td>
+                                <td>
+                                    @php
+                                        $type = $user->systemUser?->user_type ?? 'emp';
+                                        $badgeClass = match($type) {
+                                            'root', 'sys_admin' => 'bg-slate-900 text-white',
+                                            'admin_hr', 'hr' => 'bg-indigo-100 text-indigo-700',
+                                            'eqa' => 'bg-amber-100 text-amber-700',
+                                            default => 'bg-slate-100 text-slate-600'
+                                        };
+                                        $typeName = match($type) {
+                                            'root' => 'Root',
+                                            'sys_admin' => 'Admin',
+                                            'admin_hr' => 'Manage HR',
+                                            'hr' => 'HR User',
+                                            'eqa' => 'EQA',
+                                            default => 'Employee'
+                                        };
+                                    @endphp
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider {{ $badgeClass }}">
+                                        {{ $typeName }}
+                                    </span>
+                                </td>
                                 <td>
                                     @if($user->department)
                                         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-purple-50 text-purple-700 text-xs font-medium border border-purple-100/50">
@@ -259,6 +282,26 @@
                                     </div>
                                 </td>
                                 <td class="text-slate-600">${user.employee_email}</td>
+                                <td>
+                                    ${(() => {
+                                        const type = (user.systemUser || user.system_user)?.user_type || 'emp';
+                                        let badgeClass = 'bg-slate-100 text-slate-600';
+                                        let typeName = 'Employee';
+                                        
+                                        if(['root', 'sys_admin'].includes(type)) {
+                                            badgeClass = 'bg-slate-900 text-white';
+                                            typeName = type === 'root' ? 'Root' : 'Admin';
+                                        } else if(['admin_hr', 'hr'].includes(type)) {
+                                            badgeClass = 'bg-indigo-100 text-indigo-700';
+                                            typeName = type === 'admin_hr' ? 'Manage HR' : 'HR User';
+                                        } else if(type === 'eqa') {
+                                            badgeClass = 'bg-amber-100 text-amber-700';
+                                            typeName = 'EQA';
+                                        }
+                                        
+                                        return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${badgeClass}">${typeName}</span>`;
+                                    })()}
+                                </td>
                                 <td>
                                     ${getDeptBadge(user.department)}
                                 </td>

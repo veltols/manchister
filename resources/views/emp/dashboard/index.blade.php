@@ -462,7 +462,7 @@
                                 <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-2xl" style="background:rgba(255,255,255,0.3);"></div>
                                 <i class="fa-solid fa-user-slash text-white text-xl relative z-10"></i>
                             </div>
-                            <h3 class="text-4xl font-black leading-none count" style="color:#d97706;" data-target="{{ $ticketStats->unassigned }}">0</h3>
+                            <h3 class="text-4xl font-black leading-none count" style="color:#d97706;" data-target="{{ $ticketStats->cancelled }}">0</h3>
                             <p class="text-[10px] font-bold uppercase tracking-widest" style="color:#f59e0b;">Cancelled</p>
                         </a>
 
@@ -529,7 +529,7 @@
                         </a>
                     </div>
                     <div class="p-5">
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
 
                             {{-- Total Tasks --}}
                             <a href="{{ route('emp.tasks.index') }}"
@@ -622,6 +622,24 @@
                                 <p class="text-[10px] font-bold uppercase tracking-widest" style="color:#10b981;">Completed</p>
                             </a>
 
+                            {{-- Cancelled --}}
+                            <a href="{{ route('emp.tasks.index') }}"
+                               class="relative overflow-hidden rounded-2xl p-5 flex flex-col items-center gap-3 group transition-all duration-300 hover:-translate-y-2 text-center"
+                               style="background:linear-gradient(135deg,#fef2f2,#fee2e2);
+                                      border:1.5px solid rgba(220,38,38,0.15);
+                                      box-shadow:0 4px 16px rgba(220,38,38,0.1);">
+                                <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                                     style="background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,0.5) 50%,transparent 70%);"></div>
+                                <div class="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden flex-shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-5deg]"
+                                     style="background:linear-gradient(145deg,#ef4444,#dc2626);
+                                            box-shadow:0 8px 22px rgba(220,38,38,0.4),inset 0 1px 0 rgba(255,255,255,0.3);">
+                                    <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-2xl" style="background:rgba(255,255,255,0.3);"></div>
+                                    <i class="fa-solid fa-circle-xmark text-white text-xl relative z-10"></i>
+                                </div>
+                                <h3 class="text-4xl font-black leading-none count" style="color:#dc2626;" data-target="{{ $taskStats['cancelled'] }}">0</h3>
+                                <p class="text-[10px] font-bold uppercase tracking-widest" style="color:#ef4444;">Cancelled</p>
+                            </a>
+
                         </div>
                     </div>
                 </div>
@@ -694,10 +712,28 @@
                                 <th class="text-left font-bold text-slate-400">REF</th>
                                 <th class="text-left font-bold text-slate-400">Name</th>
                                 <th class="text-left font-bold text-slate-400">Assigned By</th>
+                                <th class="text-left font-bold text-slate-400">Status</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
                             @forelse($assets as $asset)
+                            @php
+                                        $statusName = $asset->status->status_name ?? 'Active';
+                                        $gradient = 'from-emerald-500 to-green-600';
+                                        $icon = 'fa-circle-check';
+                                        
+                                        $lowerName = strtolower($statusName);
+                                        if (str_contains($lowerName, 'repair') || str_contains($lowerName, 'progress')) {
+                                            $gradient = 'from-amber-500 to-orange-600';
+                                            $icon = 'fa-screwdriver-wrench';
+                                        } elseif (str_contains($lowerName, 'lost') || str_contains($lowerName, 'damage') || str_contains($lowerName, 'broken')) {
+                                            $gradient = 'from-rose-500 to-red-600';
+                                            $icon = 'fa-circle-xmark';
+                                        } elseif (str_contains($lowerName, 'stock') || str_contains($lowerName, 'available')) {
+                                            $gradient = 'from-indigo-500 to-purple-600';
+                                            $icon = 'fa-box-archive';
+                                        }
+                                    @endphp
                             <tr class="hover:bg-slate-50 transition-colors">
                                 <td>
                                     <span class="font-mono text-xs font-bold px-2 py-1 rounded-lg"
@@ -712,6 +748,11 @@
                                 <td>
                                     <span class="text-sm font-semibold text-slate-600">
                                         {{ $asset->assignedBy ? $asset->assignedBy->first_name : 'System' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="text-sm font-semibold text-slate-600">
+                                        {{ $statusName }}
                                     </span>
                                 </td>
                             </tr>
@@ -777,7 +818,7 @@
                                 </div>
                                 <span class="font-bold text-slate-700">Pending Approval</span>
                             </div>
-                            <span class="text-2xl font-black text-amber-600 count" data-target="{{ $hrStats['pending_approval'] }}">0</span>
+                            <span class="text-2xl font-black text-amber-600 count" data-target="{{ $pendingLeaves }}">0</span>
                         </a>
                         <div class="pt-2">
                             <a href="{{ route('emp.leaves.index') }}"

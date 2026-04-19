@@ -5,6 +5,7 @@ namespace App\Http\Controllers\EQA;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Question;
+use Illuminate\Support\Facades\Auth;
 
 class QuestionController extends Controller
 {
@@ -25,7 +26,7 @@ class QuestionController extends Controller
 
         $q = new Question();
         $q->q_text = $request->q_text;
-        $q->added_by = auth()->id() ?? 0;
+        $q->added_by =  Auth::user()->user_id;
         $q->added_date = now();
         $q->save();
 

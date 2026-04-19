@@ -9,18 +9,84 @@ use Illuminate\Support\Facades\Auth;
 
 class PermissionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $employeeId = $request->input('employee_id');
+        $search = $request->input('search'); // Ref No
+        $statusId = $request->input('status_id');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
         $query = LeavePermission::with(['employee', 'status'])->orderBy('permission_id', 'desc');
 
-        // Emp Filter
-        if (Auth::user()->user_type == 'emp') {
-            $query->where('employee_id', Auth::user()->employee_id);
+        if ($employeeId) {
+            $query->where('employee_id', $employeeId);
+        }
+        if ($search) {
+            $query->where('permission_id', 'LIKE', "%$search%");
+        }
+        if ($statusId) {
+            $query->where('permission_status_id', $statusId);
+        }
+        if ($startDate) {
+            $query->whereDate('start_date', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->whereDate('start_date', '<=', $endDate);
         }
 
         $permissions = $query->paginate(15);
 
-        return view('hr.permissions.index', compact('permissions'));
+        $employees = \App\Models\Employee::where('is_deleted', 0)->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })->orderBy('first_name')->get();
+        
+        $statuses = \Illuminate\Support\Facades\DB::table('hr_employees_permissions_status')->get();
+
+        return view('hr.permissions.index', compact('permissions', 'employees', 'statuses'));
+    }
+
+    public function getData(Request $request)
+    {
+        $perPage = $request->get('per_page', 15);
+        $employeeId = $request->input('employee_id');
+        $search = $request->input('search');
+        $statusId = $request->input('status_id');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        $query = LeavePermission::with(['employee', 'status'])->orderBy('permission_id', 'desc');
+
+        if ($employeeId) {
+            $query->where('employee_id', $employeeId);
+        }
+        if ($search) {
+            $query->where('permission_id', 'LIKE', "%$search%");
+        }
+        if ($statusId) {
+            $query->where('permission_status_id', $statusId);
+        }
+        if ($startDate) {
+            $query->whereDate('start_date', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->whereDate('start_date', '<=', $endDate);
+        }
+
+        $permissions = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $permissions->items(),
+            'pagination' => [
+                'current_page' => $permissions->currentPage(),
+                'last_page' => $permissions->lastPage(),
+                'per_page' => $permissions->perPage(),
+                'total' => $permissions->total(),
+                'from' => $permissions->firstItem(),
+                'to' => $permissions->lastItem(),
+            ]
+        ]);
     }
 
     public function store(Request $request)
@@ -33,7 +99,7 @@ class PermissionController extends Controller
         ]);
 
         $perm = new LeavePermission();
-        $perm->employee_id = Auth::user()->employee_id ?? Auth::id();
+        $perm->employee_id = Auth::user()->employee_id ?? auth()->user()->user_id;
         $perm->submission_date = now();
         $perm->start_date = $request->start_date;
         $perm->start_time = $request->start_time;

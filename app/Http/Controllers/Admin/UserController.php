@@ -15,6 +15,7 @@ use App\Models\AssetCategory;
 use App\Models\EmployeeListService;
 use App\Models\EmployeeService;
 use App\Models\Designation;
+use Illuminate\Support\Facades\Auth; 
 use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
@@ -350,7 +351,7 @@ class UserController extends Controller
                 DB::table('employees_services')->insert([
                     'employee_id' => $id,
                     'service_id' => $serviceId,
-                    'added_by' => auth()->id() ?? 1,
+                    'added_by' => Auth::user()->user_id,
                     'added_date' => now()->format('Y-m-d H:i:s'),
                 ]);
             }
@@ -461,7 +462,7 @@ class UserController extends Controller
             'log_action' => $action,
             'log_remark' => $remark,
             'logger_type' => 'admin',
-            'logged_by' => auth()->id() ?? 1,
+            'logged_by' => Auth::user()->user_id ?? 1,
         ]);
     }
 
@@ -481,7 +482,10 @@ class UserController extends Controller
                 $q->where('first_name', 'LIKE', "%{$search}%")
                   ->orWhere('last_name', 'LIKE', "%{$search}%")
                   ->orWhere('employee_no', 'LIKE', "%{$search}%")
-                  ->orWhere('employee_email', 'LIKE', "%{$search}%");
+                  ->orWhere('employee_email', 'LIKE', "%{$search}%")
+                  ->orWhereHas('systemUser', function($sq) use ($search) {
+                      $sq->where('user_type', 'LIKE', "%{$search}%");
+                  });
             });
         }
 

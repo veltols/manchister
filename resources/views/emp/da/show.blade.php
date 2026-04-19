@@ -12,7 +12,7 @@
                 <h2 class="text-white text-3xl font-display font-bold">Formal Action Record</h2>
                 <div
                     class="px-4 py-2 bg-white/20 backdrop-blur-md rounded-xl text-white font-bold text-sm border border-white/30">
-                    {{ $action->status->status_name ?? 'Active' }}
+                    {{ $action->status->da_status_name ?? 'Unknown' }}
                 </div>
             </div>
 

@@ -123,8 +123,9 @@ class SupportTicketController extends Controller
             ->get();
 
         $priorities = \App\Models\Priority::all();
+        $categories = \App\Models\SupportTicketCategory::all();
 
-        return view('admin.tickets.show', compact('ticket', 'itEmployees', 'allEmployees', 'priorities'));
+        return view('admin.tickets.show', compact('ticket', 'itEmployees', 'allEmployees', 'priorities', 'categories'));
     }
 
     public function store(Request $request)
@@ -199,6 +200,9 @@ class SupportTicketController extends Controller
             'added_by'       => 'required|exists:employees_list,employee_id',
             'status_id'      => 'required|integer',
             'ticket_remarks' => 'nullable|string',
+            'category_id'    => 'required|exists:support_tickets_list_cats,category_id',
+            'ticket_description' => 'required|string',
+            'ticket_attachment'  => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:8192',
         ]);
 
         $ticket = SupportTicket::findOrFail($id);
@@ -210,6 +214,20 @@ class SupportTicketController extends Controller
         $ticket->ticket_subject = $request->ticket_subject;
         $ticket->priority_id    = $request->priority_id;
         $ticket->added_by       = $request->added_by;
+        $ticket->category_id    = $request->category_id;
+        $ticket->ticket_description = $request->ticket_description;
+
+        if ($request->hasFile('ticket_attachment')) {
+            $file = $request->file('ticket_attachment');
+            $extension = $file->getClientOriginalExtension();
+            $filename = \Illuminate\Support\Str::random(64) . '.' . $extension;
+            $uploadDir = public_path('uploads/tickets');
+            if (!file_exists($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            $file->move($uploadDir, $filename);
+            $ticket->ticket_attachment = 'uploads/tickets/' . $filename;
+        }
 
         $employee = Employee::find($request->added_by);
         if ($employee) {
@@ -364,7 +382,7 @@ class SupportTicketController extends Controller
         $log->log_action = $action;
         $log->log_remark = $remark;
         $log->log_date = now();
-        $log->logged_by = $employeeId;
+        $log->logged_by = Auth::user()->user_id ?? 1;
         $log->logger_type = 'employees_list'; // Assuming root is linked or just system
         $log->log_type = 'int';
         $log->save();

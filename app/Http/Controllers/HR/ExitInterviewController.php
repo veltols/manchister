@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\ExitInterview;
 use App\Models\ExitInterviewQuestion;
+use App\Models\ExitInterviewAnswer;
 use App\Models\Employee;
+use App\Models\Department;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,26 +16,65 @@ class ExitInterviewController extends Controller
 {
     public function index(Request $request)
     {
-        $query = ExitInterview::with('employee')->orderBy('interview_id', 'desc');
+        $employeeId = $request->input('employee_id');
+        $deptId = $request->input('department_id');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $search = $request->input('search'); // Ref No
 
-        if ($request->has('employee_id') && $request->employee_id != '') {
-            $query->where('employee_id', $request->employee_id);
+        $query = ExitInterview::with(['employee', 'department'])->orderBy('interview_id', 'desc');
+
+        if ($employeeId) {
+            $query->where('employee_id', $employeeId);
+        }
+        if ($deptId) {
+            $query->where('current_department_id', $deptId);
+        }
+        if ($startDate) {
+            $query->whereDate('interview_date', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->whereDate('interview_date', '<=', $endDate);
+        }
+        if ($search) {
+            $query->where('interview_id', 'LIKE', "%$search%");
         }
 
         $interviews = $query->paginate(15);
-        $employees = Employee::where('is_deleted', 0)->orderBy('first_name')->get();
+        $employees = Employee::where('is_deleted', 0)->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })->orderBy('first_name')->get();
+        $departments = Department::orderBy('department_name')->get();
         $questions = ExitInterviewQuestion::all();
 
-        return view('hr.exit_interviews.index', compact('interviews', 'employees', 'questions'));
+        return view('hr.exit_interviews.index', compact('interviews', 'employees', 'departments', 'questions'));
     }
 
     public function getData(Request $request)
     {
         $perPage = $request->get('per_page', 15);
-        $query = ExitInterview::with('employee')->orderBy('interview_id', 'desc');
+        $employeeId = $request->input('employee_id');
+        $deptId = $request->input('department_id');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $search = $request->input('search');
 
-        if ($request->has('employee_id') && $request->employee_id != '') {
-            $query->where('employee_id', $request->employee_id);
+        $query = ExitInterview::with(['employee', 'department'])->orderBy('interview_id', 'desc');
+
+        if ($employeeId) {
+            $query->where('employee_id', $employeeId);
+        }
+        if ($deptId) {
+            $query->where('current_department_id', $deptId);
+        }
+        if ($startDate) {
+            $query->whereDate('interview_date', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->whereDate('interview_date', '<=', $endDate);
+        }
+        if ($search) {
+            $query->where('interview_id', 'LIKE', "%$search%");
         }
 
         $interviews = $query->paginate($perPage);
@@ -52,6 +93,16 @@ class ExitInterviewController extends Controller
         ]);
     }
 
+    public function show($id)
+    {
+        $interview = ExitInterview::with(['employee.department', 'department', 'answers.question'])->findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => $interview
+        ]);
+    }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -66,7 +117,7 @@ class ExitInterviewController extends Controller
             $interview->employee_id = $request->employee_id;
             $interview->interview_date = now();
             $interview->interview_remarks = $request->interview_remarks ?? '';
-            $interview->added_by = Auth::id();
+            $interview->added_by = auth()->user()->user_id;
             
             // Current Dept ID is required by schema? Legacy serv_list joins on it.
             // Let's try to get it from employee.
@@ -104,13 +155,13 @@ class ExitInterviewController extends Controller
                 
                 foreach($qIds as $index => $qId){
                     $ans = $answers[$index] ?? '';
-                    // DB::table('hr_exit_interviews_answers')->insert([
-                    //     'interview_id' => $interview->interview_id,
-                    //     'question_id' => $qId,
-                    //     'answer_text' => $ans
-                    // ]);
-                    // Commented out to prevent SQL error if table doesn't exist.
-                    // We will enable this if we find the table name.
+                    if(!empty($ans)){
+                        ExitInterviewAnswer::create([
+                            'interview_id' => $interview->interview_id,
+                            'question_id' => $qId,
+                            'answer_text' => $ans
+                        ]);
+                    }
                 }
             }
         });

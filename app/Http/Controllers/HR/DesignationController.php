@@ -145,7 +145,7 @@ class DesignationController extends Controller
             'log_action' => $action,
             'log_remark' => $remark,
             'logger_type' => 'employees_list',
-            'logged_by' => \Illuminate\Support\Facades\Auth::id() ?? 1,
+            'logged_by' => auth()->user()->user_id,
             'log_type' => 'int'
         ]);
     }

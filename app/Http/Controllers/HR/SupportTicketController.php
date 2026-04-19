@@ -201,8 +201,9 @@ class SupportTicketController extends Controller
                 $q->where('is_active', 1);
             })
             ->orderBy('first_name')->get();
+        $categories = SupportTicketCategory::all();
 
-        return view('hr.tickets.show', compact('ticket', 'statuses', 'priorities', 'employees', 'allEmployees', 'itEmployees'));
+        return view('hr.tickets.show', compact('ticket', 'statuses', 'priorities', 'employees', 'allEmployees', 'itEmployees', 'categories'));
     }
 
     public function updateDetails(Request $request, $id)
@@ -213,6 +214,9 @@ class SupportTicketController extends Controller
             'added_by'       => 'required|exists:employees_list,employee_id',
             'status_id'      => 'required|integer',
             'ticket_remarks' => 'nullable|string',
+            'category_id'    => 'required|exists:support_tickets_list_cats,category_id',
+            'ticket_description' => 'required|string',
+            'ticket_attachment'  => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:8192',
         ]);
 
         $userId = Auth::user()->user_id;
@@ -228,6 +232,20 @@ class SupportTicketController extends Controller
         $ticket->ticket_subject = $request->ticket_subject;
         $ticket->priority_id    = $request->priority_id;
         $ticket->added_by       = $request->added_by;
+        $ticket->category_id    = $request->category_id;
+        $ticket->ticket_description = $request->ticket_description;
+
+        if ($request->hasFile('ticket_attachment')) {
+            $file = $request->file('ticket_attachment');
+            $extension = $file->getClientOriginalExtension();
+            $filename = \Illuminate\Support\Str::random(64) . '.' . $extension;
+            $uploadDir = public_path('uploads/tickets');
+            if (!file_exists($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            $file->move($uploadDir, $filename);
+            $ticket->ticket_attachment = 'uploads/tickets/' . $filename;
+        }
 
         // Update department if the reporter changed
         $employee = \App\Models\Employee::find($request->added_by);
