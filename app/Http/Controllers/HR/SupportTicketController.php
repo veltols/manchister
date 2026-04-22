@@ -88,7 +88,16 @@ class SupportTicketController extends Controller
             })
             ->orderBy('first_name')->get();
 
-        return view('hr.tickets.index', compact('tickets', 'stt', 'categories', 'priorities', 'employees', 'itEmployees', 'resolvedMonths'));
+        $groupedEmployees = \App\Models\Department::with(['employees' => function($q) {
+            $q->where('is_deleted', 0)
+              ->where('is_hidden', 0)
+              ->whereHas('systemUser', function($sq) {
+                  $sq->where('is_active', 1);
+              })
+              ->orderBy('first_name');
+        }])->get();
+
+        return view('hr.tickets.index', compact('tickets', 'stt', 'categories', 'priorities', 'employees', 'itEmployees', 'resolvedMonths', 'groupedEmployees'));
     }
 
     public function create()
@@ -100,6 +109,11 @@ class SupportTicketController extends Controller
 
     public function store(Request $request)
     {
+        $user = Auth::user();
+        if (!in_array($user->user_type, ['root', 'sys_admin'])) {
+            $request->merge(['added_by' => $user->employee->employee_id ?? 0]);
+        }
+
         $request->validate([
             'added_by'           => 'required|exists:employees_list,employee_id',
             'assigned_to'        => 'required|exists:employees_list,employee_id',
@@ -152,7 +166,7 @@ class SupportTicketController extends Controller
         $log->log_action = 'Ticket Created';
         $log->log_remark = 'Ticket created by HR for employee.';
         $log->log_date = now();
-        $log->logged_by = Auth::user()->employee->employee_id ?? 0;
+        $log->logged_by = $user->employee->employee_id ?? 0;
         $log->logger_type = 'employees_list';
         $log->log_type = 'int';
         $log->save();
@@ -203,11 +217,25 @@ class SupportTicketController extends Controller
             ->orderBy('first_name')->get();
         $categories = SupportTicketCategory::all();
 
-        return view('hr.tickets.show', compact('ticket', 'statuses', 'priorities', 'employees', 'allEmployees', 'itEmployees', 'categories'));
+        $groupedEmployees = \App\Models\Department::with(['employees' => function($q) {
+            $q->where('is_deleted', 0)
+              ->where('is_hidden', 0)
+              ->whereHas('systemUser', function($sq) {
+                  $sq->where('is_active', 1);
+              })
+              ->orderBy('first_name');
+        }])->get();
+
+        return view('hr.tickets.show', compact('ticket', 'statuses', 'priorities', 'employees', 'allEmployees', 'itEmployees', 'categories', 'groupedEmployees'));
     }
 
     public function updateDetails(Request $request, $id)
     {
+        $user = Auth::user();
+        if (!in_array($user->user_type, ['root', 'sys_admin'])) {
+            $request->merge(['added_by' => $user->employee->employee_id ?? 0]);
+        }
+
         $request->validate([
             'ticket_subject' => 'required|string|max:255',
             'priority_id'    => 'required|exists:sys_list_priorities,priority_id',
@@ -219,7 +247,7 @@ class SupportTicketController extends Controller
             'ticket_attachment'  => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:8192',
         ]);
 
-        $userId = Auth::user()->user_id;
+        $userId = $user->user_id;
         $ticket = SupportTicket::where(function($q) use ($userId) {
                 $q->where('added_by', $userId)
                   ->orWhere('assigned_to', $userId);

@@ -28,6 +28,14 @@
         <span class="text-base font-semibold">Dashboard</span>
     </a>
 
+    <a href="{{ route('emp.profile.index') }}"
+        class="nav-item {{ request()->routeIs('emp.profile.index') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
+        <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-user-circle text-base"></i>
+        </div>
+        <span class="text-base font-semibold">My Profile</span>
+    </a>
+
     <a href="{{ route('emp.tasks.index') }}"
         class="nav-item {{ request()->routeIs('emp.tasks.*') && !request()->routeIs('emp.tasks.pending') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
         <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -36,13 +44,34 @@
         <span class="text-base font-semibold">My Tasks</span>
     </a>
 
+    <a href="{{ route('emp.groups.index') }}"
+        class="nav-item {{ request()->routeIs('emp.groups.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
+        <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-users text-base"></i>
+        </div>
+        <span class="text-base font-semibold">Groups</span>
+    </a>
+
     @php
-        $empPendingCount = 0;
-        if (Auth::user() && Auth::user()->employee) {
-            $empPendingCount = \App\Models\Task::where('pending_line_manager_id', Auth::user()->employee->employee_id)->count();
+        $taskPendingCount    = 0;
+        $permPendingCount    = 0;
+        $lmProbationPending  = 0;
+        $isLineManager       = false;
+        if ($authUser && $authUser->employee) {
+            $employeeId = $authUser->employee->employee_id;
+            $taskPendingCount   = \App\Models\Task::where('pending_line_manager_id', $employeeId)->count();
+            $permPendingCount   = \App\Models\Permission::where('line_manager_id', $employeeId)
+                ->whereIn('permission_status_id', [1, 2])->count();
+            // Check if this employee is a line manager for any department
+            $isLineManager = \App\Models\Department::where('line_manager_id', $employeeId)->exists();
+            if ($isLineManager) {
+                $lmProbationPending = \App\Models\ProbationReview::where('line_manager_id', $employeeId)
+                    ->where('status', 'pending_manager')->count();
+            }
         }
     @endphp
-    @if($empPendingCount > 0)
+
+    @if($taskPendingCount + $permPendingCount > 0)
         <a href="{{ route('emp.tasks.pending') }}"
             class="nav-item {{ request()->routeIs('emp.tasks.pending') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 relative"
             style="background: rgba(251,191,36,0.1); color: #92400e;">
@@ -51,9 +80,39 @@
                 <i class="fa-solid fa-clock-rotate-left text-base"></i>
             </div>
             <span class="text-base font-semibold">Pending</span>
-            <span
-                class="absolute top-1 right-2 bg-amber-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm"
-                style="box-shadow: 0 2px 6px rgba(245,158,11,0.5);">{{ $empPendingCount }}</span>
+            <span class="absolute top-1 right-2 bg-amber-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm">{{ $taskPendingCount + $permPendingCount }}</span>
+        </a>
+    @endif
+
+    {{-- Line Manager: Probation Reviews + Team Leaves --}}
+    @if($isLineManager)
+        @php
+            $lmLeavesPending = \App\Models\HrLeave::where('line_manager_id', $employeeId)
+                ->where('leave_status_id', \App\Models\HrLeave::STATUS_PENDING_APPROVAL)->count();
+        @endphp
+        <a href="{{ route('emp.probation-reviews.index') }}"
+            class="nav-item {{ request()->routeIs('emp.probation-reviews.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 relative"
+            style="{{ $lmProbationPending > 0 ? 'background: rgba(20,184,166,0.12); color: #134e4a;' : '' }}">
+            <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style="{{ $lmProbationPending > 0 ? 'background: rgba(20,184,166,0.25); color: #0f766e;' : '' }}">
+                <i class="fa-solid fa-clipboard-user text-base"></i>
+            </div>
+            <span class="text-base font-semibold">Probation Reviews</span>
+            @if($lmProbationPending > 0)
+                <span class="absolute top-1 right-2 bg-teal-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm">{{ $lmProbationPending }}</span>
+            @endif
+        </a>
+        <a href="{{ route('emp.lm.leaves.index') }}"
+            class="nav-item {{ request()->routeIs('emp.lm.leaves.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 relative"
+            style="{{ $lmLeavesPending > 0 ? 'background: rgba(20,184,166,0.12); color: #134e4a;' : '' }}">
+            <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style="{{ $lmLeavesPending > 0 ? 'background: rgba(20,184,166,0.25); color: #0f766e;' : '' }}">
+                <i class="fa-solid fa-calendar-days text-base"></i>
+            </div>
+            <span class="text-base font-semibold">Team Leaves</span>
+            @if($lmLeavesPending > 0)
+                <span class="absolute top-1 right-2 bg-teal-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm">{{ $lmLeavesPending }}</span>
+            @endif
         </a>
     @endif
 
@@ -64,6 +123,39 @@
         </div>
         <span class="text-base font-semibold">Support</span>
     </a>
+
+    {{-- GM: Probation Reviews + Leave Queue — only shown when user is designated as GM --}}
+    @if($authUser && $authUser->is_gm)
+        @php
+            $gmProbationPending = \App\Models\ProbationReview::where('gm_id', $authUser->user_id)
+                ->where('status', 'reviewed')->count();
+            $gmLeavesPending = \App\Models\HrLeave::where('leave_status_id', \App\Models\HrLeave::STATUS_PENDING_GM)->count();
+        @endphp
+        <a href="{{ route('admin.probation-reviews.index') }}"
+            class="nav-item {{ request()->routeIs('admin.probation-reviews.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 relative"
+            style="background: rgba(245,158,11,0.12); color: #92400e;">
+            <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style="background: rgba(245,158,11,0.25); color: #d97706;">
+                <i class="fa-solid fa-crown text-base"></i>
+            </div>
+            <span class="text-base font-semibold">GM Reviews</span>
+            @if($gmProbationPending > 0)
+                <span class="absolute top-1 right-2 bg-amber-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm">{{ $gmProbationPending }}</span>
+            @endif
+        </a>
+        <a href="{{ route('admin.leaves.gm') }}"
+            class="nav-item {{ request()->routeIs('admin.leaves.gm') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 relative"
+            style="background: rgba(245,158,11,0.08); color: #92400e;">
+            <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style="background: rgba(245,158,11,0.2); color: #d97706;">
+                <i class="fa-solid fa-calendar-check text-base"></i>
+            </div>
+            <span class="text-base font-semibold">GM Leaves</span>
+            @if($gmLeavesPending > 0)
+                <span class="absolute top-1 right-2 bg-amber-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm">{{ $gmLeavesPending }}</span>
+            @endif
+        </a>
+    @endif
 
     @if($authUser->feedback_enabled)
         <a href="{{ route('emp.feedback.index') }}"

@@ -90,12 +90,11 @@
                         <div class="space-y-1">
                             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Join
                                 Date</span>
-                            <p class="text-slate-700 font-bold">{{ $employee->join_date ?? 'N/A' }}</p>
+                            <p class="text-slate-700 font-bold">{{ $employee->employee_join_date ?? 'N/A' }}</p>
                         </div>
                         <div class="space-y-1">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Mobile
-                                Number</span>
-                            <p class="text-slate-700 font-bold">{{ $employee->mobile_nmbr ?? '-' }}</p>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Employee No</span>
+                            <p class="text-slate-700 font-bold">{{ $employee->employee_no ?? '-' }}</p>
                         </div>
                     </div>
                 </div>
@@ -116,6 +115,50 @@
 
             <!-- Right: Stats & Quick Actions -->
             <div class="space-y-8">
+                <div class="premium-card p-8 bg-brand-dark text-white relative overflow-hidden mb-8">
+                    <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
+                    <h3 class="text-xs font-bold text-white/50 uppercase tracking-widest mb-6 relative z-10">Monthly Permission Balance</h3>
+
+                    <div class="space-y-6 relative z-10">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] text-white/70 uppercase font-bold">Allowed</span>
+                            <span class="font-bold text-white">{{ $employee->allowed_permission_hours ?? 8 }} Hours</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] text-white/70 uppercase font-bold">Used</span>
+                            <span class="font-bold text-white">{{ $employee->permission_hours_balance ?? 0 }} Hours</span>
+                        </div>
+                        <div class="pt-4 border-t border-white/10 mt-4 flex justify-between items-center">
+                            <span class="text-xs font-bold text-white/90">Remaining</span>
+                            <span class="text-2xl font-black text-white">
+                                {{ max(0, ($employee->allowed_permission_hours ?? 8) - ($employee->permission_hours_balance ?? 0)) }}
+                                <span class="text-xs font-bold opacity-50 ml-1">HRS</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="premium-card p-6 bg-white border border-slate-100 shadow-sm mb-8">
+                    <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4">Leave Balances ({{ date('Y') }})</h3>
+                    <div class="grid grid-cols-1 gap-3">
+                        @foreach($balances as $bal)
+                            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-brand/30 transition-colors group">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-xs font-bold text-slate-700 group-hover:text-brand transition-colors">{{ $bal->name }}</span>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 bg-white rounded-full border border-slate-200 text-slate-500">{{ $bal->limit }} Days</span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-1.5 mb-2">
+                                    <div class="bg-brand h-1.5 rounded-full" style="width: {{ $bal->limit > 0 ? ($bal->used / $bal->limit) * 100 : 0 }}%"></div>
+                                </div>
+                                <div class="flex justify-between items-center text-[10px] font-bold">
+                                    <span class="text-slate-400">Used: {{ $bal->used }}</span>
+                                    <span class="text-brand">Remaining: {{ $bal->remaining }}</span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
                 <div class="premium-card p-8 bg-slate-900 text-white relative overflow-hidden">
                     <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
                     <h3 class="text-sm font-bold text-white/50 uppercase tracking-widest mb-6 relative z-10">Account Status
@@ -125,7 +168,7 @@
                         <div class="flex justify-between items-center">
                             <span class="text-xs text-white/70">Member Since</span>
                             <span
-                                class="font-bold text-white">{{ \Carbon\Carbon::parse($employee->join_date)->year }}</span>
+                                class="font-bold text-white">{{ $employee->employee_join_date ? \Carbon\Carbon::parse($employee->employee_join_date)->year : '---' }}</span>
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-xs text-white/70">Login Status</span>

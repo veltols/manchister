@@ -152,6 +152,24 @@
         background: linear-gradient(180deg, rgba(255,255,255,0.35) 0%, transparent 100%);
         pointer-events: none;
     }
+
+    /* ── Announcement card ── */
+    .ann-card {
+        background: linear-gradient(135deg, rgba(0,79,104,0.04) 0%, rgba(0,106,138,0.02) 100%);
+        border-radius: 20px;
+        border: 1.5px solid rgba(0,79,104,0.1);
+        padding: 1.5rem;
+        position: relative; overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+    .ann-card::before {
+        content: '';
+        position: absolute;
+        right: -20px; top: -20px;
+        width: 120px; height: 120px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(0,79,104,0.06) 0%, transparent 70%);
+    }
 </style>
 @endpush
 
@@ -243,7 +261,151 @@
     {{-- ═══════════════════════════════════
          TABS + CONTENT
     ═══════════════════════════════════ --}}
-    <div x-data="{ activeTab: 'activity' }" class="space-y-5">
+    <div x-data="{ activeTab: 'activity' }" class="space-y-6">
+
+        {{-- ═══════════════════════════════════
+             ANNOUNCEMENTS CAROUSEL
+        ═══════════════════════════════════ --}}
+        @if($announcements->count() > 0)
+        <div class="ann-card">
+            <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-700">
+                <i class="fa-solid fa-bullhorn text-9xl text-brand-dark"></i>
+            </div>
+            <div class="flex items-center gap-3 mb-5">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+                     style="background:linear-gradient(135deg,#004F68,#006a8a);
+                            box-shadow:0 4px 14px rgba(0,79,104,0.3),inset 0 1px 0 rgba(255,255,255,0.2);">
+                    <i class="fa-solid fa-bullhorn rotate-[-15deg] text-white text-sm"></i>
+                </div>
+                <h3 class="text-lg font-display font-bold text-premium">Current Announcements</h3>
+            </div>
+
+            <div class="min-h-[120px] relative">
+                @foreach($announcements as $index => $ann)
+                    <div class="announcement-slide transition-all duration-500 transform {{ $index === 0 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 absolute inset-0 pointer-events-none' }}"
+                         id="ann-{{ $index }}">
+                        <h4 class="text-xl font-bold text-brand-dark mb-1">{{ $ann->document_title }}</h4>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-brand-dark inline-block"></span>
+                            Posted on {{ \Carbon\Carbon::parse($ann->added_date)->format('M d, Y') }}
+                        </p>
+                        <div class="flex items-center justify-between mt-3">
+                            <p class="text-slate-600 leading-relaxed flex-1">{{ Str::limit($ann->document_description, 200) }}</p>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            @if($announcements->count() > 1)
+            <div class="flex items-center gap-3 mt-6">
+                <button onclick="prevAnn()"
+                    class="w-9 h-9 rounded-full border border-slate-200 hover:border-brand-dark hover:text-brand-dark bg-white shadow-sm flex items-center justify-center transition-all text-sm">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <div class="flex gap-1.5" id="ann-dots">
+                    @foreach($announcements as $index => $ann)
+                        <div class="h-2 rounded-full transition-all duration-300 {{ $index === 0 ? 'w-4 bg-brand-dark' : 'w-2 bg-slate-200' }}"
+                             id="ann-dot-{{ $index }}"></div>
+                    @endforeach
+                </div>
+                <button onclick="nextAnn()"
+                    class="w-9 h-9 rounded-full border border-slate-200 hover:border-brand-dark hover:text-brand-dark bg-white shadow-sm flex items-center justify-center transition-all text-sm">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+            @endif
+        </div>
+        @endif
+
+        {{-- ═══════════════════════════════════
+             HR LIBRARY (POLICIES & PROCEDURES)
+        ═══════════════════════════════════ --}}
+        <div x-data="{ libTab: 'policies' }" class="premium-card p-6 bg-white relative overflow-hidden">
+            <div class="absolute -right-6 -bottom-6 opacity-[0.03] group-hover:scale-110 transition-transform duration-700">
+                <i class="fa-solid fa-book-open text-9xl text-brand-dark"></i>
+            </div>
+            
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+                         style="background:linear-gradient(135deg,#0d9488,#0f766e);
+                                box-shadow:0 4px 14px rgba(13,148,136,0.2),inset 0 1px 0 rgba(255,255,255,0.2);">
+                        <i class="fa-solid fa-book-bookmark text-white text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-display font-bold text-premium">HR Library</h3>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Policies &amp; Procedures</p>
+                    </div>
+                </div>
+                
+                <div class="flex bg-slate-100 p-1 rounded-xl w-fit">
+                    <button @click="libTab = 'policies'"
+                            :class="libTab === 'policies' ? 'bg-white text-teal-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+                            class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all">
+                        Policies
+                    </button>
+                    <button @click="libTab = 'procedures'"
+                            :class="libTab === 'procedures' ? 'bg-white text-teal-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+                            class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all">
+                        Procedures
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {{-- Policies List --}}
+                <template x-if="libTab === 'policies'">
+                    @forelse($policies as $policy)
+                        <div class="group/doc p-3 rounded-xl border border-slate-100 hover:border-teal-200 hover:bg-teal-50/30 transition-all flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3 overflow-hidden">
+                                <div class="w-10 h-10 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center flex-shrink-0 group-hover/doc:bg-teal-100 transition-colors">
+                                    <i class="fa-solid fa-file-shield text-sm"></i>
+                                </div>
+                                <div class="overflow-hidden">
+                                    <p class="text-xs font-bold text-slate-700 truncate" title="{{ $policy->document_title }}">{{ $policy->document_title }}</p>
+                                    <p class="text-[9px] text-slate-400 uppercase tracking-tighter">HR Policy</p>
+                                </div>
+                            </div>
+                            <a href="{{ asset('uploads/' . $policy->document_attachment) }}" download
+                                    class="w-8 h-8 rounded-lg bg-white border border-slate-100 text-teal-600 shadow-sm flex items-center justify-center hover:bg-teal-600 hover:text-white transition-all"
+                                    title="Download Policy">
+                                <i class="fa-solid fa-download text-xs"></i>
+                            </a>
+                        </div>
+                    @empty
+                        <div class="col-span-full py-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                            <p class="text-xs font-medium text-slate-400">No policies available</p>
+                        </div>
+                    @endforelse
+                </template>
+
+                {{-- Procedures List --}}
+                <template x-if="libTab === 'procedures'">
+                    @forelse($procedures as $proc)
+                        <div class="group/doc p-3 rounded-xl border border-slate-100 hover:border-teal-200 hover:bg-teal-50/30 transition-all flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3 overflow-hidden">
+                                <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0 group-hover/doc:bg-indigo-100 transition-colors">
+                                    <i class="fa-solid fa-file-signature text-sm"></i>
+                                </div>
+                                <div class="overflow-hidden">
+                                    <p class="text-xs font-bold text-slate-700 truncate" title="{{ $proc->document_title }}">{{ $proc->document_title }}</p>
+                                    <p class="text-[9px] text-slate-400 uppercase tracking-tighter">Procedure</p>
+                                </div>
+                            </div>
+                            <a href="{{ asset('uploads/' . $proc->document_attachment) }}" download
+                                    class="w-8 h-8 rounded-lg bg-white border border-slate-100 text-indigo-600 shadow-sm flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all"
+                                    title="Download Procedure">
+                                <i class="fa-solid fa-download text-xs"></i>
+                            </a>
+                        </div>
+                    @empty
+                        <div class="col-span-full py-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                            <p class="text-xs font-medium text-slate-400">No procedures available</p>
+                        </div>
+                    @endforelse
+                </template>
+            </div>
+        </div>
 
         {{-- Icon-box tab buttons --}}
         <div class="flex flex-wrap items-center justify-end gap-3 w-full">
@@ -623,8 +785,17 @@
 
 {{-- Chart.js Library --}}
 <script src="{{ asset('libs/chartjs/chart.min.js') }}"></script>
+<script src="{{ asset('js/attachment-preview.js') }}"></script>
 
 <script>
+    // Initialize for modal structure
+    document.addEventListener('DOMContentLoaded', () => {
+        window.initAttachmentPreview({
+            inputSelector: '#dummy-none',
+            containerSelector: '#dummy-none'
+        });
+    });
+
     // Counter Animation
     document.querySelectorAll('.count').forEach(el => {
         const target = parseInt(el.getAttribute('data-target'));
@@ -720,5 +891,29 @@
             }
         }
     });
+    // Carousel Logic
+    let curAnn = 0;
+    const slides = document.querySelectorAll('.announcement-slide');
+    const dots = document.querySelectorAll('#ann-dots > div');
+    const totalSlides = slides.length;
+
+    function showAnn(index) {
+        if (!totalSlides) return;
+        slides.forEach((slide, i) => {
+            if (i === index) {
+                slide.classList.remove('opacity-0','translate-y-10','pointer-events-none','absolute','inset-0');
+                slide.classList.add('opacity-100','translate-y-0');
+            } else {
+                slide.classList.add('opacity-0','translate-y-10','pointer-events-none','absolute','inset-0');
+                slide.classList.remove('opacity-100','translate-y-0');
+            }
+        });
+        dots.forEach((dot, i) => {
+            if (i === index) { dot.classList.add('bg-brand-dark','w-4'); dot.classList.remove('bg-slate-200','w-2'); }
+            else { dot.classList.remove('bg-brand-dark','w-4'); dot.classList.add('bg-slate-200','w-2'); }
+        });
+    }
+    function nextAnn() { curAnn = (curAnn + 1) % totalSlides; showAnn(curAnn); }
+    function prevAnn() { curAnn = (curAnn - 1 + totalSlides) % totalSlides; showAnn(curAnn); }
 </script>
 @endsection

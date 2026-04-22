@@ -16,6 +16,11 @@ class GroupFile extends Model
 
     public function uploader()
     {
-        return $this->belongsTo(EmployeesList::class, 'added_by', 'employee_id');
+        return $this->belongsTo(Employee::class, 'added_by', 'employee_id');
+    }
+
+    public function adder()
+    {
+        return $this->uploader();
     }
 }

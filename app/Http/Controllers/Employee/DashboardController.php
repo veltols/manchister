@@ -40,9 +40,17 @@ class DashboardController extends Controller
 
         // --- 1. Announcements (Carousel & List) ---
         $announcements = HrDocument::where('document_type_id', 3)
+            ->where(function ($q) {
+                $q->whereNull('expires_at')
+                  ->orWhere('expires_at', '>', now());
+            })
             ->orderBy('document_id', 'desc')
             ->take(5)
             ->get();
+
+        // --- Policies & Procedures ---
+        $policies = HrDocument::where('document_type_id', 1)->orderBy('document_title')->get();
+        $procedures = HrDocument::where('document_type_id', 2)->orderBy('document_title')->get();
 
         $employeeId = $user->employee ? $user->employee->employee_id : 0;
 
@@ -121,7 +129,9 @@ class DashboardController extends Controller
             'mode',
             'startDate',
             'endDate',
-            'pendingLeaves'
+            'pendingLeaves',
+            'policies',
+            'procedures'
         ));
     }
 }

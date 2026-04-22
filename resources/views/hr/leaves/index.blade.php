@@ -49,11 +49,12 @@
                         <i class="fa-solid fa-signal absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                         <select id="status-filter" class="premium-input w-full pl-11 py-2.5 text-sm appearance-none">
                             <option value="">All Statuses</option>
-                            <option value="{{ \App\Models\HrLeave::STATUS_PENDING }}">Pending HR</option>
-                            <option value="{{ \App\Models\HrLeave::STATUS_PENDING_APPROVAL }}">Pending Manager</option>
-                            <option value="{{ \App\Models\HrLeave::STATUS_APPROVED }}">Approved</option>
-                            <option value="{{ \App\Models\HrLeave::STATUS_REJECTED }}">Rejected</option>
-                            <option value="{{ \App\Models\HrLeave::STATUS_ACTION_REQUIRED }}">Pending Employee</option>
+                            <option value="{{ \App\Models\HrLeave::STATUS_PENDING }}">Pending Manager</option>
+                             <option value="{{ \App\Models\HrLeave::STATUS_PENDING_APPROVAL }}">With Manager</option>
+                             <option value="{{ \App\Models\HrLeave::STATUS_PENDING_GM }}">Pending GM</option>
+                             <option value="{{ \App\Models\HrLeave::STATUS_APPROVED }}">Approved</option>
+                             <option value="{{ \App\Models\HrLeave::STATUS_REJECTED }}">Rejected</option>
+                             <option value="{{ \App\Models\HrLeave::STATUS_ACTION_REQUIRED }}">Pending Employee</option>
                         </select>
                     </div>
                     <div class="relative">
@@ -142,7 +143,7 @@
                             <th class="text-left">Type</th>
                             <th class="text-left">Duration</th>
                             <th class="text-center">Status</th>
-                            <th class="text-center">Actions</th>
+                            <th class="text-center">View</th>
                         </tr>
                     </thead>
                     <tbody id="leaves-container">
@@ -195,12 +196,13 @@
                                 <td class="text-center">
                                     @php
                                         $statusConfig = match ($leave->leave_status_id) {
-                                        \App\Models\HrLeave::STATUS_PENDING => ['bg' => 'from-yellow-400 to-amber-500', 'text' => 'Pending HR', 'icon' => 'clock'],
-                                        \App\Models\HrLeave::STATUS_PENDING_APPROVAL => ['bg' => 'from-blue-500 to-cyan-600', 'text' => 'Pending Manager', 'icon' => 'user-check'],
-                                        \App\Models\HrLeave::STATUS_APPROVED => ['bg' => 'from-green-500 to-emerald-600', 'text' => 'Approved', 'icon' => 'check-double'],
-                                        \App\Models\HrLeave::STATUS_REJECTED => ['bg' => 'from-red-500 to-rose-600', 'text' => 'Rejected', 'icon' => 'times-circle'],
-                                        \App\Models\HrLeave::STATUS_ACTION_REQUIRED => ['bg' => 'from-purple-500 to-indigo-600', 'text' => 'Pending Employee', 'icon' => 'user-edit'],
-                                            default => ['bg' => 'from-slate-400 to-slate-500', 'text' => 'Unknown', 'icon' => 'question']
+                                        \App\Models\HrLeave::STATUS_PENDING          => ['bg' => 'from-yellow-400 to-amber-500', 'text' => 'Pending Manager', 'icon' => 'clock'],
+                                        \App\Models\HrLeave::STATUS_PENDING_APPROVAL  => ['bg' => 'from-blue-500 to-cyan-600',   'text' => 'With Manager',    'icon' => 'user-check'],
+                                        \App\Models\HrLeave::STATUS_PENDING_GM        => ['bg' => 'from-amber-500 to-orange-500','text' => 'Pending GM',      'icon' => 'crown'],
+                                        \App\Models\HrLeave::STATUS_APPROVED          => ['bg' => 'from-green-500 to-emerald-600','text' => 'Approved',        'icon' => 'check-double'],
+                                        \App\Models\HrLeave::STATUS_REJECTED          => ['bg' => 'from-red-500 to-rose-600',    'text' => 'Rejected',        'icon' => 'times-circle'],
+                                        \App\Models\HrLeave::STATUS_ACTION_REQUIRED   => ['bg' => 'from-purple-500 to-indigo-600','text' => 'Pending Employee','icon' => 'user-edit'],
+                                        default => ['bg' => 'from-slate-400 to-slate-500', 'text' => 'Unknown', 'icon' => 'question']
                                         };
                                     @endphp
                                     <span
@@ -211,36 +213,6 @@
                                 </td>
                                 <td>
                                     <div class="flex items-center justify-center gap-2">
-                                        @if($leave->leave_status_id == \App\Models\HrLeave::STATUS_PENDING)
-                                            <button onclick="openStatusModal({{ $leave->leave_id }}, {{ \App\Models\HrLeave::ACTION_SEND_FOR_APPROVAL }}, 'Send for Approval')"
-                                                class="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
-                                                title="Send for Approval">
-                                                <i class="fa-solid fa-share text-sm"></i>
-                                            </button>
-                                            <button onclick="openStatusModal({{ $leave->leave_id }}, {{ \App\Models\HrLeave::ACTION_SEND_BACK }}, 'Send Back to User')"
-                                                class="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
-                                                title="Send Back to User">
-                                                <i class="fa-solid fa-user-pen text-sm"></i>
-                                            </button>
-                                            <button onclick="openStatusModal({{ $leave->leave_id }}, {{ \App\Models\HrLeave::STATUS_REJECTED }}, 'Reject Leave Request')"
-                                                class="w-9 h-9 rounded-lg bg-gradient-to-br from-red-500 to-rose-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
-                                                title="Reject Request">
-                                                <i class="fa-solid fa-times-circle text-sm"></i>
-                                            </button>
-                                        @endif
-                                        
-                                        @if($leave->leave_status_id == \App\Models\HrLeave::STATUS_PENDING_APPROVAL)
-                                             <form action="{{ route('hr.leaves.status', $leave->leave_id) }}" method="POST"
-                                                class="inline">
-                                                @csrf
-                                                <input type="hidden" name="status_id" value="3">
-                                                <button type="submit"
-                                                    class="w-9 h-9 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
-                                                    title="Quick Approve">
-                                                    <i class="fa-solid fa-check text-sm"></i>
-                                                </button>
-                                             </form>
-                                        @endif
 
                                         @if($leave->leave_attachment && $leave->leave_attachment != 'no-img.png')
                                             <a href="{{ asset('uploads/' . $leave->leave_attachment) }}" target="_blank"
@@ -327,46 +299,15 @@
 
                     let statusConfig = { bg: 'from-slate-400 to-slate-500', text: 'Unknown', icon: 'question' };
                     switch(parseInt(leave.leave_status_id)) {
-                        case {{ \App\Models\HrLeave::STATUS_PENDING }}: statusConfig = { bg: 'from-yellow-400 to-amber-500', text: 'Pending HR', icon: 'clock' }; break;
-                        case {{ \App\Models\HrLeave::STATUS_PENDING_APPROVAL }}: statusConfig = { bg: 'from-blue-500 to-cyan-600', text: 'Pending Manager', icon: 'user-check' }; break;
-                        case {{ \App\Models\HrLeave::STATUS_APPROVED }}: statusConfig = { bg: 'from-green-500 to-emerald-600', text: 'Approved', icon: 'check-double' }; break;
-                        case {{ \App\Models\HrLeave::STATUS_REJECTED }}: statusConfig = { bg: 'from-red-500 to-rose-600', text: 'Rejected', icon: 'times-circle' }; break;
-                        case {{ \App\Models\HrLeave::STATUS_ACTION_REQUIRED }}: statusConfig = { bg: 'from-purple-500 to-indigo-600', text: 'Pending Employee', icon: 'user-edit' }; break;
+                        case {{ \App\Models\HrLeave::STATUS_PENDING }}:         statusConfig = { bg: 'from-yellow-400 to-amber-500',  text: 'Pending Manager', icon: 'clock' }; break;
+                        case {{ \App\Models\HrLeave::STATUS_PENDING_APPROVAL }}: statusConfig = { bg: 'from-blue-500 to-cyan-600',    text: 'With Manager',    icon: 'user-check' }; break;
+                        case {{ \App\Models\HrLeave::STATUS_PENDING_GM }}:      statusConfig = { bg: 'from-amber-500 to-orange-500', text: 'Pending GM',      icon: 'crown' }; break;
+                        case {{ \App\Models\HrLeave::STATUS_APPROVED }}:        statusConfig = { bg: 'from-green-500 to-emerald-600',text: 'Approved',        icon: 'check-double' }; break;
+                        case {{ \App\Models\HrLeave::STATUS_REJECTED }}:        statusConfig = { bg: 'from-red-500 to-rose-600',     text: 'Rejected',        icon: 'times-circle' }; break;
+                        case {{ \App\Models\HrLeave::STATUS_ACTION_REQUIRED }}: statusConfig = { bg: 'from-purple-500 to-indigo-600',text: 'Pending Employee',icon: 'user-edit' }; break;
                     }
 
                     let actionsHtml = '';
-                    if (leave.leave_status_id == {{ \App\Models\HrLeave::STATUS_PENDING }}) {
-                        actionsHtml += `
-                            <button onclick="openStatusModal(${leave.leave_id}, {{ \App\Models\HrLeave::ACTION_SEND_FOR_APPROVAL }}, 'Send for Approval')"
-                                class="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
-                                title="Send for Approval">
-                                <i class="fa-solid fa-share text-sm"></i>
-                            </button>
-                            <button onclick="openStatusModal(${leave.leave_id}, {{ \App\Models\HrLeave::ACTION_SEND_BACK }}, 'Send Back to User')"
-                                class="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
-                                title="Send Back to User">
-                                <i class="fa-solid fa-user-pen text-sm"></i>
-                            </button>
-                            <button onclick="openStatusModal(${leave.leave_id}, {{ \App\Models\HrLeave::STATUS_REJECTED }}, 'Reject Leave Request')"
-                                class="w-9 h-9 rounded-lg bg-gradient-to-br from-red-500 to-rose-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
-                                title="Reject Request">
-                                <i class="fa-solid fa-times-circle text-sm"></i>
-                            </button>
-                        `;
-                    }
-                    if (leave.leave_status_id == {{ \App\Models\HrLeave::STATUS_PENDING_APPROVAL }}) {
-                        actionsHtml += `
-                            <form action="/hr/leaves/${leave.leave_id}/status" method="POST" class="inline">
-                                <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').content}">
-                                <input type="hidden" name="status_id" value="3">
-                                <button type="submit"
-                                    class="w-9 h-9 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md"
-                                    title="Quick Approve">
-                                    <i class="fa-solid fa-check text-sm"></i>
-                                </button>
-                            </form>
-                        `;
-                    }
                     if (leave.leave_attachment && leave.leave_attachment !== 'no-img.png') {
                         actionsHtml += `
                             <a href="/uploads/${leave.leave_attachment}" target="_blank"
@@ -550,39 +491,7 @@
         </div>
     </div>
 
-    <!-- Status Change Modal -->
-    <div class="modal" id="statusModal">
-        <div class="modal-backdrop" onclick="closeModal('statusModal')"></div>
-        <div class="modal-content max-w-lg p-6">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-display font-bold text-premium" id="statusModalTitle">Update Leave Status</h2>
-                <button onclick="closeModal('statusModal')" class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
-                    <i class="fa-solid fa-times text-xl"></i>
-                </button>
-            </div>
-            
-            <form id="statusForm" action="" method="POST">
-                @csrf
-                <input type="hidden" name="status_id" id="modal_status_id">
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">
-                            <i class="fa-solid fa-comment-dots text-indigo-600 mr-2"></i>Status Remarks
-                        </label>
-                        <textarea name="log_remark" rows="3" class="premium-input w-full px-4 py-3 text-sm" placeholder="Reason for this status change..." required></textarea>
-                    </div>
-                </div>
-
-                <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
-                    <button type="button" onclick="closeModal('statusModal')" class="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">Cancel</button>
-                    <button type="submit" class="px-8 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
-                        Confirm Update
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+    {{-- Status change modal removed: HR is read-only. Approval is handled by Line Manager → GM flow. --}}
 
     <script>
         function openViewModal(leave) {
@@ -597,11 +506,12 @@
 
             // Status Badge
             const statusConfig = {
-                1: {bg: 'from-yellow-400 to-amber-500', text: 'Pending HR', icon: 'clock'},
-                2: {bg: 'from-blue-500 to-cyan-600', text: 'Pending Manager', icon: 'user-check'},
-                3: {bg: 'from-green-500 to-emerald-600', text: 'Approved', icon: 'check-double'},
-                4: {bg: 'from-red-500 to-rose-600', text: 'Rejected', icon: 'times-circle'},
-                6: {bg: 'from-purple-500 to-indigo-600', text: 'Pending user action', icon: 'user-edit'},
+                1: {bg: 'from-yellow-400 to-amber-500',  text: 'Pending Manager', icon: 'clock'},
+                2: {bg: 'from-blue-500 to-cyan-600',     text: 'With Manager',    icon: 'user-check'},
+                5: {bg: 'from-amber-500 to-orange-500',  text: 'Pending GM',      icon: 'crown'},
+                3: {bg: 'from-green-500 to-emerald-600', text: 'Approved',        icon: 'check-double'},
+                4: {bg: 'from-red-500 to-rose-600',      text: 'Rejected',        icon: 'times-circle'},
+                6: {bg: 'from-purple-500 to-indigo-600', text: 'Pending Employee',icon: 'user-edit'},
                 default: {bg: 'from-slate-400 to-slate-500', text: 'Unknown', icon: 'question'}
             };
             const config = statusConfig[leave.leave_status_id] || statusConfig.default;
@@ -637,11 +547,6 @@
             openModal('viewLeaveModal');
         }
 
-        function openStatusModal(id, statusId, title) {
-            document.getElementById('statusModalTitle').innerText = title;
-            document.getElementById('modal_status_id').value = statusId;
-            document.getElementById('statusForm').action = "/hr/leaves/" + id + "/status";
-            openModal('statusModal');
-        }
+        // openStatusModal removed — HR is read-only in the new LM → GM approval flow.
     </script>
 @endsection

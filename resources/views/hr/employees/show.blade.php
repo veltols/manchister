@@ -49,7 +49,7 @@
     </div>
 
     <!-- Quick Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div class="premium-card p-5 border-l-4 border-indigo-500 bg-gradient-to-br from-white to-indigo-50/30">
             <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">IQC ID</div>
             <div class="text-2xl font-display font-bold text-indigo-900 mt-1">{{ $employee->employee_no }}</div>
@@ -57,6 +57,12 @@
         <div class="premium-card p-5 border-l-4 border-emerald-500 bg-gradient-to-br from-white to-emerald-50/30">
             <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Leaves Balance</div>
             <div class="text-2xl font-display font-bold text-emerald-900 mt-1">{{ $employee->leaves_open_balance }} Days</div>
+        </div>
+        <div class="premium-card p-5 border-l-4 border-amber-500 bg-gradient-to-br from-white to-amber-50/30">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Permission Balance</div>
+            <div class="text-2xl font-display font-bold text-amber-900 mt-1">
+                {{ max(0, ($employee->allowed_permission_hours ?? 8) - ($employee->permission_hours_balance ?? 0)) }} / {{ $employee->allowed_permission_hours ?? 8 }} <span class="text-sm">Hrs</span>
+            </div>
         </div>
         <div class="premium-card p-5 border-l-4 border-blue-500 bg-gradient-to-br from-white to-blue-50/30">
             <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Service Duration</div>
@@ -166,11 +172,31 @@
                     </div>
                     <div class="info-group">
                         <label>Employee Type</label>
-                        <p class="inline-flex px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wider">{{ $employee->employee_type }}</p>
+                        <p class="inline-flex px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wider">{{ str_replace('_', ' ', $employee->employee_type ?? 'N/A') }}</p>
                     </div>
                     <div class="info-group">
                         <label>Portal Role</label>
                         <p class="inline-flex px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-wider">{{ str_replace('_', ' ', $employee->systemUser->user_type ?? 'N/A') }}</p>
+                    </div>
+                    <div class="info-group">
+                        <label>Probation Type</label>
+                        @if($employee->probation_type)
+                            <p class="inline-flex px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold uppercase tracking-wider">{{ str_replace('_', ' ', $employee->probation_type) }}</p>
+                        @else
+                            <p class="text-slate-400 text-sm">N/A</p>
+                        @endif
+                    </div>
+                    <div class="info-group">
+                        <label>Probation End Date</label>
+                        @if($employee->probation_end_date)
+                            @php $endDate = \Carbon\Carbon::parse($employee->probation_end_date); @endphp
+                            <p class="{{ $endDate->isPast() ? 'text-rose-600 font-semibold' : 'text-emerald-700 font-semibold' }}">
+                                {{ $endDate->format('d M Y') }}
+                                <span class="text-xs font-normal text-slate-400 ml-1">({{ $endDate->diffForHumans() }})</span>
+                            </p>
+                        @else
+                            <p class="text-slate-400 text-sm">N/A</p>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -232,7 +258,23 @@
             <!-- Leaves Panel -->
             <div x-show="tab === 'leaves'" class="animate-fade-in space-y-6">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-lg font-bold text-slate-700">Leave Records</h3>
+                    <h3 class="text-lg font-bold text-slate-700">Leave Records & Balances</h3>
+                </div>
+
+                <!-- Annual Balances Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                    @foreach($leaveBalances as $bal)
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ $bal->name }}</div>
+                            <div class="flex justify-between items-end">
+                                <div class="text-lg font-bold text-slate-800">{{ $bal->remaining }} <span class="text-[10px] text-slate-400">Days</span></div>
+                                <div class="text-[10px] font-bold text-brand">{{ round($bal->used) }}/{{ round($bal->limit) }}</div>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-1 mt-2">
+                                <div class="bg-brand h-1 rounded-full" style="width: {{ $bal->limit > 0 ? ($bal->used / $bal->limit) * 100 : 0 }}%"></div>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
 
                 <!-- Filters -->
@@ -616,6 +658,14 @@
                     <input type="number" step="1" name="leaves_open_balance" value="{{ $employee->leaves_open_balance }}" class="premium-input w-full px-4 py-2.5 text-sm" required>
                 </div>
                 <div>
+                    <label class="premium-label">Allowed Permission Hrs (Monthly)</label>
+                    <input type="number" step="0.5" name="allowed_permission_hours" value="{{ $employee->allowed_permission_hours ?? 8 }}" class="premium-input w-full px-4 py-2.5 text-sm" required>
+                </div>
+                <div>
+                    <label class="premium-label">Used Permission Hrs (This Month)</label>
+                    <input type="number" step="0.5" name="permission_hours_balance" value="{{ $employee->permission_hours_balance ?? 0 }}" class="premium-input w-full px-4 py-2.5 text-sm" required>
+                </div>
+                <div>
                     <label class="premium-label">Nationality</label>
                     <select name="nationality_id" class="premium-input w-full px-4 py-2.5 text-sm">
                         <option value="">Select Nationality</option>
@@ -636,10 +686,24 @@
                 <div class="col-span-2">
                     <label class="premium-label">Employee Type</label>
                     <select name="employee_type" class="premium-input w-full px-4 py-2.5 text-sm">
-                        @foreach(['full_time' => 'Full Time', 'part_time' => 'Part Time', 'contract' => 'Contract', 'intern' => 'Intern'] as $val => $lbl)
+                        @foreach(['full_time' => 'Full Time', 'part_time' => 'Part Time', 'contract' => 'Contract', 'intern' => 'Intern', 'probation' => 'Probation'] as $val => $lbl)
                             <option value="{{ $val }}" {{ $employee->employee_type == $val ? 'selected' : '' }}>{{ $lbl }}</option>
                         @endforeach
                     </select>
+                </div>
+                <div class="col-span-2">
+                    <label class="premium-label">Probation Type</label>
+                    <select name="probation_type" class="premium-input w-full px-4 py-2.5 text-sm">
+                        <option value="">-- None --</option>
+                        <option value="initial" {{ $employee->probation_type == 'initial' ? 'selected' : '' }}>Initial Probation</option>
+                        <option value="extended" {{ $employee->probation_type == 'extended' ? 'selected' : '' }}>Extended Probation</option>
+                        <option value="completed" {{ $employee->probation_type == 'completed' ? 'selected' : '' }}>Probation Completed</option>
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <label class="premium-label">Probation End Date</label>
+                    <input type="date" name="probation_end_date" value="{{ $employee->probation_end_date }}" class="premium-input w-full px-4 py-2.5 text-sm">
+                    <p class="text-[10px] text-slate-400 mt-1">Set the date when probation period ends. Leave blank if not on probation.</p>
                 </div>
                 <div class="col-span-2">
                     <label class="premium-label">Portal Role (User Type) <span class="text-rose-500">*</span></label>

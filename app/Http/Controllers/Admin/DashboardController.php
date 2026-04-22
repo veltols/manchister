@@ -152,6 +152,20 @@ class DashboardController extends Controller
              }
         }
 
+        // --- Announcements ---
+        $announcements = \App\Models\HrDocument::where('document_type_id', 3)
+            ->where(function ($q) {
+                $q->whereNull('expires_at')
+                  ->orWhere('expires_at', '>', now());
+            })
+            ->orderBy('document_id', 'desc')
+            ->take(5)
+            ->get();
+
+        // --- Policies & Procedures ---
+        $policies = \App\Models\HrDocument::where('document_type_id', 1)->orderBy('document_title')->get();
+        $procedures = \App\Models\HrDocument::where('document_type_id', 2)->orderBy('document_title')->get();
+
 
         return view('admin.dashboard.index', compact(
             'totalTickets', 'totalOpen', 'totalUnassigned', 'totalProgress', 'totalResolved',
@@ -162,7 +176,10 @@ class DashboardController extends Controller
             'assetsByDeptLabels', 'assetsByDeptCounts',
             'assetsByCatLabels', 'assetsByCatCounts',
             'assetsByStatusLabels', 'assetsByStatusCounts',
-            'mode'
+            'mode',
+            'announcements',
+            'policies',
+            'procedures'
         ));
     }
 }

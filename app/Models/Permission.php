@@ -18,6 +18,7 @@ class Permission extends Model
     protected $casts = [
         'submission_date' => 'date',
         'start_date' => 'date',
+        'is_exception' => 'boolean',
     ];
 
     public function status()
@@ -27,6 +28,11 @@ class Permission extends Model
 
     public function employee()
     {
-        return $this->belongsTo(EmployeesList::class, 'employee_id', 'employee_id');
+        return $this->belongsTo(Employee::class, 'employee_id', 'employee_id');
+    }
+
+    public function lineManager()
+    {
+        return $this->belongsTo(Employee::class, 'line_manager_id', 'employee_id');
     }
 }

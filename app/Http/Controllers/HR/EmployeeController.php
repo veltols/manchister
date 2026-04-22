@@ -159,6 +159,30 @@ class EmployeeController extends Controller
             ])
             ->first();
 
+        // Calculate balances
+        $leaveBalances = [];
+        $currentYear = now()->year;
+        foreach ($leaveTypes as $type) {
+            if ($type->annual_limit == 0) continue;
+            $usedDays = $employee->leaves
+                ->where('leave_type_id', $type->leave_type_id)
+                ->where('leave_status_id', \App\Models\HrLeave::STATUS_APPROVED)
+                ->filter(function($leave) use ($currentYear) {
+                    return \Carbon\Carbon::parse($leave->start_date)->year == $currentYear;
+                })
+                ->sum(function($leave) {
+                    $start = \Carbon\Carbon::parse($leave->start_date);
+                    $end = \Carbon\Carbon::parse($leave->end_date);
+                    return $start->diffInDays($end) + 1;
+                });
+            $leaveBalances[] = (object)[
+                'name' => $type->leave_type_name,
+                'limit' => (float)$type->annual_limit,
+                'used' => (float)$usedDays,
+                'remaining' => (float)max(0, $type->annual_limit - $usedDays)
+            ];
+        }
+
         return view('hr.employees.show', compact(
             'employee',
             'departments',
@@ -170,6 +194,7 @@ class EmployeeController extends Controller
             'allServices',
             'enabledServiceIds',
             'leaveTypes',
+            'leaveBalances',
             'permissionStatuses',
             'warningLevels',
             'daStatuses',
@@ -368,7 +393,11 @@ class EmployeeController extends Controller
             'certificate_id' => 'nullable|integer',
             'user_type' => 'required|in:emp,hr,eqa',
             'employee_type' => 'nullable|string',
+            'probation_type' => 'nullable|in:initial,extended,completed',
+            'probation_end_date' => 'nullable|date',
             'leaves_open_balance' => 'required|numeric|min:0',
+            'allowed_permission_hours' => 'required|numeric|min:0',
+            'permission_hours_balance' => 'required|numeric|min:0',
             'log_remark' => 'required|string',
         ]);
 
@@ -458,6 +487,8 @@ class EmployeeController extends Controller
             'employee_join_date' => 'nullable|date',
             'employee_type' => 'required|string',
             'user_type' => 'required|in:emp,hr,eqa',
+            'probation_type' => 'nullable|in:initial,extended,completed',
+            'probation_end_date' => 'nullable|date',
             'password' => [
                 'required',
                 'string',
@@ -477,6 +508,8 @@ class EmployeeController extends Controller
             $employee->employee_dob = $request->employee_dob;
             $employee->employee_join_date = $request->employee_join_date;
             $employee->employee_type = $request->employee_type;
+            $employee->probation_type = $request->probation_type ?: null;
+            $employee->probation_end_date = $request->probation_end_date ?: null;
             $employee->employee_code = 'EMP-' . rand(1000, 9999);
             $employee->employee_no = rand(10000, 99999); // Temporary or generated IQC ID
             $employee->is_pass = 1;

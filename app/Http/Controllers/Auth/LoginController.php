@@ -288,6 +288,34 @@ class LoginController extends Controller
         // Update employee status to online
         if ($user->employee) {
             $user->employee->update(['emp_status_id' => 1]);
+
+            // Late Arrival Justification Notification (After 8:00 AM)
+            $now = now();
+            if ($now->hour >= 8) {
+                $today = $now->toDateString();
+                
+                // Check if they already have a valid permission for today (not rejected)
+                $hasPermission = \App\Models\Permission::where('employee_id', $user->employee->employee_id)
+                    ->where('start_date', $today)
+                    ->where('permission_status_id', '!=', 4) // Not Rejected
+                    ->exists();
+
+                if (!$hasPermission) {
+                    // Check if already notified today to avoid duplicates
+                    $alreadyNotified = \App\Models\EmployeeNotification::where('employee_id', $user->employee->employee_id)
+                        ->whereDate('notification_date', $today)
+                        ->where('notification_text', 'like', 'Late Arrival Alert%')
+                        ->exists();
+
+                    if (!$alreadyNotified) {
+                        \App\Services\NotificationService::send(
+                            "Late Arrival Alert: You logged in after 8:00 AM. Please submit a permission request to justify your late arrival.",
+                            "emp/permissions",
+                            $user->employee->employee_id
+                        );
+                    }
+                }
+            }
         }
 
         $request->session()->regenerate();

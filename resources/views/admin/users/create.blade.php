@@ -99,6 +99,38 @@
                     </select>
                 </div>
 
+                <!-- Employment Details -->
+                <div class="col-span-full mt-4">
+                    <h3 class="text-lg font-semibold text-premium mb-4 border-b border-slate-100 pb-2">Employment Details</h3>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Employee Type</label>
+                    <select name="employee_type" class="premium-input w-full px-4 py-3 text-sm">
+                        <option value="full_time" {{ old('employee_type') == 'full_time' ? 'selected' : '' }}>Full Time</option>
+                        <option value="part_time" {{ old('employee_type') == 'part_time' ? 'selected' : '' }}>Part Time</option>
+                        <option value="contract" {{ old('employee_type') == 'contract' ? 'selected' : '' }}>Contract</option>
+                        <option value="intern" {{ old('employee_type') == 'intern' ? 'selected' : '' }}>Intern</option>
+                        <option value="probation" {{ old('employee_type') == 'probation' ? 'selected' : '' }}>Probation</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Probation Type <span class="text-slate-400 font-normal">(optional)</span></label>
+                    <select name="probation_type" class="premium-input w-full px-4 py-3 text-sm">
+                        <option value="">-- None --</option>
+                        <option value="initial" {{ old('probation_type') == 'initial' ? 'selected' : '' }}>Initial Probation</option>
+                        <option value="extended" {{ old('probation_type') == 'extended' ? 'selected' : '' }}>Extended Probation</option>
+                        <option value="completed" {{ old('probation_type') == 'completed' ? 'selected' : '' }}>Probation Completed</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Probation End Date <span class="text-slate-400 font-normal">(optional)</span></label>
+                    <input type="date" name="probation_end_date" value="{{ old('probation_end_date') }}" class="premium-input w-full px-4 py-3 text-sm">
+                    <p class="text-[10px] text-slate-400 mt-1">Leave blank if not on probation.</p>
+                </div>
+
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-2">Password <span class="text-red-500">*</span></label>
                     <input type="text" name="password" class="premium-input w-full px-4 py-3 text-sm" placeholder="Enter password" required>

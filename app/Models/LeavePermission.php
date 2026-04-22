@@ -18,6 +18,7 @@ class LeavePermission extends Model
     protected $casts = [
         'start_date' => 'date',
         'submission_date' => 'date',
+        'is_exception' => 'boolean',
     ];
 
     public function employee()

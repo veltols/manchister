@@ -52,7 +52,7 @@
         <!-- Messages Body -->
         <div class="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30" id="chatMessages">
             @foreach($messages as $msg)
-                @if($msg->added_by == auth()->user()->user_id;)
+                @if($msg->added_by == auth()->user()->user_id)
                     <!-- My Message -->
                     <div class="flex justify-end animate-fade-in">
                         <div class="max-w-[75%]">

@@ -28,8 +28,10 @@
                     <thead>
                         <tr>
                             <th class="text-left font-bold text-slate-400">Date</th>
-                            <th class="text-left font-bold text-slate-400">Day</th>
                             <th class="text-center font-bold text-slate-400">Check-In</th>
+                            <th class="text-center font-bold text-slate-400">Check-Out</th>
+                            <th class="text-center font-bold text-slate-400">Duration</th>
+                            <th class="text-center font-bold text-slate-400">Status</th>
                             <th class="text-left font-bold text-slate-400">Remarks</th>
                         </tr>
                     </thead>
@@ -37,11 +39,8 @@
                         @forelse($attendances as $att)
                             <tr class="hover:bg-slate-50/50 transition-colors">
                                 <td>
-                                    <span class="font-bold text-slate-700">{{ $att->checkin_date->format('M d, Y') }}</span>
-                                </td>
-                                <td>
-                                    <span
-                                        class="text-sm font-medium text-slate-500">{{ $att->checkin_date->format('l') }}</span>
+                                    <div class="font-bold text-slate-700">{{ $att->checkin_date->format('M d, Y') }}</div>
+                                    <div class="text-[10px] uppercase font-bold text-slate-400">{{ $att->checkin_date->format('l') }}</div>
                                 </td>
                                 <td class="text-center">
                                     <div
@@ -50,14 +49,38 @@
                                         {{ \Carbon\Carbon::parse($att->checkin_time)->format('h:i A') }}
                                     </div>
                                 </td>
-                                <td>
-                                    @if($att->attendance_remarks == 'AUTO_CHECK_IN')
-                                        <span
-                                            class="text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-slate-100 px-2 py-0.5 rounded">System
-                                            Auto</span>
+                                <td class="text-center">
+                                    @if($att->checkout_time)
+                                        <div
+                                            class="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-50 text-purple-700 rounded-xl border border-purple-100 font-bold">
+                                            <i class="fa-regular fa-clock text-xs"></i>
+                                            {{ \Carbon\Carbon::parse($att->checkout_time)->format('h:i A') }}
+                                        </div>
                                     @else
-                                        <span class="text-sm text-slate-600">{{ $att->attendance_remarks ?? '-' }}</span>
+                                        <span class="text-slate-300">---</span>
                                     @endif
+                                </td>
+                                <td class="text-center">
+                                    <span class="px-3 py-1 bg-slate-100 rounded-lg text-slate-600 font-bold text-xs">
+                                        {{ $att->total_hours ?? '0.00' }} hrs
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    @php
+                                        $statusClass = match($att->attendance_status) {
+                                            'present' => 'bg-green-100 text-green-700',
+                                            'late' => 'bg-amber-100 text-amber-700',
+                                            'absent' => 'bg-red-100 text-red-700',
+                                            'on leave' => 'bg-blue-100 text-blue-700',
+                                            default => 'bg-slate-100 text-slate-700'
+                                        };
+                                    @endphp
+                                    <span class="px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider {{ $statusClass }}">
+                                        {{ $att->attendance_status ?? 'present' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="text-sm text-slate-600">{{ $att->attendance_remarks ?? '-' }}</span>
                                 </td>
                             </tr>
                         @empty
@@ -95,35 +118,56 @@
                         weekday: 'long'
                     });
                     
-                    // Format time h:i A
-                    const [hour, minute] = att.checkin_time.split(':');
-                    const h = parseInt(hour);
-                    const ampm = h >= 12 ? 'PM' : 'AM';
-                    const h12 = h % 12 || 12;
-                    const formattedTime = `${h12}:${minute} ${ampm}`;
+                    // Format time h:i A helper
+                    const formatT = (timeStr) => {
+                        if(!timeStr) return '-';
+                        const [hour, minute] = timeStr.split(':');
+                        const h = parseInt(hour);
+                        const ampm = h >= 12 ? 'PM' : 'AM';
+                        const h12 = h % 12 || 12;
+                        return `${h12}:${minute} ${ampm}`;
+                    };
 
-                    const isAuto = att.attendance_remarks === 'AUTO_CHECK_IN';
+                    const formattedCheckin = formatT(att.checkin_time);
+                    const formattedCheckout = formatT(att.checkout_time);
 
                     html += `
                         <tr class="hover:bg-slate-50/50 transition-colors">
                             <td>
-                                <span class="font-bold text-slate-700">${formattedDate}</span>
-                            </td>
-                            <td>
-                                <span class="text-sm font-medium text-slate-500">${formattedDay}</span>
+                                <div class="font-bold text-slate-700">${formattedDate}</div>
+                                <div class="text-[10px] uppercase font-bold text-slate-400">${formattedDay}</div>
                             </td>
                             <td class="text-center">
                                 <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-xl border border-green-100 font-bold">
                                     <i class="fa-regular fa-clock text-xs"></i>
-                                    ${formattedTime}
+                                    ${formattedCheckin}
                                 </div>
                             </td>
+                            <td class="text-center">
+                                ${att.checkout_time ? `
+                                    <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-50 text-purple-700 rounded-xl border border-purple-100 font-bold">
+                                        <i class="fa-regular fa-clock text-xs"></i>
+                                        ${formattedCheckout}
+                                    </div>
+                                ` : '<span class="text-slate-300">---</span>'}
+                            </td>
+                            <td class="text-center">
+                                <span class="px-3 py-1 bg-slate-100 rounded-lg text-slate-600 font-bold text-xs">
+                                    ${att.total_hours || '0.00'} hrs
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                                    att.attendance_status === 'present' ? 'bg-green-100 text-green-700' : 
+                                    (att.attendance_status === 'late' ? 'bg-amber-100 text-amber-700' : 
+                                    (att.attendance_status === 'absent' ? 'bg-red-100 text-red-700' : 
+                                    (att.attendance_status === 'on leave' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700')))
+                                }">
+                                    ${att.attendance_status || 'present'}
+                                </span>
+                            </td>
                             <td>
-                                ${isAuto ? `
-                                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-slate-100 px-2 py-0.5 rounded">System Auto</span>
-                                ` : `
-                                    <span class="text-sm text-slate-600">${att.attendance_remarks || '-'}</span>
-                                `}
+                                <span class="text-sm text-slate-600">${att.attendance_remarks || '-'}</span>
                             </td>
                         </tr>
                     `;

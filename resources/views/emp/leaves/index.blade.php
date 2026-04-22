@@ -18,53 +18,63 @@
         </button>
     </div>
 
-    <!-- Summary Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="premium-card p-6 bg-gradient-to-br from-indigo-500 to-indigo-700 text-white border-0 shadow-indigo-200">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-xl backdrop-blur-md">
-                    <i class="fa-solid fa-scale-balanced"></i>
-                </div>
-                <div>
-                    <h3 class="text-indigo-100 text-[10px] font-bold uppercase tracking-widest">Total Balance</h3>
-                    <div class="text-3xl font-black mt-0.5">{{ $leaveStats['total'] }} <span class="text-sm font-medium opacity-80 uppercase">Days</span></div>
-                </div>
-            </div>
-            <div class="mt-4 pt-4 border-t border-white/10 flex items-center justify-between text-xs font-semibold text-indigo-100">
-                <span>Available for request</span>
-                <i class="fa-solid fa-circle-check"></i>
-            </div>
+    <!-- Per-Type Leave Balance Panel -->
+    <div class="premium-card p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-slate-700 uppercase tracking-widest flex items-center gap-2">
+                <i class="fa-solid fa-chart-pie text-indigo-500"></i>
+                Leave Balance — {{ now()->year }}
+            </h3>
+            <span class="text-xs text-slate-400 font-medium">Annual limits per type</span>
         </div>
+        @if(count($leaveBalances) > 0)
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            @foreach($leaveBalances as $bal)
+            @php
+                $pct = $bal['limit'] > 0 ? min(100, round(($bal['used'] / $bal['limit']) * 100)) : 0;
+                $barColor = $pct >= 100 ? 'bg-rose-500' : ($pct >= 75 ? 'bg-amber-500' : 'bg-emerald-500');
+                $textColor = $pct >= 100 ? 'text-rose-600' : ($pct >= 75 ? 'text-amber-600' : 'text-emerald-600');
+            @endphp
+            <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:shadow-md transition-all">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 truncate" title="{{ $bal['name'] }}">{{ $bal['name'] }}</p>
+                <div class="flex items-end justify-between mb-2">
+                    <span class="text-2xl font-black {{ $textColor }}">{{ $bal['remaining'] }}</span>
+                    <span class="text-xs text-slate-400 font-medium">/ {{ $bal['limit'] }} days</span>
+                </div>
+                <div class="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                    <div class="h-full {{ $barColor }} rounded-full transition-all" style="width: {{ $pct }}%"></div>
+                </div>
+                <p class="text-[10px] text-slate-400 mt-1">{{ $bal['used'] }} used · {{ $bal['remaining'] }} left</p>
+            </div>
+            @endforeach
+        </div>
+        @else
+        <p class="text-sm text-slate-400 italic">No leave types with annual limits configured.</p>
+        @endif
+    </div>
 
-        <div class="premium-card p-6 bg-gradient-to-br from-emerald-500 to-emerald-700 text-white border-0 shadow-emerald-200">
+    <!-- Quick Stats Row -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="premium-card p-5 bg-gradient-to-br from-emerald-500 to-emerald-700 text-white border-0">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-xl backdrop-blur-md">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-md">
                     <i class="fa-solid fa-calendar-check"></i>
                 </div>
                 <div>
-                    <h3 class="text-emerald-100 text-[10px] font-bold uppercase tracking-widest">Availed Leaves</h3>
-                    <div class="text-3xl font-black mt-0.5">{{ $leaveStats['availed'] }} <span class="text-sm font-medium opacity-80 uppercase">Days</span></div>
+                    <h3 class="text-emerald-100 text-[10px] font-bold uppercase tracking-widest">Approved This Year</h3>
+                    <div class="text-2xl font-black mt-0.5">{{ $leaveStats['availed'] }} <span class="text-sm font-medium opacity-80">Days</span></div>
                 </div>
             </div>
-            <div class="mt-4 pt-4 border-t border-white/10 flex items-center justify-between text-xs font-semibold text-emerald-100">
-                <span>Total approved this year</span>
-                <i class="fa-solid fa-clock-rotate-left"></i>
-            </div>
         </div>
-
-        <div class="premium-card p-6 bg-gradient-to-br from-amber-500 to-amber-700 text-white border-0 shadow-amber-200">
+        <div class="premium-card p-5 bg-gradient-to-br from-amber-500 to-amber-700 text-white border-0">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-xl backdrop-blur-md">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-md">
                     <i class="fa-solid fa-hourglass-half"></i>
                 </div>
                 <div>
                     <h3 class="text-amber-100 text-[10px] font-bold uppercase tracking-widest">Pending Requests</h3>
-                    <div class="text-3xl font-black mt-0.5">{{ $leaveStats['pending'] }} <span class="text-sm font-medium opacity-80 uppercase">Days</span></div>
+                    <div class="text-2xl font-black mt-0.5">{{ $leaveStats['pending'] }} <span class="text-sm font-medium opacity-80">Days</span></div>
                 </div>
-            </div>
-            <div class="mt-4 pt-4 border-t border-white/10 flex items-center justify-between text-xs font-semibold text-amber-100">
-                <span>Awaiting HR review</span>
-                <i class="fa-solid fa-spinner"></i>
             </div>
         </div>
     </div>
@@ -747,11 +757,58 @@
         }
     }
 
-    // Attach listeners to all leave date inputs
-    document.querySelectorAll('.leave-start, .leave-end').forEach(input => {
+    // Build a JS map of typeId -> typeName from server
+    const leaveTypeNames = {
+        @foreach($leaveTypes as $type)
+        {{ $type->leave_type_id }}: "{{ strtolower(trim($type->leave_type_name)) }}",
+        @endforeach
+    };
+
+    // Build a JS map of typeId -> remaining balance
+    const leaveBalanceMap = {
+        @foreach($leaveBalances as $bal)
+        {{ $bal['id'] }}: {{ $bal['remaining'] }},
+        @endforeach
+    };
+
+    function validateBackDate(container) {
+        const typeInp  = container.querySelector('select[name="leave_type_id"]');
+        const startInp = container.querySelector('.leave-start');
+
+        if (typeInp && startInp && startInp.value) {
+            const typeId       = typeInp.value;
+            const typeName     = leaveTypeNames[typeId] || '';
+            const selectedDate = new Date(startInp.value);
+            const today        = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Dynamic check: planned leaves must be future-dated (no backdating)
+            const restricted = ['annual leave', 'special leave', 'meeting', 'training'];
+            if (restricted.includes(typeName) && selectedDate < today) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Policy Restriction',
+                    text: `"${typeInp.options[typeInp.selectedIndex].text}" must be applied before the leave date. Back-dating is not allowed.`,
+                    confirmButtonColor: '#4f46e5'
+                });
+                startInp.value = '';
+                const summary = container.querySelector('.duration-summary');
+                if (summary) summary.style.display = 'none';
+            }
+        }
+    }
+
+    // Attach listeners to all leave date and type inputs
+    document.querySelectorAll('.leave-start, .leave-end, select[name="leave_type_id"]').forEach(input => {
         input.addEventListener('change', (e) => {
-            const container = e.target.closest('.modal');
+            const container = e.target.closest('.modal-content') || e.target.closest('.modal');
+            if (!container) return;
+            
             calcDaysForContainer(container);
+            
+            if (e.target.classList.contains('leave-start') || e.target.name === 'leave_type_id') {
+                validateBackDate(container);
+            }
         });
     });
 </script>

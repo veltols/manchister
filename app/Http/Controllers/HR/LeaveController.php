@@ -326,4 +326,103 @@ class LeaveController extends Controller
 
         return ($expectedPresent / $totalEmployees) >= 0.70;
     }
+
+    public function managerApprove(Request $request, $id)
+    {
+        $leave = HrLeave::with(['employee', 'type'])->findOrFail($id);
+        $employeeId = Auth::user()->employee ? Auth::user()->employee->employee_id : 0;
+
+        // Security: ensure this user is the line manager for this leave
+        $approval = \App\Models\HrApproval::where('related_table', 'hr_leaves')
+            ->where('related_id', $leave->leave_id)
+            ->where('sent_to_id', $employeeId)
+            ->first();
+
+        if (!$approval && $leave->line_manager_id != $employeeId) {
+            return redirect()->back()->with('error', 'Unauthorized or no pending approval found.');
+        }
+
+        // Find GM for forwarding
+        $gm   = \App\Models\User::where('is_gm', 1)->where('is_active', 1)->first();
+        $gmId = $gm ? $gm->user_id : null;
+
+        // Move to Pending GM
+        $leave->leave_status_id = HrLeave::STATUS_PENDING_GM;
+        $leave->lm_comments     = $request->input('lm_comments');
+        $leave->lm_reviewed_at  = now();
+        $leave->gm_id           = $gmId;
+        $leave->save();
+
+        // Log
+        \App\Models\SystemLog::create([
+            'related_table' => 'hr_employees_leaves',
+            'related_id'    => $leave->leave_id,
+            'log_date'      => now(),
+            'log_action'    => 'Manager_Approved',
+            'log_remark'    => 'Approved by Line Manager. Forwarded to GM for final decision.',
+            'logger_type'   => 'employees_list',
+            'logged_by'     => Auth::user()->user_id,
+            'log_type'      => 'int'
+        ]);
+
+        // Notify GM
+        if ($gm) {
+            \App\Services\NotificationService::send(
+                "Leave #{$leave->leave_id} by {$leave->employee->full_name} approved by Line Manager — awaiting your final decision.",
+                "admin/leaves/gm",
+                $gm->user_id
+            );
+        }
+
+        // Notify Employee
+        \App\Services\NotificationService::send(
+            "Your leave request has been reviewed by your Line Manager and forwarded to the GM for final approval.",
+            "emp/leaves",
+            $leave->employee_id
+        );
+
+        return redirect()->back()->with('success', 'Leave approved and forwarded to GM for final decision.');
+    }
+
+    public function managerReject(Request $request, $id)
+    {
+        $request->validate(['reason' => 'required|string']);
+        $leave = HrLeave::with(['employee'])->findOrFail($id);
+        $employeeId = Auth::user()->employee ? Auth::user()->employee->employee_id : 0;
+
+        $approval = \App\Models\HrApproval::where('related_table', 'hr_leaves')
+            ->where('related_id', $leave->leave_id)
+            ->where('sent_to_id', $employeeId)
+            ->first();
+
+        if (!$approval && $leave->line_manager_id != $employeeId) {
+            return redirect()->back()->with('error', 'Unauthorized.');
+        }
+
+        $leave->leave_status_id = HrLeave::STATUS_REJECTED;
+        $leave->lm_comments     = $request->reason;
+        $leave->lm_reviewed_at  = now();
+        $leave->save();
+
+        // Log
+        \App\Models\SystemLog::create([
+            'related_table' => 'hr_employees_leaves',
+            'related_id'    => $leave->leave_id,
+            'log_date'      => now(),
+            'log_action'    => 'Manager_Rejected',
+            'log_remark'    => $request->reason,
+            'logger_type'   => 'employees_list',
+            'logged_by'     => Auth::user()->user_id,
+            'log_type'      => 'int'
+        ]);
+
+        // Notify Employee
+        \App\Services\NotificationService::send(
+            "Your leave request #{$leave->leave_id} was rejected by your Line Manager. Reason: {$request->reason}",
+            "emp/leaves",
+            $leave->employee_id
+        );
+
+        return redirect()->back()->with('success', 'Leave request rejected.');
+    }
 }

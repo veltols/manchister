@@ -12,6 +12,7 @@ use App\Models\TaskPriority;
 use App\Models\Employee;
 use App\Models\Department;
 use App\Models\SystemLog;
+use App\Models\Permission;
 
 class TaskController extends Controller
 {
@@ -272,7 +273,13 @@ class TaskController extends Controller
                 $q->where('is_active', 1);
             })->orderBy('first_name')->get();
 
-        return view('emp.tasks.pending_assignments', compact('tasks', 'employees', 'lineManagerStaff'));
+        $permissions = Permission::with(['employee', 'status'])
+            ->where('line_manager_id', $employeeId)
+            ->whereIn('permission_status_id', [1, 2])
+            ->orderBy('permission_id', 'desc')
+            ->get();
+
+        return view('emp.tasks.pending_assignments', compact('tasks', 'employees', 'lineManagerStaff', 'permissions'));
     }
 
     /**

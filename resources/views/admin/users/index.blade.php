@@ -61,6 +61,7 @@
                             <th class="text-left">Department</th>
                             <th class="text-center">Status</th>
                             <th class="text-center">Feedback</th>
+                            <th class="text-center"><i class="fa-solid fa-crown text-amber-500 mr-1"></i>GM</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
@@ -131,6 +132,17 @@
                                         title="{{ $fbEnabled ? 'Click to disable feedback' : 'Click to enable feedback' }}">
                                         <i class="fa-solid {{ $fbEnabled ? 'fa-comment-dots' : 'fa-comment-slash' }} text-[10px]"></i>
                                         {{ $fbEnabled ? 'Enabled' : 'Disabled' }}
+                                    </button>
+                                </td>
+                                <td class="text-center">
+                                    @php $isGm = $user->systemUser?->is_gm ?? 0; @endphp
+                                    <button class="gm-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all hover:scale-105
+                                        {{ $isGm ? 'bg-amber-100 text-amber-700 border border-amber-300' : 'bg-slate-100 text-slate-400 border border-slate-200' }}"
+                                        data-id="{{ $user->employee_id }}"
+                                        data-is-gm="{{ $isGm }}"
+                                        title="{{ $isGm ? 'Click to remove GM role' : 'Click to designate as General Manager' }}">
+                                        <i class="fa-solid fa-crown text-[10px]"></i>
+                                        {{ $isGm ? 'GM' : 'Not GM' }}
                                     </button>
                                 </td>
                                 <td class="text-center">
@@ -227,6 +239,16 @@
                 return `<button class="feedback-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all hover:scale-105 ${cls}" data-id="${userId}" data-enabled="${enabled ? 1 : 0}" title="${title}"><i class="fa-solid ${icon} text-[10px]"></i> ${label}</button>`;
             }
 
+            // GM Toggle Badge Helper
+            function getGmToggle(userId, isGm) {
+                const cls = isGm
+                    ? 'bg-amber-100 text-amber-700 border-amber-300'
+                    : 'bg-slate-100 text-slate-400 border-slate-200';
+                const label = isGm ? 'GM' : 'Not GM';
+                const title = isGm ? 'Click to remove GM role' : 'Click to designate as General Manager';
+                return `<button class="gm-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all hover:scale-105 ${cls}" data-id="${userId}" data-is-gm="${isGm ? 1 : 0}" title="${title}"><i class="fa-solid fa-crown text-[10px]"></i> ${label}</button>`;
+            }
+
             // Initialize AJAX Pagination
             const prefix = "{{ route('admin.users.index') }}".replace('/users', ''); // Get base admin URL
             
@@ -312,6 +334,9 @@
                                     ${getFeedbackToggle(user.employee_id, user.system_user?.feedback_enabled ?? 1)}
                                 </td>
                                 <td class="text-center">
+                                    ${getGmToggle(user.employee_id, user.system_user?.is_gm ?? 0)}
+                                </td>
+                                <td class="text-center">
                                     <div class="flex items-center justify-center gap-2">
                                         <a href="${showUrl}" 
                                            class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
@@ -344,31 +369,79 @@
             const csrfToken    = "{{ csrf_token() }}";
 
             document.addEventListener('click', function (e) {
-                const btn = e.target.closest('.feedback-toggle-btn');
-                if (!btn) return;
+                // Feedback toggle
+                const fbBtn = e.target.closest('.feedback-toggle-btn');
+                if (fbBtn) {
+                    const userId  = fbBtn.dataset.id;
+                    fetch(`${toggleFbBase}/${userId}/toggle-feedback`, {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            const isNowEnabled = data.feedback_enabled;
+                            fbBtn.dataset.enabled = isNowEnabled ? '1' : '0';
+                            fbBtn.className = `feedback-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all hover:scale-105 ${isNowEnabled ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-400 border-slate-200'}`;
+                            fbBtn.title = isNowEnabled ? 'Click to disable feedback' : 'Click to enable feedback';
+                            fbBtn.innerHTML = `<i class="fa-solid ${isNowEnabled ? 'fa-comment-dots' : 'fa-comment-slash'} text-[10px]"></i> ${isNowEnabled ? 'Enabled' : 'Disabled'}`;
+                            Toast.fire({ icon: isNowEnabled ? 'success' : 'info', title: data.message });
+                        } else {
+                            Toast.fire({ icon: 'error', title: 'Failed to update feedback setting.' });
+                        }
+                    })
+                    .catch(() => Toast.fire({ icon: 'error', title: 'An error occurred.' }));
+                    return;
+                }
 
-                const userId  = btn.dataset.id;
-                const enabled = parseInt(btn.dataset.enabled);
+                // GM toggle
+                const gmBtn = e.target.closest('.gm-toggle-btn');
+                if (gmBtn) {
+                    const userId = gmBtn.dataset.id;
+                    const isCurrentlyGm = parseInt(gmBtn.dataset.isGm);
+                    const action = isCurrentlyGm ? 'remove the GM role from' : 'designate';
+                    const empName = gmBtn.closest('tr')?.querySelector('p.font-semibold')?.textContent?.trim() || 'this user';
 
-                fetch(`${toggleFbBase}/${userId}/toggle-feedback`, {
-                    method: 'POST',
-                    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }
-                })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        const isNowEnabled = data.feedback_enabled;
-                        // Update button in-place
-                        btn.dataset.enabled = isNowEnabled ? '1' : '0';
-                        btn.className = `feedback-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all hover:scale-105 ${isNowEnabled ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-400 border-slate-200'}`;
-                        btn.title = isNowEnabled ? 'Click to disable feedback' : 'Click to enable feedback';
-                        btn.innerHTML = `<i class="fa-solid ${isNowEnabled ? 'fa-comment-dots' : 'fa-comment-slash'} text-[10px]"></i> ${isNowEnabled ? 'Enabled' : 'Disabled'}`;
-                        Toast.fire({ icon: isNowEnabled ? 'success' : 'info', title: data.message });
-                    } else {
-                        Toast.fire({ icon: 'error', title: 'Failed to update feedback setting.' });
-                    }
-                })
-                .catch(() => Toast.fire({ icon: 'error', title: 'An error occurred.' }));
+                    Swal.fire({
+                        icon: 'question',
+                        title: isCurrentlyGm ? 'Remove GM Role?' : 'Designate as GM?',
+                        text: isCurrentlyGm
+                            ? `Remove GM designation from ${empName}?`
+                            : `Designate ${empName} as General Manager? Any existing GM will be unset.`,
+                        showCancelButton: true,
+                        confirmButtonColor: isCurrentlyGm ? '#ef4444' : '#f59e0b',
+                        confirmButtonText: isCurrentlyGm ? 'Yes, Remove' : 'Yes, Designate',
+                    }).then(result => {
+                        if (!result.isConfirmed) return;
+                        fetch(`${toggleFbBase}/${userId}/toggle-gm`, {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Reset all GM buttons first (since only one GM at a time)
+                                document.querySelectorAll('.gm-toggle-btn').forEach(btn => {
+                                    btn.dataset.isGm = '0';
+                                    btn.className = 'gm-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all hover:scale-105 bg-slate-100 text-slate-400 border-slate-200';
+                                    btn.title = 'Click to designate as General Manager';
+                                    btn.innerHTML = '<i class="fa-solid fa-crown text-[10px]"></i> Not GM';
+                                });
+                                // Update clicked button if now GM
+                                if (data.is_gm) {
+                                    gmBtn.dataset.isGm = '1';
+                                    gmBtn.className = 'gm-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all hover:scale-105 bg-amber-100 text-amber-700 border-amber-300';
+                                    gmBtn.title = 'Click to remove GM role';
+                                    gmBtn.innerHTML = '<i class="fa-solid fa-crown text-[10px]"></i> GM';
+                                }
+                                Toast.fire({ icon: 'success', title: data.message });
+                            } else {
+                                Toast.fire({ icon: 'error', title: data.message || 'Failed to update GM status.' });
+                            }
+                        })
+                        .catch(() => Toast.fire({ icon: 'error', title: 'An error occurred.' }));
+                    });
+                }
             });
             // Filter Event Listeners
             const searchInput = document.getElementById('userListSearch');

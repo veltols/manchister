@@ -73,6 +73,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/performance', [PerformanceController::class, 'index'])->name('performance.index');
         Route::get('/performance/data', [PerformanceController::class, 'getData'])->name('performance.data');
 
+        // Probation Reviews (Line Manager assessment queue)
+        Route::get('/probation-reviews', [App\Http\Controllers\Employee\ProbationReviewController::class, 'index'])->name('probation-reviews.index');
+        Route::get('/probation-reviews/{id}', [App\Http\Controllers\Employee\ProbationReviewController::class, 'show'])->name('probation-reviews.show');
+        Route::post('/probation-reviews/{id}/submit', [App\Http\Controllers\Employee\ProbationReviewController::class, 'submitReview'])->name('probation-reviews.submit');
+
         // Exit Interview
         Route::get('/exit-interview', [ExitInterviewController::class, 'index'])->name('exit_interview.index');
         Route::get('/exit-interview/data', [ExitInterviewController::class, 'getData'])->name('exit_interview.data');
@@ -146,10 +151,17 @@ Route::middleware('auth')->group(function () {
         Route::post('/leaves', [App\Http\Controllers\Employee\LeaveController::class, 'store'])->name('leaves.store');
         Route::post('/leaves/{id}/resubmit', [App\Http\Controllers\Employee\LeaveController::class, 'resubmit'])->name('leaves.resubmit');
 
+        // Line Manager — Leave Queue (approve/forward to GM or reject)
+        Route::get('/lm/leaves', [App\Http\Controllers\Employee\LmLeaveController::class, 'index'])->name('lm.leaves.index');
+        Route::post('/lm/leaves/{id}/approve', [App\Http\Controllers\Employee\LmLeaveController::class, 'approve'])->name('lm.leaves.approve');
+        Route::post('/lm/leaves/{id}/reject', [App\Http\Controllers\Employee\LmLeaveController::class, 'reject'])->name('lm.leaves.reject');
+
         // My Permissions
         Route::get('/permissions', [App\Http\Controllers\Employee\PermissionController::class, 'index'])->name('permissions.index');
         Route::get('/permissions/data', [App\Http\Controllers\Employee\PermissionController::class, 'getData'])->name('permissions.data');
         Route::post('/permissions', [App\Http\Controllers\Employee\PermissionController::class, 'store'])->name('permissions.store');
+        Route::post('/permissions/{id}/approve', [App\Http\Controllers\Employee\PermissionController::class, 'approve'])->name('permissions.approve');
+        Route::post('/permissions/{id}/reject', [App\Http\Controllers\Employee\PermissionController::class, 'reject'])->name('permissions.reject');
 
         // My Attendance
         Route::get('/attendance', [App\Http\Controllers\Employee\AttendanceController::class, 'index'])->name('attendance.index');
@@ -175,6 +187,9 @@ Route::middleware('auth')->group(function () {
         // My Groups & Committees
         Route::get('/groups', [App\Http\Controllers\Employee\GroupController::class, 'index'])->name('groups.index');
         Route::get('/groups/{id}', [App\Http\Controllers\Employee\GroupController::class, 'show'])->name('groups.show');
+        Route::post('/groups', [App\Http\Controllers\Employee\GroupController::class, 'store'])->name('groups.store');
+        Route::post('/groups/member', [App\Http\Controllers\Employee\GroupController::class, 'addMember'])->name('groups.member.store');
+        Route::post('/groups/{id}/accept', [App\Http\Controllers\Employee\GroupController::class, 'acceptInvitation'])->name('groups.accept');
         Route::post('/groups/{id}/post', [App\Http\Controllers\Employee\GroupController::class, 'post'])->name('groups.post');
         Route::post('/groups/{id}/upload', [App\Http\Controllers\Employee\GroupController::class, 'upload'])->name('groups.upload');
 
@@ -257,6 +272,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/leaves/create', [App\Http\Controllers\HR\LeaveController::class, 'create'])->name('leaves.create');
         Route::post('/leaves', [App\Http\Controllers\HR\LeaveController::class, 'store'])->name('leaves.store');
         Route::post('/leaves/{id}/status', [App\Http\Controllers\HR\LeaveController::class, 'updateStatus'])->name('leaves.status');
+        Route::post('/leaves/{id}/manager-approve', [App\Http\Controllers\HR\LeaveController::class, 'managerApprove'])->name('leaves.manager_approve');
+        Route::post('/leaves/{id}/manager-reject', [App\Http\Controllers\HR\LeaveController::class, 'managerReject'])->name('leaves.manager_reject');
 
         // Permissions (Short Leaves)
         Route::get('/permissions', [App\Http\Controllers\HR\PermissionController::class, 'index'])->name('permissions.index');
@@ -267,6 +284,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/attendance', [App\Http\Controllers\HR\AttendanceController::class, 'index'])->name('attendance.index');
         Route::get('/attendance/data', [App\Http\Controllers\HR\AttendanceController::class, 'getData'])->name('attendance.data');
         Route::post('/attendance', [App\Http\Controllers\HR\AttendanceController::class, 'store'])->name('attendance.store');
+        Route::post('/attendance/sync-absents', [App\Http\Controllers\HR\AttendanceController::class, 'syncAbsents'])->name('attendance.sync_absents');
 
         // Departments
         Route::get('/departments', [App\Http\Controllers\HR\DepartmentController::class, 'index'])->name('departments.index');
@@ -347,6 +365,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/performance', [App\Http\Controllers\HR\PerformanceController::class, 'store'])->name('performance.store');
         Route::post('/performance/{id}/update', [App\Http\Controllers\HR\PerformanceController::class, 'update'])->name('performance.update');
 
+        // Probation Performance Reviews
+        Route::get('/probation-reviews', [App\Http\Controllers\HR\ProbationReviewController::class, 'index'])->name('probation-reviews.index');
+        Route::post('/probation-reviews', [App\Http\Controllers\HR\ProbationReviewController::class, 'store'])->name('probation-reviews.store');
+        Route::get('/probation-reviews/{id}', [App\Http\Controllers\HR\ProbationReviewController::class, 'show'])->name('probation-reviews.show');
+        Route::delete('/probation-reviews/{id}', [App\Http\Controllers\HR\ProbationReviewController::class, 'destroy'])->name('probation-reviews.destroy');
+
         // Communications
         Route::get('/communications', [App\Http\Controllers\HR\CommunicationController::class, 'index'])->name('communications.index');
         Route::get('/communications/data', [App\Http\Controllers\HR\CommunicationController::class, 'getData'])->name('communications.data');
@@ -414,6 +438,12 @@ Route::middleware('auth')->group(function () {
 
 
 
+        // Probation Reviews (GM Decision)
+        Route::get('/probation-reviews', [App\Http\Controllers\Admin\ProbationReviewController::class, 'index'])->name('probation-reviews.index');
+        Route::get('/probation-reviews/{id}', [App\Http\Controllers\Admin\ProbationReviewController::class, 'show'])->name('probation-reviews.show');
+        Route::post('/probation-reviews/{id}/approve', [App\Http\Controllers\Admin\ProbationReviewController::class, 'approve'])->name('probation-reviews.approve');
+        Route::post('/probation-reviews/{id}/reject', [App\Http\Controllers\Admin\ProbationReviewController::class, 'reject'])->name('probation-reviews.reject');
+
         // Assets Management (Root/Admin Logic)
         Route::get('/assets', [App\Http\Controllers\Admin\AssetController::class, 'index'])->name('assets.index');
         Route::post('/assets', [App\Http\Controllers\Admin\AssetController::class, 'store'])->name('assets.store');
@@ -474,6 +504,14 @@ Route::middleware('auth')->group(function () {
         Route::post('/users/{id}/revoke-asset', [App\Http\Controllers\Admin\UserController::class, 'revokeAsset'])->name('users.revoke-asset');
         Route::post('/users/{id}/update-login-id', [App\Http\Controllers\Admin\UserController::class, 'updateLoginId'])->name('users.update-login-id');
         Route::post('/users/{id}/toggle-feedback', [App\Http\Controllers\Admin\UserController::class, 'toggleFeedback'])->name('users.toggle-feedback');
+        Route::post('/users/{id}/toggle-gm', [App\Http\Controllers\Admin\UserController::class, 'toggleGm'])->name('users.toggle-gm');
+
+        // GM Leave Approvals
+        Route::get('/leaves/gm', [App\Http\Controllers\Admin\GmLeaveController::class, 'index'])->name('leaves.gm');
+        Route::post('/leaves/{id}/gm-approve', [App\Http\Controllers\Admin\GmLeaveController::class, 'approve'])->name('leaves.gm-approve');
+        Route::post('/leaves/{id}/gm-reject', [App\Http\Controllers\Admin\GmLeaveController::class, 'reject'])->name('leaves.gm-reject');
+
+
 
         // Settings (Dynamics Lists)
         Route::get('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');

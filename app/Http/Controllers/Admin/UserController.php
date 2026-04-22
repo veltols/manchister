@@ -63,6 +63,9 @@ class UserController extends Controller
             'department_id' => 'required|exists:employees_list_departments,department_id',
             'user_type' => 'required|in:emp,hr,eqa',
             'employee_email' => 'nullable|unique:employees_list,employee_email',
+            'employee_type' => 'nullable|string',
+            'probation_type' => 'nullable|in:initial,extended,completed',
+            'probation_end_date' => 'nullable|date',
             'password' => [
                 'required',
                 'string',
@@ -87,6 +90,9 @@ class UserController extends Controller
             $emp->employee_code = 'EMP-' . rand(1000, 9999);
             $emp->designation_id = 0;
             $emp->is_pass = 1;
+            $emp->employee_type = $request->employee_type ?? 'full_time';
+            $emp->probation_type = $request->probation_type ?: null;
+            $emp->probation_end_date = $request->probation_end_date ?: null;
             $emp->emp_status_id = 1; // Assuming 1 is Active
             $emp->save();
 
@@ -221,6 +227,8 @@ class UserController extends Controller
             'certificate_id' => 'nullable|integer',
             'user_type' => 'required|in:emp,hr,eqa',
             'employee_type' => 'nullable|string',
+            'probation_type' => 'nullable|in:initial,extended,completed',
+            'probation_end_date' => 'nullable|date',
             'log_remark' => 'required|string',
         ]);
 
@@ -229,9 +237,18 @@ class UserController extends Controller
             // Update Employee details
             $user->update($request->except(['log_remark', 'user_type', '_token']));
 
-            // Update System User Role
+            // Update System User Role + GM flag
             if ($user->systemUser) {
                 $user->systemUser->user_type = $request->user_type;
+
+                $newIsGm = $request->has('is_gm') ? 1 : 0;
+                // Clear other GMs first if designating this user
+                if ($newIsGm === 1) {
+                    \App\Models\User::where('is_gm', 1)
+                        ->where('user_id', '!=', $user->employee_id)
+                        ->update(['is_gm' => 0]);
+                }
+                $user->systemUser->is_gm = $newIsGm;
                 $user->systemUser->save();
             }
 
@@ -328,11 +345,19 @@ class UserController extends Controller
     public function updatePermissions(Request $request, $id)
     {
         $user = Employee::findOrFail($id);
-        $user->is_group = $request->has('is_group') ? 1 : 0;
+        $user->is_group     = $request->has('is_group')     ? 1 : 0;
         $user->is_committee = $request->has('is_committee') ? 1 : 0;
         $user->save();
 
-        $this->logAction($id, 'Permissions Updated', "Groups: {$user->is_group}, Committees: {$user->is_committee}. " . $request->log_remark);
+        // Update is_gm on the users_list record
+        if ($user->systemUser) {
+            $user->systemUser->is_gm = $request->has('is_gm') ? 1 : 0;
+            $user->systemUser->save();
+        }
+
+        $isGm = $request->has('is_gm') ? 'Yes' : 'No';
+        $this->logAction($id, 'Permissions Updated',
+            "Groups: {$user->is_group}, Committees: {$user->is_committee}, GM: {$isGm}. " . $request->log_remark);
 
         return redirect()->back()->with('success', "Permissions updated successfully.");
     }
@@ -465,6 +490,39 @@ class UserController extends Controller
             'message'          => "Feedback {$state} for this user.",
         ]);
     }
+
+    public function toggleGm($id)
+    {
+        $systemUser = \App\Models\User::where('user_id', $id)->first();
+
+        if (!$systemUser) {
+            return response()->json(['success' => false, 'message' => 'User not found.'], 404);
+        }
+
+        $newState = $systemUser->is_gm ? 0 : 1;
+
+        // If designating as GM, clear any existing GM first (only one GM at a time)
+        if ($newState === 1) {
+            \App\Models\User::where('is_gm', 1)->update(['is_gm' => 0]);
+        }
+
+        $systemUser->is_gm = $newState;
+        $systemUser->save();
+
+        $state  = $newState ? 'designated as GM' : 'removed from GM role';
+        $action = $newState ? 'GM Designated' : 'GM Removed';
+        $this->logAction($id, $action, "User {$state} by admin.");
+
+        return response()->json([
+            'success' => true,
+            'is_gm'   => $newState,
+            'message' => $newState
+                ? 'User designated as General Manager. Previous GM (if any) has been unset.'
+                : 'GM designation removed from this user.',
+        ]);
+    }
+
+
 
     private function logAction($refId, $action, $remark)
     {

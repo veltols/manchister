@@ -55,22 +55,19 @@ class DocumentController extends Controller
         $request->validate([
             'document_title' => 'required|string|max:255',
             'document_type_id' => 'required|exists:hr_documents_types,document_type_id',
-            'document_attachment' => 'required|file|max:10240', // 10MB max
+            'document_attachment' => 'nullable|file|max:10240', // Made nullable
+            'expires_at' => 'nullable|date', // Added validation for expiry
         ]);
 
         $doc = new HrDocument();
         $doc->document_title = $request->document_title;
         $doc->document_description = $request->document_description ?? '';
         $doc->document_type_id = $request->document_type_id;
+        $doc->expires_at = $request->expires_at; // Save expiry
+        $doc->added_date = now(); // Ensure added_date is set
 
         if ($request->hasFile('document_attachment')) {
             $file = $request->file('document_attachment');
-            // Legacy system stores in 'uploads/' adjacent to app? 
-            // We should stick to 'public/uploads' if possible or whatever the legacy path expects if we want compatibility.
-            // Based on legacy view: `../uploads/` -> which implies `manchster_php/uploads`.
-            // For Laravel, we usually use `storage/app/public`.
-            // Let's store in `public/uploads` to be safe and accessible.
-            
             $filename = time() . '_' . $file->getClientOriginalName();
             $file->move(public_path('uploads'), $filename);
             $doc->document_attachment = $filename;
@@ -78,7 +75,7 @@ class DocumentController extends Controller
 
         $doc->save();
 
-        return redirect()->back()->with('success', 'Document uploaded successfully.');
+        return redirect()->back()->with('success', 'Document saved successfully.');
     }
     
     public function destroy($id)

@@ -11,6 +11,7 @@ use App\Models\TaskPriority;
 use App\Models\Employee;
 use App\Models\Department;
 use App\Models\SystemLog;
+use App\Models\Permission;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -378,7 +379,21 @@ class TaskController extends Controller
 
         $employees = Employee::where('is_deleted', 0)->orderBy('first_name')->get();
 
-        return view('hr.tasks.pending_assignments', compact('tasks', 'employees'));
+        $permissions = Permission::with(['employee', 'status'])
+            ->where('line_manager_id', $employeeId)
+            ->whereIn('permission_status_id', [1, 2])
+            ->orderBy('permission_id', 'desc')
+            ->get();
+
+        $leaves = \App\Models\HrLeave::with(['employee', 'type', 'status'])
+            ->whereHas('approvals', function($q) use ($employeeId) {
+                $q->where('sent_to_id', $employeeId);
+            })
+            ->where('leave_status_id', \App\Models\HrLeave::STATUS_PENDING_APPROVAL)
+            ->orderBy('leave_id', 'desc')
+            ->get();
+
+        return view('hr.tasks.pending_assignments', compact('tasks', 'employees', 'permissions', 'leaves'));
     }
 
     /**

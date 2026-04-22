@@ -907,18 +907,33 @@
 
                             <div class="px-3 space-y-1">
                                 {{-- My Profile --}}
-                                <button @click="showProfileModal = true; open = false"
-                                    class="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-brand transition-all group text-left">
-                                    <div class="w-9 h-9 rounded-xl flex items-center justify-center shadow-sm relative overflow-hidden transition-transform group-hover:scale-110"
-                                        style="background:linear-gradient(135deg,#e0f2fe,#bae6fd); box-shadow:0 4px 12px rgba(14,165,233,0.15), inset 0 1px 0 rgba(255,255,255,0.8);">
-                                        <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl"
-                                            style="background:rgba(255,255,255,0.4);"></div>
-                                        <i class="fa-solid fa-user-gear text-sm text-sky-600 relative z-10"></i>
-                                    </div>
-                                    <span class="text-sm font-semibold">My Profile</span>
-                                    <i
-                                        class="fa-solid fa-angle-right text-[10px] text-slate-300 ml-auto group-hover:text-brand group-hover:translate-x-0.5 transition-all"></i>
-                                </button>
+                                @if($user && $user->user_type == 'emp')
+                                    <a href="{{ route('emp.profile.index') }}" @click="open = false"
+                                        class="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-brand transition-all group text-left">
+                                        <div class="w-9 h-9 rounded-xl flex items-center justify-center shadow-sm relative overflow-hidden transition-transform group-hover:scale-110"
+                                            style="background:linear-gradient(135deg,#e0f2fe,#bae6fd); box-shadow:0 4px 12px rgba(14,165,233,0.15), inset 0 1px 0 rgba(255,255,255,0.8);">
+                                            <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl"
+                                                style="background:rgba(255,255,255,0.4);"></div>
+                                            <i class="fa-solid fa-user-gear text-sm text-sky-600 relative z-10"></i>
+                                        </div>
+                                        <span class="text-sm font-semibold">My Profile</span>
+                                        <i
+                                            class="fa-solid fa-angle-right text-[10px] text-slate-300 ml-auto group-hover:text-brand group-hover:translate-x-0.5 transition-all"></i>
+                                    </a>
+                                @else
+                                    <button @click="showProfileModal = true; open = false"
+                                        class="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-brand transition-all group text-left">
+                                        <div class="w-9 h-9 rounded-xl flex items-center justify-center shadow-sm relative overflow-hidden transition-transform group-hover:scale-110"
+                                            style="background:linear-gradient(135deg,#e0f2fe,#bae6fd); box-shadow:0 4px 12px rgba(14,165,233,0.15), inset 0 1px 0 rgba(255,255,255,0.8);">
+                                            <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl"
+                                                style="background:rgba(255,255,255,0.4);"></div>
+                                            <i class="fa-solid fa-user-gear text-sm text-sky-600 relative z-10"></i>
+                                        </div>
+                                        <span class="text-sm font-semibold">My Profile</span>
+                                        <i
+                                            class="fa-solid fa-angle-right text-[10px] text-slate-300 ml-auto group-hover:text-brand group-hover:translate-x-0.5 transition-all"></i>
+                                    </button>
+                                @endif
 
                                 {{-- Change Password --}}
                                 <button @click="showPasswordModal = true; open = false"

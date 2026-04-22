@@ -309,9 +309,15 @@
                             </label>
                             <select name="added_by" class="premium-input w-full px-4 py-3 text-sm" required>
                                  <option value="">Select Employee...</option>
-                                 @foreach($allEmployees as $emp)
-                                    <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
-                                 @endforeach
+                                @foreach($groupedEmployees as $dept)
+                                    @if($dept->employees->count() > 0)
+                                        <optgroup label="{{ $dept->department_name }}">
+                                            @foreach($dept->employees as $emp)
+                                                <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endif
+                                @endforeach
                             </select>
                         </div>
 
@@ -322,9 +328,15 @@
                             <select name="assigned_to" class="premium-input w-full px-4 py-3 text-sm" required>
                                 <option value="">Select Assignee...</option>
                                 
-                                    @foreach($allEmployees as $emp)
-                                        <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
-                                    @endforeach
+                                @foreach($groupedEmployees as $dept)
+                                    @if($dept->employees->count() > 0)
+                                        <optgroup label="{{ $dept->department_name }}">
+                                            @foreach($dept->employees as $emp)
+                                                <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endif
+                                @endforeach
                             </select>
                         </div>
                     </div>
@@ -409,16 +421,15 @@
                         <label class="block text-sm font-semibold text-slate-700 mb-2">Assign To</label>
                         <select name="assigned_to" required class="premium-input w-full px-4 py-3 text-sm">
                             <option value="">Select Employee...</option>
-                            <optgroup label="IT Department Staff">
-                                @foreach($itEmployees as $emp)
-                                    <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
-                                @endforeach
-                            </optgroup>
-                            <optgroup label="All Employees">
-                                @foreach($allEmployees as $emp)
-                                    <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
-                                @endforeach
-                            </optgroup>
+                            @foreach($groupedEmployees as $dept)
+                                @if($dept->employees->count() > 0)
+                                    <optgroup label="{{ $dept->department_name }}">
+                                        @foreach($dept->employees as $emp)
+                                            <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
+                            @endforeach
                         </select>
                     </div>
                     <div>

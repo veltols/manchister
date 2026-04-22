@@ -96,7 +96,16 @@ class SupportTicketController extends Controller
             ->orderBy('first_name')
             ->get();
 
-        return view('admin.tickets.index', compact('tickets', 'stt', 'itEmployees', 'categories', 'priorities', 'allEmployees', 'resolvedMonths'));
+        $groupedEmployees = \App\Models\Department::with(['employees' => function($q) {
+            $q->where('is_deleted', 0)
+              ->where('is_hidden', 0)
+              ->whereHas('systemUser', function($sq) {
+                  $sq->where('is_active', 1);
+              })
+              ->orderBy('first_name');
+        }])->get();
+
+        return view('admin.tickets.index', compact('tickets', 'stt', 'itEmployees', 'categories', 'priorities', 'allEmployees', 'resolvedMonths', 'groupedEmployees'));
     }
 
     public function show($id)
@@ -125,7 +134,16 @@ class SupportTicketController extends Controller
         $priorities = \App\Models\Priority::all();
         $categories = \App\Models\SupportTicketCategory::all();
 
-        return view('admin.tickets.show', compact('ticket', 'itEmployees', 'allEmployees', 'priorities', 'categories'));
+        $groupedEmployees = \App\Models\Department::with(['employees' => function($q) {
+            $q->where('is_deleted', 0)
+              ->where('is_hidden', 0)
+              ->whereHas('systemUser', function($sq) {
+                  $sq->where('is_active', 1);
+              })
+              ->orderBy('first_name');
+        }])->get();
+
+        return view('admin.tickets.show', compact('ticket', 'itEmployees', 'allEmployees', 'priorities', 'categories', 'groupedEmployees'));
     }
 
     public function store(Request $request)

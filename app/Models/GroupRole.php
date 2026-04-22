@@ -10,7 +10,7 @@ class GroupRole extends Model
     use HasFactory;
 
     protected $table = 'z_groups_list_roles';
-    protected $primaryKey = 'role_id';
+    protected $primaryKey = 'group_role_id';
     public $timestamps = false;
     protected $guarded = [];
 }

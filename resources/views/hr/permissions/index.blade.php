@@ -105,6 +105,9 @@
                                         <i class="fa-solid fa-clock"></i>
                                         {{ $p->status->permission_status_name ?? 'Pending' }}
                                     </span>
+                                    @if($p->is_exception)
+                                        <span class="block mt-1 text-[9px] font-bold text-amber-600 uppercase tracking-tighter">Exception Granted</span>
+                                    @endif
                                 </td>
                                 <td><span class="text-sm text-slate-600">{{ $p->permission_remarks }}</span></td>
                             </tr>
@@ -136,7 +139,10 @@
         <div class="modal-backdrop" onclick="closeModal('permissionModal')"></div>
         <div class="modal-content max-w-md p-6">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-display font-bold text-premium">Request Short Leave</h2>
+                <div>
+                    <h2 class="text-2xl font-display font-bold text-premium">Request Short Leave</h2>
+                    <p class="text-xs text-slate-500 mt-1">Daily Limit: 3 hrs (Mon-Thu) | 1 hr (Friday)</p>
+                </div>
                 <button onclick="closeModal('permissionModal')"
                     class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
                     <i class="fa-solid fa-times text-xl"></i>
@@ -146,6 +152,18 @@
             <form action="{{ route('hr.permissions.store') }}" method="POST">
                 @csrf
                 <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-user text-indigo-600 mr-2"></i>Select Employee
+                        </label>
+                        <select name="employee_id" class="premium-input w-full px-4 py-3 text-sm select2" required>
+                            <option value="">Choose Employee...</option>
+                            @foreach($employees as $emp)
+                                <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }} ({{ $emp->employee_no }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">
                             <i class="fa-solid fa-calendar text-indigo-600 mr-2"></i>Date
@@ -166,6 +184,11 @@
                             </label>
                             <input type="time" name="end_time" class="premium-input w-full px-4 py-3 text-sm" required>
                         </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 mb-2">
+                        <input type="checkbox" name="is_exception" id="hr_is_exception" value="1" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500">
+                        <label for="hr_is_exception" class="text-xs font-bold text-slate-700 uppercase tracking-widest">Mark as Exception (Skip 8-hour limit)</label>
                     </div>
 
                     <div>
@@ -246,10 +269,11 @@
                                 </span>
                             </td>
                             <td class="text-center">
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-yellow-500 to-amber-600 text-white text-xs font-bold shadow-md">
-                                    <i class="fa-solid fa-clock"></i>
-                                    ${p.status ? p.status.permission_status_name : 'Pending'}
-                                </span>
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-yellow-500 to-amber-600 text-white text-xs font-bold shadow-md">
+                                        <i class="fa-solid fa-clock"></i>
+                                        ${p.status ? p.status.permission_status_name : 'Pending'}
+                                    </span>
+                                    ${p.is_exception ? '<span class="block mt-1 text-[9px] font-bold text-amber-600 uppercase tracking-tighter">Exception Granted</span>' : ''}
                             </td>
                             <td><span class="text-sm text-slate-600">${p.permission_remarks || ''}</span></td>
                         </tr>

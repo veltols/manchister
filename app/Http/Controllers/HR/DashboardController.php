@@ -35,11 +35,24 @@ class DashboardController extends Controller
         // Legacy code picked the first result ($QS_DATA[0]) which might be arbitrary if unordered.
         // We will pass the full gender stats to the view for better visualization.
         
-        $diversityStat = "N/A";
         if($totalEmps > 0 && $genders->isNotEmpty()){
              // Let's assume we want the count of the largest group for the "Diversity" KPI card for now
              $diversityStat = $genders->first()->total;
         }
+        
+        // --- Announcements ---
+        $announcements = \App\Models\HrDocument::where('document_type_id', 3)
+            ->where(function ($q) {
+                $q->whereNull('expires_at')
+                  ->orWhere('expires_at', '>', now());
+            })
+            ->orderBy('document_id', 'desc')
+            ->take(5)
+            ->get();
+            
+        // --- Policies & Procedures ---
+        $policies = \App\Models\HrDocument::where('document_type_id', 1)->orderBy('document_title')->get();
+        $procedures = \App\Models\HrDocument::where('document_type_id', 2)->orderBy('document_title')->get();
 
 
         // 4. Charts Data
@@ -102,7 +115,10 @@ class DashboardController extends Controller
             'deptDataLabels', 'deptDataCounts',
             'genderDataLabels', 'genderDataCounts',
             'certDataLabels', 'certDataCounts',
-            'myTickets'
+            'myTickets',
+            'announcements',
+            'policies',
+            'procedures'
         ));
     }
 }

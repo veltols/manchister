@@ -75,17 +75,30 @@ class GroupController extends Controller
             'group_role_id' => 'required|exists:z_groups_list_roles,group_role_id',
         ]);
 
+        $group = HrGroup::find($request->group_id);
+        $hrEmployeeId = Auth::user()->employee->employee_id ?? 0;
+
         $member = HrGroupMember::create([
             'group_id' => $request->group_id,
             'employee_id' => $request->employee_id,
             'group_role_id' => $request->group_role_id,
-            'added_by' => 1,
+            'added_by' => $hrEmployeeId,
             'added_date' => now(),
+            'is_accepted' => 0, // Pending
+        ]);
+
+        // Send Notification
+        \App\Models\Notification::create([
+            'notification_date' => now(),
+            'notification_text' => 'HR has invited you to join the group: ' . $group->group_name . '. Please accept the invitation to participate.',
+            'related_page' => route('emp.groups.index'),
+            'employee_id' => $request->employee_id,
+            'is_seen' => 0
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Member added successfully'
+            'message' => 'Invitation sent successfully'
         ]);
     }
 
@@ -93,16 +106,38 @@ class GroupController extends Controller
     {
         $request->validate([
             'group_id' => 'required|exists:z_groups_list,group_id',
-            'post_text' => 'required|string',
+            'post_text' => 'required_without:attachment|nullable|string',
+            'attachment' => 'nullable|file|max:10240'
         ]);
 
-        $post = HrGroupPost::create([
-            'group_id' => $request->group_id,
-            'post_text' => $request->post_text,
-            'post_type' => 'text',
-            'added_by' => 1,
-            'added_date' => now(),
-        ]);
+        $post = new \App\Models\HrGroupPost();
+        $post->group_id = $request->group_id;
+        $post->post_text = $request->post_text ?? '';
+        $post->post_type = 'text';
+        $post->added_by = 1;
+        $post->added_date = now();
+
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $fileName = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
+            $targetDir = public_path('uploads/groups');
+            if (!file_exists($targetDir)) {
+                mkdir($targetDir, 0777, true);
+            }
+            $file->move($targetDir, $fileName);
+
+            $post->post_text = $fileName;
+            $post->post_type = 'document';
+            $post->post_file_path = 'uploads/groups/' . $fileName;
+            $post->post_file_name = $file->getClientOriginalName();
+
+            $extension = strtolower($file->getClientOriginalExtension());
+            if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+                $post->post_type = 'image';
+            }
+        }
+
+        $post->save();
 
         return response()->json([
             'success' => true,

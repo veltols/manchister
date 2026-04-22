@@ -260,3 +260,118 @@ class AttachmentPreview {
 window.initAttachmentPreview = function (options) {
     return new AttachmentPreview(options);
 };
+
+// Global remote preview helper
+window.previewRemoteFile = function(url, fileName, fileType = null) {
+    let previewer = window.attachmentPreviewInstance;
+    if (!previewer) {
+        // Create a headless instance just for the modal
+        const dummyInput = document.createElement('input');
+        dummyInput.type = 'file';
+        dummyInput.id = 'dummy-input';
+        dummyInput.style.display = 'none';
+        document.body.appendChild(dummyInput);
+        
+        const dummyContainer = document.createElement('div');
+        dummyContainer.id = 'dummy-container';
+        dummyContainer.style.display = 'none';
+        document.body.appendChild(dummyContainer);
+        
+        window.attachmentPreviewInstance = new AttachmentPreview({
+            inputSelector: '#dummy-input',
+            containerSelector: '#dummy-container'
+        });
+        previewer = window.attachmentPreviewInstance;
+    }
+
+    const modal = document.getElementById('premium-preview-modal');
+    const content = modal.querySelector('#modal-preview-content');
+    const iconContainer = modal.querySelector('#modal-file-icon');
+    const nameLabel = modal.querySelector('#modal-file-name');
+    const infoLabel = modal.querySelector('#modal-file-info');
+    const downloadBtn = modal.querySelector('#modal-download-btn');
+
+    const extension = fileName.split('.').pop().toLowerCase();
+    
+    // Reset state
+    content.innerHTML = '<div class="flex flex-col items-center gap-4 text-slate-400"><i class="fa-solid fa-spinner fa-spin text-4xl text-brand"></i><p class="font-bold text-xs uppercase tracking-widest">Loading Document...</p></div>';
+    iconContainer.innerHTML = `<i class="fa-solid ${previewer.getIconForExtension(extension)}"></i>`;
+    nameLabel.innerText = fileName;
+    infoLabel.innerText = fileType || 'System Document';
+
+    // Hide download button for "view only" if needed, 
+    // but the user just said "preview only link", usually implying the link triggers a preview.
+    // I'll keep download available unless explicitly asked to block it, 
+    // as it's a "premium" feature to have it.
+    downloadBtn.href = url;
+    downloadBtn.download = fileName;
+
+    modal.classList.add('active');
+
+    // Render Content
+    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'svg'].includes(extension);
+    const isPdf = extension === 'pdf';
+    const isDocx = extension === 'docx';
+    const isText = ['txt', 'sql', 'php', 'js', 'json', 'css'].includes(extension);
+
+    if (isImage) {
+        const img = document.createElement('img');
+        img.src = url;
+        img.className = 'max-w-full max-h-full rounded-2xl shadow-xl transition-all hover:scale-[1.01]';
+        content.innerHTML = '';
+        content.appendChild(img);
+    } else if (isPdf) {
+        content.innerHTML = `<iframe src="${url}#toolbar=1" class="w-full h-full rounded-[1.5rem] border-0 bg-white shadow-xl"></iframe>`;
+    } else if (isDocx) {
+        fetch(url)
+            .then(response => response.arrayBuffer())
+            .then(arrayBuffer => {
+                if (window.mammoth) {
+                    window.mammoth.convertToHtml({ arrayBuffer: arrayBuffer })
+                        .then(result => {
+                            content.innerHTML = `
+                                <div class="w-full max-w-4xl bg-white p-12 md:p-16 rounded-[2rem] shadow-xl overflow-auto h-full prose prose-sm md:prose-base max-w-none prose-slate">
+                                    ${result.value || '<p class="text-slate-400 italic">No content found in document</p>'}
+                                </div>`;
+                        })
+                        .catch(err => {
+                            content.innerHTML = `<div class="text-center p-8"><i class="fa-solid fa-circle-exclamation text-red-500 text-4xl mb-4"></i><p class="font-bold text-slate-700">Display Error</p><p class="text-sm text-slate-400 mt-1">Failed to render DOCX content</p></div>`;
+                        });
+                } else {
+                    content.innerHTML = `<div class="text-center p-8 text-slate-400"><i class="fa-solid fa-cloud-arrow-down text-4xl mb-4"></i><p>Word Viewer (Mammoth.js) is missing.</p></div>`;
+                }
+            })
+            .catch(err => {
+                content.innerHTML = `<div class="text-center p-8 text-red-500"><p>Failed to load document</p></div>`;
+            });
+    } else if (isText) {
+        fetch(url)
+            .then(response => response.text())
+            .then(text => {
+                content.innerHTML = `
+                    <div class="w-full max-w-5xl h-full bg-slate-900 rounded-[2rem] p-8 md:p-12 overflow-auto shadow-2xl relative group">
+                        <div class="absolute top-4 right-4 flex gap-2">
+                             <span class="text-[9px] font-bold text-slate-600 uppercase tracking-widest bg-slate-800 px-3 py-1 rounded-full border border-slate-700">Syntax View</span>
+                        </div>
+                        <pre class="text-slate-300 font-mono text-xs md:text-sm leading-relaxed whitespace-pre-wrap"><code>${previewer.escapeHTML(text)}</code></pre>
+                    </div>`;
+            })
+            .catch(err => {
+                content.innerHTML = `<div class="text-center p-8 text-red-500"><p>Failed to load text content</p></div>`;
+            });
+    } else {
+        // Fallback for other types
+        content.innerHTML = `
+            <div class="text-center p-12 bg-white rounded-[2.5rem] shadow-xl border border-slate-100 max-w-sm">
+                <div class="w-20 h-20 rounded-3xl bg-indigo-50 text-indigo-500 flex items-center justify-center mx-auto mb-6">
+                    <i class="fa-solid ${previewer.getIconForExtension(extension)} text-4xl"></i>
+                </div>
+                <h3 class="font-display font-bold text-slate-800 text-xl">Preview Unavailable</h3>
+                <p class="text-sm text-slate-400 mt-2 leading-relaxed">This file type (<b>.${extension}</b>) cannot be previewed directly in the browser.</p>
+                <a href="${url}" download class="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-brand text-white rounded-xl font-bold shadow-lg shadow-brand/20 hover:-translate-y-0.5 transition-all">
+                    <i class="fa-solid fa-download"></i>
+                    Download to View
+                </a>
+            </div>`;
+    }
+};

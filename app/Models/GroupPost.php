@@ -16,6 +16,11 @@ class GroupPost extends Model
 
     public function sender()
     {
-        return $this->belongsTo(EmployeesList::class, 'added_by', 'employee_id');
+        return $this->belongsTo(Employee::class, 'added_by', 'employee_id');
+    }
+
+    public function author()
+    {
+        return $this->sender();
     }
 }

@@ -99,24 +99,30 @@
                 <!-- Tab Content Area -->
                 <div class="flex-1 overflow-y-auto p-6 bg-slate-50/30">
                     <!-- Wall Tab -->
-                    <div id="tab-wall" class="tab-pane active space-y-6 max-w-3xl mx-auto">
+                    <div id="tab-wall" class="tab-pane active flex flex-col h-full  mx-auto">
+                        <!-- Posts Stream -->
+                        <div id="posts-stream" class="flex-1 space-y-6 overflow-y-auto mb-6">
+                            <!-- Dynamic content -->
+                        </div>
+
                         <!-- Post Composer -->
-                        <div class="premium-card p-6 border-none shadow-md">
+                        <div class="premium-card p-6 border-none shadow-lg mt-auto sticky bottom-0 bg-white/80 backdrop-blur-md z-10">
+                            <!-- Attachment Preview Container -->
+                            <div id="group-attachment-preview" class="mb-4"></div>
+                            
                             <div class="flex gap-4">
                                 <div
                                     class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
-                                    YO</div>
+                                    {{ substr(Auth::user()->first_name, 0, 1) }}{{ substr(Auth::user()->last_name, 0, 1) }}</div>
                                 <div class="flex-1 space-y-4">
                                     <textarea id="post-text" placeholder="Share something with the team..."
-                                        class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all resize-none h-24"></textarea>
+                                        class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all resize-none h-20"></textarea>
                                     <div class="flex justify-between items-center">
                                         <div class="flex gap-2">
-                                            <button
-                                                class="p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all"><i
-                                                    class="fa-solid fa-image"></i></button>
-                                            <button
-                                                class="p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all"><i
-                                                    class="fa-solid fa-paperclip"></i></button>
+                                            <label class="p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all cursor-pointer">
+                                                <i class="fa-solid fa-paperclip"></i>
+                                                <input type="file" id="group_attachment" class="hidden">
+                                            </label>
                                         </div>
                                         <button onclick="submitPost()"
                                             class="premium-button from-indigo-600 to-purple-600 text-white px-6 py-2 rounded-xl font-bold text-sm shadow-md">
@@ -125,11 +131,6 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Posts Stream -->
-                        <div id="posts-stream" class="space-y-6">
-                            <!-- Dynamic content -->
                         </div>
                     </div>
 
@@ -418,8 +419,16 @@
         }
     </style>
 
+    <script src="{{ asset('libs/mammoth/mammoth.browser.min.js') }}"></script>
+    <script src="{{ asset('js/attachment-preview.js') }}"></script>
     <script>
         let activeGroupId = null;
+
+        // Initialize Attachment Preview
+        const wallPreview = window.initAttachmentPreview({
+            inputSelector: '#group_attachment',
+            containerSelector: '#group-attachment-preview'
+        });
 
         // Use global openModal and closeModal from app.blade.php
         // These are just wrappers if needed, but the ones in app.blade.php work by toggling .active
@@ -461,6 +470,8 @@
                     // Set Details
                     document.getElementById('details-desc').innerText = group.group_desc || 'No description provided for this team.';
                     document.getElementById('details-id').innerText = `TEAM-${group.group_id.toString().padStart(4, '0')}`;
+                    const creatorLabel = document.getElementById('details-creator');
+                    if(creatorLabel) creatorLabel.innerText = group.creator ? group.creator.first_name + ' ' + group.creator.last_name : 'System';
 
                     // Build Posts
                     renderPosts(group.posts);
@@ -497,29 +508,57 @@
                 return;
             }
 
-            posts.sort((a, b) => new Date(b.added_date) - new Date(a.added_date)).forEach(post => {
+            posts.sort((a, b) => new Date(a.added_date) - new Date(b.added_date)).forEach(post => {
                 const date = new Date(post.added_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                const authorInitials = post.author ? post.author.first_name[0] + post.author.last_name[0] : '??';
+                const authorName = post.author ? post.author.first_name + ' ' + post.author.last_name : 'System User';
+                
+                let contentHtml = '';
+                if (post.post_type === 'image') {
+                    contentHtml = `<img src="{{ asset('') }}${post.post_file_path}" class="rounded-2xl max-w-sm shadow-lg hover:brightness-95 transition-all cursor-pointer" onclick="window.previewRemoteFile(this.src, '${post.post_file_name}', 'Image')">`;
+                } else if (post.post_type === 'document') {
+                    contentHtml = `
+                        <div onclick="window.previewRemoteFile('{{ asset('') }}${post.post_file_path}', '${post.post_file_name}', 'Document')" class="flex items-center gap-4 p-4 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer group/file">
+                            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl group-hover/file:bg-indigo-600 group-hover/file:text-white transition-colors">
+                                <i class="fa-solid fa-file-lines"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="font-bold text-slate-800 text-sm truncate">${post.post_file_name}</p>
+                                <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-0.5">Click to Preview</p>
+                            </div>
+                            <a href="{{ asset('') }}${post.post_file_path}" download class="w-9 h-9 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-brand hover:text-white transition-all">
+                                <i class="fa-solid fa-download text-xs"></i>
+                            </a>
+                        </div>
+                    `;
+                } else {
+                    contentHtml = `<div class="text-slate-700 leading-relaxed whitespace-pre-line text-sm border-l-4 border-indigo-100 pl-4 py-1">${post.post_text}</div>`;
+                }
+
                 const html = `
-                                        <div class="premium-card p-6 border-none shadow-sm group">
-                                            <div class="flex gap-4 mb-4">
-                                                <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs uppercase shadow-inner">
-                                                    ${post.author ? post.author.first_name[0] + post.author.last_name[0] : '??'}
-                                                </div>
-                                                <div class="flex-1">
-                                                    <div class="flex justify-between items-center">
-                                                        <h4 class="font-bold text-slate-800">${post.author ? post.author.first_name + ' ' + post.author.last_name : 'System User'}</h4>
-                                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">${date}</span>
-                                                    </div>
-                                                    <p class="text-xs text-slate-400 font-medium">shared a team update</p>
-                                                </div>
-                                            </div>
-                                            <div class="text-slate-700 leading-relaxed whitespace-pre-line text-sm border-l-4 border-indigo-100 pl-4 py-1">
-                                                ${post.post_text}
-                                            </div>
-                                        </div>
-                                    `;
+                    <div class="premium-card p-6 border-none shadow-sm group">
+                        <div class="flex gap-4 mb-4">
+                            <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs uppercase shadow-inner">
+                                ${authorInitials}
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-center">
+                                    <h4 class="font-bold text-slate-800">${authorName}</h4>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">${date}</span>
+                                </div>
+                                <p class="text-xs text-slate-400 font-medium">shared a team update</p>
+                            </div>
+                        </div>
+                        ${contentHtml}
+                    </div>
+                `;
                 stream.innerHTML += html;
             });
+
+            // Auto-scroll to bottom of stream
+            setTimeout(() => {
+                stream.scrollTop = stream.scrollHeight;
+            }, 100);
         }
 
         function renderMembers(members) {
@@ -527,20 +566,26 @@
             list.innerHTML = '';
 
             members.forEach(m => {
+                const roleName = m.role ? m.role.group_role_name : 'Member';
+                const roleId = m.role ? m.role.group_role_id : 0;
+                const roleClass = roleId == 1 ? 'bg-amber-50 text-amber-700' : 'bg-slate-50 text-slate-600';
+
+                const statusBadge = m.is_accepted == 0 ? '<span class="ml-2 px-2 py-0.5 rounded-md bg-slate-100 text-slate-400 text-[8px] font-bold uppercase">Pending</span>' : '';
+
                 const html = `
-                                        <div class="p-4 bg-white border border-slate-100 rounded-2xl flex items-center gap-4 hover:shadow-md transition-shadow">
-                                            <div class="w-12 h-12 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden">
-                                                <i class="fa-solid fa-user text-slate-300"></i>
-                                            </div>
-                                            <div class="flex-1">
-                                                <h4 class="font-bold text-slate-800 text-sm">${m.employee.first_name} ${m.employee.last_name}</h4>
-                                                <p class="text-xs text-slate-500">${m.employee.employee_code}</p>
-                                            </div>
-                                            <div class="px-3 py-1 rounded-lg ${m.role.group_role_id == 1 ? 'bg-amber-50 text-amber-700' : 'bg-slate-50 text-slate-600'} text-[10px] font-black uppercase tracking-wider">
-                                                ${m.role.group_role_name}
-                                            </div>
-                                        </div>
-                                    `;
+                    <div class="p-4 bg-white border border-slate-100 rounded-2xl flex items-center gap-4 hover:shadow-md transition-shadow ${m.is_accepted == 0 ? 'opacity-60' : ''}">
+                        <div class="w-12 h-12 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden">
+                            <i class="fa-solid fa-user text-slate-300"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-bold text-slate-800 text-sm flex items-center">${m.employee ? m.employee.first_name + ' ' + m.employee.last_name : 'Unknown'} ${statusBadge}</h4>
+                            <p class="text-xs text-slate-500">${m.employee ? m.employee.employee_code : '---'}</p>
+                        </div>
+                        <div class="px-3 py-1 rounded-lg ${roleClass} text-[10px] font-black uppercase tracking-wider">
+                            ${roleName}
+                        </div>
+                    </div>
+                `;
                 list.innerHTML += html;
             });
         }
@@ -559,19 +604,19 @@
                 const icon = ['pdf', 'doc', 'docx'].includes(ext) ? 'fa-file-pdf text-rose-500' : (['xls', 'xlsx'].includes(ext) ? 'fa-file-excel text-emerald-500' : 'fa-file-lines text-blue-500');
 
                 const html = `
-                                        <div class="premium-card p-4 border-none shadow-sm flex items-center gap-4 group hover:shadow-md transition-all">
-                                            <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-xl">
-                                                <i class="fa-solid ${icon}"></i>
-                                            </div>
-                                            <div class="flex-1 min-w-0">
-                                                <h4 class="font-bold text-slate-800 text-sm truncate" title="${f.file_name}">${f.file_name}</h4>
-                                                <p class="text-[10px] text-slate-400 font-bold uppercase">${ext} file</p>
-                                            </div>
-                                            <a href="{{ asset('uploads/groups') }}/${f.file_path}" target="_blank" class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-indigo-600 hover:text-white transition-all">
-                                                <i class="fa-solid fa-download text-xs"></i>
-                                            </a>
-                                        </div>
-                                    `;
+                    <div class="premium-card p-4 border-none shadow-sm flex items-center gap-4 group hover:shadow-md transition-all">
+                        <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-xl cursor-pointer" onclick="window.previewRemoteFile('{{ asset('') }}${f.file_path}', '${f.file_name}', 'Resource')">
+                            <i class="fa-solid ${icon}"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-bold text-slate-800 text-sm truncate" title="${f.file_name}">${f.file_name}</h4>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase">${ext} file</p>
+                        </div>
+                        <a href="{{ asset('') }}${f.file_path}" target="_blank" class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-indigo-600 hover:text-white transition-all">
+                            <i class="fa-solid fa-download text-xs"></i>
+                        </a>
+                    </div>
+                `;
                 grid.innerHTML += html;
             });
         }
@@ -596,23 +641,28 @@
 
         async function submitPost() {
             const text = document.getElementById('post-text').value;
-            if (!text.trim()) return;
+            const fileInput = document.getElementById('group_attachment');
+            const hasFile = fileInput.files.length > 0;
+
+            if (!text.trim() && !hasFile) return;
+
+            const formData = new FormData();
+            formData.append('group_id', activeGroupId);
+            formData.append('post_text', text);
+            if(hasFile) formData.append('attachment', fileInput.files[0]);
 
             try {
                 const response = await fetch("{{ route('hr.groups.post.store') }}", {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
-                    body: JSON.stringify({
-                        group_id: activeGroupId,
-                        post_text: text
-                    })
+                    body: formData
                 });
                 const result = await response.json();
                 if (result.success) {
                     document.getElementById('post-text').value = '';
+                    wallPreview.clearPreview();
                     loadGroup(activeGroupId);
                 }
             } catch (err) { console.error(err); }

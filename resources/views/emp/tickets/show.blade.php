@@ -287,14 +287,26 @@
                         <label class="block text-sm font-semibold text-slate-700 mb-2">
                             <i class="fa-solid fa-user text-indigo-500 mr-1.5"></i>Reported By
                         </label>
-                        <select name="added_by" class="premium-input w-full px-4 py-3 text-sm" required>
-                            @foreach($allEmployees as $emp)
-                                <option value="{{ $emp->employee_id }}"
-                                    {{ $ticket->added_by == $emp->employee_id ? 'selected' : '' }}>
-                                    {{ $emp->first_name }} {{ $emp->last_name }}
+                        @php
+                            $isAdmin = in_array(Auth::user()->user_type, ['root', 'sys_admin']);
+                        @endphp
+                        <select name="added_by" class="premium-input w-full px-4 py-3 text-sm" required {{ !$isAdmin ? 'disabled' : '' }}>
+                            @if(!$isAdmin)
+                                <option value="{{ $ticket->added_by }}" selected>
+                                    {{ $ticket->addedBy->first_name ?? '' }} {{ $ticket->addedBy->last_name ?? '' }}
                                 </option>
-                            @endforeach
+                            @else
+                                @foreach($allEmployees as $emp)
+                                    <option value="{{ $emp->employee_id }}"
+                                        {{ $ticket->added_by == $emp->employee_id ? 'selected' : '' }}>
+                                        {{ $emp->first_name }} {{ $emp->last_name }}
+                                    </option>
+                                @endforeach
+                            @endif
                         </select>
+                        @if(!$isAdmin)
+                            <input type="hidden" name="added_by" value="{{ $ticket->added_by }}">
+                        @endif
                     </div>
                     
                     <div class="grid grid-cols-2 gap-4">
@@ -317,11 +329,17 @@
                             <select name="assigned_to" class="premium-input w-full px-4 py-3 text-sm">
                                 <option value="">-- Keep Current --</option>
                                
-                                    @foreach($allEmployees as $emp)
-                                        <option value="{{ $emp->employee_id }}" {{ $ticket->assigned_to == $emp->employee_id ? 'selected' : '' }}>
-                                            {{ $emp->first_name }} {{ $emp->last_name }}
-                                        </option>
-                                    @endforeach
+                                @foreach($groupedEmployees as $dept)
+                                    @if($dept->employees->count() > 0)
+                                        <optgroup label="{{ $dept->department_name }}">
+                                            @foreach($dept->employees as $emp)
+                                                <option value="{{ $emp->employee_id }}" {{ $ticket->assigned_to == $emp->employee_id ? 'selected' : '' }}>
+                                                    {{ $emp->first_name }} {{ $emp->last_name }}
+                                                </option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endif
+                                @endforeach
                             </select>
                         </div>
                     </div>

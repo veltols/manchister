@@ -36,6 +36,7 @@ class User extends Authenticatable
         'user_theme_id',
         'user_lang',
         'is_active',
+        'is_gm',
         'feedback_enabled',
     ];
 

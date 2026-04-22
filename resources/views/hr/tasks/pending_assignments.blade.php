@@ -37,6 +37,23 @@
         </div>
     </div>
 
+    <!-- Tabs -->
+    <div class="flex bg-slate-100 p-1 rounded-2xl w-fit">
+        <button onclick="switchTab('tasks')" id="tab-tasks" class="px-6 py-2.5 text-sm font-bold rounded-xl transition-all bg-white text-indigo-600 shadow-sm">
+            Tasks Awaiting Assignment
+            <span class="ml-2 px-2 py-0.5 bg-indigo-100 text-indigo-600 rounded-lg">{{ $tasks->count() }}</span>
+        </button>
+        <button onclick="switchTab('permissions')" id="tab-permissions" class="px-6 py-2.5 text-sm font-bold rounded-xl transition-all text-slate-500 hover:text-slate-700">
+            Permission Requests
+            <span class="ml-2 px-2 py-0.5 bg-slate-200 text-slate-600 rounded-lg">{{ $permissions->count() }}</span>
+        </button>
+        <button onclick="switchTab('leaves')" id="tab-leaves" class="px-6 py-2.5 text-sm font-bold rounded-xl transition-all text-slate-500 hover:text-slate-700">
+            Leave Requests
+            <span class="ml-2 px-2 py-0.5 bg-slate-200 text-slate-600 rounded-lg">{{ $leaves->count() }}</span>
+        </button>
+    </div>
+
+    <div id="tasks-section" class="animate-fade-in">
     <!-- Task Table -->
     <div class="premium-card overflow-hidden">
         <div class="p-6 border-b border-slate-100 flex items-center justify-between">
@@ -145,9 +162,87 @@
             </div>
         @endif
     </div>
-</div>
+    </div>
+    </div>
 
-{{-- Hidden task data for JS detail modal --}}
+    <div id="permissions-section" class="hidden animate-fade-in">
+        <div class="premium-card overflow-hidden">
+            <div class="p-6 border-b border-slate-100">
+                <h2 class="text-lg font-display font-bold text-premium">Permissions Awaiting Approval</h2>
+                <p class="text-sm text-slate-500 mt-1">Review and approve or reject team permission requests.</p>
+            </div>
+            @if($permissions->isEmpty())
+                <div class="p-16 text-center">
+                    <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6 text-green-400">
+                        <i class="fa-solid fa-check-double text-4xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-700 mb-2">All Caught Up!</h3>
+                    <p class="text-slate-400">No pending permission requests at this time.</p>
+                </div>
+            @else
+                <div class="overflow-x-auto">
+                    <table class="premium-table w-full">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th class="text-center">Hours</th>
+                                <th>Status</th>
+                                <th>Remarks</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($permissions as $p)
+                                <tr>
+                                    <td>
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xs">
+                                                {{ substr($p->employee->first_name ?? 'U', 0, 1) }}
+                                            </div>
+                                            <span class="font-bold text-slate-700">{{ $p->employee->first_name ?? 'Unknown' }} {{ $p->employee->last_name ?? '' }}</span>
+                                        </div>
+                                    </td>
+                                    <td>{{ $p->start_date ? $p->start_date->format('M d, Y') : '—' }}</td>
+                                    <td>{{ $p->start_time }} - {{ $p->end_time }}</td>
+                                    <td class="font-bold text-indigo-600 text-center">{{ $p->total_hours }}h</td>
+                                    <td>
+                                        @php
+                                            $statusColors = [
+                                                1 => ['bg' => '#f1f5f9', 'text' => '#64748b'], // Pending
+                                                2 => ['bg' => '#fef3c7', 'text' => '#d97706'], // Pending Approval
+                                                3 => ['bg' => '#dcfce7', 'text' => '#10b981'], // Approved
+                                                4 => ['bg' => '#fee2e2', 'text' => '#ef4444'], // Rejected
+                                            ];
+                                            $colors = $statusColors[$p->permission_status_id] ?? ['bg' => '#f1f5f9', 'text' => '#64748b'];
+                                        @endphp
+                                        <span class="px-2 py-1 rounded-lg text-[10px] font-bold" style="background: {{ $colors['bg'] }}; color: {{ $colors['text'] }}">
+                                            {{ $p->status->permission_status_name ?? 'Unknown' }}
+                                        </span>
+                                    </td>
+                                    <td class="max-w-xs truncate text-slate-500" title="{{ $p->permission_remarks }}">{{ $p->permission_remarks }}</td>
+                                    <td>
+                                        <div class="flex gap-2">
+                                            <form action="{{ route('emp.permissions.approve', $p->permission_id) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all">
+                                                    <i class="fa-solid fa-check text-xs"></i>
+                                                </button>
+                                            </form>
+                                            <button onclick="openPermRejectModal({{ $p->permission_id }})" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all">
+                                                <i class="fa-solid fa-xmark text-xs"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+    </div>
 <script>
 const taskData = {
     @foreach($tasks as $task)
@@ -279,7 +374,89 @@ const taskData = {
     </div>
 </div>
 
+<!-- Permission Reject Modal -->
+<div class="modal" id="permRejectModal">
+    <div class="modal-backdrop" onclick="closeModal('permRejectModal')"></div>
+    <div class="modal-content max-w-md p-6">
+        <h2 class="text-xl font-bold text-slate-800 mb-4">Reject Permission Request</h2>
+        <form id="permRejectForm" method="POST" class="space-y-4">
+            @csrf
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">Rejection Reason</label>
+                <textarea name="reason" rows="3" class="premium-input w-full" required placeholder="Why is this being rejected?"></textarea>
+            </div>
+            <div class="flex justify-end gap-3 pt-4">
+                <button type="button" onclick="closeModal('permRejectModal')" class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg font-semibold">Cancel</button>
+                <button type="submit" class="px-6 py-2 bg-rose-600 text-white font-bold rounded-lg shadow-lg">Confirm Reject</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Leave Reject Modal -->
+<div class="modal" id="leaveRejectModal">
+    <div class="modal-backdrop" onclick="closeModal('leaveRejectModal')"></div>
+    <div class="modal-content max-w-md p-6">
+        <h2 class="text-xl font-bold text-slate-800 mb-4">Reject Leave Request</h2>
+        <form id="leaveRejectForm" method="POST" class="space-y-4">
+            @csrf
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">Rejection Reason</label>
+                <textarea name="reason" rows="3" class="premium-input w-full" required placeholder="Provide a reason for rejection..."></textarea>
+            </div>
+            <div class="flex justify-end gap-3 pt-4">
+                <button type="button" onclick="closeModal('leaveRejectModal')" class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg font-semibold">Cancel</button>
+                <button type="submit" class="px-6 py-2 bg-rose-600 text-white font-bold rounded-lg shadow-lg hover:bg-rose-700 transition-all">Confirm Reject</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @push('scripts')
+<script>
+    function switchTab(tab) {
+        const tasksSection = document.getElementById('tasks-section');
+        const permissionsSection = document.getElementById('permissions-section');
+        const leavesSection = document.getElementById('leaves-section');
+        const tabTasks = document.getElementById('tab-tasks');
+        const tabPermissions = document.getElementById('tab-permissions');
+        const tabLeaves = document.getElementById('tab-leaves');
+
+        // Reset all
+        [tasksSection, permissionsSection, leavesSection].forEach(s => s.classList.add('hidden'));
+        [tabTasks, tabPermissions, tabLeaves].forEach(t => {
+            t.classList.remove('bg-white', 'text-indigo-600', 'shadow-sm');
+            t.classList.add('text-slate-500');
+        });
+
+        // Show active
+        if (tab === 'tasks') {
+            tasksSection.classList.remove('hidden');
+            tabTasks.classList.add('bg-white', 'text-indigo-600', 'shadow-sm');
+            tabTasks.classList.remove('text-slate-500');
+        } else if (tab === 'permissions') {
+            permissionsSection.classList.remove('hidden');
+            tabPermissions.classList.add('bg-white', 'text-indigo-600', 'shadow-sm');
+            tabPermissions.classList.remove('text-slate-500');
+        } else if (tab === 'leaves') {
+            leavesSection.classList.remove('hidden');
+            tabLeaves.classList.add('bg-white', 'text-indigo-600', 'shadow-sm');
+            tabLeaves.classList.remove('text-slate-500');
+        }
+    }
+
+    function openPermRejectModal(id) {
+        const form = document.getElementById('permRejectForm');
+        form.action = `{{ url('/emp/permissions') }}/${id}/reject`;
+        openModal('permRejectModal');
+    }
+
+    function openLeaveRejectModal(id) {
+        const form = document.getElementById('leaveRejectForm');
+        form.action = `{{ url('hr/leaves') }}/${id}/manager-reject`;
+        openModal('leaveRejectModal');
+    }
+</script>
 <script>
     function openDetailModal(taskId) {
         const t = taskData[taskId];

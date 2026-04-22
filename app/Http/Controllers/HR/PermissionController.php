@@ -99,7 +99,16 @@ class PermissionController extends Controller
         ]);
 
         $perm = new LeavePermission();
-        $perm->employee_id = Auth::user()->employee_id ?? auth()->user()->user_id;
+        $perm->employee_id = $request->employee_id;
+        
+        // Get line manager of requested user
+        $employee = \App\Models\Employee::find($request->employee_id);
+        $lineManagerId = 0;
+        if ($employee && $employee->department_id) {
+            $lineManagerId = \App\Models\Department::where('department_id', $employee->department_id)
+                ->value('line_manager_id') ?? 0;
+        }
+        $perm->line_manager_id = $lineManagerId;
         $perm->submission_date = now();
         $perm->start_date = $request->start_date;
         $perm->start_time = $request->start_time;
@@ -110,7 +119,6 @@ class PermissionController extends Controller
         $totalHours = ceil(abs($start->diffInMinutes($end, false)) / 60);
 
         // Check if employee has enough total permission hours remaining
-        $employee = \App\Models\Employee::find($perm->employee_id);
         $allowed = $employee->allowed_permission_hours ?? 0;
         $used = $employee->permission_hours_balance ?? 0;
 
@@ -120,9 +128,20 @@ class PermissionController extends Controller
             return redirect()->back()->with('error', "Not enough permission balance available (Allowed: {$allowed}, Used: {$used}, Remaining: {$remainingHours}).");
         }
 
+        // Daily limit check
+        $date = \Carbon\Carbon::parse($request->start_date);
+        $dayOfWeek = $date->dayOfWeek; // 0 (Sun) to 6 (Sat)
+        $dayName = $date->format('l');
+        
+        $dayLimit = ($dayOfWeek == \Carbon\Carbon::FRIDAY) ? 1 : 3;
+        
+        if (!$request->has('is_exception') && $totalHours > $dayLimit) {
+            return redirect()->back()->with('error', "Maximum {$dayLimit} permission hours allowed on {$dayName} (Daily Limit).");
+        }
+
         // Check Monthly limit
-        $currentMonth = \Carbon\Carbon::parse($request->start_date)->month;
-        $currentYear = \Carbon\Carbon::parse($request->start_date)->year;
+        $currentMonth = $date->month;
+        $currentYear = $date->year;
 
         $activeStatusNames = ['Pending', 'Pending Approval', 'Approved'];
         $activeStatusIds = \Illuminate\Support\Facades\DB::table('hr_employees_permissions_status')
@@ -136,9 +155,11 @@ class PermissionController extends Controller
             ->whereIn('permission_status_id', $activeStatusIds)
             ->sum('total_hours');
 
-        if ($usedHoursThisMonth + $totalHours > 8) {
+        if (!$request->has('is_exception') && ($usedHoursThisMonth + $totalHours > 8)) {
             return redirect()->back()->with('error', "Maximum 8 permission hours allowed per month. You have already used {$usedHoursThisMonth} hours this month.");
         }
+        
+        $perm->is_exception = $request->has('is_exception') ? 1 : 0;
 
         $perm->total_hours = $totalHours;
         $perm->permission_remarks = $request->permission_remarks;

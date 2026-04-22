@@ -75,9 +75,37 @@
                         </div>
                         <div>
                             <p class="text-xs text-slate-400 font-bold uppercase">Employee Type</p>
-                            <p class="font-bold text-indigo-600 uppercase italic text-[10px]">{{ str_replace('_', ' ', $user->employee_type == "local" ? "N/A" : $user->employee_type) }}</p>
+                            <p class="font-bold text-indigo-600 uppercase italic text-[10px]">{{ str_replace('_', ' ', $user->employee_type == "local" ? "N/A" : ($user->employee_type ?? 'N/A')) }}</p>
                         </div> 
                     </div>
+                    <div class="flex items-center gap-3 text-sm text-slate-600">
+                         <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                            <i class="fa-solid fa-hourglass-half"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-bold uppercase">Probation Type</p>
+                            @if($user->probation_type)
+                                <p class="font-bold text-amber-600 uppercase italic text-[10px]">{{ str_replace('_', ' ', $user->probation_type) }}</p>
+                            @else
+                                <p class="text-slate-400 text-[10px] italic">N/A</p>
+                            @endif
+                        </div>
+                    </div>
+                    @if($user->probation_end_date)
+                    @php $pEnd = \Carbon\Carbon::parse($user->probation_end_date); @endphp
+                    <div class="flex items-center gap-3 text-sm text-slate-600">
+                         <div class="w-8 h-8 rounded-lg {{ $pEnd->isPast() ? 'bg-rose-50' : 'bg-emerald-50' }} flex items-center justify-center {{ $pEnd->isPast() ? 'text-rose-400' : 'text-emerald-500' }}">
+                            <i class="fa-solid fa-calendar-check"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-bold uppercase">Probation End</p>
+                            <p class="font-bold {{ $pEnd->isPast() ? 'text-rose-600' : 'text-emerald-600' }} text-[11px]">
+                                {{ $pEnd->format('d M Y') }}
+                                <span class="text-slate-400 font-normal">({{ $pEnd->diffForHumans() }})</span>
+                            </p>
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </div>
 
@@ -615,6 +643,15 @@
                         <input type="checkbox" name="is_committee" value="1" {{ $user->is_committee ? 'checked' : '' }} class="w-6 h-6 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
                     </label>
 
+                    <label class="flex items-center justify-between p-4 rounded-xl bg-amber-50 border border-amber-200 cursor-pointer hover:bg-amber-100 transition-colors">
+                        <div>
+                            <span class="block font-bold text-amber-900 flex items-center gap-2"><i class="fa-solid fa-crown text-amber-500 text-xs"></i> General Manager (GM)</span>
+                            <span class="text-xs text-amber-700 italic">Designate as GM — receives and makes final decision on all probation performance reviews</span>
+                        </div>
+                        <input type="checkbox" name="is_gm" value="1" {{ ($user->systemUser->is_gm ?? 0) ? 'checked' : '' }} class="w-6 h-6 rounded border-amber-300 text-amber-600 focus:ring-amber-500">
+                    </label>
+
+
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Log Remark</label>
                         <textarea name="log_remark" required rows="3" class="premium-input w-full px-4 py-3" placeholder="Reason for change..."></textarea>
@@ -915,10 +952,26 @@
                     <div>
                         <label class="premium-label">Employee Type</label>
                         <select name="employee_type" class="premium-input w-full px-4 py-2.5 text-sm">
-                            @foreach(['full_time' => 'Full Time', 'part_time' => 'Part Time', 'contract' => 'Contract', 'intern' => 'Intern'] as $val => $lbl)
+                            @foreach(['full_time' => 'Full Time', 'part_time' => 'Part Time', 'contract' => 'Contract', 'intern' => 'Intern', 'probation' => 'Probation'] as $val => $lbl)
                                 <option value="{{ $val }}" {{ $user->employee_type == $val ? 'selected' : '' }}>{{ $lbl }}</option>
                             @endforeach
                         </select>
+                    </div>
+
+                    <div>
+                        <label class="premium-label">Probation Type</label>
+                        <select name="probation_type" class="premium-input w-full px-4 py-2.5 text-sm">
+                            <option value="">-- None --</option>
+                            <option value="initial" {{ $user->probation_type == 'initial' ? 'selected' : '' }}>Initial Probation</option>
+                            <option value="extended" {{ $user->probation_type == 'extended' ? 'selected' : '' }}>Extended Probation</option>
+                            <option value="completed" {{ $user->probation_type == 'completed' ? 'selected' : '' }}>Probation Completed</option>
+                        </select>
+                    </div>
+
+                    <div class="col-span-2">
+                        <label class="premium-label">Probation End Date</label>
+                        <input type="date" name="probation_end_date" value="{{ $user->probation_end_date }}" class="premium-input w-full px-4 py-2.5 text-sm">
+                        <p class="text-[10px] text-slate-400 mt-1">Leave blank if not on probation.</p>
                     </div>
 
                     <div class="col-span-2">
@@ -929,6 +982,23 @@
                             <option value="eqa" {{ ($user->systemUser->user_type ?? '') == 'eqa' ? 'selected' : '' }}>EQA Officer</option>
                         </select>
                     </div>
+
+                    {{-- GM Designation --}}
+                    <div class="col-span-2">
+                        <label class="flex items-center justify-between p-4 rounded-xl bg-amber-50 border border-amber-200 cursor-pointer hover:bg-amber-100 transition-colors">
+                            <div>
+                                <span class="block font-bold text-amber-900 flex items-center gap-2">
+                                    <i class="fa-solid fa-crown text-amber-500 text-sm"></i>
+                                    General Manager (GM)
+                                </span>
+                                <span class="text-xs text-amber-700 italic">Designate as GM — receives final decision on all probation performance reviews. Only one GM can exist at a time.</span>
+                            </div>
+                            <input type="checkbox" name="is_gm" value="1"
+                                {{ ($user->systemUser->is_gm ?? 0) ? 'checked' : '' }}
+                                class="w-6 h-6 rounded border-amber-300 text-amber-600 focus:ring-amber-500 flex-shrink-0">
+                        </label>
+                    </div>
+
 
                     <div class="col-span-2">
                         <label class="premium-label">Qualification / Certificate</label>

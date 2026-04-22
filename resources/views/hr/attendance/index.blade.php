@@ -13,11 +13,22 @@
                 <h2 class="text-2xl font-display font-bold text-premium">Attendance Tracking</h2>
                 <p class="text-sm text-slate-500 mt-1">{{ $attendances->total() }} total records</p>
             </div>
-            <button onclick="openModal('addAttendanceModal')"
-                class="inline-flex items-center gap-2 px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
-                <i class="fa-solid fa-plus"></i>
-                <span>Add Manual Entry</span>
-            </button>
+            <div class="flex gap-3">
+                <form action="{{ route('hr.attendance.sync_absents') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="date" value="{{ date('Y-m-d') }}">
+                    <button type="submit"
+                        class="inline-flex items-center gap-2 px-6 py-3 bg-slate-800 text-white font-semibold rounded-xl shadow-lg hover:bg-slate-900 transition-all duration-200">
+                        <i class="fa-solid fa-calendar-check"></i>
+                        <span>Finalize Absents</span>
+                    </button>
+                </form>
+                <button onclick="openModal('addAttendanceModal')"
+                    class="inline-flex items-center gap-2 px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Add Manual Entry</span>
+                </button>
+            </div>
         </div>
 
         <!-- Stats Cards -->
@@ -80,10 +91,11 @@
                         <tr>
                             <th class="text-left">Ref</th>
                             <th class="text-left">Employee</th>
-                            <th class="text-left">Check-in Date</th>
-                            <th class="text-left">Time</th>
+                            <th class="text-left">Check-in</th>
+                            <th class="text-left">Check-out</th>
+                            <th class="text-center">Total</th>
+                            <th class="text-center">Status</th>
                             <th class="text-left">Remarks</th>
-                            <th class="text-left">Added On</th>
                         </tr>
                     </thead>
                     <tbody id="attendance-container">
@@ -104,19 +116,33 @@
                                     </div>
                                 </td>
                                 <td class="text-sm text-slate-600">
-                                    {{ $attendance->checkin_date instanceof \Illuminate\Support\Carbon ? $attendance->checkin_date->format('M d, Y') : $attendance->checkin_date }}
+                                    <div class="font-bold">{{ $attendance->checkin_date instanceof \Illuminate\Support\Carbon ? $attendance->checkin_date->format('M d, Y') : $attendance->checkin_date }}</div>
+                                    <div class="text-[10px] uppercase font-bold text-blue-600">{{ $attendance->checkin_time }}</div>
                                 </td>
-                                <td>
-                                    <span
-                                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium font-mono">
-                                        <i class="fa-regular fa-clock text-xs"></i>
-                                        {{ $attendance->checkin_time }}
+                                <td class="text-sm text-slate-600">
+                                    <div class="font-bold">{{ $attendance->checkout_date ? (\Carbon\Carbon::parse($attendance->checkout_date)->format('M d, Y')) : '-' }}</div>
+                                    <div class="text-[10px] uppercase font-bold text-purple-600">{{ $attendance->checkout_time ?? '-' }}</div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="inline-flex px-2 py-1 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs">
+                                        {{ $attendance->total_hours ?? '0.00' }} hrs
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    @php
+                                        $statusClass = match($attendance->attendance_status) {
+                                            'present' => 'bg-green-100 text-green-700',
+                                            'late' => 'bg-amber-100 text-amber-700',
+                                            'absent' => 'bg-red-100 text-red-700',
+                                            'on leave' => 'bg-blue-100 text-blue-700',
+                                            default => 'bg-slate-100 text-slate-700'
+                                        };
+                                    @endphp
+                                    <span class="px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider {{ $statusClass }}">
+                                        {{ $attendance->attendance_status ?? 'present' }}
                                     </span>
                                 </td>
                                 <td><span class="text-sm text-slate-600">{{ $attendance->attendance_remarks }}</span></td>
-                                <td><span
-                                        class="text-sm text-slate-400">{{ $attendance->added_date ? $attendance->added_date->format('Y-m-d') : '-' }}</span>
-                                </td>
                             </tr>
                         @empty
                             <tr>
@@ -193,15 +219,30 @@
                                     <span class="font-semibold text-slate-800">${fullName}</span>
                                 </div>
                             </td>
-                            <td class="text-sm text-slate-600">${checkinDate}</td>
-                            <td>
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium font-mono">
-                                    <i class="fa-regular fa-clock text-xs"></i>
-                                    ${entry.checkin_time}
+                            <td class="text-sm text-slate-600">
+                                <div class="font-bold">${checkinDate}</div>
+                                <div class="text-[10px] uppercase font-bold text-blue-600">${entry.checkin_time}</div>
+                            </td>
+                            <td class="text-sm text-slate-600">
+                                <div class="font-bold">${entry.checkout_date ? new Date(entry.checkout_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : '-'}</div>
+                                <div class="text-[10px] uppercase font-bold text-purple-600">${entry.checkout_time || '-'}</div>
+                            </td>
+                            <td class="text-center">
+                                <span class="inline-flex px-2 py-1 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs">
+                                    ${entry.total_hours || '0.00'} hrs
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                                    entry.attendance_status === 'present' ? 'bg-green-100 text-green-700' : 
+                                    (entry.attendance_status === 'late' ? 'bg-amber-100 text-amber-700' : 
+                                    (entry.attendance_status === 'absent' ? 'bg-red-100 text-red-700' : 
+                                    (entry.attendance_status === 'on leave' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700')))
+                                }">
+                                    ${entry.attendance_status || 'present'}
                                 </span>
                             </td>
                             <td><span class="text-sm text-slate-600">${entry.attendance_remarks || ''}</span></td>
-                            <td><span class="text-sm text-slate-400">${entry.added_date ? entry.added_date.split('T')[0] : '-'}</span></td>
                         </tr>
                     `;
                 });

@@ -285,12 +285,18 @@
                             <i class="fa-solid fa-user text-indigo-500 mr-1.5"></i>Reported By
                         </label>
                         <select name="added_by" class="premium-input w-full px-4 py-3 text-sm" required>
-                            @foreach($allEmployees as $emp)
-                                <option value="{{ $emp->employee_id }}"
-                                    {{ $ticket->added_by == $emp->employee_id ? 'selected' : '' }}>
-                                    {{ $emp->first_name }} {{ $emp->last_name }}
-                                </option>
-                            @endforeach
+                            @foreach($groupedEmployees as $dept)
+                            @if($dept->employees->count() > 0)
+                                <optgroup label="{{ $dept->department_name }}">
+                                    @foreach($dept->employees as $emp)
+                                        <option value="{{ $emp->employee_id }}"
+                                            {{ $ticket->added_by == $emp->employee_id ? 'selected' : '' }}>
+                                            {{ $emp->first_name }} {{ $emp->last_name }}
+                                        </option>
+                                    @endforeach
+                                </optgroup>
+                            @endif
+                        @endforeach
                         </select>
                     </div>
                     
@@ -314,9 +320,15 @@
                            <select name="assigned_to" class="premium-input w-full px-4 py-3 text-sm">
                                     <option value="">Unassigned</option>
                                         
-                                        @foreach($allEmployees as $emp)
-                                            <option value="{{ $emp->employee_id }}" {{ $ticket->assigned_to == $emp->employee_id ? 'selected' : '' }}>{{ $emp->first_name }} {{ $emp->last_name }}</option>
-                                        @endforeach
+                                @foreach($groupedEmployees as $dept)
+                                    @if($dept->employees->count() > 0)
+                                        <optgroup label="{{ $dept->department_name }}">
+                                            @foreach($dept->employees as $emp)
+                                                <option value="{{ $emp->employee_id }}" {{ $ticket->assigned_to == $emp->employee_id ? 'selected' : '' }}>{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endif
+                                @endforeach
                                 </select>
                         </div>
                     </div>

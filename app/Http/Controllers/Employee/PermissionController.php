@@ -45,7 +45,19 @@ class PermissionController extends Controller
 
         $statuses = PermissionStatus::all();
 
-        return view('emp.permissions.index', compact('permissions', 'statuses'));
+        $isManager = \App\Models\Department::where('line_manager_id', $employeeId)->exists();
+        $awaitingApprovals = [];
+        if ($isManager) {
+            $awaitingApprovals = Permission::with(['employee', 'status'])
+                ->where('line_manager_id', $employeeId)
+                ->whereIn('permission_status_id', [1, 2])
+                ->orderBy('permission_id', 'desc')
+                ->get();
+        }
+
+        $activeTab = $request->input('tab', 'my-requests');
+
+        return view('emp.permissions.index', compact('permissions', 'statuses', 'isManager', 'awaitingApprovals', 'activeTab'));
     }
 
     public function store(Request $request)
@@ -67,7 +79,17 @@ class PermissionController extends Controller
         $permission->end_time = $request->end_time;
         $permission->permission_remarks = $request->permission_remarks;
         $permission->employee_id = $employeeId;
-        $permission->permission_status_id = 1; // Pending
+        
+        // Find line manager from department
+        $lineManagerId = 0;
+        if ($user->employee && $user->employee->department_id) {
+            $lineManagerId = \App\Models\Department::where('department_id', $user->employee->department_id)
+                ->value('line_manager_id') ?? 0;
+        }
+        $permission->line_manager_id = $lineManagerId;
+        
+        $permission->permission_status_id = 2; // Pending Approval (instead of 1: Pending)
+        $permission->is_exception = $request->has('is_exception') ? 1 : 0;
 
         // Calculate total hours
         $start = \Carbon\Carbon::parse($request->start_time);
@@ -85,9 +107,20 @@ class PermissionController extends Controller
             return redirect()->back()->with('error', "Not enough permission balance available (Allowed: {$allowed}, Used: {$used}, Remaining: {$remainingHours}).");
         }
 
+        // Daily limit check
+        $date = \Carbon\Carbon::parse($request->permission_date);
+        $dayOfWeek = $date->dayOfWeek; // 0 (Sun) to 6 (Sat)
+        $dayName = $date->format('l');
+        
+        $dayLimit = ($dayOfWeek == \Carbon\Carbon::FRIDAY) ? 1 : 3;
+        
+        if (!$permission->is_exception && $totalHours > $dayLimit) {
+            return redirect()->back()->with('error', "Maximum {$dayLimit} permission hours allowed on {$dayName} (Daily Limit).");
+        }
+
         // Check Monthly limit
-        $currentMonth = \Carbon\Carbon::parse($request->permission_date)->month;
-        $currentYear = \Carbon\Carbon::parse($request->permission_date)->year;
+        $currentMonth = $date->month;
+        $currentYear = $date->year;
 
         $activeStatusNames = ['Pending', 'Pending Approval', 'Approved'];
         $activeStatusIds = \Illuminate\Support\Facades\DB::table('hr_employees_permissions_status')
@@ -101,7 +134,7 @@ class PermissionController extends Controller
             ->whereIn('permission_status_id', $activeStatusIds)
             ->sum('total_hours');
 
-        if ($usedHoursThisMonth + $totalHours > 8) {
+        if (!$permission->is_exception && ($usedHoursThisMonth + $totalHours > 8)) {
             return redirect()->back()->with('error', "Maximum 8 permission hours allowed per month. You have already used {$usedHoursThisMonth} hours this month.");
         }
 
@@ -169,5 +202,67 @@ class PermissionController extends Controller
                 'to' => $permissions->lastItem(),
             ]
         ]);
+    }
+
+    public function approve(Request $request, $id)
+    {
+        $user = Auth::user();
+        $employeeId = $user->employee ? $user->employee->employee_id : 0;
+
+        $permission = Permission::where('permission_id', $id)
+            ->where('line_manager_id', $employeeId)
+            ->firstOrFail();
+
+        $permission->permission_status_id = 3; // Approved
+        $permission->save();
+
+        // Update employee balance
+        $employee = $permission->employee;
+        if ($employee) {
+            $employee->permission_hours_balance += $permission->total_hours;
+            $employee->save();
+        }
+
+        // Log entry
+        $log = new SystemLog();
+        $log->related_table = 'hr_employees_permissions';
+        $log->related_id = $permission->permission_id;
+        $log->log_action = 'Permission_Approved';
+        $log->log_remark = 'Approved by line manager';
+        $log->log_date = now();
+        $log->logged_by = $employeeId;
+        $log->logger_type = 'employees_list';
+        $log->log_type = 'int';
+        $log->save();
+
+        return redirect()->back()->with('success', 'Permission request approved successfully');
+    }
+
+    public function reject(Request $request, $id)
+    {
+        $user = Auth::user();
+        $employeeId = $user->employee ? $user->employee->employee_id : 0;
+
+        $permission = Permission::where('permission_id', $id)
+            ->where('line_manager_id', $employeeId)
+            ->firstOrFail();
+
+        $permission->permission_status_id = 4; // Rejected
+        $permission->permission_remarks .= "\nRejection Reason: " . $request->input('reason');
+        $permission->save();
+
+        // Log entry
+        $log = new SystemLog();
+        $log->related_table = 'hr_employees_permissions';
+        $log->related_id = $permission->permission_id;
+        $log->log_action = 'Permission_Rejected';
+        $log->log_remark = 'Rejected by line manager: ' . $request->input('reason');
+        $log->log_date = now();
+        $log->logged_by = $employeeId;
+        $log->logger_type = 'employees_list';
+        $log->log_type = 'int';
+        $log->save();
+
+        return redirect()->back()->with('success', 'Permission request rejected successfully');
     }
 }

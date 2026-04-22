@@ -93,7 +93,38 @@
                         <option value="part_time">Part Time</option>
                         <option value="contract">Contract</option>
                         <option value="intern">Intern</option>
+                        <option value="probation">Probation</option>
                     </select>
+                </div>
+
+                <!-- Probation Fields -->
+                <div class="col-span-full mt-2">
+                    <h3 class="text-lg font-semibold text-premium mb-4 border-b border-slate-100 pb-2">Probation Details <span class="text-xs font-normal text-slate-400">(optional)</span></h3>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Probation Type</label>
+                    <select name="probation_type" class="premium-input w-full px-4 py-3 text-sm">
+                        <option value="">-- None --</option>
+                        <option value="initial">Initial Probation</option>
+                        <option value="extended">Extended Probation</option>
+                        <option value="completed">Probation Completed</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Probation End Date</label>
+                    <input type="date" name="probation_end_date" class="premium-input w-full px-4 py-3 text-sm">
+                    <p class="text-[10px] text-slate-400 mt-1">Leave blank if not on probation.</p>
+                </div>
+
+                <div class="col-span-full mt-4">
+                    <h3 class="text-lg font-semibold text-premium mb-4 border-b border-slate-100 pb-2">Account Setup</h3>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Username <span class="text-rose-500">*</span></label>
+                    <input type="text" name="username" class="premium-input w-full px-4 py-3 text-sm" placeholder="e.g. john.doe" required>
                 </div>
 
                 <div>

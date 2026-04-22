@@ -45,6 +45,21 @@
         <span class="text-base font-semibold">HR Documents</span>
     </a>
 
+    {{-- Probation Performance Reviews --}}
+    @php
+        $hrProbationPending = \App\Models\ProbationReview::where('status', 'pending_manager')->count();
+    @endphp
+    <a href="{{ route('hr.probation-reviews.index') }}"
+        class="nav-item {{ request()->routeIs('hr.probation-reviews.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 relative">
+        <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-clipboard-check text-base"></i>
+        </div>
+        <span class="text-base font-semibold">Probation Reviews</span>
+        @if($hrProbationPending > 0)
+            <span class="absolute top-1 right-2 bg-indigo-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm">{{ $hrProbationPending }}</span>
+        @endif
+    </a>
+
     {{-- Apps Drawer Trigger --}}
     <div x-data="{ open: false }" @click.away="open = false" class="relative">
         <button @click="open = !open"
@@ -113,12 +128,17 @@
 
             @php
                 $hrPendingCount = 0;
+                $permPendingCount = 0;
                 if (Auth::user() && Auth::user()->employee) {
-                    $hrPendingCount = \App\Models\Task::where('pending_line_manager_id', Auth::user()->employee->employee_id)->count();
+                    $empId = Auth::user()->employee->employee_id;
+                    $hrPendingCount = \App\Models\Task::where('pending_line_manager_id', $empId)->count();
+                    $permPendingCount = \App\Models\Permission::where('line_manager_id', $empId)
+                        ->whereIn('permission_status_id', [1, 2])->count();
                 }
+                $totalPending = $hrPendingCount + $permPendingCount;
             @endphp
-            @if($hrPendingCount > 0)
-                {{-- Pending Tasks --}}
+            @if($totalPending > 0)
+                {{-- Pending Approvals --}}
                 <a href="{{ route('hr.tasks.pending') }}"
                     class="group flex items-center gap-3 p-3 rounded-xl transition-all hover:-translate-y-0.5 {{ request()->routeIs('hr.tasks.pending') ? 'bg-amber-50' : 'hover:bg-slate-50' }}"
                     style="{{ request()->routeIs('hr.tasks.pending') ? 'box-shadow:0 4px 12px rgba(245,158,11,0.12);' : '' }}">
@@ -129,11 +149,11 @@
                         </div>
                         <i class="fa-solid fa-clock-rotate-left text-white text-sm relative z-10"></i>
                         <span
-                            class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center z-20">{{ $hrPendingCount }}</span>
+                            class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center z-20">{{ $totalPending }}</span>
                     </div>
                     <span
                         class="font-semibold text-base {{ request()->routeIs('hr.tasks.pending') ? 'text-amber-800' : 'text-slate-700' }}">Pending
-                        Tasks</span>
+                        Approvals</span>
                 </a>
             @endif
 
@@ -184,6 +204,39 @@
 
         </div>
     </div>
+
+    {{-- GM Reviews + GM Leave Queue — shown if this HR user is also designated as GM --}}
+    @if(Auth::user() && Auth::user()->is_gm)
+        @php
+            $hrGmProbationPending = \App\Models\ProbationReview::where('gm_id', Auth::user()->user_id)
+                ->where('status', 'reviewed')->count();
+            $hrGmLeavesPending = \App\Models\HrLeave::where('leave_status_id', \App\Models\HrLeave::STATUS_PENDING_GM)->count();
+        @endphp
+        <a href="{{ route('admin.probation-reviews.index') }}"
+            class="nav-item {{ request()->routeIs('admin.probation-reviews.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 relative"
+            style="background: rgba(245,158,11,0.12); color: #92400e;">
+            <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style="background: rgba(245,158,11,0.25); color: #d97706;">
+                <i class="fa-solid fa-crown text-base"></i>
+            </div>
+            <span class="text-base font-semibold">GM Reviews</span>
+            @if($hrGmProbationPending > 0)
+                <span class="absolute top-1 right-2 bg-amber-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm">{{ $hrGmProbationPending }}</span>
+            @endif
+        </a>
+        <a href="{{ route('admin.leaves.gm') }}"
+            class="nav-item {{ request()->routeIs('admin.leaves.gm') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 relative"
+            style="background: rgba(245,158,11,0.08); color: #92400e;">
+            <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style="background: rgba(245,158,11,0.2); color: #d97706;">
+                <i class="fa-solid fa-calendar-check text-base"></i>
+            </div>
+            <span class="text-base font-semibold">GM Leaves</span>
+            @if($hrGmLeavesPending > 0)
+                <span class="absolute top-1 right-2 bg-amber-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm">{{ $hrGmLeavesPending }}</span>
+            @endif
+        </a>
+    @endif
 
 @endif
 
@@ -260,6 +313,26 @@
         </div>
         <span class="text-base font-semibold">Feedback</span>
     </a>
+
+    {{-- GM: Probation Reviews (only shown if user is designated as GM) --}}
+    @if(Auth::user() && Auth::user()->is_gm)
+        @php
+            $gmPendingCount = \App\Models\ProbationReview::where('gm_id', Auth::user()->user_id)
+                ->where('status', 'reviewed')->count();
+        @endphp
+        <a href="{{ route('admin.probation-reviews.index') }}"
+            class="nav-item {{ request()->routeIs('admin.probation-reviews.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 relative"
+            style="background: rgba(245,158,11,0.12); color: #92400e;">
+            <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style="background: rgba(245,158,11,0.25); color: #d97706;">
+                <i class="fa-solid fa-crown text-base"></i>
+            </div>
+            <span class="text-base font-semibold">Probation Reviews</span>
+            @if($gmPendingCount > 0)
+                <span class="absolute top-1 right-2 bg-amber-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm">{{ $gmPendingCount }}</span>
+            @endif
+        </a>
+    @endif
 
 @endif
 

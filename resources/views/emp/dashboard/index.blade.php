@@ -314,7 +314,9 @@
                             <span class="w-2 h-2 rounded-full bg-brand-dark inline-block"></span>
                             Posted on {{ \Carbon\Carbon::parse($ann->added_date)->format('M d, Y') }}
                         </p>
-                        <p class="text-slate-600 leading-relaxed">{{ Str::limit($ann->document_description, 200) }}</p>
+                        <div class="flex items-center justify-between mt-3">
+                            <p class="text-slate-600 leading-relaxed flex-1">{{ Str::limit($ann->document_description, 200) }}</p>
+                        </div>
                     </div>
                 @endforeach
             </div>
@@ -339,6 +341,96 @@
             @endif
         </div>
         @endif
+
+        {{-- ═══════════════════════════════════
+             HR LIBRARY (POLICIES & PROCEDURES)
+        ═══════════════════════════════════ --}}
+        <div x-data="{ libTab: 'policies' }" class="premium-card p-6 bg-white relative overflow-hidden">
+            <div class="absolute -right-6 -bottom-6 opacity-[0.03] group-hover:scale-110 transition-transform duration-700">
+                <i class="fa-solid fa-book-open text-9xl text-brand-dark"></i>
+            </div>
+            
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+                         style="background:linear-gradient(135deg,#0d9488,#0f766e);
+                                box-shadow:0 4px 14px rgba(13,148,136,0.2),inset 0 1px 0 rgba(255,255,255,0.2);">
+                        <i class="fa-solid fa-book-bookmark text-white text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-display font-bold text-premium">HR Library</h3>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Policies &amp; Procedures</p>
+                    </div>
+                </div>
+                
+                <div class="flex bg-slate-100 p-1 rounded-xl w-fit">
+                    <button @click="libTab = 'policies'"
+                            :class="libTab === 'policies' ? 'bg-white text-teal-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+                            class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all">
+                        Policies
+                    </button>
+                    <button @click="libTab = 'procedures'"
+                            :class="libTab === 'procedures' ? 'bg-white text-teal-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+                            class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all">
+                        Procedures
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {{-- Policies List --}}
+                <template x-if="libTab === 'policies'">
+                    @forelse($policies as $policy)
+                        <div class="group/doc p-3 rounded-xl border border-slate-100 hover:border-teal-200 hover:bg-teal-50/30 transition-all flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3 overflow-hidden">
+                                <div class="w-10 h-10 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center flex-shrink-0 group-hover/doc:bg-teal-100 transition-colors">
+                                    <i class="fa-solid fa-file-shield text-sm"></i>
+                                </div>
+                                <div class="overflow-hidden">
+                                    <p class="text-xs font-bold text-slate-700 truncate" title="{{ $policy->document_title }}">{{ $policy->document_title }}</p>
+                                    <p class="text-[9px] text-slate-400 uppercase tracking-tighter">HR Policy</p>
+                                </div>
+                            </div>
+                            <a href="{{ asset('uploads/' . $policy->document_attachment) }}" download
+                                    class="w-8 h-8 rounded-lg bg-white border border-slate-100 text-teal-600 shadow-sm flex items-center justify-center hover:bg-teal-600 hover:text-white transition-all"
+                                    title="Download Policy">
+                                <i class="fa-solid fa-download text-xs"></i>
+                            </a>
+                        </div>
+                    @empty
+                        <div class="col-span-full py-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                            <p class="text-xs font-medium text-slate-400">No policies available</p>
+                        </div>
+                    @endforelse
+                </template>
+
+                {{-- Procedures List --}}
+                <template x-if="libTab === 'procedures'">
+                    @forelse($procedures as $proc)
+                        <div class="group/doc p-3 rounded-xl border border-slate-100 hover:border-teal-200 hover:bg-teal-50/30 transition-all flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3 overflow-hidden">
+                                <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0 group-hover/doc:bg-indigo-100 transition-colors">
+                                    <i class="fa-solid fa-file-signature text-sm"></i>
+                                </div>
+                                <div class="overflow-hidden">
+                                    <p class="text-xs font-bold text-slate-700 truncate" title="{{ $proc->document_title }}">{{ $proc->document_title }}</p>
+                                    <p class="text-[9px] text-slate-400 uppercase tracking-tighter">Procedure</p>
+                                </div>
+                            </div>
+                            <a href="{{ asset('uploads/' . $proc->document_attachment) }}" download
+                                    class="w-8 h-8 rounded-lg bg-white border border-slate-100 text-indigo-600 shadow-sm flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all"
+                                    title="Download Procedure">
+                                <i class="fa-solid fa-download text-xs"></i>
+                            </a>
+                        </div>
+                    @empty
+                        <div class="col-span-full py-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                            <p class="text-xs font-medium text-slate-400">No procedures available</p>
+                        </div>
+                    @endforelse
+                </template>
+            </div>
+        </div>
 
         {{-- ═══════════════════════════════════
              HORIZONTAL TAB NAV (RIGHT ALIGNED)
@@ -820,13 +912,20 @@
                             </div>
                             <span class="text-2xl font-black text-amber-600 count" data-target="{{ $pendingLeaves }}">0</span>
                         </a>
-                        <div class="pt-2">
+                        <div class="pt-2 flex flex-col gap-2">
                             <a href="{{ route('emp.leaves.index') }}"
                                class="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-bold text-white shadow-lg transition-all hover:-translate-y-1"
                                style="background:linear-gradient(135deg,#004F68,#006a8a);
                                       box-shadow:0 6px 20px rgba(0,79,104,0.3);">
                                 Request a Leave
                                 <i class="fa-solid fa-plus-circle"></i>
+                            </a>
+                            <a href="{{ route('emp.profile.index') }}"
+                               class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-bold text-white shadow-lg transition-all hover:-translate-y-1"
+                               style="background:linear-gradient(135deg,#64748b,#475569);
+                                      box-shadow:0 6px 20px rgba(100,116,139,0.3);">
+                                View Full Profile
+                                <i class="fa-solid fa-user-circle"></i>
                             </a>
                         </div>
                     </div>
@@ -848,7 +947,16 @@
             </div>{{-- end space-y-6 (tab content) --}}
     </div>{{-- end x-data tabs (grid container) --}}
 
+<script src="{{ asset('js/attachment-preview.js') }}"></script>
 <script>
+    // Initialize for modal structure
+    document.addEventListener('DOMContentLoaded', () => {
+        window.initAttachmentPreview({
+            inputSelector: '#dummy-none',
+            containerSelector: '#dummy-none'
+        });
+    });
+
     // Counter Animation
     document.querySelectorAll('.count').forEach(el => {
         const target = parseInt(el.getAttribute('data-target'));
@@ -871,6 +979,7 @@
     const totalSlides = slides.length;
 
     function showAnn(index) {
+        if (!totalSlides) return;
         slides.forEach((slide, i) => {
             if (i === index) {
                 slide.classList.remove('opacity-0','translate-y-10','pointer-events-none','absolute','inset-0');
