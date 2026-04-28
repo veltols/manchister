@@ -1,6 +1,6 @@
 @php /** @var \App\Models\User $user */ $user = Auth::user(); @endphp
 
-<aside class="w-64 flex-shrink-0 flex flex-col shadow-2xl relative z-20 hidden md:flex sidebar-gradient-bg">
+<aside class="w-64 flex-shrink-0 flex flex-col shadow-2xl relative z-[60] hidden md:flex sidebar-gradient-bg h-full">
 
     <!-- Decorative Pattern Overlay -->
     <div class="absolute inset-0 z-0 opacity-10 pointer-events-none" style="background: url('{{ asset('images/pattern.png') }}') repeat; background-size: 200px;"></div>

@@ -17,10 +17,13 @@ class GroupController extends Controller
 {
     public function index(Request $request)
     {
-        $isCom = $request->get('c', 0);
+        $isCom = request()->get('c') ?? 0;
+        $isArchived = $request->query('archived', 0);
+
         $groups = HrGroup::with('color')
             ->where('is_commity', $isCom)
             ->where('is_deleted', 0)
+            ->where('is_archieve', $isArchived)
             ->get();
 
         $colors = SysColor::all();
@@ -171,5 +174,49 @@ class GroupController extends Controller
             'success' => true,
             'message' => 'File uploaded successfully'
         ]);
+    }
+
+    public function removeMember(Request $request, $id, $memberId)
+    {
+        $group = HrGroup::findOrFail($id);
+        HrGroupMember::where('group_id', $id)->where('employee_id', $memberId)->delete();
+        return response()->json(['success' => true, 'message' => 'Member removed']);
+    }
+
+    public function archiveGroup(Request $request, $id)
+    {
+        $group = HrGroup::findOrFail($id);
+        $group->is_archieve = 1;
+        $group->save();
+        return response()->json(['success' => true, 'message' => 'Group archived']);
+    }
+
+    public function restoreGroup(Request $request, $id)
+    {
+        $group = HrGroup::findOrFail($id);
+        $group->is_archieve = 0;
+        $group->save();
+        return response()->json(['success' => true, 'message' => 'Group restored']);
+    }
+
+    public function copyGroup(Request $request, $id)
+    {
+        $group = HrGroup::findOrFail($id);
+        $request->validate(['new_name' => 'required|string|max:50']);
+        
+        $newGroup = $group->replicate();
+        $newGroup->group_name = $request->new_name;
+        $newGroup->added_date = now();
+        $newGroup->save();
+        
+        $members = HrGroupMember::where('group_id', $id)->get();
+        foreach ($members as $member) {
+            $newMember = $member->replicate();
+            $newMember->group_id = $newGroup->group_id;
+            $newMember->added_date = now();
+            $newMember->save();
+        }
+        
+        return response()->json(['success' => true, 'message' => 'Group copied']);
     }
 }

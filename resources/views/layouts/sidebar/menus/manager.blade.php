@@ -77,7 +77,7 @@
             x-transition:enter-start="opacity-0 -translate-x-4" x-transition:enter-end="opacity-100 translate-x-0"
             x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-x-0"
             x-transition:leave-end="opacity-0 -translate-x-4"
-            class="fixed left-64 top-0 h-full w-64 bg-white/95 backdrop-blur-xl border-r border-slate-200 shadow-2xl z-50 p-6 flex flex-col gap-2 overflow-y-auto"
+            class="fixed left-64 top-0 h-full w-64 bg-white/95 backdrop-blur-xl border-r border-slate-200 shadow-2xl z-[999] p-6 flex flex-col gap-2 overflow-y-auto"
             style="display: none;">
 
             {{-- Drawer header --}}

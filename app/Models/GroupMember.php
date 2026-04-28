@@ -10,7 +10,7 @@ class GroupMember extends Model
     use HasFactory;
 
     protected $table = 'z_groups_list_members';
-    protected $primaryKey = 'member_id';
+    protected $primaryKey = 'record_id';
     public $timestamps = false;
     protected $guarded = [];
 

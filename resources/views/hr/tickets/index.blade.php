@@ -9,7 +9,7 @@
         <!-- Header with Action Button -->
         <div class="flex items-center justify-between">
             <div>
-                <h2 class="text-2xl font-display font-bold text-premium">Support Tickets</h2>
+                <h2 class="text-2xl font-display font-bold text-premium">IT Tickets</h2>
                 <p class="text-sm text-slate-500 mt-1">{{ $tickets->total() }} total tickets</p>
             </div>
             <div class="flex items-center gap-3">

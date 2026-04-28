@@ -174,9 +174,123 @@
                     System Overview
                 </h1>
             </div>
-            <p class="text-sky-100 text-sm md:text-base font-medium max-w-md leading-relaxed">
+            <p class="text-sky-100 text-sm md:text-base font-medium max-w-md leading-relaxed mb-6">
                 Monitor tickets, assets, and system health — all in one command centre.
             </p>
+
+            {{-- Premium Announcements Ticker --}}
+            <div class="w-full max-w-xl relative group">
+                <!-- Glow behind the card -->
+                <div class="absolute inset-0 bg-gradient-to-r from-amber-400/20 via-orange-500/10 to-transparent blur-xl rounded-2xl group-hover:from-amber-400/30 transition-all duration-500 pointer-events-none"></div>
+                
+                @php
+                    $latest = isset($announcements) ? $announcements->first() : null;
+                    $announcementsData = $latest 
+                        ? [[
+                            'id' => $latest->document_id,
+                            'title' => $latest->document_title,
+                            'description' => $latest->document_description ?: 'No additional details provided.',
+                            'attachment' => $latest->document_attachment ? asset('uploads/' . $latest->document_attachment) : '',
+                            'date' => $latest->added_date ? \Carbon\Carbon::parse($latest->added_date)->format('M d, Y') : 'Recent'
+                        ]]
+                        : [['id' => 0, 'title' => 'No new announcements at this time. You\'re all caught up!', 'description' => '', 'attachment' => '', 'date' => '']];
+                @endphp
+
+                <div x-data="{ 
+                        activeIndex: 0, 
+                        items: {{ json_encode($announcementsData) }},
+                        showModal: false,
+                        selectedItem: null
+                    }" 
+                    x-init="if(items.length > 1) { setInterval(() => { if(!showModal) activeIndex = (activeIndex + 1) % items.length }, 5000) }"
+                    class="w-full">
+                    
+                    <!-- Ticker Card -->
+                    <div class="relative bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-4 flex items-center gap-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:bg-white/15 transition-all duration-300 overflow-hidden cursor-pointer"
+                         style="box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 10px 25px rgba(0,0,0,0.1);"
+                         @click="if(items[activeIndex].id > 0) { selectedItem = items[activeIndex]; showModal = true; }">
+                         
+                         <!-- Animated 3D Icon -->
+                         <div class="relative flex-shrink-0">
+                             <div class="absolute inset-0 bg-amber-400 rounded-xl blur-md opacity-50 animate-pulse"></div>
+                             <div class="w-10 h-10 rounded-xl flex items-center justify-center relative z-10" 
+                                  style="background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.05) 100%); border: 1px solid rgba(255,255,255,0.4); box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);">
+                                 <i class="fa-solid fa-bolt text-amber-300 text-sm"></i>
+                             </div>
+                         </div>
+                         
+                         <!-- Carousel Content -->
+                         <div class="flex-1 min-w-0">
+                             <div class="flex items-center gap-2 mb-1">
+                                 <span class="px-2 py-0.5 rounded-md bg-amber-500/20 border border-amber-400/30 text-[9px] font-black text-amber-200 uppercase tracking-widest shadow-sm">Announcement</span>
+                             </div>
+                             
+                             <div class="relative h-5">
+                                 <template x-for="(item, index) in items" :key="index">
+                                     <div x-show="activeIndex === index" 
+                                          x-transition:enter="transition-all duration-700 ease-out absolute inset-0"
+                                          x-transition:enter-start="opacity-0 translate-x-8"
+                                          x-transition:enter-end="opacity-100 translate-x-0"
+                                          x-transition:leave="transition-all duration-700 ease-in absolute inset-0"
+                                          x-transition:leave-start="opacity-100 translate-x-0"
+                                          x-transition:leave-end="opacity-0 -translate-x-8"
+                                          class="flex items-center">
+                                         <p class="text-sm font-bold text-white truncate" style="text-shadow: 0 1px 2px rgba(0,0,0,0.3);" x-text="item.title"></p>
+                                     </div>
+                                 </template>
+                             </div>
+                         </div>
+                         
+                         <!-- Interaction Hint -->
+                         <div class="hidden sm:flex flex-shrink-0">
+                             <div class="w-8 h-8 rounded-full border border-white/30 flex items-center justify-center text-white/70 group-hover:text-white group-hover:border-white/60 group-hover:bg-white/10 transition-all">
+                                 <i class="fa-solid fa-expand text-xs transform group-hover:scale-110 transition-transform"></i>
+                             </div>
+                         </div>
+                    </div>
+
+                    <!-- AlpineJS Modal for Announcement Details -->
+                    <div x-show="showModal" style="display: none;" class="fixed inset-0 z-[9999] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                            <!-- Background overlay -->
+                            <div x-show="showModal" 
+                                 x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                                 x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                                 class="fixed inset-0 transition-opacity bg-slate-900/60 backdrop-blur-sm" aria-hidden="true" @click="showModal = false"></div>
+
+                            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                            <!-- Modal panel -->
+                            <div x-show="showModal" 
+                                 x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                                 x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                                 class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full border border-slate-100">
+                                 
+                                 <!-- Header -->
+                                <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 shadow-inner">
+                                            <i class="fa-solid fa-bullhorn"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-lg font-bold text-slate-800 leading-tight" id="modal-title" x-text="selectedItem?.title"></h3>
+                                            <p class="text-xs font-semibold text-slate-500 mt-0.5 uppercase tracking-wider" x-text="selectedItem?.date"></p>
+                                        </div>
+                                    </div>
+                                    <button @click="showModal = false" class="text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 p-2 rounded-lg transition-colors">
+                                        <i class="fa-solid fa-xmark text-lg"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Content -->
+                                <div class="px-6 py-6">
+                                    <div class="prose prose-sm text-slate-600 whitespace-pre-line" x-text="selectedItem?.description"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         {{-- Right-side 3D icon cluster --}}
@@ -226,7 +340,7 @@
         {{-- ═══════════════════════════════════
              ANNOUNCEMENTS CAROUSEL
         ═══════════════════════════════════ --}}
-        @if(isset($announcements) && $announcements->count() > 0)
+        <!-- @if(isset($announcements) && $announcements->count() > 0)
         <div class="ann-card">
             <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-700">
                 <i class="fa-solid fa-bullhorn text-9xl text-brand-dark"></i>
@@ -275,7 +389,7 @@
             </div>
             @endif
         </div>
-        @endif
+        @endif -->
 
         {{-- ═══════════════════════════════════
              HR LIBRARY (POLICIES & PROCEDURES)

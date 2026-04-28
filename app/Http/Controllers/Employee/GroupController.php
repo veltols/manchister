@@ -13,7 +13,7 @@ use App\Models\SystemLog;
 
 class GroupController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
         $employeeId = $user->employee ? $user->employee->employee_id : 0;
@@ -21,9 +21,15 @@ class GroupController extends Controller
         // Fetch groups where user is a member or created by user
         $groupIds = GroupMember::where('employee_id', $employeeId)->pluck('group_id');
 
+        $isArchived = $request->query('archived', 0);
+
         $groups = Group::with('color')
-            ->whereIn('group_id', $groupIds)
-            ->orWhere('added_by', $employeeId)
+            ->where(function($q) use ($groupIds, $employeeId) {
+                $q->whereIn('group_id', $groupIds)
+                  ->orWhere('added_by', $employeeId);
+            })
+            ->where('is_archieve', $isArchived)
+            ->where('is_deleted', 0)
             ->distinct()
             ->orderBy('group_id', 'desc')
             ->get();
@@ -236,5 +242,81 @@ class GroupController extends Controller
             'success' => true,
             'message' => 'Invitation accepted'
         ]);
+    }
+
+    public function removeMember(Request $request, $id, $memberId)
+    {
+        $employeeId = Auth::user()->employee->employee_id ?? 0;
+        $group = Group::findOrFail($id);
+        
+        if ($group->added_by != $employeeId) {
+            $currentUserMember = GroupMember::where('group_id', $id)->where('employee_id', $employeeId)->first();
+            if (!$currentUserMember || $currentUserMember->group_role_id != 1) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+            }
+        }
+        
+        GroupMember::where('group_id', $id)->where('employee_id', $memberId)->delete();
+        return response()->json(['success' => true, 'message' => 'Member removed']);
+    }
+
+    public function archiveGroup(Request $request, $id)
+    {
+        $employeeId = Auth::user()->employee->employee_id ?? 0;
+        $isMember = GroupMember::where('group_id', $id)->where('employee_id', $employeeId)->exists();
+        $group = Group::findOrFail($id);
+        
+        if (!$isMember && $group->added_by != $employeeId) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+        
+        $group->is_archieve = 1;
+        $group->save();
+        return response()->json(['success' => true, 'message' => 'Group archived']);
+    }
+
+    public function restoreGroup(Request $request, $id)
+    {
+        $employeeId = Auth::user()->employee->employee_id ?? 0;
+        $isMember = GroupMember::where('group_id', $id)->where('employee_id', $employeeId)->exists();
+        $group = Group::findOrFail($id);
+        
+        if (!$isMember && $group->added_by != $employeeId) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+        
+        $group->is_archieve = 0;
+        $group->save();
+        return response()->json(['success' => true, 'message' => 'Group restored']);
+    }
+
+    public function copyGroup(Request $request, $id)
+    {
+        $employeeId = Auth::user()->employee->employee_id ?? 0;
+        $group = Group::findOrFail($id);
+        
+        if ($group->added_by != $employeeId) {
+            $currentUserMember = GroupMember::where('group_id', $id)->where('employee_id', $employeeId)->first();
+            if (!$currentUserMember || $currentUserMember->group_role_id != 1) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+            }
+        }
+        
+        $request->validate(['new_name' => 'required|string|max:50']);
+        
+        $newGroup = $group->replicate();
+        $newGroup->group_name = $request->new_name;
+        $newGroup->added_date = now();
+        $newGroup->save();
+        
+        $members = GroupMember::where('group_id', $id)->get();
+        foreach ($members as $member) {
+            $newMember = $member->replicate();
+            $newMember->group_id = $newGroup->group_id;
+            $newMember->added_date = now();
+            $newMember->save();
+        }
+        
+        return response()->json(['success' => true, 'message' => 'Group copied']);
     }
 }

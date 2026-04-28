@@ -43,7 +43,7 @@
                 <div class="premium-card p-6 relative group">
                     <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                         <form action="{{ route('hr.documents.destroy', $doc->document_id) }}" method="POST"
-                            onsubmit="return confirm('Are you sure?');">
+                            onsubmit="return confirmDocDelete(event, this);">
                             @csrf
                             @method('DELETE')
                             <button type="submit"
@@ -111,6 +111,24 @@
     @push('scripts')
     <script src="{{ asset('js/ajax-pagination.js') }}"></script>
     <script>
+        function confirmDocDelete(event, formElement) {
+            event.preventDefault();
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this deletion!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#4f46e5', // indigo-600
+                cancelButtonColor: '#ef4444', // red-500
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    formElement.submit();
+                }
+            });
+            return false;
+        }
+
         window.ajaxPagination = new AjaxPagination({
             endpoint: "{{ route('hr.documents.data', request()->query()) }}",
             containerSelector: '#docs-container',
@@ -139,7 +157,7 @@
                     html += `
                         <div class="premium-card p-6 relative group">
                             <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <form action="/hr/documents/${doc.document_id}" method="POST" onsubmit="return confirm('Are you sure?');">
+                                <form action="/hr/documents/${doc.document_id}" method="POST" onsubmit="return confirmDocDelete(event, this);">
                                     <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').content}">
                                     <input type="hidden" name="_method" value="DELETE">
                                     <button type="submit" class="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 flex items-center justify-center text-red-500 hover:text-red-600 transition-colors">

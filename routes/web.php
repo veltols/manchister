@@ -192,6 +192,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/groups/{id}/accept', [App\Http\Controllers\Employee\GroupController::class, 'acceptInvitation'])->name('groups.accept');
         Route::post('/groups/{id}/post', [App\Http\Controllers\Employee\GroupController::class, 'post'])->name('groups.post');
         Route::post('/groups/{id}/upload', [App\Http\Controllers\Employee\GroupController::class, 'upload'])->name('groups.upload');
+        Route::delete('/groups/{id}/member/{member_id}', [App\Http\Controllers\Employee\GroupController::class, 'removeMember'])->name('groups.member.remove');
+        Route::post('/groups/{id}/archive', [App\Http\Controllers\Employee\GroupController::class, 'archiveGroup'])->name('groups.archive');
+        Route::post('/groups/{id}/restore', [App\Http\Controllers\Employee\GroupController::class, 'restoreGroup'])->name('groups.restore');
+        Route::post('/groups/{id}/copy', [App\Http\Controllers\Employee\GroupController::class, 'copyGroup'])->name('groups.copy');
 
         // My Calendar
         Route::get('/calendar', [App\Http\Controllers\Employee\CalendarController::class, 'index'])->name('calendar.index');
@@ -313,6 +317,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/groups/member', [App\Http\Controllers\HR\GroupController::class, 'addMember'])->name('groups.member.store');
         Route::post('/groups/post', [App\Http\Controllers\HR\GroupController::class, 'addPost'])->name('groups.post.store');
         Route::post('/groups/file', [App\Http\Controllers\HR\GroupController::class, 'uploadFile'])->name('groups.file.store');
+        Route::delete('/groups/{id}/member/{member_id}', [App\Http\Controllers\HR\GroupController::class, 'removeMember'])->name('groups.member.remove');
+        Route::post('/groups/{id}/archive', [App\Http\Controllers\HR\GroupController::class, 'archiveGroup'])->name('groups.archive');
+        Route::post('/groups/{id}/restore', [App\Http\Controllers\HR\GroupController::class, 'restoreGroup'])->name('groups.restore');
+        Route::post('/groups/{id}/copy', [App\Http\Controllers\HR\GroupController::class, 'copyGroup'])->name('groups.copy');
 
         // Tasks
         Route::get('/tasks', [App\Http\Controllers\HR\TaskController::class, 'index'])->name('tasks.index');

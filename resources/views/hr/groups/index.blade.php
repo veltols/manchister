@@ -8,25 +8,31 @@
         <!-- Sidebar: Groups List -->
         <div class="groups-sidebar">
             <div class="sidebar-header">
-                <h2 class="text-xl font-bold text-premium">{{ $isCom ? 'Committees' : 'Groups' }}</h2>
+                <h2 class="text-xl font-bold text-premium">{{ $isCom == 2 ? 'PMO (Ad-hoc)' : ($isCom == 1 ? 'Committees' : 'Groups') }}</h2>
                 <div class="flex gap-2">
                     <button onclick="openModal('newGroupModal')"
                         class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
                         <i class="fa-solid fa-plus"></i>
                     </button>
-                    <div class="relative group">
-                        <button
-                            class="w-10 h-10 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center hover:bg-slate-100 transition-all shadow-sm">
-                            <i class="fa-solid fa-search"></i>
-                        </button>
-                    </div>
+                    <a href="{{ request('archived') ? route('hr.groups.index', ['c' => request('c')]) : route('hr.groups.index', ['c' => request('c'), 'archived' => 1]) }}"
+                        class="w-10 h-10 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center hover:bg-slate-100 transition-all shadow-sm"
+                        title="{{ request('archived') ? 'Show Active Groups' : 'Show Archived Groups' }}">
+                        <i class="fa-solid {{ request('archived') ? 'fa-folder-open text-indigo-600' : 'fa-box-archive' }}"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="px-4 pt-4">
+                <div class="relative">
+                    <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" id="groupSearch" placeholder="Search teams..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-slate-600" onkeyup="filterGroups()">
                 </div>
             </div>
 
             <div class="groups-list space-y-3 p-4">
                 @forelse($groups as $group)
                     <div onclick="loadGroup({{ $group->group_id }})" id="group-item-{{ $group->group_id }}"
-                        class="group-card p-4 rounded-2xl bg-white border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group">
+                        class="group-card relative p-4 rounded-2xl bg-white border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group">
                         <div class="flex items-center gap-4">
                             <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-sm"
                                 style="background: {{ $group->color->color_value ?? '#6366f1' }}">
@@ -40,6 +46,27 @@
                             </div>
                             <div class="active-indicator w-1.5 h-8 rounded-full bg-indigo-600 opacity-0 transition-opacity">
                             </div>
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2" onclick="event.stopPropagation()">
+                                <button onclick="toggleGroupMenu(event, {{ $group->group_id }})" class="w-8 h-8 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 flex items-center justify-center transition-colors relative z-10">
+                                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                                </button>
+                                <div id="group-menu-{{ $group->group_id }}" class="hidden absolute right-0 top-full mt-1 w-36 bg-white rounded-xl shadow-xl border border-slate-100 z-50 py-1">
+                                    @if(request('archived'))
+                                    <button onclick="restoreGroupList(event, {{ $group->group_id }})" class="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 flex items-center gap-2">
+                                        <i class="fa-solid fa-trash-arrow-up w-4"></i> Restore
+                                    </button>
+                                    @else
+                                    <button onclick="archiveGroupList(event, {{ $group->group_id }})" class="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-amber-600 flex items-center gap-2">
+                                        <i class="fa-solid fa-box-archive w-4"></i> Archive
+                                    </button>
+                                    @endif
+                                    @if($group->added_by == (Auth::user()->employee->employee_id ?? 0))
+                                    <button onclick="duplicateGroupList(event, {{ $group->group_id }})" class="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-indigo-600 flex items-center gap-2">
+                                        <i class="fa-solid fa-copy w-4"></i> Duplicate
+                                    </button>
+                                    @endif
+                                </div>
+                            </div>
                         </div>
                     </div>
                 @empty
@@ -48,7 +75,7 @@
                             class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
                             <i class="fa-solid fa-user-group text-2xl"></i>
                         </div>
-                        <p class="text-slate-400 text-sm">No {{ $isCom ? 'committees' : 'groups' }} found</p>
+                        <p class="text-slate-400 text-sm">No {{ $isCom == 2 ? 'PMO (Ad-hoc)' : ($isCom == 1 ? 'committees' : 'groups') }} found</p>
                     </div>
                 @endforelse
             </div>
@@ -202,7 +229,7 @@
             <div
                 class="p-6 bg-gradient-to-r from-indigo-900 to-purple-900 text-white flex justify-between items-center rounded-t-[24px]">
                 <div>
-                    <h2 class="text-2xl font-display font-bold leading-none">New {{ $isCom ? 'Committee' : 'Group' }}</h2>
+                    <h2 class="text-2xl font-display font-bold leading-none">New {{ $isCom == 2 ? 'PMO (Ad-hoc)' : ($isCom == 1 ? 'Committee' : 'Group') }}</h2>
                     <p class="text-indigo-100/60 text-xs mt-1">Configure your new team space</p>
                 </div>
                 <button onclick="closeModal('newGroupModal')"
@@ -325,7 +352,7 @@
     <style>
         .groups-layout {
             display: grid;
-            grid-template-columns: 280px 1fr;
+            grid-template-columns: 320px 1fr;
             height: calc(100vh - 145px);
             background: white;
             border-radius: 20px;
@@ -349,6 +376,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
         .groups-list {
@@ -462,7 +491,7 @@
 
                     // Set Header
                     document.getElementById('header-name').innerText = group.group_name;
-                    document.getElementById('header-type').innerText = group.is_commity ? 'Committee' : 'Internal Group';
+                    document.getElementById('header-type').innerText = group.is_commity == 2 ? 'PMO (Ad-hoc)' : (group.is_commity == 1 ? 'Committee' : 'Internal Group');
                     const avatar = document.getElementById('header-avatar');
                     avatar.innerText = initials;
                     avatar.style.background = group.color ? group.color.color_value : '#6366f1';
@@ -476,8 +505,11 @@
                     // Build Posts
                     renderPosts(group.posts);
 
+                    // Determine Current User
+                    const currentUserId = {{ Auth::user()->employee->employee_id ?? 0 }};
+
                     // Build Members
-                    renderMembers(group.members);
+                    renderMembers(group.members, currentUserId);
 
                     // Build Files
                     renderFiles(group.files);
@@ -561,7 +593,7 @@
             }, 100);
         }
 
-        function renderMembers(members) {
+        function renderMembers(members, currentUserId) {
             const list = document.getElementById('members-list');
             list.innerHTML = '';
 
@@ -571,6 +603,10 @@
                 const roleClass = roleId == 1 ? 'bg-amber-50 text-amber-700' : 'bg-slate-50 text-slate-600';
 
                 const statusBadge = m.is_accepted == 0 ? '<span class="ml-2 px-2 py-0.5 rounded-md bg-slate-100 text-slate-400 text-[8px] font-bold uppercase">Pending</span>' : '';
+
+                const removeButton = (m.employee_id != currentUserId) 
+                    ? `<button onclick="removeGroupMember(${m.employee_id})" class="text-rose-500 hover:text-rose-700 ml-2" title="Remove Member"><i class="fa-solid fa-trash"></i></button>` 
+                    : '';
 
                 const html = `
                     <div class="p-4 bg-white border border-slate-100 rounded-2xl flex items-center gap-4 hover:shadow-md transition-shadow ${m.is_accepted == 0 ? 'opacity-60' : ''}">
@@ -584,6 +620,7 @@
                         <div class="px-3 py-1 rounded-lg ${roleClass} text-[10px] font-black uppercase tracking-wider">
                             ${roleName}
                         </div>
+                        ${removeButton}
                     </div>
                 `;
                 list.innerHTML += html;
@@ -702,6 +739,143 @@
                     loadGroup(activeGroupId);
                 }
             } catch (err) { console.error(err); }
+        }
+
+        async function removeGroupMember(memberId) {
+            Swal.fire({
+                title: 'Remove Member?',
+                text: "Are you sure you want to remove this member?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, remove'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`{{ url('hr/groups') }}/${activeGroupId}/member/${memberId}`, {
+                            method: 'DELETE',
+                            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                        });
+                        const res = await response.json();
+                        if(res.success) loadGroup(activeGroupId);
+                    } catch(e) { console.error(e); }
+                }
+            });
+        }
+
+        function toggleGroupMenu(event, id) {
+            event.stopPropagation();
+            document.querySelectorAll('.group-card').forEach(card => card.style.zIndex = '1');
+            document.querySelectorAll('[id^="group-menu-"]').forEach(menu => {
+                if(menu.id !== `group-menu-${id}`) menu.classList.add('hidden');
+            });
+            const menu = document.getElementById(`group-menu-${id}`);
+            menu.classList.toggle('hidden');
+            if (!menu.classList.contains('hidden')) {
+                const card = document.getElementById(`group-item-${id}`);
+                if(card) card.style.zIndex = '50';
+            }
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            document.querySelectorAll('.group-card').forEach(card => card.style.zIndex = '1');
+            document.querySelectorAll('[id^="group-menu-"]').forEach(menu => {
+                if (!menu.contains(event.target) && !menu.previousElementSibling.contains(event.target)) {
+                    menu.classList.add('hidden');
+                }
+            });
+        });
+
+        async function archiveGroupList(event, id) {
+            event.stopPropagation();
+            toggleGroupMenu(event, id);
+            Swal.fire({
+                title: 'Archive Team?',
+                text: "It will be removed from your active lists.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, archive it'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`{{ url('hr/groups') }}/${id}/archive`, {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                        });
+                        const res = await response.json();
+                        if(res.success) window.location.reload();
+                    } catch(e) { console.error(e); }
+                }
+            });
+        }
+
+        async function restoreGroupList(event, id) {
+            event.stopPropagation();
+            toggleGroupMenu(event, id);
+            Swal.fire({
+                title: 'Restore Team?',
+                text: "It will be moved back to your active lists.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, restore it'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`{{ url('hr/groups') }}/${id}/restore`, {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                        });
+                        const res = await response.json();
+                        if(res.success) window.location.href = "{{ route('hr.groups.index', ['c' => request('c')]) }}";
+                    } catch(e) { console.error(e); }
+                }
+            });
+        }
+
+        async function duplicateGroupList(event, id) {
+            event.stopPropagation();
+            toggleGroupMenu(event, id);
+            Swal.fire({
+                title: 'Duplicate Team',
+                input: 'text',
+                inputLabel: 'Enter the name for the new duplicated team:',
+                showCancelButton: true,
+                inputValidator: (value) => {
+                    if (!value) {
+                        return 'You need to write something!'
+                    }
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed && result.value) {
+                    try {
+                        const formData = new FormData();
+                        formData.append('new_name', result.value);
+                        
+                        const response = await fetch(`{{ url('hr/groups') }}/${id}/copy`, {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                            body: formData
+                        });
+                        const res = await response.json();
+                        if(res.success) window.location.reload();
+                    } catch(e) { console.error(e); }
+                }
+            });
+        }
+
+        function filterGroups() {
+            const query = document.getElementById('groupSearch').value.toLowerCase();
+            const items = document.querySelectorAll('[id^="group-item-"]');
+            
+            items.forEach(item => {
+                const name = item.querySelector('h3').innerText.toLowerCase();
+                const desc = item.querySelector('p').innerText.toLowerCase();
+                if (name.includes(query) || desc.includes(query)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
         }
     </script>
 @endsection
