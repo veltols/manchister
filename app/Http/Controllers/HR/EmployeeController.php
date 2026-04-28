@@ -101,6 +101,7 @@ class EmployeeController extends Controller
             'permissions.status',
             'attendance',
             'disciplinaryActions.type',
+            'disciplinaryActions.warning',
             'disciplinaryActions.status',
             'performance',
             'exitInterviews',
@@ -310,7 +311,7 @@ class EmployeeController extends Controller
             $query->where('da_status_id', $statusId);
         }
         if ($date) {
-            $query->whereDate('da_date', $date);
+            $query->whereDate('added_date', $date);
         }
 
         $actions = $query->paginate($perPage);
@@ -325,6 +326,42 @@ class EmployeeController extends Controller
                 'total' => $actions->total(),
                 'from' => $actions->firstItem(),
                 'to' => $actions->lastItem(),
+            ]
+        ]);
+    }
+
+    public function getAttendanceData(Request $request, $id)
+    {
+        $perPage = $request->get('per_page', 10);
+        $search = $request->input('search');
+        $status = $request->input('status');
+        $date = $request->input('date');
+
+        $query = \App\Models\Attendance::where('employee_id', $id)
+            ->orderBy('checkin_date', 'desc');
+
+        if ($search) {
+            $query->where('attendance_id', 'LIKE', "%$search%");
+        }
+        if ($status) {
+            $query->where('attendance_status', $status);
+        }
+        if ($date) {
+            $query->whereDate('checkin_date', $date);
+        }
+
+        $attendance = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $attendance->items(),
+            'pagination' => [
+                'current_page' => $attendance->currentPage(),
+                'last_page' => $attendance->lastPage(),
+                'per_page' => $attendance->perPage(),
+                'total' => $attendance->total(),
+                'from' => $attendance->firstItem(),
+                'to' => $attendance->lastItem(),
             ]
         ]);
     }
@@ -404,7 +441,7 @@ class EmployeeController extends Controller
         DB::beginTransaction();
         try {
             // Update Details
-            $employee->update($request->except(['log_remark', 'user_type', '_token']));
+            $employee->update($request->except(['log_remark', 'user_type', '_token', 'is_gm']));
 
             // Update System User Role
             if ($employee->systemUser) {

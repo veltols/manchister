@@ -72,6 +72,7 @@
                 <table class="premium-table w-full">
                     <thead>
                         <tr>
+                            <th>Ref No</th> 
                             <th class="text-left">Employee</th>
                             <th class="text-left">Date</th>
                             <th class="text-left">Time</th>
@@ -82,6 +83,9 @@
                     <tbody id="permissions-container">
                         @forelse($permissions as $p)
                             <tr>
+                                <td>
+                                    <span class="font-semibold text-slate-800">{{ $p->permission_id }}</span>
+                                </td>
                                 <td>
                                     <div class="flex items-center gap-3">
                                         <div
@@ -253,6 +257,9 @@
                     
                     html += `
                         <tr>
+                            <td>
+                                <span class="font-semibold text-slate-800">${p.permission_id}</span>
+                            </td>
                             <td>
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-semibold shadow-md">

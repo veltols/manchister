@@ -13,6 +13,7 @@ class AjaxPagination {
         this.perPage = config.perPage || 15;
         this.currentPage = 1;
         this.isLoading = false;
+        this.instanceName = config.instanceName || 'ajaxPagination';
 
         this.init();
     }
@@ -84,10 +85,13 @@ class AjaxPagination {
                 }
 
                 // Scroll to top smoothly
-                document.querySelector(this.containerSelector).scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
+                const container = document.querySelector(this.containerSelector);
+                if (container) {
+                    container.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
             } else {
                 this.showError('Failed to load data');
             }
@@ -126,7 +130,7 @@ class AjaxPagination {
 
         // Previous button
         html += `
-            <button onclick="window.ajaxPagination.loadPage(${current_page - 1})" 
+            <button onclick="window.${this.instanceName}.loadPage(${current_page - 1})" 
                     ${current_page === 1 ? 'disabled' : ''}
                     class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95">
                 <i class="fa-solid fa-chevron-left"></i>
@@ -141,7 +145,7 @@ class AjaxPagination {
             } else {
                 const isActive = page === current_page;
                 html += `
-                    <button onclick="window.ajaxPagination.loadPage(${page})"
+                    <button onclick="window.${this.instanceName}.loadPage(${page})"
                             class="min-w-[40px] px-4 py-2 rounded-lg font-medium transition-all hover:scale-105 active:scale-95 ${isActive
                         ? 'bg-gradient-to-r from-brand to-cyan-600 text-white shadow-lg shadow-brand/30'
                         : 'border border-slate-200 text-slate-600 hover:bg-slate-50'
@@ -154,7 +158,7 @@ class AjaxPagination {
 
         // Next button
         html += `
-            <button onclick="window.ajaxPagination.loadPage(${current_page + 1})" 
+            <button onclick="window.${this.instanceName}.loadPage(${current_page + 1})" 
                     ${current_page === last_page ? 'disabled' : ''}
                     class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95">
                 <i class="fa-solid fa-chevron-right"></i>

@@ -264,6 +264,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/employees/{id}/leaves-data', [App\Http\Controllers\HR\EmployeeController::class, 'getLeavesData'])->name('employees.leaves_data');
         Route::get('/employees/{id}/permissions-data', [App\Http\Controllers\HR\EmployeeController::class, 'getPermissionsData'])->name('employees.permissions_data');
         Route::get('/employees/{id}/disciplinary-data', [App\Http\Controllers\HR\EmployeeController::class, 'getDisciplinaryData'])->name('employees.disciplinary_data');
+        Route::get('/employees/{id}/attendance-data', [App\Http\Controllers\HR\EmployeeController::class, 'getAttendanceData'])->name('employees.attendance_data');
         Route::post('/employees', [App\Http\Controllers\HR\EmployeeController::class, 'store'])->name('employees.store');
         Route::post('/employees/{id}/update', [App\Http\Controllers\HR\EmployeeController::class, 'update'])->name('employees.update');
         Route::post('/employees/{id}/update-credentials', [App\Http\Controllers\HR\EmployeeController::class, 'updateCredentials'])->name('employees.update-credentials');

@@ -67,6 +67,7 @@ class ExitInterviewController extends Controller
         foreach ($questionIds as $index => $qId) {
             $ans = new ExitInterviewAnswer();
             $ans->interview_id = $interview->interview_id;
+            $ans->employee_id = $employeeId;
             $ans->question_id = $qId;
             $ans->answer_text = $answers[$index] ?? '';
             $ans->save();

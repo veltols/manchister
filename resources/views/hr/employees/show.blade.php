@@ -458,33 +458,81 @@
             </div>
 
             <!-- Attendance Panel -->
-            <div x-show="tab === 'attendance'" class="animate-fade-in">
+            <div x-show="tab === 'attendance'" class="animate-fade-in space-y-6">
+                <!-- Filters -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-6 font-display">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="relative">
+                            <i class="fa-solid fa-hashtag absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" id="att-search-filter" placeholder="Ref No..." class="premium-input w-full pl-11 py-2 text-xs">
+                        </div>
+                        <div class="relative">
+                            <i class="fa-solid fa-signal absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <select id="att-status-filter" class="premium-input w-full pl-11 py-2 text-xs appearance-none">
+                                <option value="">All Statuses</option>
+                                <option value="present">Present</option>
+                                <option value="late">Late</option>
+                                <option value="absent">Absent</option>
+                                <option value="on leave">Leave</option>
+                            </select>
+                        </div>
+                        <div class="relative">
+                            <i class="fa-solid fa-calendar absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="date" id="att-date-filter" class="premium-input w-full pl-11 py-2 text-xs">
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-2 mt-4">
+                        <button onclick="applyAttFilters()" class="px-4 py-2 bg-slate-800 text-white font-bold rounded-lg text-xs hover:bg-slate-900 transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-search"></i> Search
+                        </button>
+                        <button onclick="resetAttFilters()" class="px-4 py-2 bg-white text-slate-600 font-bold rounded-lg text-xs hover:bg-slate-100 border border-slate-200 transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-rotate-left"></i> Reset
+                        </button>
+                    </div>
+                </div>
+
                 <div class="overflow-x-auto">
                     <table class="premium-table w-full">
                         <thead>
                             <tr>
+                                <th>REF</th>
                                 <th>Date</th>
                                 <th>Check-In</th>
                                 <th>Check-Out</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            @forelse($employee->attendance as $att)
+                        <tbody id="employee-attendance-container">
+                            @forelse($employee->attendance->take(15) as $att)
                                 <tr>
+                                    <td class="font-bold text-[11px] text-slate-400">#{{ $att->attendance_id }}</td>
                                     <td>{{ $att->checkin_date instanceof \Illuminate\Support\Carbon ? $att->checkin_date->format('d M Y') : $att->checkin_date }}</td>
-                                    <td><span class="font-bold text-emerald-600">{{ $att->checkin_time }}</span></td>
-                                    <td><span class="font-bold text-rose-600">{{ $att->checkout_time }}</span></td>
+                                    <td><span class="font-bold text-emerald-600 text-xs">{{ $att->checkin_time }}</span></td>
+                                    <td><span class="font-bold text-rose-600 text-xs">{{ $att->checkout_time }}</span></td>
                                     <td>
-                                        <span class="px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wider">Present</span>
+                                        @php
+                                            $attStatus = strtolower($att->attendance_status ?? 'present');
+                                            $attConfig = match($attStatus) {
+                                                'present' => ['bg' => 'bg-emerald-50 text-emerald-700 border-emerald-100', 'icon' => 'check-circle'],
+                                                'late' => ['bg' => 'bg-amber-50 text-amber-700 border-amber-100', 'icon' => 'clock-rotate-left'],
+                                                'absent' => ['bg' => 'bg-rose-50 text-rose-700 border-rose-100', 'icon' => 'user-xmark'],
+                                                'leave' => ['bg' => 'bg-blue-50 text-blue-700 border-blue-100', 'icon' => 'calendar-day'],
+                                                default => ['bg' => 'bg-slate-50 text-slate-700 border-slate-100', 'icon' => 'circle-question']
+                                            };
+                                        @endphp
+                                        <span class="px-2.5 py-1 rounded-lg {{ $attConfig['bg'] }} text-[10px] font-bold uppercase tracking-wider border">
+                                            <i class="fa-solid fa-{{ $attConfig['icon'] }} mr-1"></i>
+                                            {{ ucfirst($attStatus) }}
+                                        </span>
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="4" class="text-center py-8 text-slate-400 italic">No attendance records found.</td></tr>
+                                <tr><td colspan="5" class="text-center py-8 text-slate-400 italic">No attendance records found.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
+                <div id="employee-attendance-pagination"></div>
             </div>
 
             <!-- Disciplinary Panel -->
@@ -539,15 +587,19 @@
                         <div class="p-5 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all flex justify-between items-start group relative overflow-hidden">
                             <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500"></div>
                             <div class="flex-1 pl-2">
-                                <div class="flex items-center gap-3 mb-2">
-                                    <span class="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 text-[10px] font-black uppercase tracking-widest border border-rose-100 italic">{{ $da->type->da_type_name ?? 'DA' }}</span>
-                                    <h4 class="font-bold text-slate-800 text-sm tracking-tight">{{ $da->warning->da_warning_name ?? 'Warning' }}</h4>
-                                    <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[9px] font-bold uppercase">{{ $da->status->da_status_name ?? 'Open' }}</span>
+                                <div class="flex flex-wrap items-center gap-2 mb-3">
+                                    <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold uppercase tracking-wider border border-slate-200">
+                                        <span class="text-slate-400">Nature:</span> {{ $da->type->da_type_text ?? 'N/A' }}
+                                    </div>
+                                    <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 text-[10px] font-bold uppercase tracking-wider border border-rose-100 italic">
+                                        <span class="text-rose-300">Level:</span> {{ $da->warning->da_warning_name ?? 'Warning' }}
+                                    </div>
+                                    <span class="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-500 text-[9px] font-bold uppercase border border-indigo-100">{{ $da->status->da_status_name ?? 'Open' }}</span>
                                 </div>
                                 <div class="flex items-center gap-3 text-[11px] text-slate-400 font-medium mb-3">
-                                    <span class="flex items-center gap-1"><i class="fa-solid fa-calendar"></i> {{ $da->da_date }}</span>
+                                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-calendar text-rose-400"></i> {{ \Carbon\Carbon::parse($da->added_date)->format('d M Y') }}</span>
                                 </div>
-                                <p class="text-xs text-slate-600 leading-relaxed max-w-2xl bg-slate-50/50 p-2.5 rounded-xl">{{ $da->da_description }}</p>
+                                <p class="text-xs text-slate-600 leading-relaxed max-w-2xl bg-slate-50/50 p-2.5 rounded-xl">{{ $da->da_remark }}</p>
                             </div>
                             <div class="text-right">
                                 <span class="text-xs font-black text-slate-200 group-hover:text-slate-300 transition-colors">#{{ $da->da_id }}</span>
@@ -564,17 +616,40 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     @forelse($employee->performance as $perf)
                         <div class="premium-card p-6 border-l-4 border-indigo-400">
-                            <div class="flex justify-between items-start mb-4">
+                            <div class="flex justify-between items-start mb-4 pb-3 border-b border-slate-50">
                                 <div>
-                                    <h4 class="font-bold text-slate-700">Review Period: {{ $perf->review_period }}</h4>
-                                    <p class="text-xs text-slate-400">{{ $perf->review_date }}</p>
+                                    <h4 class="font-bold text-slate-700 tracking-tight">Performance Record</h4>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                        <i class="fa-solid fa-calendar-day mr-1"></i> {{ \Carbon\Carbon::parse($perf->added_date)->format('d M Y') }}
+                                    </p>
                                 </div>
-                                <div class="text-2xl font-display font-bold text-indigo-600">{{ $perf->overall_score }}/100</div>
+                                <div class="text-xs font-black text-slate-200">#{{ $perf->performance_id }}</div>
                             </div>
-                            <p class="text-sm text-slate-600 italic">"{{ $perf->manager_comments }}"</p>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Objectives</span>
+                                    <p class="text-xs text-slate-600 leading-relaxed">{{ $perf->performance_object }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Key Results / KPIs</span>
+                                    <p class="text-xs text-slate-600 leading-relaxed">{{ $perf->performance_kpi }}</p>
+                                </div>
+                                @if($perf->performance_remark)
+                                    <div class="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100/50">
+                                        <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest block mb-1">HR Remarks</span>
+                                        <p class="text-xs text-indigo-700 italic">"{{ $perf->performance_remark }}"</p>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
                     @empty
-                        <div class="col-span-2 text-center py-8 text-slate-400 italic">No performance reviews found.</div>
+                        <div class="col-span-2 text-center py-12 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-100">
+                            <div class="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center mx-auto mb-4">
+                                <i class="fa-solid fa-star-half-stroke text-2xl text-slate-300"></i>
+                            </div>
+                            <p class="text-slate-500 font-medium italic">No performance reviews found for this employee.</p>
+                        </div>
                     @endforelse
                 </div>
             </div>
@@ -937,6 +1012,7 @@
 <script>
     // Leave Tab Pagination
     window.leavePagination = new AjaxPagination({
+        instanceName: 'leavePagination',
         endpoint: "{{ route('hr.employees.leaves_data', $employee->employee_id) }}",
         containerSelector: '#employee-leaves-container',
         paginationSelector: '#employee-leaves-pagination',
@@ -1011,6 +1087,7 @@
 
     // Permission Tab Pagination
     window.permPagination = new AjaxPagination({
+        instanceName: 'permPagination',
         endpoint: "{{ route('hr.employees.permissions_data', $employee->employee_id) }}",
         containerSelector: '#employee-perms-container',
         paginationSelector: '#employee-perms-pagination',
@@ -1070,6 +1147,7 @@
 
     // Disciplinary Tab Pagination
     window.daPagination = new AjaxPagination({
+        instanceName: 'daPagination',
         endpoint: "{{ route('hr.employees.disciplinary_data', $employee->employee_id) }}",
         containerSelector: '#employee-da-container',
         paginationSelector: '#employee-da-pagination',
@@ -1093,14 +1171,14 @@
                         <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500"></div>
                         <div class="flex-1 pl-2">
                             <div class="flex items-center gap-3 mb-2">
-                                <span class="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 text-[10px] font-black uppercase tracking-widest border border-rose-100 italic">${da.type ? da.type.da_type_name : 'DA'}</span>
-                                <h4 class="font-bold text-slate-800 text-sm tracking-tight">${da.warning ? da.warning.da_warning_name : 'Warning'}</h4>
-                                <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[9px] font-bold uppercase">${da.status ? da.status.da_status_name : 'Open'}</span>
+                                <span class="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 text-[10px] font-black uppercase tracking-widest border border-rose-100 italic"><span class="text-rose-300">Nature:</span> ${da.type ? da.type.da_type_text : 'N/A'}</span>
+                                <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold uppercase tracking-wider border border-slate-200 italic"><span class="text-slate-400">Level:</span> ${da.warning ? da.warning.da_warning_name : 'Warning'}</span>
+                                <span class="px-2 py-0.5 rounded-md bg-white text-slate-500 text-[9px] font-bold uppercase border border-slate-200">${da.status ? da.status.da_status_name : 'Open'}</span>
                             </div>
                             <div class="flex items-center gap-3 text-[11px] text-slate-400 font-medium mb-3">
-                                <span class="flex items-center gap-1"><i class="fa-solid fa-calendar"></i> ${da.da_date}</span>
+                                <span class="flex items-center gap-1"><i class="fa-solid fa-calendar"></i> ${da.added_date}</span>
                             </div>
-                            <p class="text-xs text-slate-600 leading-relaxed max-w-2xl bg-slate-50/50 p-2.5 rounded-xl">${da.da_description}</p>
+                            <p class="text-xs text-slate-600 leading-relaxed max-w-2xl bg-slate-50/50 p-2.5 rounded-xl">${da.da_remark}</p>
                         </div>
                         <div class="text-right">
                             <span class="text-xs font-black text-slate-200 group-hover:text-slate-300 transition-colors">#${da.da_id}</span>
@@ -1111,6 +1189,65 @@
             container.innerHTML = html;
         }
     });
+
+    // Attendance Tab Pagination
+    window.attPagination = new AjaxPagination({
+        instanceName: 'attPagination',
+        endpoint: "{{ route('hr.employees.attendance_data', $employee->employee_id) }}",
+        containerSelector: '#employee-attendance-container',
+        paginationSelector: '#employee-attendance-pagination',
+        getAdditionalParams: () => ({
+            search: document.getElementById('att-search-filter').value,
+            status: document.getElementById('att-status-filter').value,
+            date: document.getElementById('att-date-filter').value
+        }),
+        renderCallback: function(records) {
+            const container = document.querySelector('#employee-attendance-container');
+            if (records.length === 0) {
+                container.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-slate-400 italic">No attendance records found matching filters.</td></tr>';
+                return;
+            }
+
+            let html = '';
+            records.forEach(att => {
+                const checkinDate = att.checkin_date ? new Date(att.checkin_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '---';
+                const status = (att.attendance_status || 'present').toLowerCase();
+                
+                let attConfig = { bg: 'bg-slate-50 text-slate-700 border-slate-100', icon: 'circle-question' };
+                if (status === 'present') attConfig = { bg: 'bg-emerald-50 text-emerald-700 border-emerald-100', icon: 'check-circle' };
+                else if (status === 'late') attConfig = { bg: 'bg-amber-50 text-amber-700 border-amber-100', icon: 'clock-rotate-left' };
+                else if (status === 'absent') attConfig = { bg: 'bg-rose-50 text-rose-700 border-rose-100', icon: 'user-xmark' };
+                else if (status === 'leave') attConfig = { bg: 'bg-blue-50 text-blue-700 border-blue-100', icon: 'calendar-day' };
+
+                html += `
+                    <tr>
+                        <td class="font-bold text-[11px] text-slate-400">#${att.attendance_id}</td>
+                        <td>${checkinDate}</td>
+                        <td><span class="font-bold text-emerald-600 text-xs">${att.checkin_time || '---'}</span></td>
+                        <td><span class="font-bold text-rose-600 text-xs">${att.checkout_time || '---'}</span></td>
+                        <td>
+                            <span class="px-2.5 py-1 rounded-lg ${attConfig.bg} text-[10px] font-bold uppercase tracking-wider border">
+                                <i class="fa-solid fa-${attConfig.icon} mr-1"></i>
+                                ${status.charAt(0).toUpperCase() + status.slice(1)}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+            container.innerHTML = html;
+        }
+    });
+
+    function applyAttFilters() {
+        window.attPagination.loadPage(1);
+    }
+
+    function resetAttFilters() {
+        document.getElementById('att-search-filter').value = '';
+        document.getElementById('att-status-filter').value = '';
+        document.getElementById('att-date-filter').value = '';
+        window.attPagination.loadPage(1);
+    }
 
     function applyDaFilters() {
         window.daPagination.loadPage(1);
@@ -1159,6 +1296,18 @@
                 from: 1,
                 to: Math.min(10, {{ $employee->disciplinaryActions->count() }}),
                 total: {{ $employee->disciplinaryActions->count() }}
+            });
+        }
+
+        // Attendance Initial
+        const initialAtt = @json($employee->attendance->take(15));
+        if(initialAtt.length > 0) {
+            window.attPagination.renderPagination({
+                current_page: 1,
+                last_page: Math.ceil({{ $employee->attendance->count() }} / 10),
+                from: 1,
+                to: Math.min(10, {{ $employee->attendance->count() }}),
+                total: {{ $employee->attendance->count() }}
             });
         }
     });

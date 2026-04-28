@@ -158,6 +158,7 @@ class ExitInterviewController extends Controller
                     if(!empty($ans)){
                         ExitInterviewAnswer::create([
                             'interview_id' => $interview->interview_id,
+                            'employee_id' => $request->employee_id,
                             'question_id' => $qId,
                             'answer_text' => $ans
                         ]);
