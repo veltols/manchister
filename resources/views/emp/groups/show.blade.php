@@ -427,7 +427,12 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Action Items</label>
-                        <textarea name="action_items" id="edit_action_items" rows="3" class="premium-input w-full" placeholder="List action items assigned..."></textarea>
+                        <div id="edit_action_items_container" class="space-y-2">
+                            <!-- Action item rows will be added here -->
+                        </div>
+                        <button type="button" onclick="addActionItemRow('edit_action_items_container')" class="mt-3 text-xs font-bold text-indigo-600 flex items-center gap-2 hover:text-indigo-800 transition-all">
+                            <i class="fa-solid fa-plus-circle"></i> Add Action Item
+                        </button>
                     </div>
                 </div>
 
@@ -475,7 +480,16 @@
             }
             
             document.getElementById('edit_decision_outcome').value = agenda.decision_outcome || '';
-            document.getElementById('edit_action_items').value = agenda.action_items || '';
+            
+            // Populate Dynamic Action Items
+            const itemsContainer = document.getElementById('edit_action_items_container');
+            itemsContainer.innerHTML = '';
+            const items = (agenda.action_items || '').split('\n').filter(i => i.trim() !== '');
+            if (items.length > 0) {
+                items.forEach(item => addActionItemRow('edit_action_items_container', item));
+            } else {
+                addActionItemRow('edit_action_items_container');
+            }
             
             document.getElementById('editAgendaForm').action = "{{ url('emp/groups/'.$group->group_id.'/agenda') }}/" + agenda.agenda_id;
             document.getElementById('deleteAgendaForm').action = "{{ url('emp/groups/'.$group->group_id.'/agenda') }}/" + agenda.agenda_id;
@@ -498,5 +512,46 @@
                 completionFields.classList.add('hidden');
             }
         }
+
+        function addActionItemRow(containerId, value = '') {
+            const container = document.getElementById(containerId);
+            const rowId = 'action-item-' + Date.now() + Math.floor(Math.random() * 1000);
+            
+            const div = document.createElement('div');
+            div.id = rowId;
+            div.className = 'flex items-center gap-2 mb-2 animate-fade-in';
+            div.innerHTML = `
+                <input type="text" class="premium-input flex-1 py-2 text-sm action-item-input" value="${value}" placeholder="Add action item...">
+                <button type="button" onclick="removeActionItemRow('${rowId}')" class="w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm">
+                    <i class="fa-solid fa-times text-xs"></i>
+                </button>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeActionItemRow(rowId) {
+            const row = document.getElementById(rowId);
+            if (row) row.remove();
+        }
+
+        document.getElementById('editAgendaForm').addEventListener('submit', function(e) {
+            const container = document.getElementById('edit_action_items_container');
+            if (container) {
+                const actionItems = Array.from(container.querySelectorAll('.action-item-input'))
+                    .map(input => input.value.trim())
+                    .filter(val => val !== '')
+                    .join('\n');
+                
+                let hiddenInput = document.getElementById('final_action_items');
+                if (!hiddenInput) {
+                    hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = 'action_items';
+                    hiddenInput.id = 'final_action_items';
+                    this.appendChild(hiddenInput);
+                }
+                hiddenInput.value = actionItems;
+            }
+        });
     </script>
 @endsection

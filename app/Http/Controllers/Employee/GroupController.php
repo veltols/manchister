@@ -338,6 +338,7 @@ class GroupController extends Controller
         $agenda->description = $request->description;
         $agenda->priority = $request->priority;
         $agenda->start_date = $request->start_date;
+        $agenda->action_items = $request->action_items;
         $agenda->save();
 
         return response()->json(['success' => true, 'message' => 'Agenda added successfully.']);
