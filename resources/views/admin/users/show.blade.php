@@ -919,15 +919,21 @@
                         <input type="date" name="employee_join_date" value="{{ $user->employee_join_date }}" class="premium-input w-full px-4 py-2.5 text-sm">
                     </div>
                     
-                    <div class="col-span-1">
-                        <label class="premium-label">Department <span class="text-rose-500">*</span></label>
-                        <select name="department_id" required class="premium-input w-full px-4 py-2.5 text-sm">
-                            @foreach($departments as $dept)
-                                <option value="{{ $dept->department_id }}" {{ $user->department_id == $dept->department_id ? 'selected' : '' }}>
-                                    {{ $dept->department_name }} {{ $dept->is_active ? '' : '(Inactive)' }}
-                                </option>
-                            @endforeach
-                        </select>
+                    <div class="col-span-1 space-y-4">
+                        <div>
+                            <label class="premium-label">Department <span class="text-rose-500">*</span></label>
+                            <select name="department_id" required class="premium-input w-full px-4 py-2.5 text-sm">
+                                @foreach($departments as $dept)
+                                    <option value="{{ $dept->department_id }}" {{ $user->department_id == $dept->department_id ? 'selected' : '' }}>
+                                        {{ $dept->department_name }} {{ $dept->is_active ? '' : '(Inactive)' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-2 p-2 rounded-lg bg-indigo-50 border border-indigo-100">
+                            <input type="checkbox" name="is_line_manager" id="edit_is_line_manager" value="1" {{ ($user->department && $user->department->line_manager_id == $user->employee_id) ? 'checked' : '' }} class="w-4 h-4 rounded border-indigo-300 text-indigo-600 focus:ring-indigo-500">
+                            <label for="edit_is_line_manager" class="text-xs font-bold text-indigo-900 cursor-pointer">Set as Line Manager for this Dept</label>
+                        </div>
                     </div>
                     <div class="col-span-1">
                         <label class="premium-label">Designation <span class="text-rose-500">*</span></label>
@@ -982,6 +988,8 @@
                             <option value="eqa" {{ ($user->systemUser->user_type ?? '') == 'eqa' ? 'selected' : '' }}>EQA Officer</option>
                         </select>
                     </div>
+
+
 
 
 

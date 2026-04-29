@@ -251,15 +251,13 @@ class UserController extends Controller
             if ($user->systemUser) {
                 $user->systemUser->user_type = $request->user_type;
 
-                $newIsGm = $request->has('is_gm') ? 1 : 0;
-                // Clear other GMs first if designating this user
-                if ($newIsGm === 1) {
-                    \App\Models\User::where('is_gm', 1)
-                        ->where('user_id', '!=', $user->employee_id)
-                        ->update(['is_gm' => 0]);
-                }
-                $user->systemUser->is_gm = $newIsGm;
                 $user->systemUser->save();
+            }
+
+            // Handle Line Manager Assignment
+            if ($request->is_line_manager == 1) {
+                Department::where('department_id', $request->department_id)
+                    ->update(['line_manager_id' => $user->employee_id]);
             }
 
             $this->logAction($user->employee_id, 'User Profile Updated', $request->log_remark);
