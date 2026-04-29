@@ -243,6 +243,83 @@
             @endif
         </div>
     </div>
+
+    <div id="leaves-section" class="hidden animate-fade-in">
+        <div class="premium-card overflow-hidden">
+            <div class="p-6 border-b border-slate-100">
+                <h2 class="text-lg font-display font-bold text-premium">Leaves Awaiting Approval</h2>
+                <p class="text-sm text-slate-500 mt-1">Review and approve or reject team leave requests.</p>
+            </div>
+            @if($leaves->isEmpty())
+                <div class="p-16 text-center">
+                    <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6 text-green-400">
+                        <i class="fa-solid fa-check-double text-4xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-700 mb-2">All Caught Up!</h3>
+                    <p class="text-slate-400">No pending leave requests at this time.</p>
+                </div>
+            @else
+                <div class="overflow-x-auto">
+                    <table class="premium-table w-full">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Date</th>
+                                <th class="text-center">Days</th>
+                                <th>Status</th>
+                                <th>Remarks</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($leaves as $l)
+                                <tr>
+                                    <td>
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xs">
+                                                {{ substr($l->employee->first_name ?? 'U', 0, 1) }}
+                                            </div>
+                                            <span class="font-bold text-slate-700">{{ $l->employee->first_name ?? 'Unknown' }} {{ $l->employee->last_name ?? '' }}</span>
+                                        </div>
+                                    </td>
+                                    <td>{{ $l->start_date ? \Carbon\Carbon::parse($l->start_date)->format('M d, Y') : '—' }} to {{ $l->end_date ? \Carbon\Carbon::parse($l->end_date)->format('M d, Y') : '—' }}</td>
+                                    <td class="font-bold text-indigo-600 text-center">{{ $l->total_days }}d</td>
+                                    <td>
+                                        @php
+                                            $statusColors = [
+                                                1 => ['bg' => '#f1f5f9', 'text' => '#64748b'], // Pending
+                                                2 => ['bg' => '#fef3c7', 'text' => '#d97706'], // Pending Approval
+                                                3 => ['bg' => '#dcfce7', 'text' => '#10b981'], // Approved
+                                                4 => ['bg' => '#fee2e2', 'text' => '#ef4444'], // Rejected
+                                            ];
+                                            $colors = $statusColors[$l->leave_status_id] ?? ['bg' => '#f1f5f9', 'text' => '#64748b'];
+                                        @endphp
+                                        <span class="px-2 py-1 rounded-lg text-[10px] font-bold" style="background: {{ $colors['bg'] }}; color: {{ $colors['text'] }}">
+                                            {{ $l->status->leave_status_name ?? 'Unknown' }}
+                                        </span>
+                                    </td>
+                                    <td class="max-w-xs truncate text-slate-500" title="{{ $l->leave_remarks }}">{{ $l->leave_remarks }}</td>
+                                    <td>
+                                        <div class="flex gap-2">
+                                            <form action="{{ route('hr.leaves.manager_approve', $l->leave_id) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all">
+                                                    <i class="fa-solid fa-check text-xs"></i>
+                                                </button>
+                                            </form>
+                                            <button onclick="openLeaveRejectModal({{ $l->leave_id }})" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all">
+                                                <i class="fa-solid fa-xmark text-xs"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+    </div>
 <script>
 const taskData = {
     @foreach($tasks as $task)
@@ -423,25 +500,35 @@ const taskData = {
         const tabLeaves = document.getElementById('tab-leaves');
 
         // Reset all
-        [tasksSection, permissionsSection, leavesSection].forEach(s => s.classList.add('hidden'));
+        [tasksSection, permissionsSection, leavesSection].forEach(s => {
+            if (s) s.classList.add('hidden');
+        });
         [tabTasks, tabPermissions, tabLeaves].forEach(t => {
-            t.classList.remove('bg-white', 'text-indigo-600', 'shadow-sm');
-            t.classList.add('text-slate-500');
+            if (t) {
+                t.classList.remove('bg-white', 'text-indigo-600', 'shadow-sm');
+                t.classList.add('text-slate-500');
+            }
         });
 
         // Show active
-        if (tab === 'tasks') {
+        if (tab === 'tasks' && tasksSection) {
             tasksSection.classList.remove('hidden');
-            tabTasks.classList.add('bg-white', 'text-indigo-600', 'shadow-sm');
-            tabTasks.classList.remove('text-slate-500');
-        } else if (tab === 'permissions') {
+            if (tabTasks) {
+                tabTasks.classList.add('bg-white', 'text-indigo-600', 'shadow-sm');
+                tabTasks.classList.remove('text-slate-500');
+            }
+        } else if (tab === 'permissions' && permissionsSection) {
             permissionsSection.classList.remove('hidden');
-            tabPermissions.classList.add('bg-white', 'text-indigo-600', 'shadow-sm');
-            tabPermissions.classList.remove('text-slate-500');
-        } else if (tab === 'leaves') {
+            if (tabPermissions) {
+                tabPermissions.classList.add('bg-white', 'text-indigo-600', 'shadow-sm');
+                tabPermissions.classList.remove('text-slate-500');
+            }
+        } else if (tab === 'leaves' && leavesSection) {
             leavesSection.classList.remove('hidden');
-            tabLeaves.classList.add('bg-white', 'text-indigo-600', 'shadow-sm');
-            tabLeaves.classList.remove('text-slate-500');
+            if (tabLeaves) {
+                tabLeaves.classList.add('bg-white', 'text-indigo-600', 'shadow-sm');
+                tabLeaves.classList.remove('text-slate-500');
+            }
         }
     }
 

@@ -123,7 +123,7 @@
             <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
                 <i class="fa-solid fa-headset text-base"></i>
             </div>
-            <span class="text-base font-semibold">IT Support</span>
+            <span class="text-base font-semibold">Support Services</span>
             <i class="fa-solid fa-chevron-right text-[11px] ml-auto transition-transform duration-200"
                 :class="open ? 'rotate-90' : ''" style="color:rgba(255,255,255,0.5);"></i>
         </button>
