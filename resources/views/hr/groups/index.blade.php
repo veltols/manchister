@@ -663,7 +663,7 @@ $authUser = Auth::user();
             document.getElementById('group-content').classList.remove('hidden');
 
             try {
-                const response = await fetch(`{{ url('emp/groups') }}/${id}`, {
+                const response = await fetch(`{{ url('hr/groups') }}/${id}`, {
                     headers: { 'Accept': 'application/json' }
                 });
                 const result = await response.json();
@@ -1068,7 +1068,7 @@ $authUser = Auth::user();
             if(hasFile) formData.append('attachment', fileInput.files[0]);
 
             try {
-                const response = await fetch(`{{ url('emp/groups') }}/${activeGroupId}/post`, {
+                const response = await fetch(`{{ url('hr/groups') }}/${activeGroupId}/post`, {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
@@ -1282,7 +1282,7 @@ $authUser = Auth::user();
             const formData = new FormData(e.target);
 
             try {
-                const response = await fetch(`{{ url('emp/groups') }}/${activeGroupId}/upload`, {
+                const response = await fetch(`{{ url('hr/groups') }}/${activeGroupId}/upload`, {
                     method: 'POST',
                     headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: formData
@@ -1294,7 +1294,7 @@ $authUser = Auth::user();
         }
         async function acceptInvitation() {
             try {
-                const response = await fetch(`{{ url('emp/groups') }}/${activeGroupId}/accept`, {
+                const response = await fetch(`{{ url('hr/groups') }}/${activeGroupId}/accept`, {
                     method: 'POST',
                     headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
                 });
@@ -1315,7 +1315,7 @@ $authUser = Auth::user();
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     try {
-                        const response = await fetch(`{{ url('emp/groups') }}/${activeGroupId}/member/${memberId}`, {
+                        const response = await fetch(`{{ url('hr/groups') }}/${activeGroupId}/member/${memberId}`, {
                             method: 'DELETE',
                             headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
                         });
@@ -1362,7 +1362,7 @@ $authUser = Auth::user();
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     try {
-                        const response = await fetch(`{{ url('emp/groups') }}/${id}/archive`, {
+                        const response = await fetch(`{{ url('hr/groups') }}/${id}/archive`, {
                             method: 'POST',
                             headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
                         });
@@ -1385,7 +1385,7 @@ $authUser = Auth::user();
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     try {
-                        const response = await fetch(`{{ url('emp/groups') }}/${id}/restore`, {
+                        const response = await fetch(`{{ url('hr/groups') }}/${id}/restore`, {
                             method: 'POST',
                             headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
                         });
@@ -1415,7 +1415,7 @@ $authUser = Auth::user();
                         const formData = new FormData();
                         formData.append('new_name', result.value);
                         
-                        const response = await fetch(`{{ url('emp/groups') }}/${id}/copy`, {
+                        const response = await fetch(`{{ url('hr/groups') }}/${id}/copy`, {
                             method: 'POST',
                             headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                             body: formData
