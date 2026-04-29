@@ -45,7 +45,7 @@
                         id="btn-approvals">Approvals</button>
                     <button onclick="switchTab('agenda')"
                         class="tab-btn border-b-2 border-transparent pb-4 font-bold text-sm text-slate-400 hover:text-slate-600 transition-all"
-                        id="btn-agenda">Meeting Agendas</button>
+                        id="btn-agenda">Agenda</button>
                 </div>
             </div>
         </div>
@@ -200,7 +200,7 @@
                 <!-- Agenda Tab -->
                 <div id="tab-agenda" class="tab-content hidden space-y-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-bold text-premium">Meeting Agendas</h3>
+                        <h3 class="text-xl font-bold text-premium">Agenda</h3>
                         <button onclick="openModal('addAgendaModal')" class="premium-button py-2 px-4 text-xs">
                             <i class="fa-solid fa-plus"></i> New Agenda
                         </button>
@@ -339,23 +339,8 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Status</label>
-                        <select name="status" class="premium-input w-full">
-                            <option value="Pending" selected>Pending</option>
-                            <option value="In Discussion">In Discussion</option>
-                            <option value="Completed">Completed</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
                         <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Start Date/Time</label>
                         <input type="datetime-local" name="start_date" class="premium-input w-full">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Estimated Time (e.g. 30 mins)</label>
-                        <input type="text" name="time_duration" class="premium-input w-full">
                     </div>
                 </div>
                 

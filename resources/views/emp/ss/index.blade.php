@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Support Services')
+@section('title', 'Admin Services')
 @section('subtitle', 'General service requests and collaboration')
 
 @section('content')

@@ -4,15 +4,20 @@
 @section('subtitle', 'Internal collaboration and project teams')
 
 @section('content')
+@php
+$authUser = Auth::user(); 
+@endphp
     <div class="groups-layout">
         <!-- Sidebar: Groups List -->
         <div class="groups-sidebar">
             <div class="sidebar-header">
                 <h2 class="text-xl font-bold text-premium">My Groups</h2>
                 <div class="flex gap-2">
+  @if($authUser && $authUser->is_gm)
                     <button onclick="openModal('newGroupModal')" class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100" title="Create New Group">
                         <i class="fa-solid fa-plus"></i>
                     </button>
+                    @endif
                     <a href="{{ request('archived') ? route('emp.groups.index') : route('emp.groups.index', ['archived' => 1]) }}"
                         class="w-10 h-10 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center hover:bg-slate-100 transition-all shadow-sm"
                         title="{{ request('archived') ? 'Show Active Groups' : 'Show Archived Groups' }}">
@@ -127,8 +132,8 @@
                     <button onclick="switchGroupTab('wall')" class="group-tab active" data-tab="wall">The Wall</button>
                     <button onclick="switchGroupTab('files')" class="group-tab" data-tab="files">Resources</button>
                     <button onclick="switchGroupTab('members')" class="group-tab" data-tab="members">Team Members</button>
-                    <button onclick="switchGroupTab('agenda')" class="group-tab hidden" data-tab="agenda" id="btn-tab-agenda">Meeting Agendas</button>
                     <button onclick="switchGroupTab('details')" class="group-tab" data-tab="details">Information</button>
+                    <button onclick="switchGroupTab('agenda')" class="group-tab hidden" data-tab="agenda" id="btn-tab-agenda">Agenda</button>
                 </div>
 
                 <!-- Tab Content Area -->
@@ -200,7 +205,7 @@
                     <!-- Agendas Tab -->
                     <div id="tab-agenda" class="tab-pane hidden">
                         <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-xl font-display font-bold text-premium">Meeting Agendas</h3>
+                            <h3 class="text-xl font-display font-bold text-premium">Agenda</h3>
                             <button onclick="openModal('addAgendaModal')"
                                 class="premium-button from-emerald-500 to-teal-600 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-md">
                                 <i class="fa-solid fa-plus mr-2"></i>New Agenda
@@ -407,26 +412,13 @@
                             <option value="Critical">Critical</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Status</label>
-                        <select name="status" class="premium-input w-full">
-                            <option value="Pending" selected>Pending</option>
-                            <option value="In Discussion">In Discussion</option>
-                            <option value="Completed">Completed</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
+                     <div>
                         <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Start Date/Time</label>
                         <input type="datetime-local" name="start_date" class="premium-input w-full">
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Estimated Time (e.g. 30 mins)</label>
-                        <input type="text" name="time_duration" class="premium-input w-full">
-                    </div>
                 </div>
+
+               
                 
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Description / Context</label>
@@ -1077,7 +1069,7 @@
                 <div style="padding: 40px; font-family: 'Inter', sans-serif; color: #1e293b;">
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px;">
                         <div>
-                            <h1 style="margin: 0; font-size: 24px; color: #1e1b4b;">Meeting Agendas</h1>
+                            <h1 style="margin: 0; font-size: 24px; color: #1e1b4b;">Agenda</h1>
                             <p style="margin: 5px 0 0; color: #64748b;">Team: ${groupName}</p>
                         </div>
                         <div style="text-align: right; font-size: 12px; color: #94a3b8;">

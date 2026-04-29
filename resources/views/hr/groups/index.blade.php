@@ -4,16 +4,21 @@
 @section('subtitle', 'Internal collaboration and project teams')
 
 @section('content')
+@php
+$authUser = Auth::user(); 
+@endphp
     <div class="groups-layout">
         <!-- Sidebar: Groups List -->
         <div class="groups-sidebar">
             <div class="sidebar-header">
                 <h2 class="text-xl font-bold text-premium">{{ $isCom == 2 ? 'PMO (Ad-hoc)' : ($isCom == 1 ? 'Committees' : 'Groups') }}</h2>
                 <div class="flex gap-2">
+                    @if($authUser && $authUser->is_gm)
                     <button onclick="openModal('newGroupModal')"
                         class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
                         <i class="fa-solid fa-plus"></i>
                     </button>
+                    @endif
                     <a href="{{ request('archived') ? route('hr.groups.index', ['c' => request('c')]) : route('hr.groups.index', ['c' => request('c'), 'archived' => 1]) }}"
                         class="w-10 h-10 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center hover:bg-slate-100 transition-all shadow-sm"
                         title="{{ request('archived') ? 'Show Active Groups' : 'Show Archived Groups' }}">
@@ -121,7 +126,7 @@
                     <button onclick="switchGroupTab('files')" class="group-tab" data-tab="files">Resources</button>
                     <button onclick="switchGroupTab('members')" class="group-tab" data-tab="members">Team Members</button>
                     <button onclick="switchGroupTab('details')" class="group-tab" data-tab="details">Information</button>
-                    <button onclick="switchGroupTab('agenda')" class="group-tab hidden" data-tab="agenda" id="btn-tab-agenda">Meeting Agendas</button>
+                    <button onclick="switchGroupTab('agenda')" class="group-tab hidden" data-tab="agenda" id="btn-tab-agenda">Agenda</button>
                 </div>
 
                 <!-- Tab Content Area -->
@@ -193,7 +198,7 @@
                     <!-- Agendas Tab -->
                     <div id="tab-agenda" class="tab-pane hidden">
                         <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-xl font-display font-bold text-premium">Meeting Agendas</h3>
+                            <h3 class="text-xl font-display font-bold text-premium">Agenda</h3>
                             <button onclick="openModal('addAgendaModal')"
                                 class="premium-button from-emerald-500 to-teal-600 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-md">
                                 <i class="fa-solid fa-plus mr-2"></i>New Agenda
@@ -255,41 +260,64 @@
 
             <form id="newGroupForm" class="p-8 space-y-6" onsubmit="saveGroup(event)">
                 @csrf
-                <input type="hidden" name="is_com" value="{{ $isCom }}">
-
-                <div class="space-y-1">
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Team Name</label>
-                    <input type="text" name="group_name" required class="premium-input w-full"
-                        placeholder="e.g., Marketing Strategy Unit">
-                </div>
-
-                <div class="space-y-1">
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Brand Color</label>
-                    <div class="flex flex-wrap gap-2">
-                        @foreach($colors as $color)
-                            <div onclick="selectColor({{ $color->color_id }}, '{{ $color->color_value }}')"
-                                class="color-option w-10 h-10 rounded-xl cursor-pointer hover:scale-110 transition-transform shadow-sm flex items-center justify-center border-4 border-transparent"
-                                style="background: {{ $color->color_value }}" data-color-id="{{ $color->color_id }}">
-                                <i class="fa-solid fa-check text-white opacity-0 transition-opacity"></i>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 gap-4">
+                        <label class="flex items-center gap-3 p-4 rounded-2xl border-2 border-slate-100 cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-indigo-600 has-[:checked]:bg-indigo-50 group">
+                            <input type="radio" name="is_com" value="0" {{ $isCom == 0 ? 'checked' : '' }} class="hidden">
+                            <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 group-has-[:checked]:bg-indigo-600 group-has-[:checked]:text-white">
+                                <i class="fa-solid fa-users"></i>
                             </div>
-                        @endforeach
-                        <input type="hidden" name="group_color_id" id="selected-color-id" required>
+                            <span class="font-bold text-slate-600 group-has-[:checked]:text-indigo-900">Standard Group</span>
+                        </label>
+                        <label class="flex items-center gap-3 p-4 rounded-2xl border-2 border-slate-100 cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-purple-600 has-[:checked]:bg-purple-50 group">
+                            <input type="radio" name="is_com" value="1" {{ $isCom == 1 ? 'checked' : '' }} class="hidden">
+                            <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 group-has-[:checked]:bg-purple-600 group-has-[:checked]:text-white">
+                                <i class="fa-solid fa-award"></i>
+                            </div>
+                            <span class="font-bold text-slate-600 group-has-[:checked]:text-purple-900">Committee</span>
+                        </label>
+                        <label class="flex items-center gap-3 p-4 rounded-2xl border-2 border-slate-100 cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50 group">
+                            <input type="radio" name="is_com" value="2" {{ $isCom == 2 ? 'checked' : '' }} class="hidden">
+                            <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 group-has-[:checked]:bg-emerald-600 group-has-[:checked]:text-white">
+                                <i class="fa-solid fa-project-diagram"></i>
+                            </div>
+                            <span class="font-bold text-slate-600 group-has-[:checked]:text-emerald-900">PMO (Ad-hoc)</span>
+                        </label>
                     </div>
-                </div>
 
-                <div class="space-y-1">
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Purpose &
-                        Description</label>
-                    <textarea name="group_desc" rows="4" class="premium-input w-full"
-                        placeholder="What is the objective of this team?"></textarea>
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Team Name</label>
+                        <input type="text" name="group_name" required class="premium-input w-full"
+                            placeholder="e.g., Marketing Strategy Unit">
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Brand Color</label>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($colors as $color)
+                                <div onclick="selectColor({{ $color->color_id }}, '{{ $color->color_value }}')"
+                                    class="color-option w-10 h-10 rounded-xl cursor-pointer hover:scale-110 transition-transform shadow-sm flex items-center justify-center border-4 border-transparent"
+                                    style="background: {{ $color->color_value }}" data-color-id="{{ $color->color_id }}">
+                                    <i class="fa-solid fa-check text-white opacity-0 transition-opacity"></i>
+                                </div>
+                            @endforeach
+                            <input type="hidden" name="group_color_id" id="selected-color-id" required>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Purpose &
+                            Description</label>
+                        <textarea name="group_desc" rows="4" class="premium-input w-full"
+                            placeholder="What is the objective of this team?"></textarea>
+                    </div>
                 </div>
 
                 <div class="pt-4 flex gap-3">
                     <button type="button" onclick="closeModal('newGroupModal')"
                         class="flex-1 px-6 py-3 rounded-2xl border-2 border-slate-100 text-slate-500 font-bold hover:bg-slate-50 transition-all">Cancel</button>
                     <button type="submit"
-                        class="flex-[2] premium-button from-indigo-600 to-purple-600 text-white font-bold rounded-2xl shadow-xl shadow-indigo-200 justify-center">Create
-                        Team Space</button>
+                        class="flex-[2] premium-button from-indigo-600 to-purple-600 text-white font-bold rounded-2xl shadow-xl shadow-indigo-200 justify-center">Initialize Team Space</button>
                 </div>
             </form>
         </div>
@@ -369,7 +397,7 @@
         <div class="modal-backdrop" onclick="closeModal('addAgendaModal')"></div>
         <div class="modal-content max-w-2xl p-8 max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-display font-bold text-premium mb-6">Create New Agenda</h2>
-            <form id="addAgendaForm" onsubmit="submitAgenda(event)" class="space-y-4">
+            <form id="addAgendaForm" onsubmit="submitAgenda(event, 'hr')" class="space-y-4">
                 @csrf
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Agenda Title</label>
@@ -386,26 +414,13 @@
                             <option value="Critical">Critical</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Status</label>
-                        <select name="status" class="premium-input w-full">
-                            <option value="Pending" selected>Pending</option>
-                            <option value="In Discussion">In Discussion</option>
-                            <option value="Completed">Completed</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
+                     <div>
                         <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Start Date/Time</label>
                         <input type="datetime-local" name="start_date" class="premium-input w-full">
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Estimated Time (e.g. 30 mins)</label>
-                        <input type="text" name="time_duration" class="premium-input w-full">
-                    </div>
                 </div>
+
+               
                 
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Description / Context</label>
@@ -795,11 +810,12 @@
             }
         }
 
-        async function submitAgenda(e) {
+        async function submitAgenda(e, context) {
             e.preventDefault();
             const formData = new FormData(e.target);
             try {
-                const response = await fetch(`${window.location.origin}/hr/groups/${activeGroupId}/agenda`, {
+                const url = context === 'emp' ? `{{ url('emp/groups') }}/${activeGroupId}/agenda` : `{{ url('hr/groups') }}/${activeGroupId}/agenda`;
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
                     body: formData
@@ -861,71 +877,6 @@
         }
 
         function generateSingleAgendaPDF(agenda) {
-            const container = document.getElementById('print-agenda-container');
-            const groupName = document.getElementById('header-name').innerText;
-
-            let html = `
-                <div style="padding: 40px; font-family: 'Inter', sans-serif; color: #1e293b;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px;">
-                        <div>
-                            <h1 style="margin: 0; font-size: 24px; color: #1e1b4b;">Agenda Item Details</h1>
-                            <p style="margin: 5px 0 0; color: #64748b;">Team: ${groupName}</p>
-                        </div>
-                        <div style="text-align: right; font-size: 12px; color: #94a3b8;">
-                            Generated on: ${new Date().toLocaleString()}
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom: 30px; border: 1px solid #f1f5f9; border-radius: 12px; overflow: hidden;">
-                        <div style="background: #f8fafc; padding: 15px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
-                            <h2 style="margin: 0; font-size: 18px; color: #1e1b4b;">${agenda.title}</h2>
-                            <span style="font-size: 12px; font-weight: bold; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; background: ${agenda.status === 'Completed' ? '#dcfce7' : '#fef9c3'}; color: ${agenda.status === 'Completed' ? '#166534' : '#854d0e'};">
-                                ${agenda.status}
-                            </span>
-                        </div>
-                        <div style="padding: 30px;">
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 30px; font-size: 14px;">
-                                <div>
-                                    <p style="margin: 0 0 8px; font-weight: bold; color: #64748b; text-transform: uppercase; font-size: 11px;">Timeline</p>
-                                    <p style="margin: 0;"><strong>Start Date:</strong> ${agenda.start_date ? new Date(agenda.start_date).toLocaleString() : 'N/A'}</p>
-                                    ${agenda.status === 'Completed' && agenda.end_date ? `<p style="margin: 8px 0 0;"><strong>End Date:</strong> ${new Date(agenda.end_date).toLocaleString()}</p>` : ''}
-                                    <p style="margin: 8px 0 0;"><strong>Duration:</strong> ${agenda.time_duration || 'N/A'}</p>
-                                </div>
-                                <div>
-                                    <p style="margin: 0 0 8px; font-weight: bold; color: #64748b; text-transform: uppercase; font-size: 11px;">Priority & Context</p>
-                                    <p style="margin: 0;"><strong>Priority Level:</strong> ${agenda.priority}</p>
-                                    <p style="margin: 8px 0 0;"><strong>Agenda ID:</strong> #AG-${agenda.agenda_id}</p>
-                                </div>
-                            </div>
-
-                            <div style="margin-bottom: 30px;">
-                                <p style="margin: 0 0 8px; font-weight: bold; color: #64748b; text-transform: uppercase; font-size: 11px;">Description & Context</p>
-                                <div style="margin: 0; font-size: 14px; line-height: 1.6; color: #334155; white-space: pre-line;">${agenda.description || 'No description provided.'}</div>
-                            </div>
-
-                            ${agenda.status === 'Completed' ? `
-                                <div style="margin-top: 30px; padding-top: 30px; border-top: 2px solid #f1f5f9;">
-                                    <div style="margin-bottom: 25px;">
-                                        <p style="margin: 0 0 10px; font-weight: bold; color: #166534; text-transform: uppercase; font-size: 11px;">Final Decision / Outcome</p>
-                                        <div style="margin: 0; font-size: 14px; line-height: 1.6; color: #334155; white-space: pre-line;">${agenda.decision_outcome || 'N/A'}</div>
-                                    </div>
-                                    <div>
-                                        <p style="margin: 0 0 10px; font-weight: bold; color: #166534; text-transform: uppercase; font-size: 11px;">Assigned Action Items</p>
-                                        <div style="margin: 0; font-size: 14px; line-height: 1.6; color: #334155; white-space: pre-line;">${agenda.action_items || 'N/A'}</div>
-                                    </div>
-                                </div>
-                            ` : ''}
-                        </div>
-                    </div>
-                    <div style="margin-top: 50px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 20px;">
-                        This is an official record generated from the Collaboration Hub.
-                    </div>
-                </div>
-            `;
-            container.innerHTML = html;
-            window.print();
-        }
-
             const container = document.getElementById('print-agenda-container');
             const groupName = document.getElementById('header-name').innerText;
 
@@ -1322,6 +1273,24 @@
                 }
             });
         }
+
+        async function saveGroup(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const isCom = formData.get('is_com');
+            try {
+                const response = await fetch("{{ route('hr.groups.store') }}", {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success) {
+                    window.location.href = `{{ url('hr/groups') }}?c=${isCom}`;
+                }
+            } catch (err) { console.error(err); }
+        }
+
 
         function filterGroups() {
             const query = document.getElementById('groupSearch').value.toLowerCase();

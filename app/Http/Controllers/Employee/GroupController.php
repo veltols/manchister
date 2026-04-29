@@ -32,9 +32,8 @@ class GroupController extends Controller
             ->where('is_archieve', $isArchived)
             ->where('is_deleted', 0)
             ->distinct()
-            ->orderBy('group_id', 'desc')
+            ->orderBy('added_date', 'desc')
             ->get();
-
         $colors = \App\Models\SysColor::all();
         $employees = \App\Models\Employee::where('is_deleted', 0)
             ->whereHas('systemUser', function($q) { $q->where('is_active', 1); })
@@ -328,7 +327,6 @@ class GroupController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'priority' => 'required|string',
-            'status' => 'required|string',
         ]);
 
         $employeeId = Auth::user()->employee->employee_id ?? Auth::id();
@@ -339,12 +337,7 @@ class GroupController extends Controller
         $agenda->title = $request->title;
         $agenda->description = $request->description;
         $agenda->priority = $request->priority;
-        $agenda->status = $request->status;
         $agenda->start_date = $request->start_date;
-        $agenda->time_duration = $request->time_duration;
-        $agenda->end_date = $request->end_date;
-        $agenda->decision_outcome = $request->decision_outcome;
-        $agenda->action_items = $request->action_items;
         $agenda->save();
 
         return response()->json(['success' => true, 'message' => 'Agenda added successfully.']);

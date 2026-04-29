@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\HR;
 
 use App\Http\Controllers\Controller;
-use App\Models\HrGroup;
 use App\Models\SysColor;
-use App\Models\HrGroupMember;
-use App\Models\HrGroupPost;
-use App\Models\HrGroupFile;
-use App\Models\HrGroupRole;
 use App\Models\Employee;
 use App\Models\GroupAgenda;
+use App\Models\Group;
+use App\Models\GroupMember;
+use App\Models\GroupPost;
+use App\Models\GroupFile;
+use App\Models\HrGroupRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -19,16 +19,30 @@ class GroupController extends Controller
     public function index(Request $request)
     {
         $isCom = request()->get('c') ?? 0;
+        $user = Auth::user();
+        $employeeId = $user->employee ? $user->employee->employee_id : 0;
+
+        // Fetch groups where user is a member or created by user
+        $groupIds = GroupMember::where('employee_id', $employeeId)->pluck('group_id');
+
         $isArchived = $request->query('archived', 0);
 
-        $groups = HrGroup::with('color')
+        $groups = Group::with('color')
             ->where('is_commity', $isCom)
-            ->where('is_deleted', 0)
+            ->where(function($q) use ($groupIds, $employeeId) {
+                $q->whereIn('group_id', $groupIds)
+                  ->orWhere('added_by', $employeeId);
+            })
             ->where('is_archieve', $isArchived)
+            ->where('is_deleted', 0)
+            ->distinct()
+            ->orderBy('added_date', 'desc')
             ->get();
-
         $colors = SysColor::all();
-        $employees = Employee::orderBy('first_name')->get();
+        $employees = \App\Models\Employee::where('is_deleted', 0)
+            ->whereHas('systemUser', function($q) { $q->where('is_active', 1); })
+            ->orderBy('first_name')
+            ->get();
         $roles = HrGroupRole::all();
 
         return view('hr.groups.index', compact('groups', 'colors', 'isCom', 'employees', 'roles'));
@@ -36,7 +50,7 @@ class GroupController extends Controller
 
     public function show($id)
     {
-        $group = HrGroup::with(['color', 'members.employee', 'members.role', 'posts.author', 'files.adder', 'agendas'])
+        $group = Group::with(['color', 'members.employee', 'members.role', 'posts.author', 'files.adder', 'agendas'])
             ->findOrFail($id);
 
         return response()->json([
@@ -53,12 +67,12 @@ class GroupController extends Controller
             'is_com' => 'required|integer',
         ]);
 
-        $group = HrGroup::create([
+        $group = Group::create([
             'group_name' => $request->group_name,
             'group_desc' => $request->group_desc,
             'group_color_id' => $request->group_color_id,
             'is_commity' => $request->is_com,
-            'added_by' => 1, // Defaulting to 1 for now, should be auth()->user()->user_id; if integrated
+            'added_by' => Auth::user()->employee->employee_id ?? 0,
             'added_date' => now(),
             'is_deleted' => 0,
             'is_archieve' => 0,
@@ -79,10 +93,10 @@ class GroupController extends Controller
             'group_role_id' => 'required|exists:z_groups_list_roles,group_role_id',
         ]);
 
-        $group = HrGroup::find($request->group_id);
+        $group = Group::find($request->group_id);
         $hrEmployeeId = Auth::user()->employee->employee_id ?? 0;
 
-        $member = HrGroupMember::create([
+        $member = GroupMember::create([
             'group_id' => $request->group_id,
             'employee_id' => $request->employee_id,
             'group_role_id' => $request->group_role_id,
@@ -114,11 +128,11 @@ class GroupController extends Controller
             'attachment' => 'nullable|file|max:10240'
         ]);
 
-        $post = new \App\Models\HrGroupPost();
+        $post = new GroupPost();
         $post->group_id = $request->group_id;
         $post->post_text = $request->post_text ?? '';
         $post->post_type = 'text';
-        $post->added_by = 1;
+        $post->added_by = Auth::user()->employee->employee_id ?? 0;
         $post->added_date = now();
 
         if ($request->hasFile('attachment')) {
@@ -162,11 +176,22 @@ class GroupController extends Controller
             $fileName = time() . '_' . $file->getClientOriginalName();
             $file->move(public_path('uploads/groups'), $fileName);
 
-            HrGroupFile::create([
+            $gFile = GroupFile::create([
                 'group_id' => $request->group_id,
                 'file_name' => $request->file_name,
-                'file_path' => $fileName,
-                'added_by' => 1,
+                'file_path' => 'uploads/groups/' . $fileName,
+                'added_by' => Auth::user()->employee->employee_id ?? 0,
+                'added_date' => now(),
+            ]);
+
+            // Also post it to the feed to match Employee side
+            GroupPost::create([
+                'group_id' => $request->group_id,
+                'post_text' => 'Uploaded a new file: ' . $request->file_name,
+                'post_type' => 'document',
+                'post_file_path' => $gFile->file_path,
+                'post_file_name' => $gFile->file_name,
+                'added_by' => Auth::user()->employee->employee_id ?? 0,
                 'added_date' => now(),
             ]);
         }
@@ -179,14 +204,14 @@ class GroupController extends Controller
 
     public function removeMember(Request $request, $id, $memberId)
     {
-        $group = HrGroup::findOrFail($id);
-        HrGroupMember::where('group_id', $id)->where('employee_id', $memberId)->delete();
+        $group = Group::findOrFail($id);
+        GroupMember::where('group_id', $id)->where('employee_id', $memberId)->delete();
         return response()->json(['success' => true, 'message' => 'Member removed']);
     }
 
     public function archiveGroup(Request $request, $id)
     {
-        $group = HrGroup::findOrFail($id);
+        $group = Group::findOrFail($id);
         $group->is_archieve = 1;
         $group->save();
         return response()->json(['success' => true, 'message' => 'Group archived']);
@@ -194,7 +219,7 @@ class GroupController extends Controller
 
     public function restoreGroup(Request $request, $id)
     {
-        $group = HrGroup::findOrFail($id);
+        $group = Group::findOrFail($id);
         $group->is_archieve = 0;
         $group->save();
         return response()->json(['success' => true, 'message' => 'Group restored']);
@@ -202,7 +227,7 @@ class GroupController extends Controller
 
     public function copyGroup(Request $request, $id)
     {
-        $group = HrGroup::findOrFail($id);
+        $group = Group::findOrFail($id);
         $request->validate(['new_name' => 'required|string|max:50']);
         
         $newGroup = $group->replicate();
@@ -210,7 +235,7 @@ class GroupController extends Controller
         $newGroup->added_date = now();
         $newGroup->save();
         
-        $members = HrGroupMember::where('group_id', $id)->get();
+        $members = GroupMember::where('group_id', $id)->get();
         foreach ($members as $member) {
             $newMember = $member->replicate();
             $newMember->group_id = $newGroup->group_id;
@@ -228,21 +253,15 @@ class GroupController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'priority' => 'required|string',
-            'status' => 'required|string',
         ]);
-
+ $employeeId = Auth::user()->employee->employee_id ?? Auth::id();
         $agenda = new GroupAgenda();
         $agenda->group_id = $id;
-        $agenda->added_by = Auth::id() ?? 1;
+        $agenda->added_by = $employeeId;
         $agenda->title = $request->title;
         $agenda->description = $request->description;
         $agenda->priority = $request->priority;
-        $agenda->status = $request->status;
         $agenda->start_date = $request->start_date;
-        $agenda->time_duration = $request->time_duration;
-        $agenda->end_date = $request->end_date;
-        $agenda->decision_outcome = $request->decision_outcome;
-        $agenda->action_items = $request->action_items;
         $agenda->save();
 
         return response()->json(['success' => true, 'message' => 'Agenda added successfully.']);
@@ -260,7 +279,6 @@ class GroupController extends Controller
         $agenda->title = $request->title;
         $agenda->description = $request->description;
         $agenda->priority = $request->priority;
-        $agenda->status = $request->status;
         $agenda->start_date = $request->start_date;
         $agenda->time_duration = $request->time_duration;
         $agenda->end_date = $request->end_date;

@@ -146,7 +146,7 @@
                         <i class="fa-solid fa-headset text-white text-sm relative z-10"></i>
                     </div>
                     <div>
-                        <h3 class="text-base font-bold text-premium">IT Support</h3>
+                        <h3 class="text-base font-bold text-premium">Support Services</h3>
                         <p class="text-[10px] text-slate-400">Services &amp; Requests</p>
                     </div>
                 </div>
@@ -194,7 +194,7 @@
                     <i class="fa-solid fa-desktop text-white text-sm relative z-10"></i>
                 </div>
                 <span
-                    class="font-semibold text-base {{ request()->routeIs('emp.tickets.*') ? 'text-teal-800' : 'text-slate-700' }}">IT Support</span>
+                    class="font-semibold text-base {{ request()->routeIs('emp.tickets.*') ? 'text-teal-800' : 'text-slate-700' }}">IT Tickets</span>
             </a>
         </div>
     </div>
