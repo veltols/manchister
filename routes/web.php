@@ -197,6 +197,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/groups/{id}/restore', [App\Http\Controllers\Employee\GroupController::class, 'restoreGroup'])->name('groups.restore');
         Route::post('/groups/{id}/copy', [App\Http\Controllers\Employee\GroupController::class, 'copyGroup'])->name('groups.copy');
 
+        // Agendas
+        Route::post('/groups/{id}/agenda', [App\Http\Controllers\Employee\GroupController::class, 'storeAgenda'])->name('groups.agenda.store');
+        Route::post('/groups/{id}/agenda/{agenda_id}', [App\Http\Controllers\Employee\GroupController::class, 'updateAgenda'])->name('groups.agenda.update');
+        Route::delete('/groups/{id}/agenda/{agenda_id}', [App\Http\Controllers\Employee\GroupController::class, 'destroyAgenda'])->name('groups.agenda.destroy');
+
         // My Calendar
         Route::get('/calendar', [App\Http\Controllers\Employee\CalendarController::class, 'index'])->name('calendar.index');
 
@@ -322,6 +327,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/groups/{id}/archive', [App\Http\Controllers\HR\GroupController::class, 'archiveGroup'])->name('groups.archive');
         Route::post('/groups/{id}/restore', [App\Http\Controllers\HR\GroupController::class, 'restoreGroup'])->name('groups.restore');
         Route::post('/groups/{id}/copy', [App\Http\Controllers\HR\GroupController::class, 'copyGroup'])->name('groups.copy');
+
+        // Agendas
+        Route::post('/groups/{id}/agenda', [App\Http\Controllers\HR\GroupController::class, 'storeAgenda'])->name('groups.agenda.store');
+        Route::post('/groups/{id}/agenda/{agenda_id}', [App\Http\Controllers\HR\GroupController::class, 'updateAgenda'])->name('groups.agenda.update');
+        Route::delete('/groups/{id}/agenda/{agenda_id}', [App\Http\Controllers\HR\GroupController::class, 'destroyAgenda'])->name('groups.agenda.destroy');
 
         // Tasks
         Route::get('/tasks', [App\Http\Controllers\HR\TaskController::class, 'index'])->name('tasks.index');

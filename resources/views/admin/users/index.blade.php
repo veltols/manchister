@@ -514,6 +514,28 @@
                     });
                 }
             }
+
+            // GM Checkbox Alert for New User Modal
+            const newGmCheckbox = document.getElementById('modal_is_gm');
+            if (newGmCheckbox) {
+                newGmCheckbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        Swal.fire({
+                            title: 'Designate as GM?',
+                            text: "Assigning this user as General Manager will automatically unset any existing GM in the system. Are you sure?",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#f59e0b',
+                            confirmButtonText: 'Yes, I am sure',
+                            cancelButtonText: 'Cancel'
+                        }).then((result) => {
+                            if (!result.isConfirmed) {
+                                this.checked = false;
+                            }
+                        });
+                    }
+                });
+            }
         </script>
     @endpush
 
@@ -563,11 +585,19 @@
                         </select>
                     </div>
 
-                    <div class="flex items-center gap-3 p-3 rounded-xl bg-indigo-50 border border-indigo-100 mt-2">
-                        <input type="checkbox" name="is_line_manager" id="modal_is_line_manager" value="1" class="w-5 h-5 rounded border-indigo-300 text-indigo-600 focus:ring-indigo-500">
-                        <label for="modal_is_line_manager" class="text-sm font-bold text-indigo-900 cursor-pointer">
-                             Set as Line Manager for this Department
-                        </label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                        <div class="flex items-center gap-3 p-3 rounded-xl bg-indigo-50 border border-indigo-100">
+                            <input type="checkbox" name="is_line_manager" id="modal_is_line_manager" value="1" class="w-5 h-5 rounded border-indigo-300 text-indigo-600 focus:ring-indigo-500">
+                            <label for="modal_is_line_manager" class="text-xs font-bold text-indigo-900 cursor-pointer leading-tight">
+                                Set as Line Manager for this Department
+                            </label>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 rounded-xl bg-amber-50 border border-amber-100">
+                            <input type="checkbox" name="is_gm" id="modal_is_gm" value="1" class="w-5 h-5 rounded border-amber-300 text-amber-600 focus:ring-amber-500">
+                            <label for="modal_is_gm" class="text-xs font-bold text-amber-900 cursor-pointer leading-tight">
+                                Designate as General Manager (GM)
+                            </label>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">

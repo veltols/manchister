@@ -648,7 +648,7 @@
                             <span class="block font-bold text-amber-900 flex items-center gap-2"><i class="fa-solid fa-crown text-amber-500 text-xs"></i> General Manager (GM)</span>
                             <span class="text-xs text-amber-700 italic">Designate as GM — receives and makes final decision on all probation performance reviews</span>
                         </div>
-                        <input type="checkbox" name="is_gm" value="1" {{ ($user->systemUser->is_gm ?? 0) ? 'checked' : '' }} class="w-6 h-6 rounded border-amber-300 text-amber-600 focus:ring-amber-500">
+                        <input type="checkbox" name="is_gm" id="perm_is_gm" value="1" {{ ($user->systemUser->is_gm ?? 0) ? 'checked' : '' }} class="w-6 h-6 rounded border-amber-300 text-amber-600 focus:ring-amber-500">
                     </label>
 
 
@@ -983,21 +983,7 @@
                         </select>
                     </div>
 
-                    {{-- GM Designation --}}
-                    <div class="col-span-2">
-                        <label class="flex items-center justify-between p-4 rounded-xl bg-amber-50 border border-amber-200 cursor-pointer hover:bg-amber-100 transition-colors">
-                            <div>
-                                <span class="block font-bold text-amber-900 flex items-center gap-2">
-                                    <i class="fa-solid fa-crown text-amber-500 text-sm"></i>
-                                    General Manager (GM)
-                                </span>
-                                <span class="text-xs text-amber-700 italic">Designate as GM — receives final decision on all probation performance reviews. Only one GM can exist at a time.</span>
-                            </div>
-                            <input type="checkbox" name="is_gm" value="1"
-                                {{ ($user->systemUser->is_gm ?? 0) ? 'checked' : '' }}
-                                class="w-6 h-6 rounded border-amber-300 text-amber-600 focus:ring-amber-500 flex-shrink-0">
-                        </label>
-                    </div>
+
 
 
                     <div class="col-span-2">
@@ -1245,6 +1231,30 @@
                 }
             }
         })();
+
+        // GM Checkbox Alert for Permissions Modal
+        const permGmCheckbox = document.getElementById('perm_is_gm');
+        if (permGmCheckbox) {
+            const initialIsGm = permGmCheckbox.checked;
+            permGmCheckbox.addEventListener('change', function() {
+                if (this.checked && !initialIsGm) {
+                    Swal.fire({
+                        title: 'Designate as GM?',
+                        text: "Assigning this user as General Manager will automatically unset any existing GM in the system. Are you sure?",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#f59e0b',
+                        confirmButtonText: 'Yes, I am sure',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (!result.isConfirmed) {
+                            this.checked = false;
+                        }
+                    });
+                }
+            });
+        }
+
         </script>
         <!-- Alpine.js -->
         <script src="{{ asset('libs/alpinejs/alpine.min.js') }}" defer></script>

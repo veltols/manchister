@@ -43,6 +43,9 @@
                     <button onclick="switchTab('approvals')"
                         class="tab-btn border-b-2 border-transparent pb-4 font-bold text-sm text-slate-400 hover:text-slate-600 transition-all"
                         id="btn-approvals">Approvals</button>
+                    <button onclick="switchTab('agenda')"
+                        class="tab-btn border-b-2 border-transparent pb-4 font-bold text-sm text-slate-400 hover:text-slate-600 transition-all"
+                        id="btn-agenda">Meeting Agendas</button>
                 </div>
             </div>
         </div>
@@ -194,6 +197,54 @@
                     <h3 class="font-bold text-slate-400">No pending approvals for this group</h3>
                 </div>
 
+                <!-- Agenda Tab -->
+                <div id="tab-agenda" class="tab-content hidden space-y-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-premium">Meeting Agendas</h3>
+                        <button onclick="openModal('addAgendaModal')" class="premium-button py-2 px-4 text-xs">
+                            <i class="fa-solid fa-plus"></i> New Agenda
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        @forelse($group->agendas as $agenda)
+                            <div class="premium-card p-6 border-l-4 border-l-brand-dark cursor-pointer hover:shadow-md transition-shadow" onclick="openAgendaDetails({{ $agenda->toJson() }})">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="font-bold text-lg text-slate-800">{{ $agenda->title }}</h4>
+                                    <div class="flex gap-2">
+                                        <span class="px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider
+                                            @if($agenda->priority == 'High' || $agenda->priority == 'Critical') bg-red-100 text-red-700
+                                            @elseif($agenda->priority == 'Medium') bg-amber-100 text-amber-700
+                                            @else bg-blue-100 text-blue-700 @endif">
+                                            {{ $agenda->priority }}
+                                        </span>
+                                        <span class="px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider
+                                            @if($agenda->status == 'Completed') bg-green-100 text-green-700
+                                            @elseif($agenda->status == 'In Discussion') bg-amber-100 text-amber-700
+                                            @else bg-slate-100 text-slate-700 @endif">
+                                            {{ $agenda->status }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex gap-4 text-xs text-slate-500 font-medium">
+                                    @if($agenda->start_date)
+                                        <span><i class="fa-regular fa-calendar mr-1"></i> {{ \Carbon\Carbon::parse($agenda->start_date)->format('M d, Y h:i A') }}</span>
+                                    @endif
+                                    @if($agenda->time_duration)
+                                        <span><i class="fa-regular fa-clock mr-1"></i> {{ $agenda->time_duration }}</span>
+                                    @endif
+                                    <span><i class="fa-regular fa-user mr-1"></i> {{ $agenda->creator->first_name ?? 'User' }}</span>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="py-12 text-center bg-white rounded-3xl border border-slate-100 shadow-sm border-dashed">
+                                <i class="fa-regular fa-calendar-check text-4xl text-slate-200 mb-4"></i>
+                                <h3 class="font-bold text-slate-400">No agendas created yet</h3>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+
             </div>
 
             <!-- Sidebar Info -->
@@ -265,6 +316,144 @@
         </div>
     </div>
 
+    <!-- Add Agenda Modal -->
+    <div class="modal" id="addAgendaModal">
+        <div class="modal-backdrop" onclick="closeModal('addAgendaModal')"></div>
+        <div class="modal-content max-w-2xl p-8 max-h-[90vh] overflow-y-auto">
+            <h2 class="text-2xl font-display font-bold text-premium mb-6">Create New Agenda</h2>
+            <form action="{{ route('emp.groups.agenda.store', $group->group_id) }}" method="POST" class="space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Agenda Title</label>
+                    <input type="text" name="title" class="premium-input w-full" required>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Priority</label>
+                        <select name="priority" class="premium-input w-full">
+                            <option value="Low">Low</option>
+                            <option value="Medium" selected>Medium</option>
+                            <option value="High">High</option>
+                            <option value="Critical">Critical</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Status</label>
+                        <select name="status" class="premium-input w-full">
+                            <option value="Pending" selected>Pending</option>
+                            <option value="In Discussion">In Discussion</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Start Date/Time</label>
+                        <input type="datetime-local" name="start_date" class="premium-input w-full">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Estimated Time (e.g. 30 mins)</label>
+                        <input type="text" name="time_duration" class="premium-input w-full">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Description / Context</label>
+                    <textarea name="description" rows="3" class="premium-input w-full"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-6 border-t border-slate-100 mt-6">
+                    <button type="button" onclick="closeModal('addAgendaModal')" class="px-6 py-2 text-slate-500 font-bold">Cancel</button>
+                    <button type="submit" class="premium-button">Create Agenda</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit/View Agenda Modal -->
+    <div class="modal" id="editAgendaModal">
+        <div class="modal-backdrop" onclick="closeModal('editAgendaModal')"></div>
+        <div class="modal-content max-w-2xl p-8 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-display font-bold text-premium">Agenda Details</h2>
+                <form id="deleteAgendaForm" method="POST" onsubmit="return confirm('Are you sure you want to delete this agenda?');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="text-red-500 hover:text-red-700 bg-red-50 w-8 h-8 rounded-full flex items-center justify-center">
+                        <i class="fa-solid fa-trash text-xs"></i>
+                    </button>
+                </form>
+            </div>
+            
+            <form id="editAgendaForm" method="POST" class="space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Agenda Title</label>
+                    <input type="text" name="title" id="edit_title" class="premium-input w-full" required>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Priority</label>
+                        <select name="priority" id="edit_priority" class="premium-input w-full">
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                            <option value="Critical">Critical</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Status</label>
+                        <select name="status" id="edit_status" class="premium-input w-full" onchange="toggleCompletionFields()">
+                            <option value="Pending">Pending</option>
+                            <option value="In Discussion">In Discussion</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Start Date/Time</label>
+                        <input type="datetime-local" name="start_date" id="edit_start_date" class="premium-input w-full">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Time Duration</label>
+                        <input type="text" name="time_duration" id="edit_time_duration" class="premium-input w-full">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Description / Context</label>
+                    <textarea name="description" id="edit_description" rows="3" class="premium-input w-full"></textarea>
+                </div>
+
+                <div id="completion_fields" class="space-y-4 mt-6 pt-6 border-t border-slate-100 hidden">
+                    <h3 class="text-sm font-bold text-premium mb-4 uppercase tracking-widest">Completion Details</h3>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">End Date/Time</label>
+                        <input type="datetime-local" name="end_date" id="edit_end_date" class="premium-input w-full">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Decision / Outcome</label>
+                        <textarea name="decision_outcome" id="edit_decision_outcome" rows="3" class="premium-input w-full" placeholder="What was decided?"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Action Items</label>
+                        <textarea name="action_items" id="edit_action_items" rows="3" class="premium-input w-full" placeholder="List action items assigned..."></textarea>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-6 border-t border-slate-100 mt-6">
+                    <button type="button" onclick="closeModal('editAgendaModal')" class="px-6 py-2 text-slate-500 font-bold">Cancel</button>
+                    <button type="submit" class="premium-button">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         function switchTab(tab) {
             // Toggle contents
@@ -278,6 +467,51 @@
             });
             document.getElementById('btn-' + tab).classList.add('active', 'border-brand-dark', 'text-slate-800');
             document.getElementById('btn-' + tab).classList.remove('border-transparent', 'text-slate-400');
+        }
+
+        function openAgendaDetails(agenda) {
+            document.getElementById('edit_title').value = agenda.title || '';
+            document.getElementById('edit_priority').value = agenda.priority || 'Medium';
+            document.getElementById('edit_status').value = agenda.status || 'Pending';
+            
+            if(agenda.start_date) {
+                document.getElementById('edit_start_date').value = agenda.start_date.substring(0, 16);
+            } else {
+                document.getElementById('edit_start_date').value = '';
+            }
+            
+            document.getElementById('edit_time_duration').value = agenda.time_duration || '';
+            document.getElementById('edit_description').value = agenda.description || '';
+            
+            if(agenda.end_date) {
+                document.getElementById('edit_end_date').value = agenda.end_date.substring(0, 16);
+            } else {
+                document.getElementById('edit_end_date').value = '';
+            }
+            
+            document.getElementById('edit_decision_outcome').value = agenda.decision_outcome || '';
+            document.getElementById('edit_action_items').value = agenda.action_items || '';
+            
+            document.getElementById('editAgendaForm').action = "{{ url('emp/groups/'.$group->group_id.'/agenda') }}/" + agenda.agenda_id;
+            document.getElementById('deleteAgendaForm').action = "{{ url('emp/groups/'.$group->group_id.'/agenda') }}/" + agenda.agenda_id;
+            
+            toggleCompletionFields();
+            openModal('editAgendaModal');
+        }
+
+        function toggleCompletionFields() {
+            const status = document.getElementById('edit_status').value;
+            const completionFields = document.getElementById('completion_fields');
+            if(status === 'Completed') {
+                completionFields.classList.remove('hidden');
+                if(!document.getElementById('edit_end_date').value) {
+                    const now = new Date();
+                    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                    document.getElementById('edit_end_date').value = now.toISOString().slice(0,16);
+                }
+            } else {
+                completionFields.classList.add('hidden');
+            }
         }
     </script>
 @endsection

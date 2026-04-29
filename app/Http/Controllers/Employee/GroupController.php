@@ -10,6 +10,7 @@ use App\Models\GroupMember;
 use App\Models\GroupPost;
 use App\Models\GroupFile;
 use App\Models\SystemLog;
+use App\Models\GroupAgenda;
 
 class GroupController extends Controller
 {
@@ -46,7 +47,7 @@ class GroupController extends Controller
 
     public function show($id)
     {
-        $group = Group::with(['color', 'members.employee', 'members.role', 'posts.author', 'files.adder'])
+        $group = Group::with(['color', 'members.employee', 'members.role', 'posts.author', 'files.adder', 'agendas'])
             ->findOrFail($id);
 
         $user = Auth::user();
@@ -318,5 +319,65 @@ class GroupController extends Controller
         }
         
         return response()->json(['success' => true, 'message' => 'Group copied']);
+    }
+
+    // --- Agenda Methods ---
+    
+    public function storeAgenda(Request $request, $id)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'priority' => 'required|string',
+            'status' => 'required|string',
+        ]);
+
+        $employeeId = Auth::user()->employee->employee_id ?? Auth::id();
+
+        $agenda = new GroupAgenda();
+        $agenda->group_id = $id;
+        $agenda->added_by = $employeeId;
+        $agenda->title = $request->title;
+        $agenda->description = $request->description;
+        $agenda->priority = $request->priority;
+        $agenda->status = $request->status;
+        $agenda->start_date = $request->start_date;
+        $agenda->time_duration = $request->time_duration;
+        $agenda->end_date = $request->end_date;
+        $agenda->decision_outcome = $request->decision_outcome;
+        $agenda->action_items = $request->action_items;
+        $agenda->save();
+
+        return response()->json(['success' => true, 'message' => 'Agenda added successfully.']);
+    }
+
+    public function updateAgenda(Request $request, $id, $agenda_id)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'priority' => 'required|string',
+            'status' => 'required|string',
+        ]);
+
+        $agenda = GroupAgenda::where('group_id', $id)->findOrFail($agenda_id);
+        $agenda->title = $request->title;
+        $agenda->description = $request->description;
+        $agenda->priority = $request->priority;
+        $agenda->status = $request->status;
+        $agenda->start_date = $request->start_date;
+        $agenda->time_duration = $request->time_duration;
+        $agenda->end_date = $request->end_date;
+        $agenda->decision_outcome = $request->decision_outcome;
+        $agenda->action_items = $request->action_items;
+        $agenda->save();
+
+        return response()->json(['success' => true, 'message' => 'Agenda updated successfully.']);
+    }
+
+    public function destroyAgenda($id, $agenda_id)
+    {
+        $agenda = GroupAgenda::where('group_id', $id)->findOrFail($agenda_id);
+        $agenda->delete();
+        
+        return response()->json(['success' => true, 'message' => 'Agenda deleted successfully.']);
     }
 }

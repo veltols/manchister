@@ -127,6 +127,7 @@
                     <button onclick="switchGroupTab('wall')" class="group-tab active" data-tab="wall">The Wall</button>
                     <button onclick="switchGroupTab('files')" class="group-tab" data-tab="files">Resources</button>
                     <button onclick="switchGroupTab('members')" class="group-tab" data-tab="members">Team Members</button>
+                    <button onclick="switchGroupTab('agenda')" class="group-tab hidden" data-tab="agenda" id="btn-tab-agenda">Meeting Agendas</button>
                     <button onclick="switchGroupTab('details')" class="group-tab" data-tab="details">Information</button>
                 </div>
 
@@ -192,6 +193,20 @@
                             </button>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="members-list">
+                            <!-- Dynamic content -->
+                        </div>
+                    </div>
+
+                    <!-- Agendas Tab -->
+                    <div id="tab-agenda" class="tab-pane hidden">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-display font-bold text-premium">Meeting Agendas</h3>
+                            <button onclick="openModal('addAgendaModal')"
+                                class="premium-button from-emerald-500 to-teal-600 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-md">
+                                <i class="fa-solid fa-plus mr-2"></i>New Agenda
+                            </button>
+                        </div>
+                        <div class="space-y-4" id="agendas-list">
                             <!-- Dynamic content -->
                         </div>
                     </div>
@@ -370,6 +385,149 @@
         </div>
     </div>
 
+    <!-- Add Agenda Modal -->
+    <div class="modal" id="addAgendaModal">
+        <div class="modal-backdrop" onclick="closeModal('addAgendaModal')"></div>
+        <div class="modal-content max-w-2xl p-8 max-h-[90vh] overflow-y-auto">
+            <h2 class="text-2xl font-display font-bold text-premium mb-6">Create New Agenda</h2>
+            <form id="addAgendaForm" onsubmit="submitAgenda(event, 'emp')" class="space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Agenda Title</label>
+                    <input type="text" name="title" class="premium-input w-full" required>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Priority</label>
+                        <select name="priority" class="premium-input w-full">
+                            <option value="Low">Low</option>
+                            <option value="Medium" selected>Medium</option>
+                            <option value="High">High</option>
+                            <option value="Critical">Critical</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Status</label>
+                        <select name="status" class="premium-input w-full">
+                            <option value="Pending" selected>Pending</option>
+                            <option value="In Discussion">In Discussion</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Start Date/Time</label>
+                        <input type="datetime-local" name="start_date" class="premium-input w-full">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Estimated Time (e.g. 30 mins)</label>
+                        <input type="text" name="time_duration" class="premium-input w-full">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Description / Context</label>
+                    <textarea name="description" rows="3" class="premium-input w-full"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-6 border-t border-slate-100 mt-6">
+                    <button type="button" onclick="closeModal('addAgendaModal')" class="px-6 py-2 text-slate-500 font-bold">Cancel</button>
+                    <button type="submit" class="premium-button">Create Agenda</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit/View Agenda Modal -->
+    <div class="modal" id="editAgendaModal">
+        <div class="modal-backdrop" onclick="closeModal('editAgendaModal')"></div>
+        <div class="modal-content max-w-2xl p-8 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-display font-bold text-premium">Agenda Details</h2>
+                <div class="flex gap-2">
+                    <button type="button" onclick="exportSingleAgendaToPDF()" class="text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-3 py-1 rounded-lg flex items-center text-xs font-bold transition-all">
+                        <i class="fa-solid fa-file-pdf mr-2"></i>Export PDF
+                    </button>
+                    <button type="button" onclick="deleteAgenda('emp')" class="text-red-500 hover:text-red-700 bg-red-50 w-8 h-8 rounded-full flex items-center justify-center transition-all">
+                        <i class="fa-solid fa-trash text-xs"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <form id="editAgendaForm" onsubmit="updateAgenda(event, 'emp')" class="space-y-4">
+                @csrf
+                <input type="hidden" id="edit_agenda_id" value="">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Agenda Title</label>
+                    <input type="text" name="title" id="edit_title" class="premium-input w-full" required>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Priority</label>
+                        <select name="priority" id="edit_priority" class="premium-input w-full">
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                            <option value="Critical">Critical</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Status</label>
+                        <select name="status" id="edit_status" class="premium-input w-full" onchange="toggleCompletionFields()">
+                            <option value="Pending">Pending</option>
+                            <option value="In Discussion">In Discussion</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Start Date/Time</label>
+                        <input type="datetime-local" name="start_date" id="edit_start_date" class="premium-input w-full">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Time Duration</label>
+                        <input type="text" name="time_duration" id="edit_time_duration" class="premium-input w-full">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Description / Context</label>
+                    <textarea name="description" id="edit_description" rows="3" class="premium-input w-full"></textarea>
+                </div>
+
+                <div id="completion_fields" class="space-y-4 mt-6 pt-6 border-t border-slate-100 hidden">
+                    <h3 class="text-sm font-bold text-premium mb-4 uppercase tracking-widest">Completion Details</h3>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">End Date/Time</label>
+                        <input type="datetime-local" name="end_date" id="edit_end_date" class="premium-input w-full">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Decision / Outcome</label>
+                        <textarea name="decision_outcome" id="edit_decision_outcome" rows="3" class="premium-input w-full" placeholder="What was decided?"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Action Items</label>
+                        <textarea name="action_items" id="edit_action_items" rows="3" class="premium-input w-full" placeholder="List action items assigned..."></textarea>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-6 border-t border-slate-100 mt-6">
+                    <button type="button" onclick="closeModal('editAgendaModal')" class="px-6 py-2 text-slate-500 font-bold">Cancel</button>
+                    <button type="submit" class="premium-button">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Print-only container for PDF export -->
+    <div id="print-agenda-container" class="hidden"></div>
+
     <style>
         .groups-layout {
             display: grid;
@@ -380,6 +538,20 @@
             overflow: hidden;
             border: 1px solid rgba(226, 232, 240, 0.8);
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            #print-agenda-container, #print-agenda-container * { visibility: visible; }
+            #print-agenda-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                display: block !important;
+                background: white;
+            }
+            .no-print { display: none !important; }
         }
 
         .groups-sidebar {
@@ -510,6 +682,14 @@
                         overlay.classList.add('hidden');
                     }
 
+                    // Handle Agenda Tab Visibility (Only for Committees)
+                    const agendaTabBtn = document.getElementById('btn-tab-agenda');
+                    if (group.is_commity == 1) {
+                        agendaTabBtn.classList.remove('hidden');
+                    } else {
+                        agendaTabBtn.classList.add('hidden');
+                    }
+
                     const initials = group.group_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
                     // Set Header
@@ -537,6 +717,9 @@
                     // Build Files
                     renderFiles(group.files);
 
+                    // Build Agendas
+                    renderAgendas(group.agendas);
+
                     switchGroupTab('wall');
                 }
             } catch (error) {
@@ -552,6 +735,153 @@
 
             document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
             document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+        }
+
+        function renderAgendas(agendas) {
+            window.currentAgendas = agendas;
+            const list = document.getElementById('agendas-list');
+            list.innerHTML = '';
+            
+            if (!agendas || agendas.length === 0) {
+                list.innerHTML = `
+                    <div class="py-12 text-center bg-white rounded-3xl border border-slate-100 shadow-sm border-dashed">
+                        <i class="fa-regular fa-calendar-check text-4xl text-slate-200 mb-4"></i>
+                        <h3 class="font-bold text-slate-400">No agendas created yet</h3>
+                    </div>`;
+                return;
+            }
+
+            agendas.forEach(agenda => {
+                let priorityClass = 'bg-blue-100 text-blue-700';
+                if(agenda.priority === 'High' || agenda.priority === 'Critical') priorityClass = 'bg-red-100 text-red-700';
+                else if(agenda.priority === 'Medium') priorityClass = 'bg-amber-100 text-amber-700';
+
+                let statusClass = 'bg-slate-100 text-slate-700';
+                if(agenda.status === 'Completed') statusClass = 'bg-green-100 text-green-700';
+                else if(agenda.status === 'In Discussion') statusClass = 'bg-amber-100 text-amber-700';
+
+                const html = `
+                    <div class="premium-card p-6 border-l-4 border-l-brand-dark cursor-pointer hover:shadow-md transition-shadow" onclick='openAgendaDetails(${agenda.agenda_id})'>
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-lg text-slate-800">${agenda.title}</h4>
+                            <div class="flex items-center gap-2">
+                                <button onclick="event.stopPropagation(); exportSingleAgendaToPDFById(${agenda.agenda_id})" class="w-8 h-8 rounded-lg bg-slate-50 text-red-500 hover:bg-red-50 flex items-center justify-center transition-all mr-2" title="Export PDF">
+                                    <i class="fa-solid fa-file-pdf text-sm"></i>
+                                </button>
+                                <span class="px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${priorityClass}">
+                                    ${agenda.priority}
+                                </span>
+                                <span class="px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${statusClass}">
+                                    ${agenda.status}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-4 text-xs text-slate-500 font-medium">
+                            ${agenda.start_date ? `<span><i class="fa-regular fa-calendar mr-1"></i> Start: ${new Date(agenda.start_date).toLocaleString()}</span>` : ''}
+                            ${agenda.status === 'Completed' && agenda.end_date ? `<span class="text-emerald-600"><i class="fa-solid fa-flag-checkered mr-1"></i> End: ${new Date(agenda.end_date).toLocaleString()}</span>` : ''}
+                            ${agenda.time_duration ? `<span><i class="fa-regular fa-clock mr-1"></i> ${agenda.time_duration}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+                list.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        function openAgendaDetails(agendaId) {
+            const agenda = window.currentAgendas.find(a => a.agenda_id == agendaId);
+            if (!agenda) return;
+            document.getElementById('edit_agenda_id').value = agenda.agenda_id;
+            document.getElementById('edit_title').value = agenda.title || '';
+            document.getElementById('edit_priority').value = agenda.priority || 'Medium';
+            document.getElementById('edit_status').value = agenda.status || 'Pending';
+            
+            if(agenda.start_date) {
+                document.getElementById('edit_start_date').value = agenda.start_date.substring(0, 16);
+            } else {
+                document.getElementById('edit_start_date').value = '';
+            }
+            
+            document.getElementById('edit_time_duration').value = agenda.time_duration || '';
+            document.getElementById('edit_description').value = agenda.description || '';
+            
+            if(agenda.end_date) {
+                document.getElementById('edit_end_date').value = agenda.end_date.substring(0, 16);
+            } else {
+                document.getElementById('edit_end_date').value = '';
+            }
+            
+            document.getElementById('edit_decision_outcome').value = agenda.decision_outcome || '';
+            document.getElementById('edit_action_items').value = agenda.action_items || '';
+            
+            toggleCompletionFields();
+            openModal('editAgendaModal');
+        }
+
+        function toggleCompletionFields() {
+            const status = document.getElementById('edit_status').value;
+            const completionFields = document.getElementById('completion_fields');
+            if(status === 'Completed') {
+                completionFields.classList.remove('hidden');
+                if(!document.getElementById('edit_end_date').value) {
+                    const now = new Date();
+                    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                    document.getElementById('edit_end_date').value = now.toISOString().slice(0,16);
+                }
+            } else {
+                completionFields.classList.add('hidden');
+            }
+        }
+
+        async function submitAgenda(e, module) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            try {
+                const response = await fetch(`${window.location.origin}/${module}/groups/${activeGroupId}/agenda`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success) {
+                    closeModal('addAgendaModal');
+                    e.target.reset();
+                    loadGroup(activeGroupId);
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function updateAgenda(e, module) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const agendaId = document.getElementById('edit_agenda_id').value;
+            try {
+                const response = await fetch(`${window.location.origin}/${module}/groups/${activeGroupId}/agenda/${agendaId}`, {
+                    method: 'POST', // using POST instead of PUT because FormData handles POST easier, wait, our routes are POST for updateAgenda
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success) {
+                    closeModal('editAgendaModal');
+                    loadGroup(activeGroupId);
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function deleteAgenda(module) {
+            if(!confirm('Are you sure you want to delete this agenda?')) return;
+            const agendaId = document.getElementById('edit_agenda_id').value;
+            try {
+                const response = await fetch(`${window.location.origin}/${module}/groups/${activeGroupId}/agenda/${agendaId}`, {
+                    method: 'DELETE',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+                });
+                const result = await response.json();
+                if (result.success) {
+                    closeModal('editAgendaModal');
+                    loadGroup(activeGroupId);
+                }
+            } catch (err) { console.error(err); }
         }
 
         function renderPosts(posts) {
@@ -731,6 +1061,157 @@
                     window.location.reload();
                 }
             } catch (err) { console.error(err); }
+        }
+
+        function exportAgendasToPDF() {
+            const container = document.getElementById('print-agenda-container');
+            const groupName = document.getElementById('header-name').innerText;
+            const agendas = window.currentAgendas || [];
+
+            if (agendas.length === 0) {
+                alert('No agendas available to export.');
+                return;
+            }
+
+            let html = `
+                <div style="padding: 40px; font-family: 'Inter', sans-serif; color: #1e293b;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px;">
+                        <div>
+                            <h1 style="margin: 0; font-size: 24px; color: #1e1b4b;">Meeting Agendas</h1>
+                            <p style="margin: 5px 0 0; color: #64748b;">Team: ${groupName}</p>
+                        </div>
+                        <div style="text-align: right; font-size: 12px; color: #94a3b8;">
+                            Generated on: ${new Date().toLocaleString()}
+                        </div>
+                    </div>
+            `;
+
+            agendas.forEach((agenda, index) => {
+                html += `
+                    <div style="margin-bottom: 30px; page-break-inside: avoid; border: 1px solid #f1f5f9; border-radius: 12px; overflow: hidden;">
+                        <div style="background: #f8fafc; padding: 15px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+                            <h2 style="margin: 0; font-size: 16px; color: #1e1b4b;">${index + 1}. ${agenda.title}</h2>
+                            <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; padding: 4px 8px; border-radius: 4px; background: ${agenda.status === 'Completed' ? '#dcfce7' : '#fef9c3'}; color: ${agenda.status === 'Completed' ? '#166534' : '#854d0e'};">
+                                ${agenda.status}
+                            </span>
+                        </div>
+                        <div style="padding: 20px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px; font-size: 13px;">
+                                <div>
+                                    <p style="margin: 0 0 5px; font-weight: bold; color: #64748b; text-transform: uppercase; font-size: 10px;">Schedule</p>
+                                    <p style="margin: 0;">Start: ${agenda.start_date ? new Date(agenda.start_date).toLocaleString() : 'N/A'}</p>
+                                    ${agenda.status === 'Completed' && agenda.end_date ? `<p style="margin: 5px 0 0;">End: ${new Date(agenda.end_date).toLocaleString()}</p>` : ''}
+                                </div>
+                                <div>
+                                    <p style="margin: 0 0 5px; font-weight: bold; color: #64748b; text-transform: uppercase; font-size: 10px;">Details</p>
+                                    <p style="margin: 0;">Priority: ${agenda.priority}</p>
+                                    <p style="margin: 5px 0 0;">Duration: ${agenda.time_duration || 'N/A'}</p>
+                                </div>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <p style="margin: 0 0 5px; font-weight: bold; color: #64748b; text-transform: uppercase; font-size: 10px;">Description</p>
+                                <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #334155;">${agenda.description || 'No description provided.'}</p>
+                            </div>
+                            ${agenda.status === 'Completed' ? `
+                                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2e8f0;">
+                                    <div style="margin-bottom: 10px;">
+                                        <p style="margin: 0 0 5px; font-weight: bold; color: #166534; text-transform: uppercase; font-size: 10px;">Decision / Outcome</p>
+                                        <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #334155;">${agenda.decision_outcome || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <p style="margin: 0 0 5px; font-weight: bold; color: #166534; text-transform: uppercase; font-size: 10px;">Action Items</p>
+                                        <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #334155;">${agenda.action_items || 'N/A'}</p>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            container.innerHTML = html;
+            window.print();
+        }
+
+        function exportSingleAgendaToPDFById(id) {
+            const agenda = window.currentAgendas.find(a => a.agenda_id == id);
+            if (!agenda) return;
+            generateSingleAgendaPDF(agenda);
+        }
+
+        function exportSingleAgendaToPDF() {
+            const agendaId = document.getElementById('edit_agenda_id').value;
+            const agenda = window.currentAgendas.find(a => a.agenda_id == agendaId);
+            if (!agenda) return;
+            generateSingleAgendaPDF(agenda);
+        }
+
+        function generateSingleAgendaPDF(agenda) {
+
+            const container = document.getElementById('print-agenda-container');
+            const groupName = document.getElementById('header-name').innerText;
+
+            let html = `
+                <div style="padding: 40px; font-family: 'Inter', sans-serif; color: #1e293b;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px;">
+                        <div>
+                            <h1 style="margin: 0; font-size: 24px; color: #1e1b4b;">Agenda Item Details</h1>
+                            <p style="margin: 5px 0 0; color: #64748b;">Team: ${groupName}</p>
+                        </div>
+                        <div style="text-align: right; font-size: 12px; color: #94a3b8;">
+                            Generated on: ${new Date().toLocaleString()}
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 30px; border: 1px solid #f1f5f9; border-radius: 12px; overflow: hidden;">
+                        <div style="background: #f8fafc; padding: 15px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+                            <h2 style="margin: 0; font-size: 18px; color: #1e1b4b;">${agenda.title}</h2>
+                            <span style="font-size: 12px; font-weight: bold; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; background: ${agenda.status === 'Completed' ? '#dcfce7' : '#fef9c3'}; color: ${agenda.status === 'Completed' ? '#166534' : '#854d0e'};">
+                                ${agenda.status}
+                            </span>
+                        </div>
+                        <div style="padding: 30px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 30px; font-size: 14px;">
+                                <div>
+                                    <p style="margin: 0 0 8px; font-weight: bold; color: #64748b; text-transform: uppercase; font-size: 11px;">Timeline</p>
+                                    <p style="margin: 0;"><strong>Start Date:</strong> ${agenda.start_date ? new Date(agenda.start_date).toLocaleString() : 'N/A'}</p>
+                                    ${agenda.status === 'Completed' && agenda.end_date ? `<p style="margin: 8px 0 0;"><strong>End Date:</strong> ${new Date(agenda.end_date).toLocaleString()}</p>` : ''}
+                                    <p style="margin: 8px 0 0;"><strong>Duration:</strong> ${agenda.time_duration || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <p style="margin: 0 0 8px; font-weight: bold; color: #64748b; text-transform: uppercase; font-size: 11px;">Priority & Context</p>
+                                    <p style="margin: 0;"><strong>Priority Level:</strong> ${agenda.priority}</p>
+                                    <p style="margin: 8px 0 0;"><strong>Agenda ID:</strong> #AG-${agenda.agenda_id}</p>
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom: 30px;">
+                                <p style="margin: 0 0 8px; font-weight: bold; color: #64748b; text-transform: uppercase; font-size: 11px;">Description & Context</p>
+                                <div style="margin: 0; font-size: 14px; line-height: 1.6; color: #334155; white-space: pre-line;">${agenda.description || 'No description provided.'}</div>
+                            </div>
+
+                            ${agenda.status === 'Completed' ? `
+                                <div style="margin-top: 30px; padding-top: 30px; border-top: 2px solid #f1f5f9;">
+                                    <div style="margin-bottom: 25px;">
+                                        <p style="margin: 0 0 10px; font-weight: bold; color: #166534; text-transform: uppercase; font-size: 11px;">Final Decision / Outcome</p>
+                                        <div style="margin: 0; font-size: 14px; line-height: 1.6; color: #334155; white-space: pre-line;">${agenda.decision_outcome || 'N/A'}</div>
+                                    </div>
+                                    <div>
+                                        <p style="margin: 0 0 10px; font-weight: bold; color: #166534; text-transform: uppercase; font-size: 11px;">Assigned Action Items</p>
+                                        <div style="margin: 0; font-size: 14px; line-height: 1.6; color: #334155; white-space: pre-line;">${agenda.action_items || 'N/A'}</div>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div style="margin-top: 50px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 20px;">
+                        This is an official record generated from the Collaboration Hub.
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+            window.print();
         }
 
         async function addNewMember(e) {

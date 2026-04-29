@@ -119,6 +119,16 @@ class UserController extends Controller
             $sysUser->int_ext = 'int';
             $sysUser->user_family = 'employees_list';
             $sysUser->user_theme_id = 7;
+            
+            // Handle GM logic
+            if ($request->is_gm == 1) {
+                // Clear other GMs first
+                \App\Models\User::where('is_gm', 1)->update(['is_gm' => 0]);
+                $sysUser->is_gm = 1;
+            } else {
+                $sysUser->is_gm = 0;
+            }
+
             $sysUser->save();
 
             // 6. Handle Line Manager Assignment
@@ -351,7 +361,16 @@ class UserController extends Controller
 
         // Update is_gm on the users_list record
         if ($user->systemUser) {
-            $user->systemUser->is_gm = $request->has('is_gm') ? 1 : 0;
+            $newIsGm = $request->has('is_gm') ? 1 : 0;
+            
+            if ($newIsGm === 1) {
+                // Clear other GMs first
+                \App\Models\User::where('is_gm', 1)
+                    ->where('user_id', '!=', $user->employee_id)
+                    ->update(['is_gm' => 0]);
+            }
+            
+            $user->systemUser->is_gm = $newIsGm;
             $user->systemUser->save();
         }
 

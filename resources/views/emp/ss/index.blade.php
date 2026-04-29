@@ -108,29 +108,46 @@
                 </button>
             </div>
 
-            <form action="{{ route('emp.ss.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+            <form id="newSSForm" action="{{ route('emp.ss.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6" onsubmit="return validateSSForm(event)">
                 @csrf
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-widest text-[10px]">Request
-                        Type</label>
-                    <select name="category_id" class="premium-input w-full" required>
+                    <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-widest text-[10px]">Request Type</label>
+                    <select name="category_id" id="ss_category_id" class="premium-input w-full" required onchange="handleCategoryChange(this)">
                         <option value="">Select Type</option>
                         @foreach($categories as $cat)
-                            <option value="{{ $cat->category_id }}">{{ $cat->category_name }}</option>
+                            <option value="{{ $cat->category_id }}" 
+                                    data-receiver-id="{{ $cat->destination_id }}"
+                                    data-receiver-name="{{ $cat->receiver ? ($cat->receiver->first_name . ' ' . $cat->receiver->last_name) : '' }}">
+                                {{ $cat->category_name }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-widest text-[10px]">Send To
-                        (Employee)</label>
-                    <select name="sent_to_id" class="premium-input w-full" required>
-                        <option value="">Select Target Employee</option>
-                        @foreach($employees as $emp)
-                            <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}
-                                ({{ $emp->department->department_name ?? '-' }})</option>
-                        @endforeach
-                    </select>
+                <div id="assigned_receiver_display" class="hidden p-4 rounded-xl border transition-all">
+                    <div id="receiver_found_state" class="hidden">
+                        <label class="block text-[10px] font-bold text-amber-600 uppercase tracking-widest mb-1">Assigned Receiver</label>
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-amber-200 flex items-center justify-center text-amber-700 font-bold">
+                                <i class="fa-solid fa-user-shield"></i>
+                            </div>
+                            <div>
+                                <p class="font-bold text-amber-900" id="assigned_receiver_name">-</p>
+                                <p class="text-[10px] text-amber-700 italic">This request will be automatically routed to the pre-assigned service manager.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="receiver_missing_state" class="hidden">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-rose-100 flex items-center justify-center text-rose-600 font-bold">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                            </div>
+                            <div>
+                                <p class="font-bold text-rose-900 uppercase tracking-tight text-xs">Receiver not assigned for this request</p>
+                                <p class="text-[10px] text-rose-700 italic">Please contact your administrator to configure a receiver for this service type.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div>
@@ -218,5 +235,55 @@
             inputSelector: '#ss_attachment',
             containerSelector: '#ss-attachment-preview'
         });
+
+        function handleCategoryChange(select) {
+            const selectedOption = select.options[select.selectedIndex];
+            const receiverId = selectedOption.getAttribute('data-receiver-id');
+            const receiverName = selectedOption.getAttribute('data-receiver-name');
+            
+            const displayContainer = document.getElementById('assigned_receiver_display');
+            const foundState = document.getElementById('receiver_found_state');
+            const missingState = document.getElementById('receiver_missing_state');
+            const receiverNameEl = document.getElementById('assigned_receiver_name');
+
+            if (select.value === '') {
+                displayContainer.classList.add('hidden');
+                return;
+            }
+
+            displayContainer.classList.remove('hidden');
+            foundState.classList.add('hidden');
+            missingState.classList.add('hidden');
+            displayContainer.className = 'p-4 rounded-xl border transition-all'; // reset classes
+
+            if (receiverId && receiverId !== 'null' && receiverId !== '' && receiverId !== '0') {
+                // Pre-assigned receiver exists
+                displayContainer.classList.add('bg-amber-50', 'border-amber-100');
+                foundState.classList.remove('hidden');
+                receiverNameEl.innerText = receiverName;
+            } else {
+                // Missing
+                displayContainer.classList.add('bg-rose-50', 'border-rose-100');
+                missingState.classList.remove('hidden');
+            }
+        }
+
+        function validateSSForm(event) {
+            const categorySelect = document.getElementById('ss_category_id');
+            const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+            const receiverId = selectedOption.getAttribute('data-receiver-id');
+
+            if (!receiverId || receiverId === 'null' || receiverId === '0' || receiverId === '') {
+                event.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Service Unavailable',
+                    text: 'Receiver not assigned for this request. Please contact admin.',
+                    confirmButtonColor: '#f43f5e'
+                });
+                return false;
+            }
+            return true;
+        }
     </script>
 @endsection

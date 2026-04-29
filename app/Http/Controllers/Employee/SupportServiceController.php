@@ -23,7 +23,7 @@ class SupportServiceController extends Controller
             ->orderBy('ss_id', 'desc')
             ->paginate(15);
 
-        $categories = SupportServiceCategory::all();
+        $categories = SupportServiceCategory::with('receiver')->get();
         $employees = EmployeesList::where('is_deleted', 0)->where('is_hidden', 0)->where('employee_id', '!=', $employeeId)->get();
 
         return view('emp.ss.index', compact('services', 'categories', 'employees'));
@@ -34,13 +34,20 @@ class SupportServiceController extends Controller
         $request->validate([
             'category_id' => 'required',
             'ss_description' => 'required',
-            'sent_to_id' => 'required',
+            'sent_to_id' => 'nullable', // Made optional, will be fetched from category if empty
             'ss_attachment' => 'nullable|file|max:5120',
         ]);
 
+        $category = SupportServiceCategory::findOrFail($request->category_id);
+        $finalReceiverId = $category->destination_id ?: $request->sent_to_id;
+
+        if (!$finalReceiverId || $finalReceiverId == '0') {
+            return redirect()->back()->with('error', 'This request receiver is not available. Please contact admin.')->withInput();
+        }
+
         $user = Auth::user();
         $employeeId = $user->employee ? $user->employee->employee_id : 0;
-        $departmentId = $user->employee ? $user->employee->department_id : 1; // Default to 1 if not set
+        $departmentId = $user->employee ? $user->employee->department_id : 1; 
 
         $attachment = null;
         if ($request->hasFile('ss_attachment')) {
@@ -57,7 +64,7 @@ class SupportServiceController extends Controller
         $ss->ss_attachment = $attachment;
         $ss->department_id = $departmentId;
         $ss->added_by = $employeeId;
-        $ss->sent_to_id = $request->sent_to_id;
+        $ss->sent_to_id = $finalReceiverId;
         $ss->status_id = 1; // Pending
         $ss->ss_added_date = now();
         $ss->save();

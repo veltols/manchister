@@ -44,4 +44,9 @@ class Group extends Model
         }
         return mb_strtoupper(mb_substr($initials, 0, 2));
     }
+
+    public function agendas()
+    {
+        return $this->hasMany(GroupAgenda::class, 'group_id', 'group_id')->orderBy('agenda_id', 'desc');
+    }
 }
