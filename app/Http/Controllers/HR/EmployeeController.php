@@ -441,7 +441,7 @@ class EmployeeController extends Controller
         DB::beginTransaction();
         try {
             // Update Details
-            $employee->update($request->except(['log_remark', 'user_type', '_token', 'is_gm']));
+            $employee->update($request->except(['log_remark', 'user_type', '_token', 'is_gm', 'is_line_manager']));
 
             // Update System User Role
             if ($employee->systemUser) {
