@@ -260,16 +260,43 @@
         box-shadow: 0 4px 16px rgba(0,79,104,0.1);
         transform: translateX(4px);
     }
+	.dash-tab-btn {
+    min-height: 160px;
+	    width: auto;
+}
 </style>
 @endpush
 
 @section('content')
 <div class="space-y-6">
+        {{-- ═══════════════════════════════════
+         DATE FILTER BAR
+    ═══════════════════════════════════ --}}
+    <div class="premium-card p-5 bg-white relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-28 h-28 rounded-full -mr-14 -mt-14"
+             style="background:radial-gradient(circle, rgba(0,79,104,0.05) 0%, transparent 70%);"></div>
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4 relative z-10">
+            <div>
+                <h2 class="text-2xl font-display font-bold text-premium">Hello, <span class="text-brand-dark">{{ $employeeName }}</span></h2>
+                <p class="text-teal-700 mt-1 flex items-center gap-2 text-sm">
+                    <i class="fa-regular fa-calendar-check text-brand-dark"></i>
+                    {{ now()->format('l, jS F Y') }}
+                </p>
+            </div>
+ 
 
+        </div>
+    </div>
+    
     {{-- ═══════════════════════════════════
          WELCOME BANNER
     ═══════════════════════════════════ --}}
     <div class="relative mb-8" style="padding-top: 2.5rem;">
+	
+        {{-- Floating character --}}
+        <!--div class="absolute -right-4 md:right-8 bottom-0 w-36 md:w-60 lg:w-72 pointer-events-none drop-shadow-[0_20px_50px_rgba(0,0,0,0.18)] animate-float overflow-visible" style="top: 0;z-index:1000; bottom: auto; display:flex; align-items:flex-end; height:100%;">
+            <img src="{{ asset('images/char.png') }}" alt="Staff character"  class="w-full h-auto object-contain" style="width:70%">
+        </div !-->
         <div class="admin-banner" x-data="{ 
             active: 0, 
             total: {{ $announcements->count() }},
@@ -345,24 +372,22 @@
             @endif
         </div>
 
-        {{-- Floating character --}}
-        <div class="absolute -right-4 md:right-8 bottom-0 w-36 md:w-60 lg:w-72 pointer-events-none drop-shadow-[0_20px_50px_rgba(0,0,0,0.18)] animate-float overflow-visible" style="top: 0; bottom: auto; display:flex; align-items:flex-end; height:100%;">
-            <img src="{{ asset('images/char.png') }}" alt="Staff character" class="w-full h-auto object-contain">
-        </div>
+
     </div>
 
-    {{-- ═══════════════════════════════════
-         DATE FILTER BAR
+<div class="space-y-6">
+        {{-- ═══════════════════════════════════
+        Quick access tab
     ═══════════════════════════════════ --}}
     <div class="premium-card p-5 bg-white relative overflow-hidden">
         <div class="absolute top-0 right-0 w-28 h-28 rounded-full -mr-14 -mt-14"
              style="background:radial-gradient(circle, rgba(0,79,104,0.05) 0%, transparent 70%);"></div>
         <div class="flex flex-col md:flex-row items-center justify-between gap-4 relative z-10">
-            <div>
-                <h2 class="text-2xl font-display font-bold text-premium">Hello, <span class="text-brand-dark">{{ $employeeName }}</span></h2>
+			   <div>
+                <h2 class="text-2xl font-display font-bold text-premium">Quick View</h2>
                 <p class="text-teal-700 mt-1 flex items-center gap-2 text-sm">
                     <i class="fa-regular fa-calendar-check text-brand-dark"></i>
-                    {{ now()->format('l, jS F Y') }}
+                    Filter by Period
                 </p>
             </div>
             <div class="flex items-center gap-3">
@@ -489,6 +514,7 @@
         {{-- ═══════════════════════════════════
              HR LIBRARY (POLICIES & PROCEDURES)
         ═══════════════════════════════════ --}}
+        <!--  disabled for now>
         <div x-data="{ libTab: 'policies' }" class="premium-card p-6 bg-white relative overflow-hidden">
             <div class="absolute -right-6 -bottom-6 opacity-[0.03] group-hover:scale-110 transition-transform duration-700">
                 <i class="fa-solid fa-book-open text-9xl text-brand-dark"></i>
@@ -575,66 +601,125 @@
                 </template>
             </div>
         </div>
+        <!-->
+{{-- ── Tab: My Portal ── --}}
+<div 
+    x-transition:enter="transition ease-out duration-300 transform"
+    x-transition:enter-start="opacity-0 translate-y-2"
+    x-transition:enter-end="opacity-100 translate-y-0">
 
+    <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100">
+
+        <!-- Header -->
+        <div class="panel-header-gradient flex items-center justify-between px-6 py-4">
+            <h3 class="font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-chart-pie"></i> My Portal
+            </h3>
+            <p class="text-white/80 text-sm">Quick Access to your Services</p>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                {{-- IT Support --}}
+                <button @click="activeTab = 'tickets'"
+                    class="dash-tab-btn h-full flex flex-col justify-center items-center text-center rounded-2xl p-6 transition-all duration-300"
+                    :class="activeTab === 'tickets' ? 'shadow-lg scale-[1.03]' : 'hover:shadow-md'"
+                    :style="activeTab === 'tickets' 
+                        ? 'background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff;' 
+                        : 'background:#f8fafc; color:#1d4ed8;'">
+
+                    <div class="w-14 h-14 flex items-center justify-center rounded-xl mb-4"
+                        :style="activeTab === 'tickets'
+                            ? 'background:rgba(255,255,255,0.2);'
+                            : 'background:#e0ecff;'">
+                        <i class="fa-solid fa-headset text-xl"></i>
+                    </div>
+
+                    <h4 class="font-semibold text-lg">IT Support</h4>
+
+                  
+                </button>
+
+
+                {{-- My Tasks --}}
+                <button @click="activeTab = 'tasks'"
+                    class="dash-tab-btn h-full flex flex-col justify-center items-center text-center rounded-2xl p-6 transition-all duration-300" 
+                    :class="activeTab === 'tasks' ? 'shadow-lg scale-[1.03]' : 'hover:shadow-md'"
+                    :style="activeTab === 'tasks' 
+                        ? 'background:linear-gradient(135deg,#8b5cf6,#7c3aed); color:#fff;' 
+                        : 'background:#f8fafc; color:#7c3aed;'">
+
+                    <div class="w-14 h-14 flex items-center justify-center rounded-xl mb-4"
+                        :style="activeTab === 'tasks'
+                            ? 'background:rgba(255,255,255,0.2);'
+                            : 'background:#ede9fe;'">
+                        <i class="fa-solid fa-list-check text-xl"></i>
+                    </div>
+
+                    <h4 class="font-semibold text-lg">My Tasks</h4>
+
+                
+                </button>
+
+
+                {{-- Assets --}}
+                <button @click="activeTab = 'assets'"
+                    class="dash-tab-btn h-full flex flex-col justify-center items-center text-center rounded-2xl p-6 transition-all duration-300"
+                    :class="activeTab === 'assets' ? 'shadow-lg scale-[1.03]' : 'hover:shadow-md'"
+                    :style="activeTab === 'assets' 
+                        ? 'background:linear-gradient(135deg,#f97316,#ea580c); color:#fff;' 
+                        : 'background:#f8fafc; color:#c2410c;'">
+
+                    <div class="w-14 h-14 flex items-center justify-center rounded-xl mb-4"
+                        :style="activeTab === 'assets'
+                            ? 'background:rgba(255,255,255,0.2);'
+                            : 'background:#fff7ed;'">
+                        <i class="fa-solid fa-laptop-code text-xl"></i>
+                    </div>
+
+                    <h4 class="font-semibold text-lg">Assets</h4>
+
+                </button>
+
+
+                {{-- HR & Leaves --}}
+                <button @click="activeTab = 'hr'"
+                    class="dash-tab-btn h-full flex flex-col justify-center items-center text-center rounded-2xl p-6 transition-all duration-300"
+                    :class="activeTab === 'hr' ? 'shadow-lg scale-[1.03]' : 'hover:shadow-md'"
+                    :style="activeTab === 'hr' 
+                        ? 'background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff;' 
+                        : 'background:#f8fafc; color:#15803d;'">
+
+                    <div class="w-14 h-14 flex items-center justify-center rounded-xl mb-4"
+                        :style="activeTab === 'hr'
+                            ? 'background:rgba(255,255,255,0.2);'
+                            : 'background:#f0fdf4;'">
+                        <i class="fa-solid fa-umbrella-beach text-xl"></i>
+                    </div>
+
+                    <h4 class="font-semibold text-lg">HR &amp; Leaves</h4>
+
+                
+                </button>
+
+            </div>
+        </div>
+    </div>
+</div>
+		
+		
         {{-- ═══════════════════════════════════
              HORIZONTAL TAB NAV (RIGHT ALIGNED)
         ═══════════════════════════════════ --}}
         <div class="flex flex-wrap items-center justify-end gap-3 w-full">
-            {{-- IT Support --}}
-            <button @click="activeTab = 'tickets'"
-                class="dash-tab-btn"
-                :class="activeTab === 'tickets' ? 'active-tab' : ''"
-                :style="activeTab === 'tickets' ? 'background:linear-gradient(135deg,#eff6ff,#dbeafe); color:#1d4ed8;' : 'color:#1d4ed8;'">
-                <div class="tab-icon-box"
-                     :style="activeTab === 'tickets'
-                        ? 'background:linear-gradient(145deg,#3b82f6,#2563eb); box-shadow:0 6px 18px rgba(37,99,235,0.4),inset 0 1px 0 rgba(255,255,255,0.3); color:#fff;'
-                        : 'background:linear-gradient(145deg,#eff6ff,#bfdbfe); color:#3b82f6; box-shadow:0 3px 8px rgba(37,99,235,0.15);'">
-                    <i class="fa-solid fa-headset"></i>
-                </div>
-                <span>IT Support</span>
-            </button>
+       
 
-            {{-- My Tasks --}}
-            <button @click="activeTab = 'tasks'"
-                class="dash-tab-btn"
-                :class="activeTab === 'tasks' ? 'active-tab' : ''"
-                :style="activeTab === 'tasks' ? 'background:linear-gradient(135deg,#f5f3ff,#ede9fe); color:#7c3aed;' : 'color:#7c3aed;'">
-                <div class="tab-icon-box"
-                     :style="activeTab === 'tasks'
-                        ? 'background:linear-gradient(145deg,#8b5cf6,#7c3aed); box-shadow:0 6px 18px rgba(124,58,237,0.4),inset 0 1px 0 rgba(255,255,255,0.3); color:#fff;'
-                        : 'background:linear-gradient(145deg,#f5f3ff,#ddd6fe); color:#8b5cf6; box-shadow:0 3px 8px rgba(124,58,237,0.15);'">
-                    <i class="fa-solid fa-list-check"></i>
-                </div>
-                <span>My Tasks</span>
-            </button>
 
-            {{-- Assets --}}
-            <button @click="activeTab = 'assets'"
-                class="dash-tab-btn"
-                :class="activeTab === 'assets' ? 'active-tab' : ''"
-                :style="activeTab === 'assets' ? 'background:linear-gradient(135deg,#fff7ed,#fed7aa); color:#c2410c;' : 'color:#c2410c;'">
-                <div class="tab-icon-box"
-                     :style="activeTab === 'assets'
-                        ? 'background:linear-gradient(145deg,#f97316,#ea580c); box-shadow:0 6px 18px rgba(234,88,12,0.4),inset 0 1px 0 rgba(255,255,255,0.3); color:#fff;'
-                        : 'background:linear-gradient(145deg,#fff7ed,#fed7aa); color:#f97316; box-shadow:0 3px 8px rgba(234,88,12,0.15);'">
-                    <i class="fa-solid fa-laptop-code"></i>
-                </div>
-                <span>Assets</span>
-            </button>
 
-            {{-- HR & Leaves --}}
-            <button @click="activeTab = 'hr'"
-                class="dash-tab-btn"
-                :class="activeTab === 'hr' ? 'active-tab' : ''"
-                :style="activeTab === 'hr' ? 'background:linear-gradient(135deg,#f0fdf4,#dcfce7); color:#15803d;' : 'color:#15803d;'">
-                <div class="tab-icon-box"
-                     :style="activeTab === 'hr'
-                        ? 'background:linear-gradient(145deg,#22c55e,#16a34a); box-shadow:0 6px 18px rgba(22,163,74,0.4),inset 0 1px 0 rgba(255,255,255,0.3); color:#fff;'
-                        : 'background:linear-gradient(145deg,#f0fdf4,#bbf7d0); color:#22c55e; box-shadow:0 3px 8px rgba(22,163,74,0.15);'">
-                    <i class="fa-solid fa-umbrella-beach"></i>
-                </div>
-                <span>HR &amp; Leaves</span>
-            </button>
+    
         </div>
 
         {{-- ═══════════════════════════════════
