@@ -54,7 +54,7 @@ $authUser = Auth::user();
                                 <button onclick="toggleGroupMenu(event, {{ $group->group_id }})" class="w-8 h-8 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 flex items-center justify-center transition-colors relative z-10">
                                     <i class="fa-solid fa-ellipsis-vertical"></i>
                                 </button>
-                                <div id="group-menu-{{ $group->group_id }}" class="hidden absolute right-0 top-full mt-1 w-36 bg-white rounded-xl shadow-xl border border-slate-100 z-50 py-1">
+                                <div id="group-menu-{{ $group->group_id }}" class="hidden absolute right-0 top-full mt-1 w-40 bg-white rounded-xl shadow-xl border border-slate-100 z-50 py-1">
                                     @if(request('archived'))
                                     <button onclick="restoreGroupList(event, {{ $group->group_id }})" class="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 flex items-center gap-2">
                                         <i class="fa-solid fa-trash-arrow-up w-4"></i> Restore
@@ -65,6 +65,9 @@ $authUser = Auth::user();
                                     </button>
                                     @endif
                                     @if($group->added_by == (Auth::user()->employee->employee_id ?? 0))
+                                    <button onclick="editGroupFromMenu(event, {{ $group->group_id }})" class="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-blue-600 flex items-center gap-2">
+                                        <i class="fa-solid fa-pen-to-square w-4"></i> Edit
+                                    </button>
                                     <button onclick="duplicateGroupList(event, {{ $group->group_id }})" class="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-indigo-600 flex items-center gap-2">
                                         <i class="fa-solid fa-copy w-4"></i> Duplicate
                                     </button>
@@ -110,7 +113,6 @@ $authUser = Auth::user();
                     </button>
                 </div>
 
-                <!-- Group Header -->
                 <div class="main-header p-6 bg-white border-b border-slate-100 flex items-center justify-between">
                     <div class="flex items-center gap-4">
                         <div id="header-avatar"
@@ -122,8 +124,7 @@ $authUser = Auth::user();
                                 class="px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-wider"></span>
                         </div>
                     </div>
-                    <div class="flex gap-2">
-                        <!-- Settings usually restricted for employees -->
+                    <div class="flex gap-2" id="header-actions">
                     </div>
                 </div>
 
@@ -243,6 +244,37 @@ $authUser = Auth::user();
     </div>
 
     <!-- Modals -->
+    <!-- Edit Group Modal -->
+    <div class="modal" id="editGroupModal">
+        <div class="modal-backdrop" onclick="closeModal('editGroupModal')"></div>
+        <div class="modal-content max-w-lg p-0 border-none shadow-2xl">
+            <div class="p-6 bg-gradient-to-r from-slate-800 to-slate-900 text-white flex justify-between items-center rounded-t-[24px]">
+                <div>
+                    <h2 class="text-xl font-display font-bold leading-none">Edit Group</h2>
+                    <p class="text-slate-300/60 text-xs mt-1">Only the group creator can change the name</p>
+                </div>
+                <button onclick="closeModal('editGroupModal')" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <form id="editGroupForm" class="p-8 space-y-5" onsubmit="saveEditGroup(event)">
+                @csrf
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Group Name <span class="text-red-500">*</span></label>
+                    <input type="text" id="edit_group_name" name="group_name" required class="premium-input w-full" placeholder="Enter new group name">
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Description</label>
+                    <textarea id="edit_group_desc" name="group_desc" rows="3" class="premium-input w-full" placeholder="Update group description (optional)"></textarea>
+                </div>
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="closeModal('editGroupModal')" class="flex-1 px-6 py-3 rounded-2xl border-2 border-slate-100 text-slate-500 font-bold hover:bg-slate-50 transition-all">Cancel</button>
+                    <button type="submit" class="flex-[2] premium-button from-slate-700 to-slate-900 text-white font-bold rounded-2xl shadow-xl justify-center">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- New Group Modal -->
     <div class="modal" id="newGroupModal">
         <div class="modal-backdrop" onclick="closeModal('newGroupModal')"></div>
@@ -642,6 +674,7 @@ $authUser = Auth::user();
     <script src="{{ asset('js/attachment-preview.js') }}"></script>
     <script>
         let activeGroupId = null;
+        let activeGroupData = null; // stores current group data for edit modal
 
         // Initialize Attachment Preview
         const wallPreview = window.initAttachmentPreview({
@@ -670,6 +703,7 @@ $authUser = Auth::user();
 
                 if (result.success) {
                     const group = result.data;
+                    activeGroupData = group; // store for edit modal
                     
                     // Handle Invitation Status
                     const overlay = document.getElementById('invitation-overlay');
@@ -678,6 +712,9 @@ $authUser = Auth::user();
                     } else {
                         overlay.classList.add('hidden');
                     }
+
+                    // Determine permissions for member actions
+                    const currentUserId = {{ Auth::user()->employee->employee_id ?? 0 }};
 
                     // Handle Agenda Tab Visibility (Only for Committees)
                     const agendaTabBtn = document.getElementById('btn-tab-agenda');
@@ -703,12 +740,9 @@ $authUser = Auth::user();
                     // Build Posts
                     renderPosts(group.posts);
 
-                    // Determine Permissions
-                    const currentUserId = {{ Auth::user()->employee->employee_id ?? 0 }};
+                    // Build Members
                     const currentUserMember = group.members.find(m => m.employee_id == currentUserId);
                     const isAdmin = (group.added_by == currentUserId) || (currentUserMember && currentUserMember.group_role_id == 1);
-
-                    // Build Members
                     renderMembers(group.members, isAdmin, currentUserId);
 
                     // Build Files
@@ -1104,6 +1138,52 @@ $authUser = Auth::user();
                 if (result.success) {
                     closeModal('newGroupModal');
                     window.location.reload();
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function editGroupFromMenu(event, id) {
+            event.stopPropagation();
+            toggleGroupMenu(event, id);
+            // Load the group if it's not already active
+            await loadGroup(id);
+            openEditGroupModal();
+        }
+
+        function openEditGroupModal() {
+            if (!activeGroupData) return;
+            document.getElementById('edit_group_name').value = activeGroupData.group_name || '';
+            document.getElementById('edit_group_desc').value = activeGroupData.group_desc || '';
+            openModal('editGroupModal');
+        }
+
+        async function saveEditGroup(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+
+            try {
+                const response = await fetch(`{{ url('emp/groups') }}/${activeGroupId}/update`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success) {
+                    closeModal('editGroupModal');
+                    // Update header name live
+                    document.getElementById('header-name').innerText = result.data.group_name;
+                    // Update sidebar card name
+                    const card = document.getElementById(`group-item-${activeGroupId}`);
+                    if (card) {
+                        const h3 = card.querySelector('h3');
+                        if (h3) h3.innerText = result.data.group_name;
+                        const desc = card.querySelector('p');
+                        if (desc && result.data.group_desc) desc.innerText = result.data.group_desc;
+                    }
+                    // Refresh the full group content
+                    loadGroup(activeGroupId);
+                } else {
+                    alert(result.message || 'Failed to update group.');
                 }
             } catch (err) { console.error(err); }
         }

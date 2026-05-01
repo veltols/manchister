@@ -93,8 +93,10 @@ class SupportServiceController extends Controller
     {
         $service = SupportService::with(['category', 'status', 'sender', 'receiver', 'logs.logger'])
             ->findOrFail($id);
+        
+        $statuses = \App\Models\SupportServiceStatus::all();
 
-        return view('emp.ss.show', compact('service'));
+        return view('emp.ss.show', compact('service', 'statuses'));
     }
 
     public function getData(Request $request)
@@ -122,6 +124,52 @@ class SupportServiceController extends Controller
                 'from' => $services->firstItem(),
                 'to' => $services->lastItem(),
             ]
+        ]);
+    }
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status_id' => 'required|exists:ss_list_status,status_id',
+            'remark'    => 'nullable|string'
+        ]);
+
+        $user = Auth::user();
+        $employeeId = $user->employee ? $user->employee->employee_id : 0;
+
+        $service = SupportService::findOrFail($id);
+
+        // Only the receiver can update the status
+        if ($service->sent_to_id != $employeeId) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $oldStatusId = $service->status_id;
+        $service->status_id = $request->status_id;
+        $service->save();
+
+        // Log the status change
+        $log = new SystemLog();
+        $log->related_table = 'ss_list';
+        $log->related_id    = $service->ss_id;
+        $log->log_action    = 'Status Updated';
+        $log->log_remark    = $request->remark ?: ('Status changed to ' . ($service->fresh()->status->status_name ?? 'N/A'));
+        $log->log_date      = now();
+        $log->logger_type   = 'employees_list';
+        $log->logged_by     = $employeeId;
+        $log->save();
+
+        // Notify the requester (sender)
+        \App\Services\NotificationService::send(
+            "Your Support Request ({$service->ss_ref}) status has been updated.",
+            "emp/ss/{$service->ss_id}",
+            $service->added_by
+        );
+
+        return response()->json([
+            'success' => true, 
+            'message' => 'Status updated successfully',
+            'status_name' => $service->fresh()->status->status_name,
+            'status_color' => $service->fresh()->status->status_color
         ]);
     }
 }

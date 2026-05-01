@@ -63,7 +63,7 @@
     {{-- Apps Drawer Trigger --}}
     <div x-data="{ open: false }" @click.away="open = false" class="relative">
         <button @click="open = !open"
-            class="nav-item {{ request()->routeIs('hr.groups.*', 'hr.tasks.*', 'hr.calendar.*', 'hr.tickets.*', 'hr.messages.*') ? 'active' : '' }} w-full flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
+            class="nav-item {{ request()->routeIs('hr.groups.*', 'hr.tasks.*', 'hr.calendar.*', 'hr.tickets.*', 'hr.messages.*', 'hr.ss.*') ? 'active' : '' }} w-full flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
             <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
                 <i class="fa-solid fa-layer-group text-base"></i>
             </div>
@@ -200,6 +200,33 @@
                 </div>
                 <span
                     class="font-semibold text-base {{ request()->routeIs('hr.messages.*') ? 'text-emerald-800' : 'text-slate-700' }}">Chats</span>
+            </a>
+            {{-- Service Requests --}}
+            @php
+                $hrSsPendingCount = \App\Models\SupportService::where('status_id', 1)
+                    ->when(!in_array(auth()->user()->user_type, ['root', 'sys_admin', 'admin_hr']), function($q) {
+                        $empId = auth()->user()->employee?->employee_id ?? 0;
+                        $q->where('sent_to_id', $empId);
+                    })->count();
+            @endphp
+            <a href="{{ route('hr.ss.index') }}"
+                class="group flex items-center gap-3 p-3 rounded-xl transition-all hover:-translate-y-0.5 {{ request()->routeIs('hr.ss.*') ? 'bg-indigo-50' : 'hover:bg-slate-50' }}"
+                style="{{ request()->routeIs('hr.ss.*') ? 'box-shadow:0 4px 12px rgba(99,102,241,0.12);' : '' }}">
+                <div class="relative flex-shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-5deg]">
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden"
+                        style="background:linear-gradient(145deg,#6366f1,#4f46e5);
+                                    box-shadow:0 4px 12px rgba(99,102,241,0.35),inset 0 1px 0 rgba(255,255,255,0.35);">
+                        <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl" style="background:rgba(255,255,255,0.3);"></div>
+                        <i class="fa-solid fa-screwdriver-wrench text-white text-sm relative z-10"></i>
+                    </div>
+                    @if($hrSsPendingCount > 0)
+                        <span class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center z-20 shadow-sm">{{ $hrSsPendingCount }}</span>
+                    @endif
+                </div>
+                <span class="font-semibold text-base {{ request()->routeIs('hr.ss.*') ? 'text-indigo-800' : 'text-slate-700' }}">Service Requests</span>
+                @if($hrSsPendingCount > 0 && !request()->routeIs('hr.ss.*'))
+                    <span class="ml-auto bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-full">{{ $hrSsPendingCount }}</span>
+                @endif
             </a>
 
         </div>

@@ -1,0 +1,283 @@
+@extends('layouts.app')
+
+@section('title', 'Service Request — ' . $service->ss_ref)
+@section('subtitle', 'View and manage service request details')
+
+@section('content')
+    <div class="space-y-8 animate-fade-in-up">
+
+        <!-- Back & Header Actions -->
+        <div class="flex items-center justify-between">
+            <a href="{{ route('hr.ss.index') }}"
+               class="group flex items-center gap-2 text-slate-500 font-bold hover:text-brand transition-colors">
+                <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
+                <span>Back to Requests</span>
+            </a>
+            <!-- Status Update Trigger -->
+            <button onclick="openModal('updateStatusModal')"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white font-bold text-sm shadow-lg hover:scale-105 transition-all">
+                <i class="fa-solid fa-arrows-rotate"></i>
+                Update Status
+            </button>
+        </div>
+
+        <!-- Premium Hero Banner -->
+        <div class="rounded-[2.5rem] bg-gradient-to-br from-indigo-900 via-indigo-800 to-purple-900 p-8 md:p-12 text-white shadow-2xl shadow-indigo-900/20 relative overflow-hidden isolate">
+            <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-white/5 rounded-full blur-3xl -z-10"></div>
+            <div class="absolute bottom-0 left-1/3 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl -z-10"></div>
+
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+                <div class="space-y-4">
+                    <div class="flex items-center gap-3">
+                        <span class="px-3 py-1 rounded-lg bg-white/10 border border-white/10 text-[10px] font-bold uppercase tracking-widest backdrop-blur-md">
+                            {{ $service->category->category_name ?? 'General Request' }}
+                        </span>
+                        <span class="text-white/40 text-xs">•</span>
+                        <span class="text-xs font-mono font-medium text-white/60">
+                            {{ \Carbon\Carbon::parse($service->ss_added_date)->format('M d, Y H:i') }}
+                        </span>
+                    </div>
+                    <h1 class="text-3xl md:text-5xl font-display font-black tracking-tight text-white leading-tight">
+                        {{ $service->ss_ref }}
+                    </h1>
+                    <div class="flex flex-wrap items-center gap-6 pt-2">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
+                                <i class="fa-solid fa-user text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-white/40 uppercase tracking-wider">Requested By</p>
+                                <p class="text-sm font-bold">{{ $service->sender->first_name ?? 'Unknown' }} {{ $service->sender->last_name ?? '' }}</p>
+                            </div>
+                        </div>
+                        <div class="w-px h-8 bg-white/10"></div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
+                                <i class="fa-solid fa-paper-plane text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-white/40 uppercase tracking-wider">Assigned To</p>
+                                <p class="text-sm font-bold">{{ $service->receiver->first_name ?? 'Unassigned' }} {{ $service->receiver->last_name ?? '' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col items-end gap-4">
+                    <div id="current-status-badge" class="px-6 py-3 rounded-2xl bg-white text-slate-900 shadow-xl flex items-center gap-3">
+                        <div class="w-3 h-3 rounded-full animate-pulse" style="background-color: #{{ $service->status->status_color ?? '000' }}"></div>
+                        <span class="font-bold text-lg" id="current-status-text" style="color: #{{ $service->status->status_color ?? '000' }}">
+                            {{ $service->status->status_name ?? 'Pending' }}
+                        </span>
+                    </div>
+                    @if($service->ss_attachment)
+                        <a href="{{ asset($service->ss_attachment) }}" target="_blank"
+                           class="flex items-center gap-2 text-xs font-bold text-white/70 hover:text-white transition-colors bg-white/10 px-4 py-2 rounded-xl hover:bg-white/20">
+                            <i class="fa-solid fa-paperclip"></i>
+                            View Attachment
+                        </a>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left: Description + Activity -->
+            <div class="lg:col-span-2 space-y-8">
+
+                <!-- Description -->
+                <div class="premium-card p-1">
+                    <div class="bg-indigo-50/50 p-8 rounded-[1.25rem]">
+                        <h3 class="flex items-center gap-2 text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">
+                            <i class="fa-solid fa-align-left text-brand"></i>
+                            Request Description
+                        </h3>
+                        <div class="prose prose-slate max-w-none prose-p:font-medium prose-p:text-slate-600">
+                            {!! nl2br(e($service->ss_description)) !!}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Timeline -->
+                <div class="premium-card p-8">
+                    <h3 class="flex items-center gap-2 text-sm font-bold text-slate-400 uppercase tracking-widest mb-8">
+                        <i class="fa-solid fa-clock-rotate-left text-brand"></i>
+                        Activity Timeline
+                    </h3>
+                    <div id="activity-timeline" class="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-indigo-100 before:via-slate-200 before:to-transparent">
+                        @forelse($service->logs as $log)
+                            <div class="relative flex items-start gap-4 group">
+                                <div class="relative z-10 flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-indigo-50 text-indigo-600 shadow-sm group-hover:scale-110 group-hover:bg-brand group-hover:text-white transition-all duration-300">
+                                    <i class="fa-solid fa-check text-[10px]"></i>
+                                </div>
+                                <div class="flex-1 bg-white rounded-2xl border border-slate-100 p-5 shadow-sm group-hover:shadow-md group-hover:border-indigo-100 transition-all">
+                                    <div class="flex flex-wrap justify-between gap-2 mb-2">
+                                        <span class="font-bold text-slate-800">{{ $log->log_action }}</span>
+                                        <span class="text-xs font-mono text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                                            {{ \Carbon\Carbon::parse($log->log_date)->format('M d, H:i A') }}
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-slate-500 mb-3">{{ $log->log_remark }}</p>
+                                    <div class="flex items-center gap-2 pt-2 border-t border-slate-50">
+                                        <div class="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-[9px] font-bold text-slate-500">
+                                            {{ $log->logger ? substr($log->logger->first_name, 0, 1) : 'S' }}
+                                        </div>
+                                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                            {{ $log->logger->first_name ?? 'System' }} {{ $log->logger->last_name ?? '' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="pl-12 py-4">
+                                <p class="text-slate-400 italic font-medium">No activity recorded yet.</p>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Request Info -->
+            <div class="space-y-6">
+                <!-- Info Card -->
+                <div class="premium-card p-6">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-5">Request Details</h4>
+                    <dl class="space-y-4">
+                        <div>
+                            <dt class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Reference</dt>
+                            <dd class="font-mono text-sm font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded inline-block">{{ $service->ss_ref }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Category</dt>
+                            <dd class="text-sm font-bold text-slate-700">{{ $service->category->category_name ?? '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Submitted</dt>
+                            <dd class="text-sm text-slate-600">{{ \Carbon\Carbon::parse($service->ss_added_date)->format('M d, Y \a\t H:i') }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Current Status</dt>
+                            <dd>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-[10px] font-bold uppercase shadow-sm"
+                                      style="background: #{{ $service->status->status_color ?? '64748b' }};">
+                                    {{ $service->status->status_name ?? 'Pending' }}
+                                </span>
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="premium-card p-6 bg-gradient-to-br from-slate-900 to-slate-800 text-white relative overflow-hidden">
+                    <div class="absolute top-0 right-0 -mr-8 -mt-8 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+                    <h4 class="text-lg font-bold mb-2">Quick Actions</h4>
+                    <p class="text-sm text-slate-400 mb-5 leading-relaxed">Send a message to the requester directly.</p>
+                    <a href="{{ route('hr.messages.index') }}"
+                       class="w-full py-3 rounded-xl bg-white/10 border border-white/10 text-white font-bold text-sm hover:bg-white hover:text-slate-900 transition-all flex items-center justify-center gap-2">
+                        <i class="fa-regular fa-paper-plane"></i>
+                        Open Messages
+                    </a>
+                </div>
+
+                @if($service->ss_attachment)
+                    <div class="premium-card p-6">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Attachment</h4>
+                        <a href="{{ asset($service->ss_attachment) }}" target="_blank" class="group block">
+                            <div class="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 group-hover:border-indigo-200 group-hover:bg-indigo-50/30 transition-all">
+                                <div class="w-10 h-10 rounded-lg bg-red-50 text-red-500 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </div>
+                                <div class="overflow-hidden">
+                                    <p class="text-sm font-bold text-slate-700 truncate group-hover:text-indigo-700 transition-colors">Attachment</p>
+                                    <p class="text-[10px] text-slate-400 uppercase tracking-wider">Click to Preview</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Update Status Modal -->
+    <div class="modal" id="updateStatusModal">
+        <div class="modal-backdrop" onclick="closeModal('updateStatusModal')"></div>
+        <div class="modal-content max-w-md p-0 border-none shadow-2xl">
+            <div class="p-6 bg-gradient-to-r from-indigo-700 to-purple-700 text-white flex justify-between items-center rounded-t-[24px]">
+                <div>
+                    <h2 class="text-xl font-display font-bold leading-none">Update Status</h2>
+                    <p class="text-indigo-200/70 text-xs mt-1">{{ $service->ss_ref }}</p>
+                </div>
+                <button onclick="closeModal('updateStatusModal')" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <div class="p-8 space-y-5">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">New Status <span class="text-red-500">*</span></label>
+                    <select id="new_status_id" class="premium-input w-full">
+                        @foreach($statuses as $st)
+                            <option value="{{ $st->status_id }}" {{ $st->status_id == $service->status_id ? 'selected' : '' }}>
+                                {{ $st->status_name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Remark (Optional)</label>
+                    <textarea id="status_remark" rows="3" class="premium-input w-full" placeholder="Add a note about this status change…"></textarea>
+                </div>
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="closeModal('updateStatusModal')"
+                            class="flex-1 px-6 py-3 rounded-2xl border-2 border-slate-100 text-slate-500 font-bold hover:bg-slate-50 transition-all">Cancel</button>
+                    <button type="button" onclick="submitStatusUpdate()"
+                            class="flex-[2] px-6 py-3 bg-gradient-to-br from-indigo-600 to-purple-600 text-white font-bold rounded-2xl shadow-xl hover:scale-105 transition-all">
+                        Save Status
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function submitStatusUpdate() {
+            const statusId = document.getElementById('new_status_id').value;
+            const remark   = document.getElementById('status_remark').value;
+
+            try {
+                const response = await fetch("{{ route('hr.ss.status', $service->ss_id) }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ status_id: statusId, remark })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    closeModal('updateStatusModal');
+                    // Update badge in page
+                    const badge = document.getElementById('current-status-badge');
+                    const text  = document.getElementById('current-status-text');
+                    if (result.new_status) {
+                        badge.querySelector('.animate-pulse').style.backgroundColor = '#' + result.new_status.status_color;
+                        text.style.color = '#' + result.new_status.status_color;
+                        text.innerText   = result.new_status.status_name;
+                    }
+                    Swal.fire({ icon: 'success', title: 'Status Updated', text: result.message, timer: 2000, showConfirmButton: false });
+                    // Reload page to refresh timeline
+                    setTimeout(() => window.location.reload(), 2000);
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: result.message });
+                }
+            } catch (err) {
+                console.error(err);
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Something went wrong.' });
+            }
+        }
+    </script>
+@endsection

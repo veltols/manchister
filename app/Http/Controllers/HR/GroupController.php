@@ -224,6 +224,28 @@ class GroupController extends Controller
         return response()->json(['success' => true, 'message' => 'Group restored']);
     }
 
+    public function updateGroup(Request $request, $id)
+    {
+        $request->validate([
+            'group_name' => 'required|string|max:50',
+        ]);
+
+        $employeeId = Auth::user()->employee->employee_id ?? 0;
+        $group = Group::findOrFail($id);
+
+        if ($group->added_by != $employeeId) {
+            return response()->json(['success' => false, 'message' => 'Only the group creator can edit the group name.'], 403);
+        }
+
+        $group->group_name = $request->group_name;
+        if ($request->filled('group_desc')) {
+            $group->group_desc = $request->group_desc;
+        }
+        $group->save();
+
+        return response()->json(['success' => true, 'message' => 'Group updated successfully', 'data' => $group]);
+    }
+
     public function copyGroup(Request $request, $id)
     {
         $group = Group::findOrFail($id);

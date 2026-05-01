@@ -18,6 +18,10 @@
             </button>
         </div>
 
+        @php
+            $currentEmpId = auth()->user()->employee->employee_id ?? 0;
+        @endphp
+
         <!-- SS List -->
         <div class="premium-card overflow-hidden">
             <div class="overflow-x-auto">
@@ -27,13 +31,20 @@
                             <th class="text-left font-bold text-slate-400">REF</th>
                             <th class="text-left font-bold text-slate-400">Type</th>
                             <th class="text-left font-bold text-slate-400">Description</th>
-                            <th class="text-left font-bold text-slate-400">Sent To</th>
+                            <th class="text-center font-bold text-slate-400">Role</th>
+                            <th class="text-left font-bold text-slate-400">Related Party</th>
                             <th class="text-center font-bold text-slate-400">Status</th>
                             <th class="text-center font-bold text-slate-400">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50" id="ss-container">
                         @forelse($services as $sv)
+                            @php
+                                $isSender = $sv->added_by == $currentEmpId;
+                                $party = $isSender ? $sv->receiver : $sv->sender;
+                                $roleLabel = $isSender ? 'Sender' : 'Receiver';
+                                $roleColor = $isSender ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700';
+                            @endphp
                             <tr class="hover:bg-slate-50/50 transition-colors">
                                 <td>
                                     <span
@@ -48,15 +59,20 @@
                                         {{ $sv->ss_description }}
                                     </p>
                                 </td>
+                                <td class="text-center">
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase {{ $roleColor }}">
+                                        {{ $roleLabel }}
+                                    </span>
+                                </td>
                                 <td>
                                     <div class="flex items-center gap-2">
                                         <div
                                             class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 uppercase">
-                                            {{ substr($sv->receiver->first_name ?? '?', 0, 1) }}{{ substr($sv->receiver->last_name ?? '?', 0, 1) }}
+                                            {{ substr($party->first_name ?? '?', 0, 1) }}{{ substr($party->last_name ?? '?', 0, 1) }}
                                         </div>
                                         <span
-                                            class="text-sm text-slate-600 font-medium">{{ $sv->receiver->first_name ?? 'Unknown' }}
-                                            {{ $sv->receiver->last_name ?? '' }}</span>
+                                            class="text-sm text-slate-600 font-medium">{{ $party->first_name ?? 'Unknown' }}
+                                            {{ $party->last_name ?? '' }}</span>
                                     </div>
                                 </td>
                                 <td class="text-center">
@@ -75,7 +91,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-20">
+                                <td colspan="7" class="text-center py-20">
                                     <i class="fa-solid fa-handshake-angle text-5xl text-slate-100 mb-4"></i>
                                     <p class="text-slate-400 font-medium">No service requests found</p>
                                 </td>
@@ -179,16 +195,31 @@
     <script src="{{ asset('libs/mammoth/mammoth.browser.min.js') }}"></script>
     <script src="{{ asset('js/attachment-preview.js') }}"></script>
     <script>
+        const CURRENT_EMP_ID = {{ $currentEmpId }};
+
         window.ajaxPagination = new AjaxPagination({
             endpoint: "{{ route('emp.ss.data') }}",
             containerSelector: '#ss-container',
             paginationSelector: '#ss-pagination',
             renderCallback: function(data) {
                 let html = '';
+                if (!data || data.length === 0) {
+                    return `<tr><td colspan="7" class="text-center py-20">
+                        <i class="fa-solid fa-handshake-angle text-5xl text-slate-100 mb-4 block"></i>
+                        <p class="text-slate-400 font-medium">No service requests found</p>
+                    </td></tr>`;
+                }
+
                 data.forEach(sv => {
                     const statusColor = sv.status ? sv.status.status_color : '64748b';
                     const statusName = sv.status ? sv.status.status_name : 'Pending';
-                    const initial = ((sv.receiver.first_name || '?')[0] + (sv.receiver.last_name || '?')[0]).toUpperCase();
+                    
+                    const isSender = sv.added_by == CURRENT_EMP_ID;
+                    const party = isSender ? sv.receiver : sv.sender;
+                    const roleLabel = isSender ? 'Sender' : 'Receiver';
+                    const roleColor = isSender ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700';
+                    
+                    const initial = ((party?.first_name || '?')[0] + (party?.last_name || '?')[0]).toUpperCase();
 
                     html += `
                         <tr class="hover:bg-slate-50/50 transition-colors">
@@ -203,12 +234,17 @@
                                     ${sv.ss_description}
                                 </p>
                             </td>
+                            <td class="text-center">
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${roleColor}">
+                                    ${roleLabel}
+                                </span>
+                            </td>
                             <td>
                                 <div class="flex items-center gap-2">
                                     <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 uppercase">
                                         ${initial}
                                     </div>
-                                    <span class="text-sm text-slate-600 font-medium">${sv.receiver.first_name || 'Unknown'} ${sv.receiver.last_name || ''}</span>
+                                    <span class="text-sm text-slate-600 font-medium">${party?.first_name || 'Unknown'} ${party?.last_name || ''}</span>
                                 </div>
                             </td>
                             <td class="text-center">

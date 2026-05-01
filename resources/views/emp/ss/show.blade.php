@@ -7,13 +7,24 @@
     <div class="space-y-8 animate-fade-in-up" x-data="{ activeTab: 'details' }">
 
         <!-- Back Button & Tools -->
+        @php
+            $currentEmpId = auth()->user()->employee->employee_id ?? 0;
+            $isReceiver = $service->sent_to_id == $currentEmpId;
+        @endphp
         <div class="flex items-center justify-between">
             <a href="{{ route('emp.ss.index') }}"
                 class="group flex items-center gap-2 text-slate-500 font-bold hover:text-brand transition-colors">
                 <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
                 <span>Back to Requests</span>
             </a>
-            <!-- Optional Actions -->
+            
+            @if($isReceiver)
+                <button onclick="openModal('updateStatusModal')"
+                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white font-bold text-sm shadow-lg hover:scale-105 transition-all">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                    Update Status
+                </button>
+            @endif
         </div>
 
         <!-- Premium Hero Banner -->
@@ -179,4 +190,77 @@
         </div>
 
     </div>
+    @if($isReceiver)
+        <!-- Update Status Modal -->
+        <div class="modal" id="updateStatusModal">
+            <div class="modal-backdrop" onclick="closeModal('updateStatusModal')"></div>
+            <div class="modal-content max-w-md p-0 border-none shadow-2xl">
+                <div class="p-6 bg-gradient-to-r from-indigo-700 to-purple-700 text-white flex justify-between items-center rounded-t-[24px]">
+                    <div>
+                        <h2 class="text-xl font-display font-bold leading-none">Update Status</h2>
+                        <p class="text-indigo-200/70 text-xs mt-1">{{ $service->ss_ref }}</p>
+                    </div>
+                    <button onclick="closeModal('updateStatusModal')" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+                <div class="p-8 space-y-5">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">New Status <span class="text-red-500">*</span></label>
+                        <select id="new_status_id" class="premium-input w-full">
+                            @foreach($statuses as $st)
+                                <option value="{{ $st->status_id }}" {{ $st->status_id == $service->status_id ? 'selected' : '' }}>
+                                    {{ $st->status_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Remark (Optional)</label>
+                        <textarea id="status_remark" rows="3" class="premium-input w-full" placeholder="Add a note about this status change…"></textarea>
+                    </div>
+                    <div class="pt-2 flex gap-3">
+                        <button type="button" onclick="closeModal('updateStatusModal')"
+                                class="flex-1 px-6 py-3 rounded-2xl border-2 border-slate-100 text-slate-500 font-bold hover:bg-slate-50 transition-all">Cancel</button>
+                        <button type="button" onclick="submitStatusUpdate()"
+                                class="flex-[2] px-6 py-3 bg-gradient-to-br from-indigo-600 to-purple-600 text-white font-bold rounded-2xl shadow-xl hover:scale-105 transition-all">
+                            Save Status
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            async function submitStatusUpdate() {
+                const statusId = document.getElementById('new_status_id').value;
+                const remark   = document.getElementById('status_remark').value;
+
+                try {
+                    const response = await fetch("{{ route('emp.ss.status', $service->ss_id) }}", {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({ status_id: statusId, remark })
+                    });
+                    const result = await response.json();
+
+                    if (result.success) {
+                        closeModal('updateStatusModal');
+                        Swal.fire({ icon: 'success', title: 'Status Updated', text: result.message, timer: 2000, showConfirmButton: false });
+                        // Reload page to refresh timeline
+                        setTimeout(() => window.location.reload(), 2000);
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: result.message });
+                    }
+                } catch (err) {
+                    console.error(err);
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Something went wrong.' });
+                }
+            }
+        </script>
+    @endif
 @endsection

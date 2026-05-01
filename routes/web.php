@@ -172,6 +172,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/ss/data', [App\Http\Controllers\Employee\SupportServiceController::class, 'getData'])->name('ss.data');
         Route::post('/ss', [App\Http\Controllers\Employee\SupportServiceController::class, 'store'])->name('ss.store');
         Route::get('/ss/{id}', [App\Http\Controllers\Employee\SupportServiceController::class, 'show'])->name('ss.show');
+        Route::post('/ss/{id}/status', [App\Http\Controllers\Employee\SupportServiceController::class, 'updateStatus'])->name('ss.status');
 
         // My Disciplinary Actions
         Route::get('/da', [App\Http\Controllers\Employee\DisciplinaryActionController::class, 'index'])->name('da.index');
@@ -196,6 +197,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/groups/{id}/archive', [App\Http\Controllers\Employee\GroupController::class, 'archiveGroup'])->name('groups.archive');
         Route::post('/groups/{id}/restore', [App\Http\Controllers\Employee\GroupController::class, 'restoreGroup'])->name('groups.restore');
         Route::post('/groups/{id}/copy', [App\Http\Controllers\Employee\GroupController::class, 'copyGroup'])->name('groups.copy');
+        Route::post('/groups/{id}/update', [App\Http\Controllers\Employee\GroupController::class, 'updateGroup'])->name('groups.update');
 
         // Agendas
         Route::post('/groups/{id}/agenda', [App\Http\Controllers\Employee\GroupController::class, 'storeAgenda'])->name('groups.agenda.store');
@@ -316,6 +318,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/documents', [App\Http\Controllers\HR\DocumentController::class, 'store'])->name('documents.store');
         Route::delete('/documents/{id}', [App\Http\Controllers\HR\DocumentController::class, 'destroy'])->name('documents.destroy');
 
+        // Support Services (Received Requests)
+        Route::get('/ss', [App\Http\Controllers\HR\SupportServiceController::class, 'index'])->name('ss.index');
+        Route::get('/ss/data', [App\Http\Controllers\HR\SupportServiceController::class, 'getData'])->name('ss.data');
+        Route::get('/ss/{id}', [App\Http\Controllers\HR\SupportServiceController::class, 'show'])->name('ss.show');
+        Route::post('/ss/{id}/status', [App\Http\Controllers\HR\SupportServiceController::class, 'updateStatus'])->name('ss.status');
+
         // Groups & Committees
         Route::get('/groups', [App\Http\Controllers\HR\GroupController::class, 'index'])->name('groups.index');
         Route::get('/groups/{id}', [App\Http\Controllers\HR\GroupController::class, 'show'])->name('groups.show');
@@ -327,6 +335,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/groups/{id}/archive', [App\Http\Controllers\HR\GroupController::class, 'archiveGroup'])->name('groups.archive');
         Route::post('/groups/{id}/restore', [App\Http\Controllers\HR\GroupController::class, 'restoreGroup'])->name('groups.restore');
         Route::post('/groups/{id}/copy', [App\Http\Controllers\HR\GroupController::class, 'copyGroup'])->name('groups.copy');
+        Route::post('/groups/{id}/update', [App\Http\Controllers\HR\GroupController::class, 'updateGroup'])->name('groups.update');
 
         // Agendas
         Route::post('/groups/{id}/agenda', [App\Http\Controllers\HR\GroupController::class, 'storeAgenda'])->name('groups.agenda.store');
