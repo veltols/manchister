@@ -14,7 +14,7 @@
             </div>
             <div>
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pending</p>
-                <p class="text-2xl font-bold text-slate-700">{{ $tasks->count() }}</p>
+                <p class="text-2xl font-bold text-slate-700">{{ $tasks->count() + $permissions->count() }}</p>
             </div>
         </div>
         <div class="premium-card p-5 flex items-center gap-4 group">
