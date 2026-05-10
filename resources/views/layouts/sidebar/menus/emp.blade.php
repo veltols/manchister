@@ -116,6 +116,56 @@
         </a>
     @endif
 
+    {{-- ── Inbound Correspondence Menus (role-based, any user type) ─────── --}}
+
+    {{-- Liaison Officer: register & track inbound --}}
+    @if(Auth::user()->is_liaison)
+    <a href="{{ route('emp.inbound-liaison.index') }}"
+        class="nav-item {{ request()->routeIs('emp.inbound-liaison.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
+        <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-envelope-circle-check text-base"></i>
+        </div>
+        <span class="text-base font-semibold">Inbound (Liaison)</span>
+    </a>
+    @endif
+
+    {{-- General Manager: review & assign --}}
+    @if(Auth::user()->is_gm)
+    @php
+        $empGmInboundPending = \App\Models\InboundCorrespondence::where('gm_user_id', Auth::user()->user_id)
+            ->whereIn('status', ['Pending Approval', 'Under Review', 'Resubmitted'])->count();
+    @endphp
+    <a href="{{ route('emp.inbound-gm.index') }}"
+        class="nav-item {{ request()->routeIs('emp.inbound-gm.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 relative">
+        <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-envelope-open-text text-base"></i>
+        </div>
+        <span class="text-base font-semibold">Inbound (GM)</span>
+        @if($empGmInboundPending > 0)
+            <span class="absolute top-1 right-2 bg-amber-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm">{{ $empGmInboundPending }}</span>
+        @endif
+    </a>
+    @endif
+
+    {{-- Line Manager: execute assigned action items --}}
+    @php
+        $inboundPendingCount = \App\Models\InboundActionItem::where('assigned_to', Auth::user()->user_id)
+            ->whereIn('status', ['Pending', 'In Progress'])
+            ->count();
+    @endphp
+    @if($inboundPendingCount > 0 || request()->routeIs('emp.inbound.*'))
+    <a href="{{ route('emp.inbound.index') }}"
+        class="nav-item {{ request()->routeIs('emp.inbound.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 relative">
+        <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-list-check text-base"></i>
+        </div>
+        <span class="text-base font-semibold">Inbound Actions</span>
+        @if($inboundPendingCount > 0)
+            <span class="absolute top-1 right-2 bg-indigo-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm">{{ $inboundPendingCount }}</span>
+        @endif
+    </a>
+    @endif
+
     <!-- Support Menu Drawer -->
     <div x-data="{ open: false }" @click.away="open = false" class="relative">
         <button @click="open = !open"

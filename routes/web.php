@@ -185,6 +185,26 @@ Route::middleware('auth')->group(function () {
         Route::post('/communications', [App\Http\Controllers\Employee\CommunicationRequestController::class, 'store'])->name('communications.store');
         Route::get('/communications/{id}', [App\Http\Controllers\Employee\CommunicationRequestController::class, 'show'])->name('communications.show');
 
+        // Inbound Correspondence — Line Manager (Form C)
+        Route::get('/inbound', [App\Http\Controllers\Employee\InboundLineManagerController::class, 'index'])->name('inbound.index');
+        Route::get('/inbound/{actionId}', [App\Http\Controllers\Employee\InboundLineManagerController::class, 'show'])->name('inbound.show');
+        Route::post('/inbound/{actionId}/note', [App\Http\Controllers\Employee\InboundLineManagerController::class, 'submitNote'])->name('inbound.note');
+
+        // Inbound Correspondence — Liaison Officer (Form A) — accessible to emp users who are also Liaison Officers
+        Route::get('/inbound-liaison', [App\Http\Controllers\HR\InboundController::class, 'index'])->name('inbound-liaison.index');
+        Route::get('/inbound-liaison/data', [App\Http\Controllers\HR\InboundController::class, 'getData'])->name('inbound-liaison.data');
+        Route::post('/inbound-liaison', [App\Http\Controllers\HR\InboundController::class, 'store'])->name('inbound-liaison.store');
+        Route::get('/inbound-liaison/{id}', [App\Http\Controllers\HR\InboundController::class, 'show'])->name('inbound-liaison.show');
+        Route::put('/inbound-liaison/{id}', [App\Http\Controllers\HR\InboundController::class, 'update'])->name('inbound-liaison.update');
+        Route::post('/inbound-liaison/entity', [App\Http\Controllers\HR\InboundController::class, 'storeEntity'])->name('inbound-liaison.entity.store');
+
+        // Inbound Correspondence — GM Review (Form B) — accessible to emp users who are also the GM
+        Route::get('/inbound-gm', [App\Http\Controllers\Admin\InboundGmController::class, 'index'])->name('inbound-gm.index');
+        Route::get('/inbound-gm/{id}', [App\Http\Controllers\Admin\InboundGmController::class, 'show'])->name('inbound-gm.show');
+        Route::post('/inbound-gm/{id}/decide', [App\Http\Controllers\Admin\InboundGmController::class, 'decide'])->name('inbound-gm.decide');
+        Route::post('/inbound-gm/{id}/action', [App\Http\Controllers\Admin\InboundGmController::class, 'storeActionItem'])->name('inbound-gm.action.store');
+        Route::delete('/inbound-gm/{id}/action/{actionId}', [App\Http\Controllers\Admin\InboundGmController::class, 'destroyActionItem'])->name('inbound-gm.action.destroy');
+
         // My Groups & Committees
         Route::get('/groups', [App\Http\Controllers\Employee\GroupController::class, 'index'])->name('groups.index');
         Route::get('/groups/{id}', [App\Http\Controllers\Employee\GroupController::class, 'show'])->name('groups.show');
@@ -404,6 +424,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/communications/data', [App\Http\Controllers\HR\CommunicationController::class, 'getData'])->name('communications.data');
         Route::post('/communications', [App\Http\Controllers\HR\CommunicationController::class, 'store'])->name('communications.store');
 
+        // Inbound Correspondence (Form A — Liaison Officer)
+        Route::get('/inbound', [App\Http\Controllers\HR\InboundController::class, 'index'])->name('inbound.index');
+        Route::get('/inbound/data', [App\Http\Controllers\HR\InboundController::class, 'getData'])->name('inbound.data');
+        Route::post('/inbound', [App\Http\Controllers\HR\InboundController::class, 'store'])->name('inbound.store');
+        Route::get('/inbound/{id}', [App\Http\Controllers\HR\InboundController::class, 'show'])->name('inbound.show');
+        Route::put('/inbound/{id}', [App\Http\Controllers\HR\InboundController::class, 'update'])->name('inbound.update');
+        Route::post('/inbound/entity', [App\Http\Controllers\HR\InboundController::class, 'storeEntity'])->name('inbound.entity.store');
+
 
         // Designations
         Route::get('/designations', [App\Http\Controllers\HR\DesignationController::class, 'index'])->name('designations.index');
@@ -533,6 +561,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/users/{id}/update-login-id', [App\Http\Controllers\Admin\UserController::class, 'updateLoginId'])->name('users.update-login-id');
         Route::post('/users/{id}/toggle-feedback', [App\Http\Controllers\Admin\UserController::class, 'toggleFeedback'])->name('users.toggle-feedback');
         Route::post('/users/{id}/toggle-gm', [App\Http\Controllers\Admin\UserController::class, 'toggleGm'])->name('users.toggle-gm');
+        Route::post('/users/{id}/toggle-liaison', [App\Http\Controllers\Admin\UserController::class, 'toggleLiaison'])->name('users.toggle-liaison');
 
         // GM Leave Approvals
         Route::get('/leaves/gm', [App\Http\Controllers\Admin\GmLeaveController::class, 'index'])->name('leaves.gm');
@@ -540,6 +569,13 @@ Route::middleware('auth')->group(function () {
         Route::post('/leaves/{id}/gm-reject', [App\Http\Controllers\Admin\GmLeaveController::class, 'reject'])->name('leaves.gm-reject');
 
 
+
+        // Inbound Correspondence (Form B — GM Review)
+        Route::get('/inbound', [App\Http\Controllers\Admin\InboundGmController::class, 'index'])->name('inbound.index');
+        Route::get('/inbound/{id}', [App\Http\Controllers\Admin\InboundGmController::class, 'show'])->name('inbound.show');
+        Route::post('/inbound/{id}/decide', [App\Http\Controllers\Admin\InboundGmController::class, 'decide'])->name('inbound.decide');
+        Route::post('/inbound/{id}/action', [App\Http\Controllers\Admin\InboundGmController::class, 'storeActionItem'])->name('inbound.action.store');
+        Route::delete('/inbound/{id}/action/{actionId}', [App\Http\Controllers\Admin\InboundGmController::class, 'destroyActionItem'])->name('inbound.action.destroy');
 
         // Settings (Dynamics Lists)
         Route::get('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');

@@ -37,6 +37,17 @@
         <span class="text-base font-semibold">Requests</span>
     </a>
 
+    {{-- Inbound Correspondence (Liaison Officer only) --}}
+    @if(Auth::user()->is_liaison)
+    <a href="{{ route('hr.inbound.index') }}"
+        class="nav-item {{ request()->routeIs('hr.inbound.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
+        <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-envelope-open-text text-base"></i>
+        </div>
+        <span class="text-base font-semibold">Inbound Corr.</span>
+    </a>
+    @endif
+
     <a href="{{ route('hr.documents.index') }}"
         class="nav-item {{ request()->routeIs('hr.documents.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
         <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -331,6 +342,24 @@
         </div>
         <span class="text-base font-semibold">Incidents</span>
     </a>
+
+    {{-- Inbound Correspondence (GM Review — only for GM) --}}
+    @if(Auth::user()->is_gm)
+    @php
+        $adminInboundPending = \App\Models\InboundCorrespondence::where('gm_user_id', Auth::user()->user_id)
+            ->whereIn('status', ['Pending Approval', 'Under Review', 'Resubmitted'])->count();
+    @endphp
+    <a href="{{ route('admin.inbound.index') }}"
+        class="nav-item {{ request()->routeIs('admin.inbound.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 relative">
+        <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-envelope-open-text text-base"></i>
+        </div>
+        <span class="text-base font-semibold">Inbound Corr.</span>
+        @if($adminInboundPending > 0)
+            <span class="absolute top-1 right-2 bg-indigo-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm">{{ $adminInboundPending }}</span>
+        @endif
+    </a>
+    @endif
 
     {{-- Feedback --}}
     <a href="{{ route('admin.feedback.index') }}"

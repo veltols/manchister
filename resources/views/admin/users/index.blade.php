@@ -62,6 +62,7 @@
                             <th class="text-center">Status</th>
                             <th class="text-center">Feedback</th>
                             <th class="text-center"><i class="fa-solid fa-crown text-amber-500 mr-1"></i>GM</th>
+                            <th class="text-center"><i class="fa-solid fa-user-tie text-teal-500 mr-1"></i>Liaison</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
@@ -143,6 +144,17 @@
                                         title="{{ $isGm ? 'Click to remove GM role' : 'Click to designate as General Manager' }}">
                                         <i class="fa-solid fa-crown text-[10px]"></i>
                                         {{ $isGm ? 'GM' : 'Not GM' }}
+                                    </button>
+                                </td>
+                                <td class="text-center">
+                                    @php $isLiaison = $user->systemUser?->is_liaison ?? 0; @endphp
+                                    <button class="liaison-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all hover:scale-105
+                                        {{ $isLiaison ? 'bg-teal-100 text-teal-700 border border-teal-300' : 'bg-slate-100 text-slate-400 border border-slate-200' }}"
+                                        data-id="{{ $user->employee_id }}"
+                                        data-is-liaison="{{ $isLiaison }}"
+                                        title="{{ $isLiaison ? 'Click to remove Liaison Officer role' : 'Click to designate as Liaison Officer' }}">
+                                        <i class="fa-solid fa-user-tie text-[10px]"></i>
+                                        {{ $isLiaison ? 'Liaison' : 'Not Liaison' }}
                                     </button>
                                 </td>
                                 <td class="text-center">
@@ -249,6 +261,16 @@
                 return `<button class="gm-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all hover:scale-105 ${cls}" data-id="${userId}" data-is-gm="${isGm ? 1 : 0}" title="${title}"><i class="fa-solid fa-crown text-[10px]"></i> ${label}</button>`;
             }
 
+            // Liaison Officer Toggle Badge Helper
+            function getLiaisonToggle(userId, isLiaison) {
+                const cls = isLiaison
+                    ? 'bg-teal-100 text-teal-700 border-teal-300'
+                    : 'bg-slate-100 text-slate-400 border-slate-200';
+                const label = isLiaison ? 'Liaison' : 'Not Liaison';
+                const title = isLiaison ? 'Click to remove Liaison Officer role' : 'Click to designate as Liaison Officer';
+                return `<button class="liaison-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all hover:scale-105 ${cls}" data-id="${userId}" data-is-liaison="${isLiaison ? 1 : 0}" title="${title}"><i class="fa-solid fa-user-tie text-[10px]"></i> ${label}</button>`;
+            }
+
             // Initialize AJAX Pagination
             const prefix = "{{ route('admin.users.index') }}".replace('/users', ''); // Get base admin URL
             
@@ -335,6 +357,9 @@
                                 </td>
                                 <td class="text-center">
                                     ${getGmToggle(user.employee_id, user.system_user?.is_gm ?? 0)}
+                                </td>
+                                <td class="text-center">
+                                    ${getLiaisonToggle(user.employee_id, user.system_user?.is_liaison ?? 0)}
                                 </td>
                                 <td class="text-center">
                                     <div class="flex items-center justify-center gap-2">
@@ -442,7 +467,47 @@
                         .catch(() => Toast.fire({ icon: 'error', title: 'An error occurred.' }));
                     });
                 }
+
+                // Liaison Officer toggle
+                const liaisonBtn = e.target.closest('.liaison-toggle-btn');
+                if (liaisonBtn) {
+                    const userId = liaisonBtn.dataset.id;
+                    const isCurrentlyLiaison = parseInt(liaisonBtn.dataset.isLiaison);
+                    const empName = liaisonBtn.closest('tr')?.querySelector('p.font-semibold')?.textContent?.trim() || 'this user';
+
+                    Swal.fire({
+                        icon: 'question',
+                        title: isCurrentlyLiaison ? 'Remove Liaison Officer Role?' : 'Designate as Liaison Officer?',
+                        text: isCurrentlyLiaison
+                            ? `Remove Liaison Officer designation from ${empName}?`
+                            : `Designate ${empName} as Liaison Officer?`,
+                        showCancelButton: true,
+                        confirmButtonColor: isCurrentlyLiaison ? '#ef4444' : '#14b8a6',
+                        confirmButtonText: isCurrentlyLiaison ? 'Yes, Remove' : 'Yes, Designate',
+                    }).then(result => {
+                        if (!result.isConfirmed) return;
+                        fetch(`${toggleFbBase}/${userId}/toggle-liaison`, {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.success) {
+                                const isNowLiaison = data.is_liaison;
+                                liaisonBtn.dataset.isLiaison = isNowLiaison ? '1' : '0';
+                                liaisonBtn.className = `liaison-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all hover:scale-105 ${isNowLiaison ? 'bg-teal-100 text-teal-700 border-teal-300' : 'bg-slate-100 text-slate-400 border-slate-200'}`;
+                                liaisonBtn.title = isNowLiaison ? 'Click to remove Liaison Officer role' : 'Click to designate as Liaison Officer';
+                                liaisonBtn.innerHTML = `<i class="fa-solid fa-user-tie text-[10px]"></i> ${isNowLiaison ? 'Liaison' : 'Not Liaison'}`;
+                                Toast.fire({ icon: 'success', title: data.message });
+                            } else {
+                                Toast.fire({ icon: 'error', title: data.message || 'Failed to update Liaison status.' });
+                            }
+                        })
+                        .catch(() => Toast.fire({ icon: 'error', title: 'An error occurred.' }));
+                    });
+                }
             });
+
             // Filter Event Listeners
             const searchInput = document.getElementById('userListSearch');
             const deptFilter = document.getElementById('filterDepartment');

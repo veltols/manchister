@@ -651,6 +651,14 @@
                         <input type="checkbox" name="is_gm" id="perm_is_gm" value="1" {{ ($user->systemUser->is_gm ?? 0) ? 'checked' : '' }} class="w-6 h-6 rounded border-amber-300 text-amber-600 focus:ring-amber-500">
                     </label>
 
+                    <label class="flex items-center justify-between p-4 rounded-xl bg-teal-50 border border-teal-200 cursor-pointer hover:bg-teal-100 transition-colors">
+                        <div>
+                            <span class="block font-bold text-teal-900 flex items-center gap-2"><i class="fa-solid fa-user-tie text-teal-500 text-xs"></i> Liaison Officer</span>
+                            <span class="text-xs text-teal-700 italic">Designate as Liaison Officer — can register and submit inbound correspondence to the GM</span>
+                        </div>
+                        <input type="checkbox" name="is_liaison" id="perm_is_liaison" value="1" {{ ($user->systemUser->is_liaison ?? 0) ? 'checked' : '' }} class="w-6 h-6 rounded border-teal-300 text-teal-600 focus:ring-teal-500">
+                    </label>
+
 
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Log Remark</label>

@@ -357,24 +357,26 @@ class UserController extends Controller
         $user->is_committee = $request->has('is_committee') ? 1 : 0;
         $user->save();
 
-        // Update is_gm on the users_list record
+        // Update is_gm and is_liaison on the users_list record
         if ($user->systemUser) {
             $newIsGm = $request->has('is_gm') ? 1 : 0;
-            
+
             if ($newIsGm === 1) {
                 // Clear other GMs first
                 \App\Models\User::where('is_gm', 1)
                     ->where('user_id', '!=', $user->employee_id)
                     ->update(['is_gm' => 0]);
             }
-            
+
             $user->systemUser->is_gm = $newIsGm;
+            $user->systemUser->is_liaison = $request->has('is_liaison') ? 1 : 0;
             $user->systemUser->save();
         }
 
-        $isGm = $request->has('is_gm') ? 'Yes' : 'No';
+        $isGm      = $request->has('is_gm')      ? 'Yes' : 'No';
+        $isLiaison = $request->has('is_liaison')  ? 'Yes' : 'No';
         $this->logAction($id, 'Permissions Updated',
-            "Groups: {$user->is_group}, Committees: {$user->is_committee}, GM: {$isGm}. " . $request->log_remark);
+            "Groups: {$user->is_group}, Committees: {$user->is_committee}, GM: {$isGm}, Liaison: {$isLiaison}. " . $request->log_remark);
 
         return redirect()->back()->with('success', "Permissions updated successfully.");
     }
@@ -536,6 +538,34 @@ class UserController extends Controller
             'message' => $newState
                 ? 'User designated as General Manager. Previous GM (if any) has been unset.'
                 : 'GM designation removed from this user.',
+        ]);
+    }
+
+
+
+    public function toggleLiaison($id)
+    {
+        $systemUser = \App\Models\User::where('user_id', $id)->first();
+
+        if (!$systemUser) {
+            return response()->json(['success' => false, 'message' => 'User not found.'], 404);
+        }
+
+        $newState = $systemUser->is_liaison ? 0 : 1;
+
+        $systemUser->is_liaison = $newState;
+        $systemUser->save();
+
+        $state  = $newState ? 'designated as Liaison Officer' : 'removed from Liaison Officer role';
+        $action = $newState ? 'Liaison Officer Designated' : 'Liaison Officer Removed';
+        $this->logAction($id, $action, "User {$state} by admin.");
+
+        return response()->json([
+            'success'    => true,
+            'is_liaison' => $newState,
+            'message'    => $newState
+                ? 'User designated as Liaison Officer.'
+                : 'Liaison Officer designation removed from this user.',
         ]);
     }
 

@@ -37,6 +37,7 @@ class User extends Authenticatable
         'user_lang',
         'is_active',
         'is_gm',
+        'is_liaison',
         'feedback_enabled',
     ];
 
