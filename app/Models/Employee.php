@@ -55,6 +55,11 @@ class Employee extends Model
     {
         return trim("{$this->first_name} {$this->second_name} {$this->third_name} {$this->last_name}");
     }
+ 
+    public function getEmployeeNameAttribute()
+    {
+        return $this->fullName;
+    }
 
     public function leaves()
     {

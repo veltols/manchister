@@ -14,6 +14,11 @@ class CommunicationRequest extends Model
     public $timestamps = false;
 
     protected $guarded = [];
+ 
+    protected $casts = [
+        'requested_date' => 'datetime',
+        'approved_1_date' => 'datetime',
+    ];
 
     public function type()
     {
@@ -27,6 +32,16 @@ class CommunicationRequest extends Model
 
     public function employee()
     {
-        return $this->belongsTo(EmployeesList::class, 'requested_by', 'employee_id');
+        return $this->belongsTo(Employee::class, 'requested_by', 'employee_id');
+    }
+
+    public function attachments()
+    {
+        return $this->hasMany(CommunicationAttachment::class, 'communication_id', 'communication_id');
+    }
+
+    public function actionItems()
+    {
+        return $this->hasMany(OutboundActionItem::class, 'communication_id', 'communication_id');
     }
 }

@@ -95,7 +95,7 @@
             </a>
 
             <!-- External Communications -->
-            <!-- <a href="{{ route('emp.communications.index') }}"
+            <a href="{{ route('emp.communications.index') }}"
                 class="hub-card group bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
                 <div
                     class="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center text-orange-600 mb-6 group-hover:bg-orange-600 group-hover:text-white transition-all duration-500">
@@ -107,7 +107,7 @@
                     <span>Share Info</span>
                     <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
                 </div>
-            </a> -->
+            </a>
 
             <!-- Document Requests -->
             <div class="hub-card bg-slate-50 p-6 rounded-3xl border border-slate-200 border-dashed relative">

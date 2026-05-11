@@ -6,6 +6,21 @@
 @section('content')
     <div class="max-w-5xl mx-auto space-y-8 animate-fade-in-up">
 
+        @if($request->modification_notes && ($request->is_approved_1 == 3 || $request->is_approved_2 == 3))
+            <div class="premium-card p-8 bg-amber-50 border-l-8 border-amber-500 shadow-lg">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-200 flex items-center justify-center text-amber-700 shrink-0">
+                        <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-amber-800 mb-1">Action Required: Modification Requested</h3>
+                        <p class="text-amber-700 font-medium italic leading-relaxed">"{{ $request->modification_notes }}"</p>
+                        <p class="text-[10px] text-amber-500 font-bold uppercase mt-3 italic tracking-wider">Please update the request and resubmit for review.</p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <!-- Top Card -->
         <div class="premium-card p-10 bg-white border-l-8 border-teal-500 shadow-xl">
             <div class="flex flex-col md:flex-row justify-between items-start gap-8">
@@ -20,6 +35,14 @@
                     <h1 class="text-4xl font-display font-bold text-premium leading-tight">
                         {{ $request->communication_subject }}
                     </h1>
+                    <div class="flex items-center gap-2 mt-2">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider {{ $request->priority == 'high' ? 'bg-red-100 text-red-700' : ($request->priority == 'medium' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700') }}">
+                            {{ $request->priority }} Priority
+                        </span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider {{ $request->confidentiality == 'restricted' ? 'bg-purple-100 text-purple-700' : ($request->confidentiality == 'confidential' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700') }}">
+                            {{ $request->confidentiality }}
+                        </span>
+                    </div>
                     <div class="flex items-center gap-6">
                         <div class="flex items-center gap-2">
                             <i class="fa-solid fa-building text-slate-400"></i>
@@ -52,21 +75,67 @@
             <div class="premium-card p-8">
                 <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
                     <i class="fa-solid fa-align-left text-teal-500"></i>
-                    Description
+                    Description / Summary
                 </h3>
                 <div class="prose prose-slate max-w-none text-slate-700 leading-relaxed font-medium">
                     {!! nl2br(e($request->communication_description)) !!}
                 </div>
             </div>
 
+            <!-- Purpose -->
+            <div class="premium-card p-8 bg-indigo-50/30">
+                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-bullseye text-indigo-500"></i>
+                    Purpose / Reason
+                </h3>
+                <div class="prose prose-slate max-w-none text-slate-700 leading-relaxed font-medium italic">
+                    {!! nl2br(e($request->communication_purpose)) !!}
+                </div>
+            </div>
+        </div>
+
+        <!-- Information & Attachments -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <!-- Information Shared -->
             <div class="premium-card p-8 bg-slate-50/50">
                 <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
                     <i class="fa-solid fa-share-nodes text-teal-500"></i>
                     Information Shared
                 </h3>
-                <div class="p-6 bg-white rounded-2xl border border-slate-100 text-slate-600 italic">
+                <div class="p-6 bg-white rounded-2xl border border-slate-100 text-slate-600">
                     {!! nl2br(e($request->information_shared)) !!}
+                </div>
+            </div>
+
+            <!-- Attachments -->
+            <div class="premium-card p-8">
+                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-paperclip text-teal-500"></i>
+                    Source Attachments
+                </h3>
+                <div class="space-y-3">
+                    @forelse($request->attachments as $file)
+                        <div class="flex items-center justify-between p-4 bg-white rounded-xl border border-slate-100 hover:border-brand hover:shadow-md transition-all group cursor-pointer" 
+                             onclick="window.previewRemoteFile('{{ asset('storage/' . $file->file_path) }}', '{{ $file->file_name }}')">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-brand/10 group-hover:text-brand transition-colors">
+                                    <i class="fa-solid fa-file-pdf text-xl"></i>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-bold text-slate-700 truncate max-w-[150px]">{{ $file->file_name }}</span>
+                                    <span class="text-[10px] text-slate-400 uppercase font-bold">{{ strtoupper($file->file_type) }}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] text-brand font-bold uppercase opacity-0 group-hover:opacity-100 transition-opacity">Preview</span>
+                                <i class="fa-solid fa-eye text-slate-300 group-hover:text-brand"></i>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center py-6 text-slate-400 italic text-sm">
+                            No attachments found
+                        </div>
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -79,12 +148,14 @@
                 <!-- Stage 1 -->
                 <div class="flex flex-col items-center gap-3">
                     <div
-                        class="w-12 h-12 rounded-full {{ $request->is_approved_1 == 1 ? 'bg-green-500 text-white' : 'bg-slate-100 text-slate-300' }} flex items-center justify-center shadow-sm">
-                        <i class="fa-solid fa-user-check"></i>
+                        class="w-12 h-12 rounded-full {{ $request->is_approved_1 == 1 ? 'bg-green-500 text-white' : ($request->is_approved_1 == 2 ? 'bg-red-500 text-white' : 'bg-slate-100 text-slate-300') }} flex items-center justify-center shadow-sm relative">
+                        <i class="fa-solid fa-user-tie"></i>
+                        @if($request->is_approved_1 == 0)
+                            <div class="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 border-2 border-white rounded-full animate-pulse"></div>
+                        @endif
                     </div>
                     <span
-                        class="text-xs font-bold {{ $request->is_approved_1 == 1 ? 'text-green-600' : 'text-slate-400' }}">Dept
-                        Manager</span>
+                        class="text-[10px] font-bold {{ $request->is_approved_1 == 1 ? 'text-green-600' : 'text-slate-400' }} uppercase">Line Manager</span>
                 </div>
 
                 <div class="h-0.5 w-12 bg-slate-100 hidden md:block"></div>
@@ -93,26 +164,38 @@
                 <div class="flex flex-col items-center gap-3">
                     <div
                         class="w-12 h-12 rounded-full {{ $request->is_approved_2 == 1 ? 'bg-green-500 text-white' : 'bg-slate-100 text-slate-300' }} flex items-center justify-center shadow-sm">
-                        <i class="fa-solid fa-user-shield"></i>
+                        <i class="fa-solid fa-crown"></i>
                     </div>
                     <span
-                        class="text-xs font-bold {{ $request->is_approved_2 == 1 ? 'text-green-600' : 'text-slate-400' }}">Admin
-                        Office</span>
+                        class="text-[10px] font-bold {{ $request->is_approved_2 == 1 ? 'text-green-600' : 'text-slate-400' }} uppercase">GM (Form 1)</span>
                 </div>
 
                 <div class="h-0.5 w-12 bg-slate-100 hidden md:block"></div>
 
-                <!-- Stage 3 (Final) -->
+                <!-- Stage 3 -->
                 <div class="flex flex-col items-center gap-3">
                     <div
-                        class="w-12 h-12 rounded-full {{ $request->communication_status_id == 4 ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-300' }} flex items-center justify-center shadow-sm">
-                        <i class="fa-solid fa-flag-checkered"></i>
+                        class="w-12 h-12 rounded-full {{ $request->communication_status_id == 3 ? 'bg-indigo-500 text-white' : 'bg-slate-100 text-slate-300' }} flex items-center justify-center shadow-sm">
+                        <i class="fa-solid fa-paper-plane"></i>
                     </div>
                     <span
-                        class="text-xs font-bold {{ $request->communication_status_id == 4 ? 'text-blue-600' : 'text-slate-400' }}">Completed</span>
+                        class="text-[10px] font-bold {{ $request->communication_status_id == 3 ? 'text-indigo-600' : 'text-slate-400' }} uppercase">Liaison (Form 2)</span>
+                </div>
+
+                <div class="h-0.5 w-12 bg-slate-100 hidden md:block"></div>
+
+                <!-- Final -->
+                <div class="flex flex-col items-center gap-3">
+                    <div
+                        class="w-12 h-12 rounded-full {{ $request->communication_status_id == 4 ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-300' }} flex items-center justify-center shadow-sm">
+                        <i class="fa-solid fa-earth-americas"></i>
+                    </div>
+                    <span
+                        class="text-[10px] font-bold {{ $request->communication_status_id == 4 ? 'text-blue-600' : 'text-slate-400' }} uppercase">External Entity</span>
                 </div>
             </div>
         </div>
 
     </div>
+    <script src="{{ asset('js/attachment-preview.js') }}"></script>
 @endsection

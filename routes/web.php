@@ -156,6 +156,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/lm/leaves/{id}/approve', [App\Http\Controllers\Employee\LmLeaveController::class, 'approve'])->name('lm.leaves.approve');
         Route::post('/lm/leaves/{id}/reject', [App\Http\Controllers\Employee\LmLeaveController::class, 'reject'])->name('lm.leaves.reject');
 
+        // Line Manager — Outbound Communications Queue (Stage 2)
+        Route::get('/lm/communications', [App\Http\Controllers\Employee\LmCommunicationController::class, 'index'])->name('lm.communications.index');
+        Route::post('/lm/communications/{id}/approve', [App\Http\Controllers\Employee\LmCommunicationController::class, 'approve'])->name('lm.communications.approve');
+        Route::post('/lm/communications/{id}/modify', [App\Http\Controllers\Employee\LmCommunicationController::class, 'modify'])->name('lm.communications.modify');
+        Route::post('/lm/communications/{id}/reject', [App\Http\Controllers\Employee\LmCommunicationController::class, 'reject'])->name('lm.communications.reject');
+
         // My Permissions
         Route::get('/permissions', [App\Http\Controllers\Employee\PermissionController::class, 'index'])->name('permissions.index');
         Route::get('/permissions/data', [App\Http\Controllers\Employee\PermissionController::class, 'getData'])->name('permissions.data');
@@ -184,6 +190,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/communications/data', [App\Http\Controllers\Employee\CommunicationRequestController::class, 'getData'])->name('communications.data');
         Route::post('/communications', [App\Http\Controllers\Employee\CommunicationRequestController::class, 'store'])->name('communications.store');
         Route::get('/communications/{id}', [App\Http\Controllers\Employee\CommunicationRequestController::class, 'show'])->name('communications.show');
+        Route::post('/communications/{id}/update', [App\Http\Controllers\Employee\CommunicationRequestController::class, 'update'])->name('communications.update');
+
+        // Outbound Tasks (Assigned by GM)
+        Route::get('/outbound-tasks', [App\Http\Controllers\Employee\OutboundActionController::class, 'index'])->name('outbound-tasks.index');
+        Route::post('/outbound-tasks/{id}/status', [App\Http\Controllers\Employee\OutboundActionController::class, 'updateStatus'])->name('outbound-tasks.status');
 
         // Inbound Correspondence — Line Manager (Form C)
         Route::get('/inbound', [App\Http\Controllers\Employee\InboundLineManagerController::class, 'index'])->name('inbound.index');
@@ -432,6 +443,10 @@ Route::middleware('auth')->group(function () {
         Route::put('/inbound/{id}', [App\Http\Controllers\HR\InboundController::class, 'update'])->name('inbound.update');
         Route::post('/inbound/entity', [App\Http\Controllers\HR\InboundController::class, 'storeEntity'])->name('inbound.entity.store');
 
+        // Outbound Communications (Form 2 — Liaison Finalization)
+        Route::get('/communications/outbound-liaison', [App\Http\Controllers\HR\OutboundLiaisonController::class, 'index'])->name('communications.outbound_liaison.index');
+        Route::post('/communications/outbound-liaison/{id}/finalize', [App\Http\Controllers\HR\OutboundLiaisonController::class, 'finalize'])->name('communications.outbound_liaison.finalize');
+
 
         // Designations
         Route::get('/designations', [App\Http\Controllers\HR\DesignationController::class, 'index'])->name('designations.index');
@@ -576,6 +591,13 @@ Route::middleware('auth')->group(function () {
         Route::post('/inbound/{id}/decide', [App\Http\Controllers\Admin\InboundGmController::class, 'decide'])->name('inbound.decide');
         Route::post('/inbound/{id}/action', [App\Http\Controllers\Admin\InboundGmController::class, 'storeActionItem'])->name('inbound.action.store');
         Route::delete('/inbound/{id}/action/{actionId}', [App\Http\Controllers\Admin\InboundGmController::class, 'destroyActionItem'])->name('inbound.action.destroy');
+
+        // Outbound Communications (Form 1 — GM Review)
+        Route::get('/communications/outbound', [App\Http\Controllers\Admin\OutboundGmController::class, 'index'])->name('communications.outbound.index');
+        Route::get('/communications/outbound/{id}', [App\Http\Controllers\Admin\OutboundGmController::class, 'show'])->name('communications.outbound.show');
+        Route::post('/communications/outbound/{id}/decide', [App\Http\Controllers\Admin\OutboundGmController::class, 'decide'])->name('communications.outbound.decide');
+        Route::post('/communications/outbound/{id}/action', [App\Http\Controllers\Admin\OutboundGmController::class, 'storeActionItem'])->name('communications.outbound.action.store');
+        Route::delete('/communications/outbound/{id}/action/{actionId}', [App\Http\Controllers\Admin\OutboundGmController::class, 'destroyActionItem'])->name('communications.outbound.action.destroy');
 
         // Settings (Dynamics Lists)
         Route::get('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');

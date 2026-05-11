@@ -46,6 +46,21 @@
         </div>
         <span class="text-base font-semibold">Inbound Corr.</span>
     </a>
+
+    @php
+        $liaisonOutboundPending = \App\Models\CommunicationRequest::where('is_approved_2', 1)
+            ->where('communication_status_id', 3)->count();
+    @endphp
+    <a href="{{ route('hr.communications.outbound_liaison.index') }}"
+        class="nav-item {{ request()->routeIs('hr.communications.outbound_liaison.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 relative">
+        <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-paper-plane text-base"></i>
+        </div>
+        <span class="text-base font-semibold">Outbound Dispatch</span>
+        @if($liaisonOutboundPending > 0)
+            <span class="absolute top-1 right-2 bg-indigo-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm">{{ $liaisonOutboundPending }}</span>
+        @endif
+    </a>
     @endif
 
     <a href="{{ route('hr.documents.index') }}"
@@ -274,9 +289,27 @@
                 <span class="absolute top-1 right-2 bg-amber-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm">{{ $hrGmLeavesPending }}</span>
             @endif
         </a>
-    @endif
 
+        @php
+            $gmOutboundPending = \App\Models\CommunicationRequest::where('is_approved_1', 1)
+                ->where('is_approved_2', 0)->count();
+        @endphp
+        <a href="{{ route('admin.communications.outbound.index') }}"
+            class="nav-item {{ request()->routeIs('admin.communications.outbound.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 relative"
+            style="background: rgba(245,158,11,0.12); color: #92400e;">
+            <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style="background: rgba(245,158,11,0.25); color: #d97706;">
+                <i class="fa-solid fa-paper-plane text-base"></i>
+            </div>
+            <span class="text-base font-semibold">Outbound Review</span>
+            @if($gmOutboundPending > 0)
+                <span class="absolute top-1 right-2 bg-amber-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm">{{ $gmOutboundPending }}</span>
+            @endif
+        </a>
+    @endif
 @endif
+
+
 
 
 @if($isAdmin)
@@ -388,8 +421,8 @@
                 <span class="absolute top-1 right-2 bg-amber-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm">{{ $gmPendingCount }}</span>
             @endif
         </a>
-    @endif
 
+    @endif
 @endif
 
 @if(in_array($user->user_type, ['eqa']) && !$isAdmin)

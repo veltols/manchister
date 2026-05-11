@@ -12,7 +12,7 @@
                 <h2 class="text-2xl font-display font-bold text-premium">External Communications</h2>
                 <p class="text-sm text-slate-500 mt-1">Track formal information shared with external parties</p>
             </div>
-            <button onclick="openModal('newCommModal')" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
+            <button onclick="openCreateModal()" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
                 <i class="fa-solid fa-plus"></i>
                 <span>New Request</span>
             </button>
@@ -66,10 +66,17 @@
                                     </span>
                                 </td>
                                 <td class="text-center">
-                                    <a href="{{ route('emp.communications.show', $req->communication_id) }}"
-                                        class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md mx-auto">
-                                        <i class="fa-solid fa-eye text-sm"></i>
-                                    </a>
+                                    <div class="flex items-center justify-center gap-2">
+                                        @if($req->is_approved_1 == 3 || $req->is_approved_2 == 3)
+                                            <button onclick="openEditModal({{ json_encode($req) }})" class="w-9 h-9 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center hover:bg-orange-600 hover:text-white transition-all shadow-sm" title="Edit & Resubmit">
+                                                <i class="fa-solid fa-pen-to-square text-sm"></i>
+                                            </button>
+                                        @endif
+                                        <a href="{{ route('emp.communications.show', $req->communication_id) }}"
+                                            class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md">
+                                            <i class="fa-solid fa-eye text-sm"></i>
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -107,7 +114,7 @@
                 </button>
             </div>
 
-            <form action="{{ route('emp.communications.store') }}" method="POST" class="space-y-6">
+            <form id="newCommForm" action="{{ route('emp.communications.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                 @csrf
                 <div class="grid grid-cols-2 gap-6">
                     <div>
@@ -137,19 +144,51 @@
                         placeholder="Brief summary of the communication" required>
                 </div>
 
+                <div>
+                    <label
+                        class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-widest text-[10px]">Description / Content Summary</label>
+                    <textarea name="communication_description" rows="3" class="premium-input w-full"
+                        placeholder="Brief description of the content..." required></textarea>
+                </div>
+
+                <div>
+                    <label
+                        class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-widest text-[10px]">Purpose / Reason</label>
+                    <textarea name="communication_purpose" rows="3" class="premium-input w-full"
+                        placeholder="Why is this communication being sent?" required></textarea>
+                </div>
+
                 <div class="grid grid-cols-2 gap-6">
                     <div>
                         <label
-                            class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-widest text-[10px]">Description</label>
-                        <textarea name="communication_description" rows="5" class="premium-input w-full"
-                            placeholder="Detail the purpose..." required></textarea>
+                            class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-widest text-[10px]">Priority Level</label>
+                        <select name="priority" class="premium-input w-full" required>
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
                     </div>
                     <div>
                         <label
-                            class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-widest text-[10px]">Information
-                            Shared</label>
-                        <textarea name="information_shared" rows="5" class="premium-input w-full"
+                            class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-widest text-[10px]">Confidentiality</label>
+                        <select name="confidentiality" class="premium-input w-full" required>
+                            <option value="open" selected>Open</option>
+                            <option value="confidential">Confidential</option>
+                            <option value="restricted">Restricted</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-widest text-[10px]">Information Shared</label>
+                        <textarea name="information_shared" rows="3" class="premium-input w-full"
                             placeholder="What specific data was shared?" required></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-widest text-[10px]">Source Attachment (Required)</label>
+                        <input type="file" name="attachment" id="comm_attachment" class="premium-input w-full" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required>
+                        <div id="comm_attachment_preview"></div>
                     </div>
                 </div>
 
@@ -217,5 +256,65 @@
                 return html;
             }
         });
+    </script>
+    <script src="{{ asset('js/attachment-preview.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.initAttachmentPreview) {
+                window.initAttachmentPreview({
+                    inputSelector: '#comm_attachment',
+                    containerSelector: '#comm_attachment_preview'
+                });
+            }
+        });
+
+        function openEditModal(record) {
+            const modal = document.getElementById('newCommModal');
+            const form = document.getElementById('newCommForm');
+            
+            // Clear preview
+            const previewContainer = document.getElementById('comm_attachment_preview');
+            if (previewContainer) previewContainer.innerHTML = '';
+            
+            // Change title and button text
+            modal.querySelector('h2').innerText = 'Edit & Resubmit Request';
+            modal.querySelector('button[type="submit"]').innerText = 'Resubmit Request';
+            
+            // Set form action
+            form.action = `/emp/communications/${record.communication_id}/update`;
+            
+            // Populate fields
+            form.querySelector('[name="external_party_name"]').value = record.external_party_name;
+            form.querySelector('[name="communication_subject"]').value = record.communication_subject;
+            form.querySelector('[name="communication_description"]').value = record.communication_description;
+            form.querySelector('[name="communication_purpose"]').value = record.communication_purpose;
+            form.querySelector('[name="information_shared"]').value = record.information_shared;
+            form.querySelector('[name="communication_type_id"]').value = record.communication_type_id;
+            form.querySelector('[name="priority"]').value = record.priority;
+            form.querySelector('[name="confidentiality"]').value = record.confidentiality;
+            
+            // Attachment is optional for edit
+            form.querySelector('[name="attachment"]').required = false;
+            
+            openModal('newCommModal');
+        }
+
+        // Reset modal when opened for "New Request"
+        function openCreateModal() {
+            const modal = document.getElementById('newCommModal');
+            const form = document.getElementById('newCommForm');
+            
+            // Clear preview
+            const previewContainer = document.getElementById('comm_attachment_preview');
+            if (previewContainer) previewContainer.innerHTML = '';
+            
+            modal.querySelector('h2').innerText = 'Initiate Outbound Communication';
+            modal.querySelector('button[type="submit"]').innerText = 'Submit for Review';
+            form.action = "{{ route('emp.communications.store') }}";
+            form.reset();
+            form.querySelector('[name="attachment"]').required = true;
+            
+            openModal('newCommModal');
+        }
     </script>
 @endsection
