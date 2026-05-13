@@ -115,7 +115,7 @@
                                         <button onclick="openReviewModal({{ $rec->communication_id }}, '{{ addslashes($rec->communication_subject) }}')" class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
                                             <i class="fa-solid fa-magnifying-glass-plus text-sm"></i>
                                         </button>
-                                        <a href="{{ route('emp.communications.show', $rec->communication_id) }}" target="_blank" class="w-9 h-9 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-slate-200 transition-all">
+                                        <a href="{{ route('emp.communications.show', $rec->communication_id) }}" class="w-9 h-9 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-slate-200 transition-all">
                                             <i class="fa-solid fa-eye text-sm"></i>
                                         </a>
                                     </div>

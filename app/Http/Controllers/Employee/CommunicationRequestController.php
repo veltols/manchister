@@ -105,7 +105,7 @@ class CommunicationRequestController extends Controller
             );
         }
 
-        return redirect()->back()->with('success', 'Communication request (Form 0) submitted successfully and forwarded to Line Manager.');
+        return redirect()->back()->with('success', 'Communication request submitted successfully.');
     }
 
     public function show($id)
