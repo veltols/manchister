@@ -186,9 +186,10 @@
                             placeholder="What specific data was shared?" required></textarea>
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-widest text-[10px]">Source Attachment (Required)</label>
-                        <input type="file" name="attachment" id="comm_attachment" class="premium-input w-full" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required>
+                        <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-widest text-[10px]">Source Attachment (Optional)</label>
+                        <input type="file" name="attachment" id="comm_attachment" class="premium-input w-full" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onchange="validateFileType(this)">
                         <div id="comm_attachment_preview"></div>
+                        <p id="attachment_error" class="text-rose-500 text-[10px] font-bold mt-1 hidden">Invalid file type. Please upload PDF, Word, or Image.</p>
                     </div>
                 </div>
 
@@ -311,10 +312,98 @@
             modal.querySelector('h2').innerText = 'Initiate Outbound Communication';
             modal.querySelector('button[type="submit"]').innerText = 'Submit for Review';
             form.action = "{{ route('emp.communications.store') }}";
-            form.reset();
-            form.querySelector('[name="attachment"]').required = true;
+            
+            // Load from localStorage if exists
+            loadFormData();
+            
+            form.querySelector('[name="attachment"]').required = false;
             
             openModal('newCommModal');
         }
+
+        // --- New Features: Persistence & Validation ---
+
+        function validateFileType(input) {
+            const errorEl = document.getElementById('attachment_error');
+            const file = input.files[0];
+            if (!file) return;
+
+            const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+            const extension = file.name.split('.').pop().toLowerCase();
+            const allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'];
+
+            if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(extension)) {
+                errorEl.classList.remove('hidden');
+                input.value = ''; // Reset input
+                const previewContainer = document.getElementById('comm_attachment_preview');
+                if (previewContainer) previewContainer.innerHTML = '';
+            } else {
+                errorEl.classList.add('hidden');
+            }
+        }
+
+        const FORM_STORAGE_KEY = 'outbound_comm_form_data';
+
+        function saveFormData() {
+            const form = document.getElementById('newCommForm');
+            // Only save if it's a "Create" form, not "Edit"
+            if (form.action.includes('store')) {
+                const formData = {
+                    external_party_name: form.external_party_name.value,
+                    communication_type_id: form.communication_type_id.value,
+                    communication_subject: form.communication_subject.value,
+                    communication_description: form.communication_description.value,
+                    communication_purpose: form.communication_purpose.value,
+                    priority: form.priority.value,
+                    confidentiality: form.confidentiality.value,
+                    information_shared: form.information_shared.value,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(formData));
+            }
+        }
+
+        function loadFormData() {
+            const dataStr = localStorage.getItem(FORM_STORAGE_KEY);
+            if (!dataStr) return;
+
+            const data = JSON.parse(dataStr);
+            // Expire after 24 hours
+            if (Date.now() - data.timestamp > 86400000) {
+                localStorage.removeItem(FORM_STORAGE_KEY);
+                return;
+            }
+
+            const form = document.getElementById('newCommForm');
+            form.external_party_name.value = data.external_party_name || '';
+            form.communication_type_id.value = data.communication_type_id || '';
+            form.communication_subject.value = data.communication_subject || '';
+            form.communication_description.value = data.communication_description || '';
+            form.communication_purpose.value = data.communication_purpose || '';
+            form.priority.value = data.priority || 'medium';
+            form.confidentiality.value = data.confidentiality || 'open';
+            form.information_shared.value = data.information_shared || '';
+        }
+
+        function clearFormData() {
+            localStorage.removeItem(FORM_STORAGE_KEY);
+        }
+
+        // Attach listeners to all inputs
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('newCommForm');
+            const inputs = form.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                if (input.type !== 'file') {
+                    input.addEventListener('input', saveFormData);
+                    input.addEventListener('change', saveFormData);
+                }
+            });
+
+            // Clear on successful submit (handled by server redirect back with success)
+            @if(session('success'))
+                clearFormData();
+            @endif
+        });
     </script>
 @endsection

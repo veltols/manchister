@@ -62,7 +62,8 @@
                             <th class="text-center">Status</th>
                             <th class="text-center">Feedback</th>
                             <th class="text-center"><i class="fa-solid fa-crown text-amber-500 mr-1"></i>GM</th>
-                            <th class="text-center"><i class="fa-solid fa-user-tie text-teal-500 mr-1"></i>Liaison</th>
+                            <th class="text-center"><i class="fa-solid fa-user-tie text-indigo-500 mr-1"></i>LM</th>
+                            <th class="text-center"><i class="fa-solid fa-user-shield text-teal-500 mr-1"></i>Liaison</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
@@ -147,13 +148,24 @@
                                     </button>
                                 </td>
                                 <td class="text-center">
+                                    @php $isLm = ($user->department && (int)$user->department->line_manager_id === (int)$user->employee_id) ? 1 : 0; @endphp
+                                    <button class="lm-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all hover:scale-105
+                                        {{ $isLm ? 'bg-indigo-100 text-indigo-700 border border-indigo-300' : 'bg-slate-100 text-slate-400 border border-slate-200' }}"
+                                        data-id="{{ $user->employee_id }}"
+                                        data-is-lm="{{ $isLm }}"
+                                        title="{{ $isLm ? 'Click to remove Line Manager role' : 'Click to designate as Line Manager' }}">
+                                        <i class="fa-solid fa-user-tie text-[10px]"></i>
+                                        {{ $isLm ? 'LM' : 'Not LM' }}
+                                    </button>
+                                </td>
+                                <td class="text-center">
                                     @php $isLiaison = $user->systemUser?->is_liaison ?? 0; @endphp
                                     <button class="liaison-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all hover:scale-105
                                         {{ $isLiaison ? 'bg-teal-100 text-teal-700 border border-teal-300' : 'bg-slate-100 text-slate-400 border border-slate-200' }}"
                                         data-id="{{ $user->employee_id }}"
                                         data-is-liaison="{{ $isLiaison }}"
                                         title="{{ $isLiaison ? 'Click to remove Liaison Officer role' : 'Click to designate as Liaison Officer' }}">
-                                        <i class="fa-solid fa-user-tie text-[10px]"></i>
+                                        <i class="fa-solid fa-user-shield text-[10px]"></i>
                                         {{ $isLiaison ? 'Liaison' : 'Not Liaison' }}
                                     </button>
                                 </td>
@@ -170,7 +182,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center py-12 text-slate-500">
+                                <td colspan="11" class="text-center py-12 text-slate-500">
                                     No users found.
                                 </td>
                             </tr>
@@ -261,6 +273,16 @@
                 return `<button class="gm-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all hover:scale-105 ${cls}" data-id="${userId}" data-is-gm="${isGm ? 1 : 0}" title="${title}"><i class="fa-solid fa-crown text-[10px]"></i> ${label}</button>`;
             }
 
+            // LM Toggle Badge Helper
+            function getLmToggle(userId, isLm) {
+                const cls = isLm
+                    ? 'bg-indigo-100 text-indigo-700 border-indigo-300'
+                    : 'bg-slate-100 text-slate-400 border-slate-200';
+                const label = isLm ? 'LM' : 'Not LM';
+                const title = isLm ? 'Click to remove Line Manager role' : 'Click to designate as Line Manager';
+                return `<button class="lm-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all hover:scale-105 ${cls}" data-id="${userId}" data-is-lm="${isLm ? 1 : 0}" title="${title}"><i class="fa-solid fa-user-tie text-[10px]"></i> ${label}</button>`;
+            }
+
             // Liaison Officer Toggle Badge Helper
             function getLiaisonToggle(userId, isLiaison) {
                 const cls = isLiaison
@@ -268,7 +290,7 @@
                     : 'bg-slate-100 text-slate-400 border-slate-200';
                 const label = isLiaison ? 'Liaison' : 'Not Liaison';
                 const title = isLiaison ? 'Click to remove Liaison Officer role' : 'Click to designate as Liaison Officer';
-                return `<button class="liaison-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all hover:scale-105 ${cls}" data-id="${userId}" data-is-liaison="${isLiaison ? 1 : 0}" title="${title}"><i class="fa-solid fa-user-tie text-[10px]"></i> ${label}</button>`;
+                return `<button class="liaison-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all hover:scale-105 ${cls}" data-id="${userId}" data-is-liaison="${isLiaison ? 1 : 0}" title="${title}"><i class="fa-solid fa-user-shield text-[10px]"></i> ${label}</button>`;
             }
 
             // Initialize AJAX Pagination
@@ -292,7 +314,7 @@
                     if (users.length === 0) {
                         container.innerHTML = `
                             <tr>
-                                <td colspan="7" class="text-center py-12 text-slate-500">
+                                <td colspan="11" class="text-center py-12 text-slate-500">
                                     No users found.
                                 </td>
                             </tr>
@@ -357,6 +379,9 @@
                                 </td>
                                 <td class="text-center">
                                     ${getGmToggle(user.employee_id, user.system_user?.is_gm ?? 0)}
+                                </td>
+                                <td class="text-center">
+                                    ${getLmToggle(user.employee_id, (user.department && parseInt(user.department.line_manager_id) === parseInt(user.employee_id)) ? 1 : 0)}
                                 </td>
                                 <td class="text-center">
                                     ${getLiaisonToggle(user.employee_id, user.system_user?.is_liaison ?? 0)}
@@ -497,10 +522,51 @@
                                 liaisonBtn.dataset.isLiaison = isNowLiaison ? '1' : '0';
                                 liaisonBtn.className = `liaison-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all hover:scale-105 ${isNowLiaison ? 'bg-teal-100 text-teal-700 border-teal-300' : 'bg-slate-100 text-slate-400 border-slate-200'}`;
                                 liaisonBtn.title = isNowLiaison ? 'Click to remove Liaison Officer role' : 'Click to designate as Liaison Officer';
-                                liaisonBtn.innerHTML = `<i class="fa-solid fa-user-tie text-[10px]"></i> ${isNowLiaison ? 'Liaison' : 'Not Liaison'}`;
+                                liaisonBtn.innerHTML = `<i class="fa-solid fa-user-shield text-[10px]"></i> ${isNowLiaison ? 'Liaison' : 'Not Liaison'}`;
                                 Toast.fire({ icon: 'success', title: data.message });
                             } else {
                                 Toast.fire({ icon: 'error', title: data.message || 'Failed to update Liaison status.' });
+                            }
+                        })
+                        .catch(() => Toast.fire({ icon: 'error', title: 'An error occurred.' }));
+                    });
+                }
+
+                // Line Manager toggle
+                const lmBtn = e.target.closest('.lm-toggle-btn');
+                if (lmBtn) {
+                    const userId = lmBtn.dataset.id;
+                    const isCurrentlyLm = parseInt(lmBtn.dataset.isLm);
+                    const empName = lmBtn.closest('tr')?.querySelector('p.font-semibold')?.textContent?.trim() || 'this user';
+                    const deptName = lmBtn.closest('tr')?.querySelector('span.inline-flex.bg-purple-50')?.textContent?.trim() || 'their department';
+
+                    Swal.fire({
+                        icon: 'question',
+                        title: isCurrentlyLm ? 'Remove Line Manager Role?' : 'Designate as Line Manager?',
+                        text: isCurrentlyLm
+                            ? `Remove Line Manager designation from ${empName} for ${deptName}?`
+                            : `Designate ${empName} as Line Manager for ${deptName}? Any existing LM for this department will be replaced.`,
+                        showCancelButton: true,
+                        confirmButtonColor: isCurrentlyLm ? '#ef4444' : '#4f46e5',
+                        confirmButtonText: isCurrentlyLm ? 'Yes, Remove' : 'Yes, Designate',
+                    }).then(result => {
+                        if (!result.isConfirmed) return;
+                        fetch(`${toggleFbBase}/${userId}/toggle-lm`, {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.success) {
+                                const isNowLm = data.is_lm;
+                                lmBtn.dataset.isLm = isNowLm ? '1' : '0';
+                                lmBtn.className = `lm-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all hover:scale-105 ${isNowLm ? 'bg-indigo-100 text-indigo-700 border border-indigo-300' : 'bg-slate-100 text-slate-400 border border-slate-200'}`;
+                                lmBtn.title = isNowLm ? 'Click to remove Line Manager role' : 'Click to designate as Line Manager';
+                                lmBtn.innerHTML = `<i class="fa-solid fa-user-tie text-[10px]"></i> ${isNowLm ? 'LM' : 'Not LM'}`;
+                                
+                                Toast.fire({ icon: 'success', title: data.message });
+                            } else {
+                                Toast.fire({ icon: 'error', title: data.message || 'Failed to update Line Manager status.' });
                             }
                         })
                         .catch(() => Toast.fire({ icon: 'error', title: 'An error occurred.' }));

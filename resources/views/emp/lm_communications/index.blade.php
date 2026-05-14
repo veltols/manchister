@@ -77,6 +77,7 @@
                             <th class="text-left">Ref / Subject</th>
                             <th class="text-center">Priority</th>
                             <th class="text-center">Confidentiality</th>
+                            <th class="text-center">Status</th>
                             <th class="text-center">Action</th>
                         </tr>
                     </thead>
@@ -111,12 +112,17 @@
                                     </span>
                                 </td>
                                 <td class="text-center">
+                                    <span
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-[10px] font-bold uppercase shadow-sm"
+                                        style="background: #{{ $rec->status->status_color ?? '64748b' }};">
+                                        {{ $rec->status->communication_status_name ?? 'Pending' }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
                                     <div class="flex items-center justify-center gap-2">
-                                        <button onclick="openReviewModal({{ $rec->communication_id }}, '{{ addslashes($rec->communication_subject) }}')" class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
-                                            <i class="fa-solid fa-magnifying-glass-plus text-sm"></i>
-                                        </button>
-                                        <a href="{{ route('emp.communications.show', $rec->communication_id) }}" class="w-9 h-9 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-slate-200 transition-all">
-                                            <i class="fa-solid fa-eye text-sm"></i>
+                                        <a href="{{ route('emp.communications.show', $rec->communication_id) }}" class="w-full flex items-center justify-center gap-2 px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg font-bold text-xs hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                                            <i class="fa-solid fa-magnifying-glass-plus"></i>
+                                            <span>Review Request</span>
                                         </a>
                                     </div>
                                 </td>
@@ -140,67 +146,4 @@
         </div>
     </div>
 
-    <!-- Review Modal -->
-    <div class="modal" id="reviewModal">
-        <div class="modal-backdrop" onclick="closeModal('reviewModal')"></div>
-        <div class="modal-content max-w-xl p-8">
-            <h2 class="text-2xl font-display font-bold text-premium mb-2">Review Request</h2>
-            <p id="modalSubject" class="text-slate-500 text-sm mb-8 italic"></p>
-
-            <form id="reviewForm" method="POST" class="space-y-6">
-                @csrf
-                <input type="hidden" name="notes" id="hiddenNotes">
-                
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Reviewer Comments</label>
-                    <textarea id="modalNotes" rows="4" class="premium-input w-full" placeholder="Enter reason for approval, modification, or rejection..."></textarea>
-                </div>
-
-                <div class="grid grid-cols-3 gap-3">
-                    <button type="button" onclick="submitReview('approve')" class="px-4 py-4 bg-green-600 text-white rounded-2xl font-bold text-xs uppercase shadow-lg shadow-green-200 hover:scale-105 transition-all">
-                        <i class="fa-solid fa-check-circle mb-2 block text-lg"></i>
-                        Approve
-                    </button>
-                    <button type="button" onclick="submitReview('modify')" class="px-4 py-4 bg-orange-500 text-white rounded-2xl font-bold text-xs uppercase shadow-lg shadow-orange-200 hover:scale-105 transition-all">
-                        <i class="fa-solid fa-pen-to-square mb-2 block text-lg"></i>
-                        Modify
-                    </button>
-                    <button type="button" onclick="submitReview('reject')" class="px-4 py-4 bg-red-600 text-white rounded-2xl font-bold text-xs uppercase shadow-lg shadow-red-200 hover:scale-105 transition-all">
-                        <i class="fa-solid fa-times-circle mb-2 block text-lg"></i>
-                        Reject
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        function openReviewModal(id, subject) {
-            document.getElementById('modalSubject').innerText = subject;
-            document.getElementById('reviewForm').action = ""; // Set by JS
-            window.currentCommId = id;
-            openModal('reviewModal');
-        }
-
-        function submitReview(action) {
-            const notes = document.getElementById('modalNotes').value;
-            if ((action === 'modify' || action === 'reject') && !notes) {
-                alert('Please provide comments for modification or rejection.');
-                return;
-            }
-            
-            document.getElementById('hiddenNotes').value = notes;
-            const form = document.getElementById('reviewForm');
-            
-            if (action === 'approve') {
-                form.action = `/emp/lm/communications/${window.currentCommId}/approve`;
-            } else if (action === 'modify') {
-                form.action = `/emp/lm/communications/${window.currentCommId}/modify`;
-            } else {
-                form.action = `/emp/lm/communications/${window.currentCommId}/reject`;
-            }
-            
-            form.submit();
-        }
-    </script>
 @endsection

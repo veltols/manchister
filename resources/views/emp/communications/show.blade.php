@@ -195,6 +195,97 @@
                 </div>
             </div>
         </div>
+        <!-- Line Manager Review Action -->
+        @if(auth()->user()->employee && (int)auth()->user()->employee->employee_id === (int)$request->approval_id_1 && $request->is_approved_1 == 0)
+            <div class="premium-card p-10 bg-indigo-50/50 border-2 border-indigo-100 shadow-xl">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg">
+                        <i class="fa-solid fa-user-check text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-display font-bold text-premium">Line Manager Review</h2>
+                        <p class="text-sm text-slate-500">Please provide your decision on this outbound communication request.</p>
+                    </div>
+                </div>
+
+                <form id="lmReviewForm" method="POST" class="space-y-6">
+                    @csrf
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Reviewer Comments / Internal Notes</label>
+                        <textarea name="notes" id="lmNotes" rows="4" class="premium-input w-full bg-white border-slate-200" placeholder="Enter reason for approval, modification, or rejection..."></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <button type="button" onclick="submitLmReview('approve')" class="group px-6 py-6 bg-emerald-600 text-white rounded-3xl font-bold text-xs uppercase shadow-xl shadow-emerald-200 hover:scale-105 transition-all">
+                            <i class="fa-solid fa-check-circle mb-3 block text-2xl group-hover:scale-125 transition-transform"></i>
+                            Approve & Forward to GM
+                        </button>
+                        <button type="button" onclick="submitLmReview('modify')" class="group px-6 py-6 bg-amber-500 text-white rounded-3xl font-bold text-xs uppercase shadow-xl shadow-amber-200 hover:scale-105 transition-all">
+                            <i class="fa-solid fa-pen-to-square mb-3 block text-2xl group-hover:scale-125 transition-transform"></i>
+                            Request Modification
+                        </button>
+                        <button type="button" onclick="submitLmReview('reject')" class="group px-6 py-6 bg-rose-600 text-white rounded-3xl font-bold text-xs uppercase shadow-xl shadow-rose-200 hover:scale-105 transition-all">
+                            <i class="fa-solid fa-ban mb-3 block text-2xl group-hover:scale-125 transition-transform"></i>
+                            Reject Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <script>
+                function submitLmReview(action) {
+                    const notes = document.getElementById('lmNotes').value;
+                    const form = document.getElementById('lmReviewForm');
+                    
+                    if ((action === 'modify' || action === 'reject') && !notes) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Comments Required',
+                            text: 'Please provide comments explaining why modification or rejection is required.',
+                            confirmButtonColor: '#6366f1'
+                        });
+                        return;
+                    }
+                    
+                    let confirmTitle = '';
+                    let confirmText = '';
+                    let confirmColor = '';
+                    let route = '';
+
+                    if (action === 'approve') {
+                        confirmTitle = 'Approve Request?';
+                        confirmText = 'This will forward the request to the GM for final review.';
+                        confirmColor = '#10b981';
+                        route = "{{ route('emp.lm.communications.approve', $request->communication_id) }}";
+                    } else if (action === 'modify') {
+                        confirmTitle = 'Request Modification?';
+                        confirmText = 'The employee will be notified to update and resubmit the request.';
+                        confirmColor = '#f59e0b';
+                        route = "{{ route('emp.lm.communications.modify', $request->communication_id) }}";
+                    } else {
+                        confirmTitle = 'Reject Request?';
+                        confirmText = 'This will permanently reject this communication request.';
+                        confirmColor = '#ef4444';
+                        route = "{{ route('emp.lm.communications.reject', $request->communication_id) }}";
+                    }
+
+                    Swal.fire({
+                        title: confirmTitle,
+                        text: confirmText,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: confirmColor,
+                        cancelButtonColor: '#94a3b8',
+                        confirmButtonText: 'Yes, Proceed'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.action = route;
+                            form.submit();
+                        }
+                    });
+                }
+            </script>
+        @endif
 
     </div>
     <script src="{{ asset('js/attachment-preview.js') }}"></script>

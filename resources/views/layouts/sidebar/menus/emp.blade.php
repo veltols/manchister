@@ -217,7 +217,12 @@
             </a>
 
             {{-- Communication Hub --}}
-            <a href="{{ route('emp.communication-hub.index') }}"
+            @php
+                $isLM = \App\Models\Department::where('line_manager_id', $authUser->employee->employee_id ?? 0)->exists();
+                $isPrivileged = $isLM || $authUser->is_gm || $authUser->is_liaison;
+                $commLink = $isPrivileged ? route('emp.communication-hub.index') : route('emp.requests.index');
+            @endphp
+            <a href="{{ $commLink }}"
                 class="group flex items-center gap-3 p-3 rounded-xl transition-all hover:-translate-y-0.5 {{ request()->routeIs('emp.communication-hub.*') ? 'bg-indigo-50' : 'hover:bg-slate-50' }}"
                 style="{{ request()->routeIs('emp.communication-hub.*') ? 'box-shadow:0 4px 12px rgba(99,102,241,0.12);' : '' }}">
                 <div class="w-9 h-9 rounded-xl flex items-center justify-center relative overflow-hidden flex-shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-5deg]"
@@ -231,166 +236,7 @@
                     class="font-semibold text-base {{ request()->routeIs('emp.communication-hub.*') ? 'text-indigo-800' : 'text-slate-700' }}">Communication</span>
             </a>
 
-        </div>
-    </div>
-
-    {{-- NEW Outbound Correspondence Drawer --}}
-    @php
-        $employeeId = $authUser->employee->employee_id ?? 0;
-        $lmCommPending = \App\Models\CommunicationRequest::where('approval_id_1', $employeeId)
-            ->where('is_approved_1', 0)->count();
-        $gmOutboundPending = \App\Models\CommunicationRequest::where('is_approved_1', 1)
-            ->where('is_approved_2', 0)->count();
-        $liaisonOutboundPending = \App\Models\CommunicationRequest::where('is_approved_2', 1)
-            ->where('communication_status_id', 3)->count();
-        $outboundTaskCount = \App\Models\OutboundActionItem::where('assigned_to_id', $employeeId)
-            ->whereIn('status', ['Pending', 'In Progress'])
-            ->count();
-        
-        $totalOutboundPending = $lmCommPending + $gmOutboundPending + $liaisonOutboundPending + $outboundTaskCount;
-    @endphp
- 
-    <div x-data="{ open: false }" @click.away="open = false" class="relative">
-        <button @click="open = !open"
-            class="nav-item {{ request()->routeIs('emp.communications.*', 'emp.lm.communications.*', 'admin.communications.outbound.*', 'hr.communications.outbound_liaison.*', 'emp.outbound-tasks.*') ? 'active' : '' }} w-full flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
-            <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
-                <i class="fa-solid fa-paper-plane text-base"></i>
-            </div>
-            <span class="text-base font-semibold">Outbound Portal</span>
-            @if($totalOutboundPending > 0)
-                <span class="bg-indigo-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm ml-2">{{ $totalOutboundPending }}</span>
-            @endif
-            <i class="fa-solid fa-chevron-right text-[11px] ml-auto transition-transform duration-200"
-                :class="open ? 'rotate-90' : ''" style="color:rgba(255,255,255,0.5);"></i>
-        </button>
- 
-        {{-- Slide-Right Drawer --}}
-        <div x-show="open" x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 -translate-x-4" x-transition:enter-end="opacity-100 translate-x-0"
-            x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-x-0"
-            x-transition:leave-end="opacity-0 -translate-x-4"
-            class="fixed left-64 top-0 h-full w-64 bg-white/95 backdrop-blur-xl border-r border-slate-200 shadow-2xl z-[999] p-6 flex flex-col gap-2 overflow-y-auto"
-            style="display: none;">
- 
-            {{-- Drawer header --}}
-            <div class="mb-5 pb-4 border-b border-slate-100">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl flex items-center justify-center relative overflow-hidden" style="background:linear-gradient(145deg,#4f46e5,#6366f1);
-                                    box-shadow:0 6px 16px rgba(79,70,229,0.3),inset 0 1px 0 rgba(255,255,255,0.3);">
-                        <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl"
-                            style="background:rgba(255,255,255,0.3);"></div>
-                        <i class="fa-solid fa-paper-plane text-white text-sm relative z-10"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-base font-bold text-premium">Outbound Portal</h3>
-                        <p class="text-[10px] text-slate-400">Manage Communications</p>
-                    </div>
-                </div>
-            </div>
- 
-            {{-- My Requests --}}
-            <a href="{{ route('emp.communications.index') }}"
-                class="group flex items-center gap-3 p-3 rounded-xl transition-all hover:-translate-y-0.5 {{ request()->routeIs('emp.communications.*') ? 'bg-indigo-50' : 'hover:bg-slate-50' }}"
-                style="{{ request()->routeIs('emp.communications.*') ? 'box-shadow:0 4px 12px rgba(79,70,229,0.12);' : '' }}">
-                <div class="w-9 h-9 rounded-xl flex items-center justify-center relative overflow-hidden flex-shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-5deg]"
-                    style="background:linear-gradient(145deg,#4f46e5,#6366f1);
-                                box-shadow:0 4px 12px rgba(79,70,229,0.35),inset 0 1px 0 rgba(255,255,255,0.35);">
-                    <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl" style="background:rgba(255,255,255,0.3);">
-                    </div>
-                    <i class="fa-solid fa-paper-plane text-white text-xs relative z-10"></i>
-                </div>
-                <div class="flex flex-col">
-                    <span class="font-semibold text-sm {{ request()->routeIs('emp.communications.*') ? 'text-indigo-800' : 'text-slate-700' }}">My Requests</span>
-                    <span class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">History & New</span>
-                </div>
-            </a>
- 
-            {{-- Team Review (Line Manager) --}}
-            @if($isLineManager)
-            <a href="{{ route('emp.lm.communications.index') }}"
-                class="group flex items-center gap-3 p-3 rounded-xl transition-all hover:-translate-y-0.5 {{ request()->routeIs('emp.lm.communications.*') ? 'bg-teal-50' : 'hover:bg-slate-50' }}"
-                style="{{ request()->routeIs('emp.lm.communications.*') ? 'box-shadow:0 4px 12px rgba(20,184,166,0.12);' : '' }}">
-                <div class="w-9 h-9 rounded-xl flex items-center justify-center relative overflow-hidden flex-shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-5deg]"
-                    style="background:linear-gradient(145deg,#14b8a6,#0f766e);
-                                box-shadow:0 4px 12px rgba(20,184,166,0.35),inset 0 1px 0 rgba(255,255,255,0.35);">
-                    <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl" style="background:rgba(255,255,255,0.3);">
-                    </div>
-                    <i class="fa-solid fa-user-tie text-white text-xs relative z-10"></i>
-                </div>
-                <div class="flex flex-col flex-1">
-                    <span class="font-semibold text-sm {{ request()->routeIs('emp.lm.communications.*') ? 'text-teal-800' : 'text-slate-700' }}">Team Review</span>
-                    <span class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Line Manager Stage</span>
-                </div>
-                @if($lmCommPending > 0)
-                    <span class="bg-teal-500 text-white text-[9px] font-black rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1">{{ $lmCommPending }}</span>
-                @endif
-            </a>
-            @endif
- 
-            {{-- GM Review --}}
-            @if($authUser && $authUser->is_gm)
-            <a href="{{ route('admin.communications.outbound.index') }}"
-                class="group flex items-center gap-3 p-3 rounded-xl transition-all hover:-translate-y-0.5 {{ request()->routeIs('admin.communications.outbound.*') ? 'bg-amber-50' : 'hover:bg-slate-50' }}"
-                style="{{ request()->routeIs('admin.communications.outbound.*') ? 'box-shadow:0 4px 12px rgba(245,158,11,0.12);' : '' }}">
-                <div class="w-9 h-9 rounded-xl flex items-center justify-center relative overflow-hidden flex-shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-5deg]"
-                    style="background:linear-gradient(145deg,#f59e0b,#d97706);
-                                box-shadow:0 4px 12px rgba(245,158,11,0.35),inset 0 1px 0 rgba(255,255,255,0.35);">
-                    <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl" style="background:rgba(255,255,255,0.3);">
-                    </div>
-                    <i class="fa-solid fa-crown text-white text-xs relative z-10"></i>
-                </div>
-                <div class="flex flex-col flex-1">
-                    <span class="font-semibold text-sm {{ request()->routeIs('admin.communications.outbound.*') ? 'text-amber-800' : 'text-slate-700' }}">GM Review</span>
-                    <span class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Final Approval</span>
-                </div>
-                @if($gmOutboundPending > 0)
-                    <span class="bg-amber-500 text-white text-[9px] font-black rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1">{{ $gmOutboundPending }}</span>
-                @endif
-            </a>
-            @endif
- 
-            {{-- Dispatch (Liaison) --}}
-            @if($authUser && $authUser->is_liaison)
-            <a href="{{ route('hr.communications.outbound_liaison.index') }}"
-                class="group flex items-center gap-3 p-3 rounded-xl transition-all hover:-translate-y-0.5 {{ request()->routeIs('hr.communications.outbound_liaison.*') ? 'bg-sky-50' : 'hover:bg-slate-50' }}"
-                style="{{ request()->routeIs('hr.communications.outbound_liaison.*') ? 'box-shadow:0 4px 12px rgba(14,165,233,0.12);' : '' }}">
-                <div class="w-9 h-9 rounded-xl flex items-center justify-center relative overflow-hidden flex-shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-5deg]"
-                    style="background:linear-gradient(145deg,#0ea5e9,#0284c7);
-                                box-shadow:0 4px 12px rgba(14,165,233,0.35),inset 0 1px 0 rgba(255,255,255,0.35);">
-                    <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl" style="background:rgba(255,255,255,0.3);">
-                    </div>
-                    <i class="fa-solid fa-truck-fast text-white text-xs relative z-10"></i>
-                </div>
-                <div class="flex flex-col flex-1">
-                    <span class="font-semibold text-sm {{ request()->routeIs('hr.communications.outbound_liaison.*') ? 'text-sky-800' : 'text-slate-700' }}">Dispatch</span>
-                    <span class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Liaison Stage</span>
-                </div>
-                @if($liaisonOutboundPending > 0)
-                    <span class="bg-sky-500 text-white text-[9px] font-black rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1">{{ $liaisonOutboundPending }}</span>
-                @endif
-            </a>
-            @endif
- 
-            {{-- Action Tasks --}}
-            <a href="{{ route('emp.outbound-tasks.index') }}"
-                class="group flex items-center gap-3 p-3 rounded-xl transition-all hover:-translate-y-0.5 {{ request()->routeIs('emp.outbound-tasks.*') ? 'bg-rose-50' : 'hover:bg-slate-50' }}"
-                style="{{ request()->routeIs('emp.outbound-tasks.*') ? 'box-shadow:0 4px 12px rgba(244,63,94,0.12);' : '' }}">
-                <div class="w-9 h-9 rounded-xl flex items-center justify-center relative overflow-hidden flex-shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-5deg]"
-                    style="background:linear-gradient(145deg,#f43f5e,#e11d48);
-                                box-shadow:0 4px 12px rgba(244,63,94,0.35),inset 0 1px 0 rgba(255,255,255,0.35);">
-                    <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl" style="background:rgba(255,255,255,0.3);">
-                    </div>
-                    <i class="fa-solid fa-tasks text-white text-xs relative z-10"></i>
-                </div>
-                <div class="flex flex-col flex-1">
-                    <span class="font-semibold text-sm {{ request()->routeIs('emp.outbound-tasks.*') ? 'text-rose-800' : 'text-slate-700' }}">Action Tasks</span>
-                    <span class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Assigned Items</span>
-                </div>
-                @if($outboundTaskCount > 0)
-                    <span class="bg-rose-500 text-white text-[9px] font-black rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1">{{ $outboundTaskCount }}</span>
-                @endif
-            </a>
-        </div>
+          </div>
     </div>
 
     {{-- GM: Probation Reviews + Leave Queue — only shown when user is designated as GM --}}

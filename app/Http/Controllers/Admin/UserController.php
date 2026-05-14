@@ -132,16 +132,23 @@ class UserController extends Controller
             $sysUser->save();
 
             // 6. Handle Line Manager Assignment
+            $lmMsg = '';
             if ($request->is_line_manager == 1) {
+                $dept = Department::find($request->department_id);
+                if ($dept && $dept->line_manager_id != 0) {
+                    $oldLm = Employee::find($dept->line_manager_id);
+                    $oldName = $oldLm ? $oldLm->full_name : 'Previous Manager';
+                    $lmMsg = " (Note: {$oldName} was replaced as Line Manager)";
+                }
                 Department::where('department_id', $request->department_id)
                     ->update(['line_manager_id' => $emp->employee_id]);
             }
 
             // Log
-            $this->logAction($emp->employee_id, 'User Created', "User [{$emp->full_name}] created and assigned to department [{$emp->department_id}].");
+            $this->logAction($emp->employee_id, 'User Created', "User [{$emp->full_name}] created and assigned to department [{$emp->department_id}]. " . $lmMsg);
 
             DB::commit();
-            return redirect()->back()->with('success', 'User created successfully.');
+            return redirect()->back()->with('success', 'User created successfully.' . $lmMsg);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -255,15 +262,32 @@ class UserController extends Controller
             }
 
             // Handle Line Manager Assignment
+            $lmMsg = '';
             if ($request->is_line_manager == 1) {
+                $dept = Department::find($request->department_id);
+                if ($dept && $dept->line_manager_id != $user->employee_id && $dept->line_manager_id != 0) {
+                    $oldLm = Employee::find($dept->line_manager_id);
+                    $oldName = $oldLm ? $oldLm->full_name : 'Previous Manager';
+                    $lmMsg = " (Note: {$oldName} was replaced as Line Manager)";
+                }
+
+                // Remove this user from any other department they might manage
+                Department::where('line_manager_id', $user->employee_id)->update(['line_manager_id' => 0]);
+                
+                // Assign them to the current department
                 Department::where('department_id', $request->department_id)
                     ->update(['line_manager_id' => $user->employee_id]);
+            } else {
+                // Remove as LM if they were the LM of this department
+                Department::where('department_id', $request->department_id)
+                    ->where('line_manager_id', $user->employee_id)
+                    ->update(['line_manager_id' => 0]);
             }
 
-            $this->logAction($user->employee_id, 'User Profile Updated', $request->log_remark);
+            $this->logAction($user->employee_id, 'User Profile Updated', $request->log_remark . $lmMsg);
 
             DB::commit();
-            return redirect()->back()->with('success', 'User profile updated successfully.');
+            return redirect()->back()->with('success', 'User profile updated successfully.' . $lmMsg);
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to update profile: ' . $e->getMessage());
@@ -507,6 +531,54 @@ class UserController extends Controller
             'success'          => true,
             'feedback_enabled' => $systemUser->feedback_enabled,
             'message'          => "Feedback {$state} for this user.",
+        ]);
+    }
+
+    public function toggleLm($id)
+    {
+        $employee = Employee::findOrFail($id);
+        $deptId = $employee->department_id;
+
+        if (!$deptId) {
+            return response()->json(['success' => false, 'message' => 'User has no assigned department.'], 400);
+        }
+
+        $department = Department::find($deptId);
+        if (!$department) {
+            return response()->json(['success' => false, 'message' => 'Department not found.'], 404);
+        }
+
+        $isCurrentlyLm = (int)$department->line_manager_id === (int)$id;
+        $oldLmId = $department->line_manager_id;
+        
+        if ($isCurrentlyLm) {
+            // Remove as LM
+            $department->line_manager_id = 0;
+            $department->save();
+            $state = 'removed from Line Manager role';
+            $action = 'Line Manager Removed';
+            $message = "Line Manager role removed for {$department->department_name}.";
+        } else {
+            // Designate as LM (replaces any existing LM for this dept)
+            $department->line_manager_id = $id;
+            $department->save();
+            $state = 'designated as Line Manager';
+            $action = 'Line Manager Designated';
+            
+            $message = "User designated as Line Manager for {$department->department_name}.";
+            if ($oldLmId && (int)$oldLmId !== (int)$id) {
+                $oldLm = Employee::find($oldLmId);
+                $oldName = $oldLm ? $oldLm->full_name : "Previous manager";
+                $message = "User designated as Line Manager. {$oldName} has been replaced.";
+            }
+        }
+
+        $this->logAction($id, $action, "User {$state} for department [{$department->department_name}] by admin.");
+
+        return response()->json([
+            'success' => true,
+            'is_lm'   => (int)$department->line_manager_id === (int)$id ? 1 : 0,
+            'message' => $message,
         ]);
     }
 

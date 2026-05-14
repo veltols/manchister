@@ -580,6 +580,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/users/{id}/toggle-feedback', [App\Http\Controllers\Admin\UserController::class, 'toggleFeedback'])->name('users.toggle-feedback');
         Route::post('/users/{id}/toggle-gm', [App\Http\Controllers\Admin\UserController::class, 'toggleGm'])->name('users.toggle-gm');
         Route::post('/users/{id}/toggle-liaison', [App\Http\Controllers\Admin\UserController::class, 'toggleLiaison'])->name('users.toggle-liaison');
+        Route::post('/users/{id}/toggle-lm', [App\Http\Controllers\Admin\UserController::class, 'toggleLm'])->name('users.toggle-lm');
 
         // GM Leave Approvals
         Route::get('/leaves/gm', [App\Http\Controllers\Admin\GmLeaveController::class, 'index'])->name('leaves.gm');
