@@ -145,6 +145,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/requests', [App\Http\Controllers\Employee\RequestController::class, 'index'])->name('requests.index');
         Route::get('/requests/data', [App\Http\Controllers\Employee\RequestController::class, 'getData'])->name('requests.data');
 
+        // Communication Hub
+        Route::get('/communication-hub', [App\Http\Controllers\Employee\CommunicationHubController::class, 'index'])->name('communication-hub.index');
+
         // My Leaves
         Route::get('/leaves', [App\Http\Controllers\Employee\LeaveController::class, 'index'])->name('leaves.index');
         Route::get('/leaves/data', [App\Http\Controllers\Employee\LeaveController::class, 'getData'])->name('leaves.data');
