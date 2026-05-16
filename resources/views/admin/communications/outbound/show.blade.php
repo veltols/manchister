@@ -173,7 +173,7 @@
                                     <input type="radio" name="decision" value="approved" class="text-green-600 focus:ring-green-500" required>
                                     <div class="flex flex-col">
                                         <span class="text-sm font-bold text-slate-700 group-hover:text-green-700">Approve & Forward</span>
-                                        <span class="text-[10px] text-slate-400">Moves to Liaison Officer (Form 2)</span>
+                                        <span class="text-[10px] text-slate-400">Moves to Liaison Officer</span>
                                     </div>
                                 </label>
                                 <label class="flex items-center gap-3 p-4 rounded-xl border border-slate-100 hover:bg-orange-50 transition-all cursor-pointer group">

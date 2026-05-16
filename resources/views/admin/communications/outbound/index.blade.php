@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'GM: Outbound Communications')
-@section('subtitle', 'Final review and task assignment (Form 1)')
+@section('subtitle', 'Final review and task assignment')
 
 @section('content')
     <div class="space-y-6 animate-fade-in-up">
