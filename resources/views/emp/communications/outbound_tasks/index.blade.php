@@ -19,6 +19,7 @@
                     <thead>
                         <tr>
                             <th class="text-left">Communication</th>
+                            <th class="text-left">Type</th>
                             <th class="text-left">Action Required</th>
                             <th class="text-center">Due Date</th>
                             <th class="text-center">Status</th>
@@ -33,6 +34,9 @@
                                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ $task->communication->communication_code }}</span>
                                         <span class="text-sm font-bold text-slate-700 truncate max-w-xs">{{ $task->communication->communication_subject }}</span>
                                     </div>
+                                </td>
+                                <td>
+                                    <span class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase">{{ $task->action_type }}</span>
                                 </td>
                                 <td>
                                     <p class="text-sm text-slate-600 font-medium">{{ $task->action_required }}</p>

@@ -54,7 +54,9 @@ class OutboundGmController extends Controller
             $q->where('is_active', 1);
         })->orderBy('first_name', 'asc')->get();
  
-        return view('admin.communications.outbound.show', compact('record', 'employees'));
+        $liaisonExists = User::where('is_liaison', 1)->where('is_active', 1)->exists();
+        
+        return view('admin.communications.outbound.show', compact('record', 'employees', 'liaisonExists'));
     }
 
     public function decide(Request $request, $id)
@@ -80,13 +82,14 @@ class OutboundGmController extends Controller
 
         if ($request->decision === 'approved') {
             $record->communication_status_id = 3; // Ready for Liaison (Form 2)
-            // Assign to Liaison Officers (anyone with is_liaison = 1)
-            $liaisons = User::where('is_liaison', 1)->get();
-            foreach ($liaisons as $l) {
+            
+            // Notify the primary (first active) Liaison officer - same as action items
+            $liaison = User::where('is_liaison', 1)->where('is_active', 1)->first();
+            if ($liaison) {
                 NotificationService::send(
                     "Outbound Communication REF: " . $record->communication_code . " approved by GM. Please finalize dispatch (Form 2).",
-                    "emp/communications/show/" . $record->communication_id, // Link to show or liaison finalization view
-                    $l->employee_id ?? $l->user_id
+                    "emp/communications/show/" . $record->communication_id,
+                    $liaison->employee_id ?? $liaison->user_id
                 );
             }
         } elseif ($request->decision === 'modifications_required') {
@@ -127,40 +130,52 @@ class OutboundGmController extends Controller
         $gmId = $this->ensureGm();
 
         $request->validate([
-            'assigned_to_id' => 'required|exists:employees_list,employee_id',
-            'action_required' => 'required|string',
-            'due_date' => 'required|date',
+            'actions' => 'required|array|min:1',
+            'actions.*.action_required' => 'required|string',
+            'actions.*.due_date' => 'required|date',
+            'actions.*.action_type' => 'required|string',
         ]);
 
         $record = CommunicationRequest::findOrFail($id);
 
-        $action = OutboundActionItem::create([
-            'communication_id' => $record->communication_id,
-            'assigned_by_id' => $gmId,
-            'assigned_to_id' => $request->assigned_to_id,
-            'action_required' => $request->action_required,
-            'due_date' => $request->due_date,
-            'status' => 'Pending',
-        ]);
+        // Auto-find the first active Liaison officer
+        $liaison = User::where('is_liaison', 1)->where('is_active', 1)->first();
+        if (!$liaison) {
+            return redirect()->back()->with('error', 'No active Liaison Officer found in the system to assign these tasks.');
+        }
+        
+        $assignedToId = $liaison->employee_id ?? $liaison->user_id;
+
+        foreach ($request->actions as $item) {
+            $action = OutboundActionItem::create([
+                'communication_id' => $record->communication_id,
+                'action_type'      => $item['action_type'],
+                'assigned_by_id'   => $gmId,
+                'assigned_to_id'   => $assignedToId,
+                'action_required'  => $item['action_required'],
+                'due_date'         => $item['due_date'],
+                'status'           => 'Pending',
+            ]);
+
+            SystemLog::create([
+                'related_table' => 'outbound_action_items',
+                'related_id' => $action->action_id,
+                'log_action' => 'Action_Item_Assigned',
+                'log_remark' => 'GM assigned task "' . $item['action_required'] . '" to Liaison: ' . $liaison->name,
+                'log_date' => now(),
+                'logged_by' => $gmId,
+                'logger_type' => 'employees_list',
+                'log_type' => 'int',
+            ]);
+        }
 
         NotificationService::send(
-            "New Action Item assigned for Outbound Comm REF: " . $record->communication_code . ". Action: " . $request->action_required,
+            "New Action Items (" . count($request->actions) . ") assigned for Outbound Comm REF: " . $record->communication_code,
             "emp/communications/show/" . $record->communication_id,
-            $request->assigned_to_id
+            $assignedToId
         );
 
-        SystemLog::create([
-            'related_table' => 'outbound_action_items',
-            'related_id' => $action->action_id,
-            'log_action' => 'Action_Item_Assigned',
-            'log_remark' => 'GM assigned task to employee ID: ' . $request->assigned_to_id,
-            'log_date' => now(),
-            'logged_by' => $gmId,
-            'logger_type' => 'employees_list',
-            'log_type' => 'int',
-        ]);
-
-        return redirect()->back()->with('success', 'Action item assigned successfully.');
+        return redirect()->back()->with('success', 'Action items assigned to Liaison successfully.');
     }
 
     public function destroyActionItem($id, $actionId)

@@ -77,9 +77,17 @@
                             <i class="fa-solid fa-tasks text-brand"></i>
                             Assigned Action Items
                         </h3>
-                        <button onclick="openModal('actionModal')" class="px-4 py-2 bg-brand text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:scale-105 transition-all">
-                            <i class="fa-solid fa-plus mr-1"></i> Add Task
-                        </button>
+                        @if($record->is_approved_2 == 0)
+                            @if($liaisonExists)
+                                <button onclick="openModal('actionModal')" class="px-4 py-2 bg-brand text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:scale-105 transition-all">
+                                    <i class="fa-solid fa-plus mr-1"></i> Add Task
+                                </button>
+                            @else
+                                <button onclick="Swal.fire('Notice', 'No active Liaison Officer found in the system. Please create or activate a Liaison account first.', 'warning')" class="px-4 py-2 bg-slate-200 text-slate-500 rounded-xl text-xs font-bold uppercase tracking-wider cursor-not-allowed">
+                                    <i class="fa-solid fa-plus mr-1"></i> Add Task
+                                </button>
+                            @endif
+                        @endif
                     </div>
 
                     <div class="space-y-4">
@@ -87,11 +95,14 @@
                             <div class="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100 relative group">
                                 <div class="flex items-center gap-4">
                                     <div class="w-12 h-12 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-brand font-bold shadow-sm">
-                                        {{ substr($action->assignedTo->employee_name ?? 'E', 0, 1) }}
+                                        {{ substr($action->assignedTo->employee_name ?? 'L', 0, 1) }}
                                     </div>
                                     <div class="flex flex-col">
-                                        <span class="text-xs font-bold text-slate-400 uppercase tracking-tighter">Assigned To: {{ $action->assignedTo->employee_name }}</span>
-                                        <span class="text-sm font-bold text-slate-700">{{ $action->action_required }}</span>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-[10px] font-black uppercase text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded">{{ $action->action_type }}</span>
+                                            <span class="text-xs font-bold text-slate-400 uppercase tracking-tighter">Assigned To: {{ $action->assignedTo->employee_name ?? 'Liaison Officer' }}</span>
+                                        </div>
+                                        <span class="text-sm font-bold text-slate-700 mt-1">{{ $action->action_required }}</span>
                                         <span class="text-[10px] font-bold text-brand mt-1 uppercase">Due: {{ \Carbon\Carbon::parse($action->due_date)->format('Y-m-d') }}</span>
                                     </div>
                                 </div>
@@ -99,7 +110,7 @@
                                     <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-white border border-slate-200 text-slate-500 shadow-sm">{{ $action->status }}</span>
                                     <form action="{{ route('admin.communications.outbound.action.destroy', [$record->communication_id, $action->action_id]) }}" method="POST">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="w-8 h-8 rounded-lg bg-red-50 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">
+                                        <button type="submit" class="w-8 h-8 rounded-lg bg-slate-50 text-brand flex items-center justify-center hover:bg-brand hover:text-white transition-all">
                                             <i class="fa-solid fa-trash text-xs"></i>
                                         </button>
                                     </form>
@@ -111,6 +122,20 @@
                             </div>
                         @endforelse
                     </div>
+
+                    @if($record->is_approved_2 == 0)
+                        <div class="mt-8 pt-8 border-t border-slate-100 flex justify-end">
+                            <form action="{{ route('admin.communications.outbound.decide', $record->communication_id) }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="decision" value="approved">
+                                <input type="hidden" name="notes" value="Approved via quick action.">
+                                <button type="submit" class="premium-button">
+                                    <i class="fa-solid fa-check-double"></i>
+                                    Approve & Forward to Liaison
+                                </button>
+                            </form>
+                        </div>
+                    @endif
                 </div>
 
             </div>
@@ -136,7 +161,7 @@
                 <div class="premium-card p-8 border-t-4 border-brand">
                     <h3 class="text-sm font-bold text-premium uppercase tracking-widest mb-8 flex items-center gap-2">
                         <i class="fa-solid fa-gavel text-brand"></i>
-                        GM Decision (Form 1)
+                        GM Decision
                     </h3>
 
                     <form action="{{ route('admin.communications.outbound.decide', $record->communication_id) }}" method="POST" class="space-y-6">
@@ -186,32 +211,104 @@
     <!-- Add Action Item Modal -->
     <div class="modal" id="actionModal">
         <div class="modal-backdrop" onclick="closeModal('actionModal')"></div>
-        <div class="modal-content max-w-md p-8">
-            <h2 class="text-2xl font-display font-bold text-premium mb-8">Assign Action Item</h2>
-            <form action="{{ route('admin.communications.outbound.action.store', $record->communication_id) }}" method="POST" class="space-y-6">
+        <div class="modal-content max-w-4xl p-8">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl font-display font-bold text-premium">Assign Action Items</h2>
+                <button type="button" onclick="addActionRow()" class="px-4 py-2 bg-brand/10 text-brand rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-brand/20 transition-all">
+                    <i class="fa-solid fa-plus mr-1"></i> Add Another Row
+                </button>
+            </div>
+            
+            <form action="{{ route('admin.communications.outbound.action.store', $record->communication_id) }}" method="POST">
                 @csrf
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Assign To</label>
-                    <select name="assigned_to_id" class="premium-input w-full select2" required>
-                        <option value="">Select Employee...</option>
-                        @foreach($employees as $emp)
-                            <option value="{{ $emp->employee_id }}">{{ $emp->employee_name }} ({{ $emp->department->department_name ?? 'N/A' }})</option>
-                        @endforeach
-                    </select>
+                <div class="overflow-x-auto mb-8">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-100">
+                                <th class="pb-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Action Required</th>
+                                <th class="pb-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Due Date</th>
+                                <th class="pb-4 text-right"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="actionRows">
+                            <tr class="action-row group">
+                                <td class="py-4 pr-4">
+                                    <input type="hidden" name="actions[0][action_type]" value="External">
+                                    <select name="actions[0][action_required]" class="premium-input w-full" required>
+                                        <option value="">Select Action...</option>
+                                        <option value="Review">Review</option>
+                                        <option value="Approve">Approve</option>
+                                        <option value="Reject">Reject</option>
+                                        <option value="Provide Info">Provide Info</option>
+                                        <option value="Forward">Forward</option>
+                                        <option value="Archive">Archive</option>
+                                    </select>
+                                </td>
+                                <td class="py-4 pr-4">
+                                    <input type="date" name="actions[0][due_date]" class="premium-input w-full" required>
+                                </td>
+                                <td class="py-4 text-right">
+                                    <button type="button" onclick="removeActionRow(this)" class="w-10 h-10 rounded-xl bg-slate-50 text-brand flex items-center justify-center hover:bg-brand hover:text-white transition-all">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Action Required</label>
-                    <textarea name="action_required" rows="3" class="premium-input w-full" placeholder="Describe the task..." required></textarea>
+
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 mb-8">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 italic">Note</p>
+                    <p class="text-xs text-slate-500 leading-relaxed">
+                        These action items will be automatically assigned to the **primary Liaison Officer** for execution.
+                    </p>
                 </div>
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Due Date</label>
-                    <input type="date" name="due_date" class="premium-input w-full" required>
-                </div>
+
                 <button type="submit" class="w-full py-4 bg-brand text-white rounded-2xl font-bold text-xs uppercase shadow-lg shadow-brand/20">
-                    Assign Task
+                    Assign All Tasks to Liaison
                 </button>
             </form>
         </div>
     </div>
+
+    <script>
+        let actionRowCount = 1;
+        function addActionRow() {
+            const tbody = document.getElementById('actionRows');
+            const newRow = document.createElement('tr');
+            newRow.className = 'action-row group';
+            newRow.innerHTML = `
+                <td class="py-4 pr-4">
+                    <input type="hidden" name="actions[${actionRowCount}][action_type]" value="External">
+                    <select name="actions[${actionRowCount}][action_required]" class="premium-input w-full" required>
+                        <option value="">Select Action...</option>
+                        <option value="Review">Review</option>
+                        <option value="Approve">Approve</option>
+                        <option value="Reject">Reject</option>
+                        <option value="Provide Info">Provide Info</option>
+                        <option value="Forward">Forward</option>
+                        <option value="Archive">Archive</option>
+                    </select>
+                </td>
+                <td class="py-4 pr-4">
+                    <input type="date" name="actions[${actionRowCount}][due_date]" class="premium-input w-full" required>
+                </td>
+                <td class="py-4 text-right">
+                    <button type="button" onclick="removeActionRow(this)" class="w-10 h-10 rounded-xl bg-slate-50 text-brand flex items-center justify-center hover:bg-brand hover:text-white transition-all">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(newRow);
+            actionRowCount++;
+        }
+
+        function removeActionRow(btn) {
+            const rows = document.querySelectorAll('.action-row');
+            if (rows.length > 1) {
+                btn.closest('tr').remove();
+            }
+        }
+    </script>
     <script src="{{ asset('js/attachment-preview.js') }}"></script>
 @endsection

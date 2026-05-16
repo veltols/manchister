@@ -35,7 +35,7 @@
                 <p class="text-slate-500 mb-8 leading-relaxed">Review incoming mail, official letters, and assigned action items from the General Manager's office.</p>
                 
                 <div class="space-y-4">
-                    @if(!Auth::user()->is_gm)
+                    @if(!Auth::user()->is_gm && !Auth::user()->is_liaison)
                         <a href="{{ route('emp.inbound.index') }}" class="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-teal-50 group/item transition-colors">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-teal-600 shadow-sm">
@@ -110,7 +110,7 @@
 
                 <div class="space-y-4">
                     {{-- My Requests --}}
-                    @if(!Auth::user()->is_gm)
+                    <!-- @if(!Auth::user()->is_gm)
                         <a href="{{ route('emp.communications.index') }}" class="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50 group/item transition-colors">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-indigo-600 shadow-sm">
@@ -123,7 +123,7 @@
                             </div>
                             <i class="fa-solid fa-chevron-right text-slate-300 group-hover/item:text-indigo-600 group-hover/item:translate-x-1 transition-all"></i>
                         </a>
-                    @endif
+                    @endif -->
 
                     {{-- Team Review (Line Manager) --}}
                     @php $isLM = \App\Models\Department::where('line_manager_id', Auth::user()->employee->employee_id ?? 0)->exists(); @endphp
@@ -190,7 +190,8 @@
                     @endif
 
                     {{-- Action Tasks --}}
-                    @if(!Auth::user()->is_gm)
+                    @php $isLM = $isLM ?? \App\Models\Department::where('line_manager_id', Auth::user()->employee->employee_id ?? 0)->exists(); @endphp
+                    @if(!Auth::user()->is_gm && !$isLM)
                         <a href="{{ route('emp.outbound-tasks.index') }}" class="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-rose-50 group/item transition-colors">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-rose-600 shadow-sm">
