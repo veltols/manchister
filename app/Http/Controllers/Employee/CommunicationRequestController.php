@@ -89,7 +89,7 @@ class CommunicationRequestController extends Controller
         $log->related_table = 'm_communications_list';
         $log->related_id = $comm->communication_id;
         $log->log_action = 'Outbound_Requested';
-        $log->log_remark = 'Initial request for outbound communication (Form 0)';
+        $log->log_remark = 'Initial request for outbound communication.';
         $log->log_date = now();
         $log->logged_by = $employeeId;
         $log->logger_type = 'employees_list';
@@ -99,7 +99,7 @@ class CommunicationRequestController extends Controller
         // Notify Line Manager (as per PDF flow)
         if ($lineManagerId != 0) {
             \App\Services\NotificationService::send(
-                "New Outbound Comm Request (Form 0) from " . ($employee->employee_name ?? 'Employee') . ", REF: " . $comm->communication_code,
+                "New Outbound Comm Request from " . ($employee->employee_name ?? 'Employee') . ", REF: " . $comm->communication_code,
                 "hr/communications/list/", // Assuming Line Manager/HR sees it here
                 $lineManagerId
             );

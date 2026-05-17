@@ -56,7 +56,13 @@ class OutboundGmController extends Controller
  
         $liaisonExists = User::where('is_liaison', 1)->where('is_active', 1)->exists();
         
-        return view('admin.communications.outbound.show', compact('record', 'employees', 'liaisonExists'));
+        $logs = SystemLog::with('logger')
+            ->where('related_table', 'm_communications_list')
+            ->where('related_id', $id)
+            ->orderBy('log_date', 'desc')
+            ->get();
+
+        return view('admin.communications.outbound.show', compact('record', 'employees', 'liaisonExists', 'logs'));
     }
 
     public function decide(Request $request, $id)
@@ -81,13 +87,13 @@ class OutboundGmController extends Controller
         $record->approved_2_notes = $request->notes;
 
         if ($request->decision === 'approved') {
-            $record->communication_status_id = 3; // Ready for Liaison (Form 2)
+            $record->communication_status_id = 3; // Ready for Liaison
             
             // Notify the primary (first active) Liaison officer - same as action items
             $liaison = User::where('is_liaison', 1)->where('is_active', 1)->first();
             if ($liaison) {
                 NotificationService::send(
-                    "Outbound Communication REF: " . $record->communication_code . " approved by GM. Please finalize dispatch (Form 2).",
+                    "Outbound Communication REF: " . $record->communication_code . " approved by GM. Please finalize dispatch.",
                     "emp/communications/show/" . $record->communication_id,
                     $liaison->employee_id ?? $liaison->user_id
                 );

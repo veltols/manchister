@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Liaison: Outbound Dispatch')
-@section('subtitle', 'Finalize dispatch and generate reference codes (Form 2)')
+@section('subtitle', 'Finalize dispatch and generate reference codes')
 
 @section('content')
     <div class="space-y-6 animate-fade-in-up">

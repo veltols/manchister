@@ -70,7 +70,7 @@ class LmCommunicationController extends Controller
             'related_table' => 'm_communications_list',
             'related_id' => $comm->communication_id,
             'log_action' => 'Manager_Approved',
-            'log_remark' => 'Approved by Line Manager. Forwarded to GM (Form 1).',
+            'log_remark' => 'Approved by Line Manager. Forwarded to GM.',
             'log_date' => now(),
             'logged_by' => $employeeId,
             'logger_type' => 'employees_list',
@@ -79,7 +79,7 @@ class LmCommunicationController extends Controller
 
         if ($gmId) {
             NotificationService::send(
-                "New Outbound Comm Request (Form 1) awaiting GM review, REF: " . $comm->communication_code,
+                "New Outbound Comm Request awaiting GM review, REF: " . $comm->communication_code,
                 "admin/communications/gm", 
                 $gmId
             );

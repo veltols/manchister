@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'GM Review: ' . $record->communication_code)
-@section('subtitle', 'Assign action items and record final decision (Form 1)')
+@section('subtitle', 'Assign action items and record final decision')
 
 @section('content')
     <div class="space-y-8 animate-fade-in-up pb-20">
@@ -24,10 +24,23 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
             <!-- Left Column: Source Data & LM Comments -->
-            <div class="lg:col-span-2 space-y-8">
+            <div class="lg:col-span-2">
                 
-                <!-- LM Review Log -->
-                <div class="premium-card p-8 border-l-4 border-green-500">
+                <!-- Tabs -->
+                <div class="flex items-center gap-2 border-b border-slate-200 mb-6">
+                    <button type="button" onclick="switchTab('details')" id="tab-btn-details" class="px-6 py-3 text-sm font-bold uppercase tracking-widest text-brand border-b-2 border-brand transition-colors">
+                        Details & Actions
+                    </button>
+                    <button type="button" onclick="switchTab('logs')" id="tab-btn-logs" class="px-6 py-3 text-sm font-bold uppercase tracking-widest text-slate-400 border-b-2 border-transparent hover:text-slate-700 transition-colors">
+                        Activity Logs
+                    </button>
+                </div>
+
+                <!-- Tab Content: Details -->
+                <div id="tab-content-details" class="space-y-8 block">
+                    
+                    <!-- LM Review Log -->
+                    <div class="premium-card p-8 border-l-4 border-green-500">
                     <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
                         <i class="fa-solid fa-user-tie text-green-500"></i>
                         Line Manager Review Notes
@@ -137,6 +150,36 @@
                         </div>
                     @endif
                 </div>
+
+                </div> <!-- End Details Tab -->
+
+                <!-- Tab Content: Logs -->
+                <div id="tab-content-logs" class="hidden space-y-6">
+                    <div class="premium-card p-8">
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                            <i class="fa-solid fa-history text-slate-500"></i>
+                            Communication Timeline & Logs
+                        </h3>
+                        
+                        <div class="relative border-l border-slate-200 ml-3 space-y-8">
+                            @forelse($logs as $log)
+                                <div class="relative pl-6">
+                                    <div class="absolute -left-1.5 top-1 w-3 h-3 rounded-full bg-indigo-500 ring-4 ring-indigo-50"></div>
+                                    <div class="mb-1 text-xs text-slate-400 font-bold uppercase">{{ \Carbon\Carbon::parse($log->log_date)->format('M d, Y - h:i A') }}</div>
+                                    <h4 class="text-sm font-bold text-slate-700 mb-1">{{ str_replace('_', ' ', $log->log_action) }}</h4>
+                                    <p class="text-sm text-slate-600 mb-2">{{ $log->log_remark }}</p>
+                                    <div class="text-[10px] text-slate-400 uppercase font-bold">
+                                        <i class="fa-solid fa-user mr-1"></i> By: {{ $log->logger->employee_name ?? 'System' }}
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="text-center py-10 text-slate-400 italic text-sm">
+                                    No activity logs recorded yet.
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+                </div> <!-- End Logs Tab -->
 
             </div>
 
@@ -272,6 +315,28 @@
     </div>
 
     <script>
+        function switchTab(tab) {
+            if(tab === 'details') {
+                document.getElementById('tab-content-details').classList.remove('hidden');
+                document.getElementById('tab-content-logs').classList.add('hidden');
+                
+                document.getElementById('tab-btn-details').classList.add('text-brand', 'border-brand');
+                document.getElementById('tab-btn-details').classList.remove('text-slate-400', 'border-transparent');
+                
+                document.getElementById('tab-btn-logs').classList.remove('text-brand', 'border-brand');
+                document.getElementById('tab-btn-logs').classList.add('text-slate-400', 'border-transparent');
+            } else {
+                document.getElementById('tab-content-details').classList.add('hidden');
+                document.getElementById('tab-content-logs').classList.remove('hidden');
+                
+                document.getElementById('tab-btn-logs').classList.add('text-brand', 'border-brand');
+                document.getElementById('tab-btn-logs').classList.remove('text-slate-400', 'border-transparent');
+                
+                document.getElementById('tab-btn-details').classList.remove('text-brand', 'border-brand');
+                document.getElementById('tab-btn-details').classList.add('text-slate-400', 'border-transparent');
+            }
+        }
+
         let actionRowCount = 1;
         function addActionRow() {
             const tbody = document.getElementById('actionRows');
