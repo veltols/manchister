@@ -167,7 +167,7 @@
                         <i class="fa-solid fa-crown"></i>
                     </div>
                     <span
-                        class="text-[10px] font-bold {{ $request->is_approved_2 == 1 ? 'text-green-600' : 'text-slate-400' }} uppercase">GM (Form 1)</span>
+                        class="text-[10px] font-bold {{ $request->is_approved_2 == 1 ? 'text-green-600' : 'text-slate-400' }} uppercase">GM</span>
                 </div>
 
                 <div class="h-0.5 w-12 bg-slate-100 hidden md:block"></div>
@@ -179,7 +179,7 @@
                         <i class="fa-solid fa-paper-plane"></i>
                     </div>
                     <span
-                        class="text-[10px] font-bold {{ $request->communication_status_id == 3 ? 'text-indigo-600' : 'text-slate-400' }} uppercase">Liaison (Form 2)</span>
+                        class="text-[10px] font-bold {{ $request->communication_status_id == 3 ? 'text-indigo-600' : 'text-slate-400' }} uppercase">Liaison</span>
                 </div>
 
                 <div class="h-0.5 w-12 bg-slate-100 hidden md:block"></div>

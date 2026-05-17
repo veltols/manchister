@@ -42,6 +42,14 @@ class OutboundLiaisonController extends Controller
         return view('hr.communications.outbound_liaison.index', compact('records'));
     }
 
+    public function show($id)
+    {
+        $this->ensureLiaison();
+        $record = CommunicationRequest::with(['employee.department', 'type', 'status', 'attachments'])->findOrFail($id);
+        
+        return view('hr.communications.outbound_liaison.show', compact('record'));
+    }
+
     public function finalize(Request $request, $id)
     {
         $liaisonId = $this->ensureLiaison();
@@ -110,7 +118,7 @@ class OutboundLiaisonController extends Controller
             $record->requested_by
         );
 
-        return redirect()->route('hr.communications.outbound_liaison.index')
+        return redirect()->route('emp.outbound-liaison.index')
             ->with('success', 'Communication finalized with Ref: ' . $refCode);
     }
 }

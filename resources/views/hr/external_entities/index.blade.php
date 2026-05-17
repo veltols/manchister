@@ -32,13 +32,12 @@
                         <th class="text-left font-bold text-slate-400">Contact Person</th>
                         <th class="text-left font-bold text-slate-400">Email</th>
                         <th class="text-left font-bold text-slate-400">Phone</th>
-                        <th class="text-center font-bold text-slate-400">Status</th>
                         <th class="text-center font-bold text-slate-400">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50" id="entitiesTbody">
                     <tr>
-                        <td colspan="7" class="text-center py-10">
+                        <td colspan="6" class="text-center py-10">
                             <i class="fa-solid fa-spinner fa-spin text-slate-400 text-2xl"></i>
                             <p class="text-slate-500 mt-2">Loading entities...</p>
                         </td>
@@ -118,13 +117,6 @@
                         @endforeach
                     </select>
                 </div>
-                
-                <div class="col-span-2">
-                    <label class="flex items-center gap-2 cursor-pointer mt-2">
-                        <input type="checkbox" name="is_active" id="is_active" value="1" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" checked>
-                        <span class="text-sm font-semibold text-slate-700">Is Active?</span>
-                    </label>
-                </div>
             </div>
             
             <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
@@ -155,13 +147,9 @@
                 tbody.innerHTML = '';
                 
                 if(data.data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-slate-500">No entities found.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-slate-500">No entities found.</td></tr>`;
                 } else {
                     data.data.forEach(entity => {
-                        const activeBadge = entity.is_active 
-                            ? '<span class="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">Active</span>'
-                            : '<span class="px-2 py-1 bg-rose-100 text-rose-700 text-xs font-bold rounded-full">Inactive</span>';
-                            
                         tbody.innerHTML += `
                             <tr class="hover:bg-slate-50/50 transition-colors">
                                 <td class="font-semibold text-slate-700 text-sm">${entity.entity_name}</td>
@@ -169,7 +157,6 @@
                                 <td class="text-sm text-slate-600">${entity.contact_person || '-'}</td>
                                 <td class="text-sm text-slate-600">${entity.entity_email || '-'}</td>
                                 <td class="text-sm text-slate-600">${entity.entity_phone || '-'}</td>
-                                <td class="text-center">${activeBadge}</td>
                                 <td class="text-center">
                                     <button onclick='editEntity(${JSON.stringify(entity).replace(/'/g, "\\'")})' class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-100 transition-colors mx-auto">
                                         <i class="fa-solid fa-pen text-xs"></i>
@@ -205,7 +192,6 @@
         document.getElementById('entityForm').reset();
         document.getElementById('formMethod').value = 'POST';
         document.getElementById('entityForm').action = "{{ route('emp.external-entities.store') }}";
-        document.getElementById('is_active').checked = true;
         document.getElementById('entityModal').style.display = 'flex';
     }
 
@@ -222,7 +208,6 @@
         document.getElementById('emirate_id').value = entity.emirate_id || '';
         document.getElementById('category_id').value = entity.category_id || '';
         document.getElementById('type_id').value = entity.type_id || '';
-        document.getElementById('is_active').checked = entity.is_active == 1;
         
         document.getElementById('entityModal').style.display = 'flex';
     }

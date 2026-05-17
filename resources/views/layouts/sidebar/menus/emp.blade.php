@@ -220,7 +220,7 @@
             @php
                 $isLM = \App\Models\Department::where('line_manager_id', $authUser->employee->employee_id ?? 0)->exists();
                 $isPrivileged = $isLM || $authUser->is_gm || $authUser->is_liaison;
-                $commLink = $isPrivileged ? route('emp.communication-hub.index') : route('emp.requests.index');
+                $commLink = $isPrivileged ? route('emp.communication-hub.index') : route('emp.communications.index');
             @endphp
             @if(!$authUser->is_liaison)
             <a href="{{ $commLink }}"
@@ -399,8 +399,8 @@
             $liaisonOutboundPending = \App\Models\CommunicationRequest::where('is_approved_2', 1)
                 ->where('communication_status_id', 3)->count();
         @endphp
-        <a href="{{ route('hr.communications.outbound_liaison.index') }}"
-            class="nav-item {{ request()->routeIs('hr.communications.outbound_liaison.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 relative">
+        <a href="{{ route('emp.outbound-liaison.index') }}"
+            class="nav-item {{ request()->routeIs('emp.outbound-liaison.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 relative">
             <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
                 <i class="fa-solid fa-paper-plane text-base"></i>
             </div>
@@ -409,7 +409,7 @@
                 <span class="absolute top-1 right-2 bg-indigo-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm">{{ $liaisonOutboundPending }}</span>
             @endif
         </a>
-        @php
+        <!-- @php
             $outboundTaskCount = \App\Models\OutboundActionItem::where('assigned_to_id', Auth::user()->user_id)
                 ->whereIn('status', ['Pending', 'In Progress'])
                 ->count();
@@ -422,7 +422,7 @@
             @if($outboundTaskCount > 0)
                 <span class="absolute top-1 right-2 bg-indigo-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm">{{ $outboundTaskCount }}</span>
             @endif
-        </a>
+        </a> -->
     @endif
 
     <!-- Back to Main Menu Button -->

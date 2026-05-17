@@ -170,7 +170,7 @@
 
                     {{-- Dispatch (Liaison) --}}
                     @if(Auth::user()->is_liaison && !Auth::user()->is_gm)
-                        <a href="{{ route('hr.communications.outbound_liaison.index') }}" class="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-sky-50 group/item transition-colors">
+                        <a href="{{ route('emp.outbound-liaison.index') }}" class="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-sky-50 group/item transition-colors">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-sky-600 shadow-sm">
                                     <i class="fa-solid fa-truck-fast"></i>

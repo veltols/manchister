@@ -51,8 +51,8 @@
         $liaisonOutboundPending = \App\Models\CommunicationRequest::where('is_approved_2', 1)
             ->where('communication_status_id', 3)->count();
     @endphp
-    <a href="{{ route('hr.communications.outbound_liaison.index') }}"
-        class="nav-item {{ request()->routeIs('hr.communications.outbound_liaison.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 relative">
+    <a href="{{ route('emp.outbound-liaison.index') }}"
+        class="nav-item {{ request()->routeIs('emp.outbound-liaison.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 relative">
         <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
             <i class="fa-solid fa-paper-plane text-base"></i>
         </div>

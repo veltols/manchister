@@ -61,7 +61,7 @@ class InboundExternalEntityController extends Controller
             'emirate_id' => $request->emirate_id,
             'category_id' => $request->category_id,
             'type_id' => $request->type_id,
-            'is_active' => $request->has('is_active') ? 1 : 0,
+            'is_active' => 1,
         ]);
 
         return redirect()->back()->with('success', 'External Entity created successfully.');
@@ -95,7 +95,7 @@ class InboundExternalEntityController extends Controller
             'emirate_id' => $request->emirate_id,
             'category_id' => $request->category_id,
             'type_id' => $request->type_id,
-            'is_active' => $request->has('is_active') ? 1 : 0,
+            'is_active' => 1,
         ]);
 
         return redirect()->back()->with('success', 'External Entity updated successfully.');

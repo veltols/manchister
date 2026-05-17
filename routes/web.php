@@ -218,6 +218,11 @@ Route::middleware('auth')->group(function () {
 
         // Communications Log
         Route::get('/communications-log', [App\Http\Controllers\HR\CommunicationsLogController::class, 'index'])->name('communications-log.index');
+        
+        // Outbound Communications (Form 2 — Liaison Finalization)
+        Route::get('/outbound-liaison', [App\Http\Controllers\HR\OutboundLiaisonController::class, 'index'])->name('outbound-liaison.index');
+        Route::get('/outbound-liaison/{id}', [App\Http\Controllers\HR\OutboundLiaisonController::class, 'show'])->name('outbound-liaison.show');
+        Route::post('/outbound-liaison/{id}/finalize', [App\Http\Controllers\HR\OutboundLiaisonController::class, 'finalize'])->name('outbound-liaison.finalize');
         // Inbound Correspondence — GM Review (Form B) — accessible to emp users who are also the GM
         Route::get('/inbound-gm', [App\Http\Controllers\Admin\InboundGmController::class, 'index'])->name('inbound-gm.index');
         Route::get('/inbound-gm/{id}', [App\Http\Controllers\Admin\InboundGmController::class, 'show'])->name('inbound-gm.show');
@@ -451,10 +456,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/inbound/{id}', [App\Http\Controllers\HR\InboundController::class, 'show'])->name('inbound.show');
         Route::put('/inbound/{id}', [App\Http\Controllers\HR\InboundController::class, 'update'])->name('inbound.update');
         Route::post('/inbound/entity', [App\Http\Controllers\HR\InboundController::class, 'storeEntity'])->name('inbound.entity.store');
-
-        // Outbound Communications (Form 2 — Liaison Finalization)
-        Route::get('/communications/outbound-liaison', [App\Http\Controllers\HR\OutboundLiaisonController::class, 'index'])->name('communications.outbound_liaison.index');
-        Route::post('/communications/outbound-liaison/{id}/finalize', [App\Http\Controllers\HR\OutboundLiaisonController::class, 'finalize'])->name('communications.outbound_liaison.finalize');
 
 
         // Designations
