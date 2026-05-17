@@ -112,11 +112,18 @@
                                     </span>
                                 </td>
                                 <td class="text-center">
-                                    <span
-                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-[10px] font-bold uppercase shadow-sm"
-                                        style="background: #{{ $rec->status->status_color ?? '64748b' }};">
-                                        {{ $rec->status->communication_status_name ?? 'Pending' }}
-                                    </span>
+                                    @if($rec->is_approved_1 == 3 || $rec->is_approved_2 == 3)
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-[10px] font-bold uppercase shadow-sm"
+                                            style="background: #f97316;">
+                                            Required Modification
+                                        </span>
+                                    @else
+                                        <span
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-[10px] font-bold uppercase shadow-sm"
+                                            style="background: #{{ $rec->status->status_color ?? '64748b' }};">
+                                            {{ $rec->status->communication_status_name ?? 'Pending' }}
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="text-center">
                                     <div class="flex items-center justify-center gap-2">

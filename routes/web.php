@@ -212,6 +212,12 @@ Route::middleware('auth')->group(function () {
         Route::put('/inbound-liaison/{id}', [App\Http\Controllers\HR\InboundController::class, 'update'])->name('inbound-liaison.update');
         Route::post('/inbound-liaison/entity', [App\Http\Controllers\HR\InboundController::class, 'storeEntity'])->name('inbound-liaison.entity.store');
 
+        // External Entities Management
+        Route::get('/external-entities/data', [App\Http\Controllers\HR\InboundExternalEntityController::class, 'getData'])->name('external-entities.data');
+        Route::resource('external-entities', App\Http\Controllers\HR\InboundExternalEntityController::class);
+
+        // Communications Log
+        Route::get('/communications-log', [App\Http\Controllers\HR\CommunicationsLogController::class, 'index'])->name('communications-log.index');
         // Inbound Correspondence — GM Review (Form B) — accessible to emp users who are also the GM
         Route::get('/inbound-gm', [App\Http\Controllers\Admin\InboundGmController::class, 'index'])->name('inbound-gm.index');
         Route::get('/inbound-gm/{id}', [App\Http\Controllers\Admin\InboundGmController::class, 'show'])->name('inbound-gm.show');

@@ -198,7 +198,7 @@
                                     <i class="fa-solid fa-tasks"></i>
                                 </div>
                                 <div class="flex flex-col">
-                                    <span class="font-bold text-slate-700">Action Tasks</span>
+                                    <span class="font-bold text-slate-700">Action Items</span>
                                     <span class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Assigned Items</span>
                                 </div>
                             </div>

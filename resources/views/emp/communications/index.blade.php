@@ -59,11 +59,18 @@
                                     </span>
                                 </td>
                                 <td class="text-center">
-                                    <span
-                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-[10px] font-bold uppercase shadow-sm"
-                                        style="background: #{{ $req->status->status_color ?? '64748b' }};">
-                                        {{ $req->status->communication_status_name ?? 'Pending' }}
-                                    </span>
+                                    @if($req->is_approved_1 == 3 || $req->is_approved_2 == 3)
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-[10px] font-bold uppercase shadow-sm"
+                                            style="background: #f97316;">
+                                            Required Modification
+                                        </span>
+                                    @else
+                                        <span
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-[10px] font-bold uppercase shadow-sm"
+                                            style="background: #{{ $req->status->status_color ?? '64748b' }};">
+                                            {{ $req->status->communication_status_name ?? 'Pending' }}
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="text-center">
                                     <div class="flex items-center justify-center gap-2">
@@ -212,9 +219,14 @@
             renderCallback: function(data) {
                 let html = '';
                 data.forEach(req => {
-                    const statusColor = req.status ? req.status.status_color : '64748b';
-                    const statusName = req.status ? req.status.communication_status_name : 'Pending';
+                    let statusColor = req.status ? req.status.status_color : '64748b';
+                    let statusName = req.status ? req.status.communication_status_name : 'Pending';
                     const typeName = req.type ? req.type.communication_type_name : '-';
+
+                    if (req.is_approved_1 == 3 || req.is_approved_2 == 3) {
+                        statusName = 'Required Modification';
+                        statusColor = 'f97316';
+                    }
 
                     html += `
                         <tr class="hover:bg-slate-50/50 transition-colors">

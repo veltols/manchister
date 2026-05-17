@@ -13,10 +13,10 @@
             <p class="text-sm text-slate-500 mt-1">{{ $records->total() }} total records</p>
         </div>
         <div class="flex items-center gap-3">
-            <button onclick="openModal('addEntityModal')"
+            <!-- <button onclick="openModal('addEntityModal')"
                 class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-all">
                 <i class="fa-solid fa-building"></i> Add Entity
-            </button>
+            </button> -->
             <button onclick="openModal('addInboundModal')"
                 class="inline-flex items-center gap-2 px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
                 <i class="fa-solid fa-plus"></i>

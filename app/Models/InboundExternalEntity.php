@@ -14,7 +14,7 @@ class InboundExternalEntity extends Model
     protected $primaryKey = 'entity_id';
 
     protected $fillable = [
-        'entity_name', 'entity_code', 'entity_email', 'entity_phone', 'is_active',
+        'entity_name', 'contact_person', 'entity_code', 'entity_email', 'entity_phone', 'emirate_id', 'category_id', 'type_id', 'is_active',
     ];
 
     public function correspondences()
