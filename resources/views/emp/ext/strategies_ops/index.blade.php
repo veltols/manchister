@@ -7,11 +7,7 @@
 <div class="space-y-6 animate-fade-in-up">
 
     {{-- Header --}}
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-            <h1 class="text-2xl font-display font-bold text-premium">Operational Projects</h1>
-            <p class="text-sm text-slate-500 mt-1">Department project portfolio linked to strategic plans</p>
-        </div>
+    <div class="flex justify-end">
         <a href="{{ route('emp.ext.strategies.projects.create') }}"
            class="premium-button px-5 py-2.5 flex items-center gap-2">
             <i class="fa-solid fa-plus text-xs"></i>

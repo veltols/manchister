@@ -434,9 +434,11 @@
     </button>
 </div>
 
-<!-- Switch Workspace Toggle Container -->
-@if($hasAnyRcService || Auth::user()->is_liaison)
-    <div id="emp-switch-container" class="mt-auto pt-3 px-1">
+<!-- Bottom Section -->
+<div class="mt-auto flex flex-col pt-3 pb-2">
+    <!-- Switch Workspace Toggle Container -->
+    @if($hasAnyRcService || Auth::user()->is_liaison)
+        <div id="emp-switch-container" class="px-1 mb-2">
         <!-- Divider with label -->
         <div class="flex items-center gap-2 mb-3 px-2">
             <div class="flex-1 h-px"
@@ -524,7 +526,27 @@
             </button>
         @endif
     </div>
-@endif
+    @endif
+
+    <!-- Department Name -->
+    <div class="text-center px-2 mt-1">
+        <!-- Divider with label -->
+        <div class="flex items-center gap-2 mb-2">
+            <div class="flex-1 h-px" style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);"></div>
+            <span style="font-size:9px; font-weight:700; letter-spacing:0.12em; color:rgba(255,255,255,0.45); text-transform:uppercase;">Department</span>
+            <div class="flex-1 h-px" style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);"></div>
+        </div>
+        @if(Auth::user() && Auth::user()->employee && Auth::user()->employee->department)
+            <p class="text-[10px] font-bold text-white/50 tracking-widest uppercase truncate" title="{{ Auth::user()->employee->department->department_name }}">
+                {{ Auth::user()->employee->department->department_name }}
+            </p>
+        @else
+            <p class="text-[10px] font-bold text-white/30 tracking-widest uppercase truncate">
+                No Department
+            </p>
+        @endif
+    </div>
+</div>
 
 <script>
     function switchEmpMenu(mode) {
