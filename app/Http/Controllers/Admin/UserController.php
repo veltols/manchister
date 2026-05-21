@@ -195,12 +195,12 @@ class UserController extends Controller
         $allServices = EmployeeListService::orderBy('service_id')->get();
         $enabledServiceIds = EmployeeService::where('employee_id', $id)->pluck('service_id')->toArray();
 
-        // Org Chart Data
+        // Org Chart Data - User Related Tree Only
         $activeManagerCheck = fn($q) => $q->whereHas('lineManager', fn($lm) => $lm->whereHas('systemUser', fn($u) => $u->where('is_active', 1)));
         $activeManagerQuery  = fn($q) => $q->whereHas('systemUser', fn($u) => $u->where('is_active', 1))->with('designation');
         $activeEmployeesQuery = fn($q) => $q->whereHas('systemUser', fn($u) => $u->where('is_active', 1))->with('designation');
         
-        $orgRoot = Department::where('main_department_id', 0)
+        $orgRoot = Department::where('department_id', $user->department_id)
             ->where('is_active', 1)
             ->where($activeManagerCheck)
             ->with([
@@ -221,11 +221,40 @@ class UserController extends Controller
             ])
             ->first();
 
+        // Calculate related department IDs (current, ancestors, descendants)
+        $relatedDeptIds = [];
+        if ($user->department_id) {
+            $relatedDeptIds[] = (int)$user->department_id;
+            
+            // Ancestors (parents, grandparents, etc.)
+            $currentDeptId = $user->department_id;
+            while ($currentDeptId) {
+                $parentDept = Department::find($currentDeptId);
+                if ($parentDept && $parentDept->main_department_id) {
+                    $relatedDeptIds[] = (int)$parentDept->main_department_id;
+                    $currentDeptId = $parentDept->main_department_id;
+                } else {
+                    break;
+                }
+            }
+            
+            // Descendants (children, grandchildren, etc.)
+            $fetchDescendants = function($deptId) use (&$relatedDeptIds, &$fetchDescendants) {
+                $childrenIds = Department::where('main_department_id', $deptId)->pluck('department_id')->toArray();
+                foreach ($childrenIds as $childId) {
+                    $relatedDeptIds[] = (int)$childId;
+                    $fetchDescendants($childId);
+                }
+            };
+            $fetchDescendants($user->department_id);
+        }
+        $relatedDeptIds = array_unique($relatedDeptIds);
+
         return view('admin.users.show', compact(
             'user', 'assets', 'logs', 'availableAssets', 
             'allServices', 'enabledServiceIds', 'departments', 
             'designations', 'titles', 'genders', 'nationalities', 
-            'certificates', 'orgRoot'
+            'certificates', 'orgRoot', 'relatedDeptIds'
         ));
     }
 

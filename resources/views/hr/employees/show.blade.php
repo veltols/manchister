@@ -205,7 +205,7 @@
             <div x-show="tab === 'organization'" class="animate-fade-in overflow-x-auto p-4">
                 <div class="org-tree-container py-8">
                     @if($orgRoot)
-                        @include('hr.employees.partials.org_node', ['dept' => $orgRoot, 'targetId' => $employee->employee_id])
+                        @include('hr.employees.partials.org_node', ['dept' => $orgRoot, 'targetId' => $employee->employee_id, 'relatedDeptIds' => $relatedDeptIds])
                     @else
                         <div class="flex flex-col items-center justify-center py-20 text-slate-400">
                             <i class="fa-solid fa-sitemap text-6xl mb-4 opacity-20"></i>

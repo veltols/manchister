@@ -1,3 +1,4 @@
+@if(!isset($relatedDeptIds) || in_array($dept->department_id, $relatedDeptIds))
 <div class="org-node mb-10 last:mb-0">
     <!-- Department Node -->
     <div class="flex items-center gap-4 mb-4">
@@ -51,9 +52,10 @@
         @if($dept->children && $dept->children->count() > 0)
             <div class="mt-6 pt-2 space-y-8">
                 @foreach($dept->children as $child)
-                    @include('admin.users.partials.org_node', ['dept' => $child, 'targetId' => $targetId])
+                    @include('admin.users.partials.org_node', ['dept' => $child, 'targetId' => $targetId, 'relatedDeptIds' => $relatedDeptIds ?? null])
                 @endforeach
             </div>
         @endif
     </div>
 </div>
+@endif

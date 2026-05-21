@@ -436,8 +436,8 @@
 
 <!-- Bottom Section -->
 <div class="mt-auto flex flex-col pt-3 pb-2">
-    <!-- Switch Workspace Toggle Container -->
-    @if($hasAnyRcService || Auth::user()->is_liaison)
+    <!-- Switch Workspace Toggle Container   $hasAnyRcService ||-->
+    @if( Auth::user()->is_liaison)
         <div id="emp-switch-container" class="px-1 mb-2">
         <!-- Divider with label -->
         <div class="flex items-center gap-2 mb-3 px-2">
@@ -450,7 +450,7 @@
                 style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);"></div>
         </div>
 
-        @if($hasAnyRcService)
+        {{-- @if($hasAnyRcService)
             <button onclick="switchEmpMenu('rc')"
                 class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl relative overflow-hidden group mb-2" style="
                             background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 100%);
@@ -487,7 +487,7 @@
                 </div>
                 <i class="fa-solid fa-arrow-right text-xs flex-shrink-0" style="color: rgba(255,255,255,0.5);"></i>
             </button>
-        @endif
+        @endif --}}
 
         @if(Auth::user()->is_liaison)
             <button onclick="switchEmpMenu('liaison')"

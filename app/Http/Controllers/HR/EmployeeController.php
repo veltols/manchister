@@ -139,7 +139,7 @@ class EmployeeController extends Controller
         $activeManagerQuery = fn($q) => $q->whereHas('systemUser', fn($u) => $u->where('is_active', 1))->with('designation');
         $activeEmployeesQuery = fn($q) => $q->whereHas('systemUser', fn($u) => $u->where('is_active', 1))->with('designation');
         
-        $orgRoot = Department::where('main_department_id', 0)
+        $orgRoot = Department::where('department_id', $employee->department_id)
             ->where('is_active', 1)
             ->where($activeManagerCheck)
             ->with([
@@ -184,6 +184,35 @@ class EmployeeController extends Controller
             ];
         }
 
+        // Calculate related department IDs (current, ancestors, descendants)
+        $relatedDeptIds = [];
+        if ($employee->department_id) {
+            $relatedDeptIds[] = (int)$employee->department_id;
+            
+            // Ancestors (parents, grandparents, etc.)
+            $currentDeptId = $employee->department_id;
+            while ($currentDeptId) {
+                $parentDept = Department::find($currentDeptId);
+                if ($parentDept && $parentDept->main_department_id) {
+                    $relatedDeptIds[] = (int)$parentDept->main_department_id;
+                    $currentDeptId = $parentDept->main_department_id;
+                } else {
+                    break;
+                }
+            }
+            
+            // Descendants (children, grandchildren, etc.)
+            $fetchDescendants = function($deptId) use (&$relatedDeptIds, &$fetchDescendants) {
+                $childrenIds = Department::where('main_department_id', $deptId)->pluck('department_id')->toArray();
+                foreach ($childrenIds as $childId) {
+                    $relatedDeptIds[] = (int)$childId;
+                    $fetchDescendants($childId);
+                }
+            };
+            $fetchDescendants($employee->department_id);
+        }
+        $relatedDeptIds = array_unique($relatedDeptIds);
+
         return view('hr.employees.show', compact(
             'employee',
             'departments',
@@ -199,7 +228,8 @@ class EmployeeController extends Controller
             'permissionStatuses',
             'warningLevels',
             'daStatuses',
-            'orgRoot'
+            'orgRoot',
+            'relatedDeptIds'
         ));
     }
 

@@ -13,14 +13,14 @@
                 <p class="text-sm text-slate-500 mt-1">{{ $tickets->total() }} total tickets</p>
             </div>
             <div class="flex items-center gap-3">
-                <a href="{{ route('emp.requests.index') }}"
+                {{-- <a href="{{ route('emp.requests.index') }}"
                     class="px-4 py-2 rounded-lg font-medium text-sm text-slate-600 hover:bg-slate-100 transition-all">
                     <i class="fa-solid fa-hand-sparkles mr-1"></i> HR Requests
                 </a>
                 <a href="{{ route('emp.ss.index') }}"
                     class="px-4 py-2 rounded-lg font-medium text-sm text-slate-600 hover:bg-slate-100 transition-all">
                     <i class="fa-solid fa-headset mr-1"></i> Admin Services
-                </a>
+                </a> --}}
                 <button onclick="openModal('newTicketModal')"
                     class="ml-2 inline-flex items-center gap-2 px-6 py-3 bg-gradient-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-200">
                     <i class="fa-solid fa-plus"></i>

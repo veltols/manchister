@@ -4,6 +4,12 @@
 @section('subtitle', 'View system user details')
 
 @section('content')
+    <div class="mb-4 animate-fade-in-up">
+        <a href="{{ route('admin.users.index') }}" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1 group bg-white px-4 py-2 rounded-xl border border-slate-100 shadow-sm transition-all hover:shadow">
+            <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i> BACK TO USERS LIST
+        </a>
+    </div>
+
     <div x-data="{ activeTab: 'assets' }" class="space-y-6 animate-fade-in-up md:grid md:grid-cols-3 md:gap-6 md:space-y-0">
         
         <!-- Left Column: Profile Card -->
@@ -174,7 +180,7 @@
                 <div x-show="activeTab === 'organization'" class="animate-fade-in overflow-x-auto p-4">
                     <div class="org-tree-container py-8 max-w-2xl mx-auto">
                         @if($orgRoot)
-                            @include('admin.users.partials.org_node', ['dept' => $orgRoot, 'targetId' => $user->employee_id])
+                            @include('admin.users.partials.org_node', ['dept' => $orgRoot, 'targetId' => $user->employee_id, 'relatedDeptIds' => $relatedDeptIds])
                         @else
                             <div class="flex flex-col items-center justify-center py-20 text-slate-400">
                                 <i class="fa-solid fa-sitemap text-6xl mb-4 opacity-20"></i>
