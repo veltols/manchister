@@ -40,6 +40,11 @@ class Task extends Model
         return $this->belongsTo(Employee::class, 'assigned_to', 'employee_id');
     }
 
+    public function department()
+    {
+        return $this->belongsTo(Department::class, 'department_id', 'department_id');
+    }
+
     public function subtasks()
     {
         return $this->hasMany(Task::class, 'parent_task_id', 'task_id')->orderBy('task_id', 'asc');

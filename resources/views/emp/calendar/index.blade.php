@@ -239,10 +239,10 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">Assign To</label>
-                        <select name="assigned_to" class="premium-input w-full px-4 py-3 text-sm">
-                            <option value="{{ auth()->user()->employee ? auth()->user()->employee->employee_id : 0 }}">Me (Self)</option>
-                            @foreach($employees as $emp)
-                                <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                        <select name="assigned_to" class="premium-input w-full px-4 py-3 text-sm" required>
+                            <option value="myself">Myself</option>
+                            @foreach($departments as $dept)
+                                <option value="dept_{{ $dept->department_id }}">{{ $dept->department_name }} Department</option>
                             @endforeach
                         </select>
                     </div>

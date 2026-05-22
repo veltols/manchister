@@ -40,10 +40,9 @@
                             To</label>
                         <div class="relative">
                             <select name="assigned_to" class="premium-input w-full appearance-none" required>
-                                <option value="">Select Employee</option>
-                                @foreach($employees as $emp)
-                                    <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}
-                                    </option>
+                                <option value="myself">Myself</option>
+                                @foreach(\App\Models\Department::orderBy('department_name')->get() as $dept)
+                                    <option value="dept_{{ $dept->department_id }}">{{ $dept->department_name }} Department</option>
                                 @endforeach
                             </select>
                             <i

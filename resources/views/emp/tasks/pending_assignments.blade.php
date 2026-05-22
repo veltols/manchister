@@ -126,10 +126,10 @@
                                 @if($task->assignedTo)
                                 <div class="flex items-center gap-2">
                                     <div class="w-7 h-7 rounded-full bg-gradient-to-br from-green-400 to-teal-500 flex items-center justify-center text-white text-xs font-bold">
-                                        {{ substr($task->assignedTo->first_name, 0, 1) }}
+                                        {{ substr($task->assignedTo?->first_name ?? 'U', 0, 1) }}
                                     </div>
                                     <div>
-                                        <span class="text-sm font-medium text-slate-700">{{ $task->assignedTo->first_name }} {{ $task->assignedTo->last_name }}</span>
+                                        <span class="text-sm font-medium text-slate-700">{{ $task->assignedTo?->first_name }} {{ $task->assignedTo?->last_name }}</span>
                                         <span class="block text-[10px] text-green-600 font-bold">Suggested</span>
                                     </div>
                                 </div>
@@ -265,10 +265,33 @@ const taskData = {
         priority: "{{ $task->priority->priority_name ?? '—' }}",
         priorityColor: "#{{ $task->priority->priority_color ?? '6366f1' }}",
         createdBy: "{{ $task->assignedBy ? $task->assignedBy->first_name . ' ' . $task->assignedBy->last_name : '—' }}",
-        suggestedFor: "{{ $task->assignedTo ? $task->assignedTo->first_name . ' ' . $task->assignedTo->last_name : 'Not specified' }}",
+        suggestedFor: "{{ $task->assignedTo ? $task->assignedTo?->first_name . ' ' . $task->assignedTo?->last_name : 'Not specified' }}",
         dueDate: "{{ \Carbon\Carbon::parse($task->task_due_date)->format('d M Y') }}",
         assignedDate: "{{ \Carbon\Carbon::parse($task->task_assigned_date)->format('d M Y') }}",
         attachment: "{{ $task->task_attachment ? asset($task->task_attachment) : '' }}",
+        employees: [
+            @php
+                $taskDeptId = $task->department_id;
+                if ($taskDeptId) {
+                    $taskEmployees = \App\Models\Employee::where('is_deleted', 0)
+                        ->where('department_id', $taskDeptId)
+                        ->whereHas('systemUser', function($q) {
+                            $q->where('is_active', 1);
+                        })
+                        ->orderBy('first_name')
+                        ->get();
+                } else {
+                    $taskEmployees = $employees;
+                }
+            @endphp
+            @foreach($taskEmployees as $emp)
+            {
+                id: {{ $emp->employee_id }},
+                name: "{{ addslashes($emp->first_name . ' ' . $emp->last_name) }}",
+                designation: "{{ $emp->designation ? addslashes($emp->designation->designation_name) : '' }}"
+            },
+            @endforeach
+        ]
     },
     @endforeach
 };
@@ -465,6 +488,19 @@ const taskData = {
         document.getElementById('assign-task-id').value = taskId;
         document.getElementById('assign-task-title').innerText = taskTitle;
         const sel = document.getElementById('assign-employee');
+        
+        // Clear and rebuild options based on the task's valid employees
+        sel.innerHTML = '<option value="">Select Employee...</option>';
+        const t = taskData[taskId];
+        if (t && t.employees) {
+            t.employees.forEach(emp => {
+                const opt = document.createElement('option');
+                opt.value = emp.id;
+                opt.textContent = emp.name + (emp.designation ? ' — ' + emp.designation : '');
+                sel.appendChild(opt);
+            });
+        }
+        
         sel.value = suggestedId ? suggestedId : '';
         openModal('assignModal');
     }

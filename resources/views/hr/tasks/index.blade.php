@@ -105,6 +105,7 @@
             <div id="tasks-container">
                 @forelse($tasks as $task)
                     @php
+                        $isDept = ($viewMode != 'assigned_to') && $task->department_id && $task->department;
                         $person = ($viewMode == 'assigned_to') ? $task->assignedBy : $task->assignedTo;
                         $dueDate = $task->task_due_date ? \Carbon\Carbon::parse($task->task_due_date) : null;
                         $isOverdue = $dueDate && $dueDate->isPast() && !in_array(strtolower($task->status->status_name ?? ''), ['done', 'completed', 'closed']);
@@ -134,12 +135,21 @@
                         {{-- Assignee --}}
                         <div class="col-assignee">
                             <div class="flex items-center gap-2">
-                                <div
-                                    class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
-                                    {{ strtoupper(substr($person->first_name ?? 'U', 0, 1)) }}
-                                </div>
-                                <span
-                                    class="text-sm text-slate-600 truncate max-w-[100px]">{{ $person->first_name ?? '—' }}</span>
+                                @if($isDept)
+                                    <div
+                                        class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                                        {{ strtoupper(substr($task->department->department_name ?? 'D', 0, 1)) }}
+                                    </div>
+                                    <span
+                                        class="text-sm text-slate-600 truncate max-w-[100px]">{{ ($task->department->department_name ?? '') . ' Dept' }}</span>
+                                @else
+                                    <div
+                                        class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                                        {{ strtoupper(substr($person->first_name ?? 'U', 0, 1)) }}
+                                    </div>
+                                    <span
+                                        class="text-sm text-slate-600 truncate max-w-[100px]">{{ $person->first_name ?? '—' }}</span>
+                                @endif
                             </div>
                         </div>
 
@@ -206,6 +216,7 @@
                     @if($task->subtasks && $task->subtasks->count() > 0)
                         @foreach($task->subtasks as $sub)
                             @php
+                                $isSubDept = ($viewMode != 'assigned_to') && $sub->department_id && $sub->department;
                                 $subPerson = ($viewMode == 'assigned_to') ? $sub->assignedBy : $sub->assignedTo;
                                 $subDue = $sub->task_due_date ? \Carbon\Carbon::parse($sub->task_due_date) : null;
                                 $subOverdue = $subDue && $subDue->isPast() && !in_array(strtolower($sub->status->status_name ?? ''), ['done', 'completed', 'closed']);
@@ -229,7 +240,13 @@
                                     </div>
                                 </div>
                                 <div class="col-assignee">
-                                    <span class="text-xs text-slate-500">{{ $subPerson->first_name ?? '—' }}</span>
+                                    <span class="text-xs text-slate-500">
+                                        @if($isSubDept)
+                                            {{ ($sub->department->department_name ?? '') . ' Dept' }}
+                                        @else
+                                            {{ $subPerson->first_name ?? '—' }}
+                                        @endif
+                                    </span>
                                 </div>
                                 <div class="col-due">
                                     @if($subDue)
@@ -523,10 +540,10 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Assign
                             To</label>
-                        <select name="assigned_to" class="premium-input w-full px-4 py-3 text-sm">
-                            <option value="">Not specified</option>
-                            @foreach($employees as $emp)
-                                <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                        <select name="assigned_to" class="premium-input w-full px-4 py-3 text-sm" required>
+                            <option value="myself">Myself</option>
+                            @foreach($departments as $dept)
+                                <option value="dept_{{ $dept->department_id }}">{{ $dept->department_name }} Department</option>
                             @endforeach
                         </select>
                     </div>
@@ -958,7 +975,15 @@
 
                     // Meta
                     document.getElementById('drawer-assigned-by').innerText = task.assigned_by ? `${task.assigned_by.first_name} ${task.assigned_by.last_name}` : '—';
-                    document.getElementById('drawer-assigned-to').innerText = task.assigned_to ? `${task.assigned_to.first_name} ${task.assigned_to.last_name}` : '—';
+                    if (task.department) {
+                        let deptStr = `${task.department.department_name} Department`;
+                        if (task.assigned_to && task.assigned_to.first_name) {
+                            deptStr += ` — Assigned to: ${task.assigned_to.first_name} ${task.assigned_to.last_name}`;
+                        }
+                        document.getElementById('drawer-assigned-to').innerText = deptStr;
+                    } else {
+                        document.getElementById('drawer-assigned-to').innerText = task.assigned_to ? `${task.assigned_to.first_name} ${task.assigned_to.last_name}` : '—';
+                    }
                     document.getElementById('drawer-due-date').innerText = task.task_due_date ? new Date(task.task_due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 
                     // Progress
@@ -1244,7 +1269,18 @@
                         let html = '';
                         tasks.forEach(task => {
                             const person = vm == 'assigned_to' ? task.assigned_by : task.assigned_to;
-                            const initials = (person?.first_name ?? 'U').charAt(0).toUpperCase();
+                            let assigneeName = '—';
+                            let initials = 'U';
+                            if (vm !== 'assigned_to' && task.department) {
+                                assigneeName = `${task.department.department_name} Dept`;
+                                if (person && person.first_name) {
+                                    assigneeName += ` (${person.first_name})`;
+                                }
+                                initials = (task.department.department_name ?? 'D').charAt(0).toUpperCase();
+                            } else if (person) {
+                                assigneeName = person.first_name ?? '—';
+                                initials = (person.first_name ?? 'U').charAt(0).toUpperCase();
+                            }
                             const dueDate = task.task_due_date ? new Date(task.task_due_date) : null;
                             const isOverdue = dueDate && dueDate < new Date();
                             html += `
@@ -1261,7 +1297,7 @@
                                                                                                             <div class="col-assignee">
                                                                                                                 <div class="flex items-center gap-2">
                                                                                                                     <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold">${initials}</div>
-                                                                                                                    <span class="text-sm text-slate-600 truncate">${person?.first_name ?? '—'}</span>
+                                                                                                                    <span class="text-sm text-slate-600 truncate">${assigneeName}</span>
                                                                                                                 </div>
                                                                                                             </div>
                                                                                                             <div class="col-due">

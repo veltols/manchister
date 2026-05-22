@@ -25,7 +25,7 @@ class TaskController extends Controller
 
         // Tasks pending line manager approval (submitted by this user)
         if ($viewMode === 'submitted') {
-            $tasks = Task::with(['status', 'priority', 'assignedBy', 'assignedTo'])
+            $tasks = Task::with(['status', 'priority', 'assignedBy', 'assignedTo', 'department'])
                 ->where('assigned_by', $employeeId)
                 ->whereNotNull('pending_line_manager_id')
                 ->where('pending_line_manager_id', '!=', 0)
@@ -33,18 +33,18 @@ class TaskController extends Controller
 
         } elseif ($viewMode === 'pending') {
             // Tasks pending THIS user's LM approval
-            $tasks = Task::with(['status', 'priority', 'assignedBy', 'assignedTo'])
+            $tasks = Task::with(['status', 'priority', 'assignedBy', 'assignedTo', 'department'])
                 ->where('pending_line_manager_id', $employeeId)
                 ->orderBy('task_id', 'desc')->paginate(15);
 
         } elseif ($viewMode === 'rejected') {
-            $tasks = Task::with(['status', 'priority', 'assignedBy', 'assignedTo'])
+            $tasks = Task::with(['status', 'priority', 'assignedBy', 'assignedTo', 'department'])
                 ->where('assigned_by', $employeeId)
                 ->where('is_rejected', 1)
                 ->orderBy('task_id', 'desc')->paginate(15);
 
         } elseif ($viewMode === 'rejected_by_me') {
-            $tasks = Task::with(['status', 'priority', 'assignedBy', 'assignedTo'])
+            $tasks = Task::with(['status', 'priority', 'assignedBy', 'assignedTo', 'department'])
                 ->where('is_rejected', 1)
                 ->whereHas('assignedBy', function ($q) use ($employeeId) {
                     $deptIds = Department::where('line_manager_id', $employeeId)->pluck('department_id');
@@ -60,6 +60,7 @@ class TaskController extends Controller
                 'priority',
                 'assignedBy',
                 'assignedTo',
+                'department',
                 'subtasks' => function ($q) {
                     $q->where(function ($sq) {
                         $sq->whereNull('pending_line_manager_id')->orWhere('pending_line_manager_id', 0);
@@ -68,7 +69,8 @@ class TaskController extends Controller
                 'subtasks.status',
                 'subtasks.priority',
                 'subtasks.assignedBy',
-                'subtasks.assignedTo'
+                'subtasks.assignedTo',
+                'subtasks.department'
             ])
                 ->where(function ($q) {
                     $q->whereNull('pending_line_manager_id')->orWhere('pending_line_manager_id', 0);
@@ -119,19 +121,25 @@ class TaskController extends Controller
             ->count();
 
         $isLineManager = Department::where('line_manager_id', $employeeId)->exists();
+        $departments = Department::orderBy('department_name')->get();
 
-        return view('emp.tasks.index', compact('tasks', 'statuses', 'priorities', 'employees', 'viewMode', 'statusId', 'pendingCount', 'submittedCount', 'rejectedCount', 'rejectedByMeCount', 'isLineManager'));
+        return view('emp.tasks.index', compact('tasks', 'statuses', 'priorities', 'employees', 'viewMode', 'statusId', 'pendingCount', 'submittedCount', 'rejectedCount', 'rejectedByMeCount', 'isLineManager', 'departments'));
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        $task = Task::with(['status', 'priority', 'assignedBy', 'assignedTo', 'logs.logger', 'comments.commenter'])
+        $task = Task::with(['status', 'priority', 'assignedBy', 'assignedTo', 'department', 'logs.logger', 'comments.commenter'])
             ->findOrFail($id);
 
-        return response()->json([
-            'success' => true,
-            'data' => $task
-        ]);
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => $task
+            ]);
+        }
+
+        $statuses = TaskStatus::all();
+        return view('emp.tasks.show', compact('task', 'statuses'));
     }
 
     public function storeComment(Request $request, $id)
@@ -173,24 +181,57 @@ class TaskController extends Controller
         $employee = $user->employee;
         $employeeId = $employee ? $employee->employee_id : 0;
 
-        // Always fetch the freshest line manager at task creation time
-        $lineManagerId = null;
-        if ($employee && $employee->department_id) {
-            // Fresh query — gets current line_manager_id even if it changed recently
-            $lineManagerId = Department::where('department_id', $employee->department_id)
-                ->value('line_manager_id');
-        }
-        // dd($lineManagerId);
-        // Fallback: if this department has no line manager, get the most recently updated dept that has one
-        if (!$lineManagerId) {
-            $lineManagerId = Department::whereNotNull('line_manager_id')
-                ->orderBy('updated_at', 'desc')
-                ->value('line_manager_id');
-        }
+        // Parse assigned_to input to determine assignment
+        $assignedToInput = $request->input('assigned_to');
+        $assignedTo = null;
+        $departmentId = null;
+        $pendingLineManagerId = null;
+        $remark = 'Task created — pending line manager assignment';
 
-        // If the creator IS the line manager, they don't need to approve their own task
-        if ($lineManagerId && $lineManagerId == $employeeId) {
-            $lineManagerId = null;
+        if ($assignedToInput === 'myself') {
+            // Assign to own list, bypass line manager approval
+            $assignedTo = $employeeId;
+            $departmentId = null;
+            $pendingLineManagerId = null;
+            $remark = 'Task created and self-assigned';
+        } elseif (str_starts_with($assignedToInput, 'dept_')) {
+            // Assign to department directly
+            $deptId = (int) substr($assignedToInput, 5); // strip 'dept_'
+            $assignedTo = 0;
+            $departmentId = $deptId;
+            // Route to department's line manager for review & delegation
+            $pendingLineManagerId = Department::where('department_id', $deptId)->value('line_manager_id');
+            if (!$pendingLineManagerId) {
+                // Fallback: if department has no line manager, get general line manager
+                $pendingLineManagerId = Department::whereNotNull('line_manager_id')
+                    ->orderBy('updated_at', 'desc')
+                    ->value('line_manager_id');
+            }
+            // If the creator IS the line manager of the assigned department, bypass approval
+            if ($pendingLineManagerId && $pendingLineManagerId == $employeeId) {
+                $pendingLineManagerId = null;
+                $remark = 'Task created and assigned to department (self-approved)';
+            } else {
+                $remark = 'Task created and assigned to department — pending department manager assignment';
+            }
+        } else {
+            // Fallback (or if it's numeric employee ID)
+            $assignedTo = $request->filled('assigned_to') ? (int) $request->assigned_to : null;
+            $departmentId = null;
+            // Standard flow: goes to the creator's line manager
+            if ($employee && $employee->department_id) {
+                $pendingLineManagerId = Department::where('department_id', $employee->department_id)
+                    ->value('line_manager_id');
+            }
+            if (!$pendingLineManagerId) {
+                $pendingLineManagerId = Department::whereNotNull('line_manager_id')
+                    ->orderBy('updated_at', 'desc')
+                    ->value('line_manager_id');
+            }
+            if ($pendingLineManagerId && $pendingLineManagerId == $employeeId) {
+                $pendingLineManagerId = null;
+                $remark = 'Task created (self-approved)';
+            }
         }
 
         $task = new Task();
@@ -210,9 +251,9 @@ class TaskController extends Controller
         $task->task_due_date = $dueDate;
 
         $task->assigned_by = $employeeId;
-        // Store the suggested assignee from the creator; line manager can change or confirm
-        $task->assigned_to = $request->filled('assigned_to') ? $request->assigned_to : null;
-        $task->pending_line_manager_id = $lineManagerId;
+        $task->assigned_to = $assignedTo;
+        $task->department_id = $departmentId;
+        $task->pending_line_manager_id = $pendingLineManagerId;
         $task->priority_id = $request->priority_id;
         $task->parent_task_id = $request->parent_task_id ?? 0;
 
@@ -229,18 +270,18 @@ class TaskController extends Controller
         $task->save();
 
         // Notify line manager
-        if ($lineManagerId) {
+        if ($pendingLineManagerId) {
             \App\Services\NotificationService::send(
                 "A new task requires your review & assignment: " . $task->task_title,
                 "emp/tasks/pending",
-                $lineManagerId
+                $pendingLineManagerId
             );
         }
 
         // Initial log
         SystemLog::create([
             'log_action' => 'Task_Added',
-            'log_remark' => 'Task created — pending line manager assignment',
+            'log_remark' => $remark,
             'related_table' => 'tasks_list',
             'related_id' => $task->task_id,
             'log_date' => now(),
@@ -249,7 +290,11 @@ class TaskController extends Controller
             'log_type' => 'int'
         ]);
 
-        return response()->json(['success' => true, 'message' => 'Task submitted to your line manager for assignment!']);
+        if ($pendingLineManagerId) {
+            return response()->json(['success' => true, 'message' => 'Task submitted to your line manager for assignment!']);
+        } else {
+            return response()->json(['success' => true, 'message' => 'Task created successfully!']);
+        }
     }
 
     /**
@@ -296,6 +341,14 @@ class TaskController extends Controller
         $task = Task::where('task_id', $id)
             ->where('pending_line_manager_id', $employeeId)
             ->firstOrFail();
+
+        $employee = Employee::findOrFail($request->assigned_to);
+        if ($task->department_id && $employee->department_id != $task->department_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The selected employee does not belong to the department assigned to this task.'
+            ], 422);
+        }
 
         $task->assigned_to = $request->assigned_to;
         $task->pending_line_manager_id = null;
@@ -470,10 +523,12 @@ class TaskController extends Controller
             'priority',
             'assignedBy',
             'assignedTo',
+            'department',
             'subtasks.status',
             'subtasks.priority',
             'subtasks.assignedBy',
-            'subtasks.assignedTo'
+            'subtasks.assignedTo',
+            'subtasks.department'
         ]);
 
         // ── Apply view-mode specific filters ─────────────────────────
@@ -482,6 +537,7 @@ class TaskController extends Controller
             'priority',
             'assignedBy',
             'assignedTo',
+            'department',
             'subtasks' => function ($q) {
                 $q->where(function ($sq) {
                     $sq->whereNull('pending_line_manager_id')->orWhere('pending_line_manager_id', 0);
@@ -490,7 +546,8 @@ class TaskController extends Controller
             'subtasks.status',
             'subtasks.priority',
             'subtasks.assignedBy',
-            'subtasks.assignedTo'
+            'subtasks.assignedTo',
+            'subtasks.department'
         ]);
 
         // ── Apply view-mode specific filters ─────────────────────────

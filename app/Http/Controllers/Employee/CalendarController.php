@@ -42,7 +42,8 @@ class CalendarController extends Controller
         // Data for New Task Modal
         $employees = \App\Models\Employee::where('is_deleted', 0)->where('is_hidden', 0)->get();
         $priorities = \App\Models\Priority::all();
+        $departments = \App\Models\Department::orderBy('department_name')->get();
 
-        return view('emp.calendar.index', compact('tasks', 'view', 'date', 'carbonDate', 'startDate', 'endDate', 'employees', 'priorities'));
+        return view('emp.calendar.index', compact('tasks', 'view', 'date', 'carbonDate', 'startDate', 'endDate', 'employees', 'priorities', 'departments'));
     }
 }

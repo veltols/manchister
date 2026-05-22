@@ -106,13 +106,26 @@
                     <div>
                         <h3 class="text-sm font-bold text-slate-400 uppercase mb-1">Assigned To</h3>
                         <div class="flex items-center gap-3 mt-2">
-                            <div
-                                class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-white text-xs font-bold">
-                                {{ substr($task->assignedTo->first_name ?? 'U', 0, 1) }}
-                            </div>
-                            <p class="font-medium text-slate-800">
-                                {{ $task->assignedTo->first_name ?? 'Unknown' }} {{ $task->assignedTo->last_name ?? '' }}
-                            </p>
+                            @if($task->department_id && $task->department)
+                                <div
+                                    class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-white text-xs font-bold">
+                                    {{ substr($task->department->department_name ?? 'D', 0, 1) }}
+                                </div>
+                                <p class="font-medium text-slate-800">
+                                    {{ ($task->department->department_name ?? '') . ' Department' }}
+                                    @if($task->assigned_to && $task->assigned_to != 0 && $task->assignedTo)
+                                        <span class="block text-xs text-slate-500 font-normal mt-0.5">Assigned to: {{ $task->assignedTo?->first_name }} {{ $task->assignedTo?->last_name }}</span>
+                                    @endif
+                                </p>
+                            @else
+                                <div
+                                    class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-white text-xs font-bold">
+                                    {{ substr($task->assignedTo?->first_name ?? 'U', 0, 1) }}
+                                </div>
+                                <p class="font-medium text-slate-800">
+                                    {{ $task->assignedTo?->first_name ?? 'Unknown' }} {{ $task->assignedTo?->last_name ?? '' }}
+                                </p>
+                            @endif
                         </div>
                     </div>
                 </div>

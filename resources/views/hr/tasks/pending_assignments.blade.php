@@ -332,6 +332,29 @@ const taskData = {
         dueDate: "{{ \Carbon\Carbon::parse($task->task_due_date)->format('d M Y') }}",
         startDate: "{{ \Carbon\Carbon::parse($task->task_assigned_date)->format('d M Y') }}",
         attachment: "{{ $task->task_attachment ? asset($task->task_attachment) : '' }}",
+        employees: [
+            @php
+                $taskDeptId = $task->department_id;
+                if ($taskDeptId) {
+                    $taskEmployees = \App\Models\Employee::where('is_deleted', 0)
+                        ->where('department_id', $taskDeptId)
+                        ->whereHas('systemUser', function($q) {
+                            $q->where('is_active', 1);
+                        })
+                        ->orderBy('first_name')
+                        ->get();
+                } else {
+                    $taskEmployees = $employees;
+                }
+            @endphp
+            @foreach($taskEmployees as $emp)
+            {
+                id: {{ $emp->employee_id }},
+                name: "{{ addslashes($emp->first_name . ' ' . $emp->last_name) }}",
+                designation: "{{ $emp->designation ? addslashes($emp->designation->designation_name) : '' }}"
+            },
+            @endforeach
+        ]
     },
     @endforeach
 };
@@ -570,7 +593,21 @@ const taskData = {
     function openAssignModal(taskId, taskTitle) {
         document.getElementById('assign-task-id').value = taskId;
         document.getElementById('assign-task-title').innerText = taskTitle;
-        document.getElementById('assign-employee').value = '';
+        const sel = document.getElementById('assign-employee');
+        
+        // Clear and rebuild options based on the task's valid employees
+        sel.innerHTML = '<option value="">Select Employee...</option>';
+        const t = taskData[taskId];
+        if (t && t.employees) {
+            t.employees.forEach(emp => {
+                const opt = document.createElement('option');
+                opt.value = emp.id;
+                opt.textContent = emp.name + (emp.designation ? ' — ' + emp.designation : '');
+                sel.appendChild(opt);
+            });
+        }
+        
+        sel.value = '';
         openModal('assignModal');
     }
 
