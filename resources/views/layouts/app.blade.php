@@ -855,12 +855,12 @@
                             </div>
 
                             <div class="hidden md:block text-left pr-2">
-                                <p
+                                {{-- <p
                                     class="text-[12px] font-bold text-slate-800 leading-tight group-hover:text-[#004F68] transition-colors">
-                                    Account</p>
+                                    Account</p> --}}
                                 <p
                                     class="text-[10px] text-slate-500 font-medium leading-tight mt-0.5 uppercase tracking-wide">
-                                    {{ ucfirst($user->user_type ?? 'User') }}
+                                    {{ ucfirst($user?->employee?->first_name) }} {{ ucfirst($user?->employee?->last_name) }}
                                 </p>
                             </div>
                             <i class="fa-solid fa-chevron-down text-[10px] text-slate-300 group-hover:text-[#004F68] transition-all hidden sm:block"

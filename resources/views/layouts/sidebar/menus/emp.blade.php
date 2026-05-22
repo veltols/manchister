@@ -16,6 +16,20 @@
     if ($authUser && $authUser->employee) {
         $hasSubmittedFeedback = \App\Models\FeedbackForm::where('employee_id', $authUser->employee->employee_id)->exists();
     }
+
+    // Check if employee is a member or creator of any group or committee
+    $isGroupMember = false;
+    if ($authUser && $authUser->employee) {
+        $employeeId = $authUser->employee->employee_id;
+        $isGroupMember = \App\Models\Group::where('is_deleted', 0)
+            ->where(function($q) use ($employeeId) {
+                $q->where('added_by', $employeeId)
+                  ->orWhereHas('members', function($sq) use ($employeeId) {
+                      $sq->where('employee_id', $employeeId);
+                  });
+            })
+            ->exists();
+    }
 @endphp
 
 <!-- Standard Menu Items -->
@@ -44,13 +58,15 @@
         <span class="text-base font-semibold">My Tasks</span>
     </a>
 
-    <a href="{{ route('emp.groups.index') }}"
-        class="nav-item {{ request()->routeIs('emp.groups.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
-        <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
-            <i class="fa-solid fa-users text-base"></i>
-        </div>
-        <span class="text-base font-semibold">Groups / Committees</span>
-    </a>
+    @if($isGroupMember)
+        <a href="{{ route('emp.groups.index') }}"
+            class="nav-item {{ request()->routeIs('emp.groups.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
+            <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
+                <i class="fa-solid fa-users text-base"></i>
+            </div>
+            <span class="text-base font-semibold">Groups / Committees</span>
+        </a>
+    @endif
 
     @php
         $taskPendingCount    = 0;
