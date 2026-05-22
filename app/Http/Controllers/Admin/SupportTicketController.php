@@ -173,8 +173,8 @@ class SupportTicketController extends Controller
              $attachmentPath = 'no-img.png';
         }
 
-        // Generate Ticket REF: TR-{RAND}-{YEAR} (Simple unique format)
-        $ref = 'TR-' . strtoupper(Str::random(5)) . '-' . date('Y');
+        // Generate Ticket REF: TK-YYMM001 style
+        $ref = SupportTicket::generateReference();
 
         $employee = Employee::find($request->added_by);
         $departmentId = $employee ? $employee->department_id : 0;

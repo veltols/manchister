@@ -136,8 +136,8 @@ class SupportTicketController extends Controller
             $attachmentName = 'uploads/tickets/' . $filename;
         }
 
-        // Generate Ticket REF (Legacy style: T-timestamp)
-        $ref = 'T-' . time();
+        // Generate Ticket REF: TK-YYMM001 style
+        $ref = SupportTicket::generateReference();
 
         $ticket = new SupportTicket();
         $ticket->ticket_ref = $ref;

@@ -322,7 +322,7 @@
                             </select>
                         </div>
 
-                        <div>
+                        {{-- <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">
                                 <i class="fa-solid fa-user-shield text-indigo-500 mr-1.5"></i>Assign To (Optional)
                             </label>
@@ -341,7 +341,7 @@
                                     @endif
                                 @endforeach
                             </select>
-                        </div>
+                        </div> --}}
                     </div>
                     
                 </div>

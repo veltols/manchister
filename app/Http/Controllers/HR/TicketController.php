@@ -77,7 +77,7 @@ class TicketController extends Controller
         $departmentId = $employee ? $employee->department_id : 0;
 
         $ticket = new \App\Models\SupportTicket();
-        $ticket->ticket_ref = 'T-' . time();
+        $ticket->ticket_ref = \App\Models\SupportTicket::generateReference();
         $ticket->ticket_subject = $request->ticket_subject;
         $ticket->ticket_description = $request->ticket_description;
         $ticket->category_id = $request->category_id;

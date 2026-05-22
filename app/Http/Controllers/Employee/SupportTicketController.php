@@ -127,7 +127,7 @@ class SupportTicketController extends Controller
 
         $request->validate([
             'added_by'           => 'required|exists:employees_list,employee_id',
-            'assigned_to'        => 'required|exists:employees_list,employee_id',
+            'assigned_to'        => 'nullable|exists:employees_list,employee_id',
             'ticket_subject'     => 'required|string|max:255',
             'ticket_description' => 'required|string',
             'category_id'        => 'required|integer',
@@ -156,8 +156,8 @@ class SupportTicketController extends Controller
             $attachmentName = 'uploads/tickets/' . $filename;
         }
 
-        // Generate Ticket REF (Legacy style: T-timestamp)
-        $ref = 'T-' . time();
+        // Generate Ticket REF: TK-YYMM001 style
+        $ref = SupportTicket::generateReference();
 
         $ticket = new SupportTicket();
         $ticket->ticket_ref = $ref;
@@ -172,8 +172,12 @@ class SupportTicketController extends Controller
         $ticket->ticket_added_date = now();
 
         $ticket->status_id = \App\Models\SupportTicketStatus::OPEN;
-        $ticket->assigned_to = (int) $request->assigned_to;
-        $ticket->assigned_date = now();
+        $ticket->assigned_to = $request->filled('assigned_to') ? (int) $request->assigned_to : 0;
+        if ($ticket->assigned_to > 0) {
+            $ticket->assigned_date = now();
+        } else {
+            $ticket->assigned_date = null;
+        }
         $ticket->save();
 
         // Create Initial Log

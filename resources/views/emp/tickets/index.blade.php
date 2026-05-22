@@ -521,7 +521,7 @@
             <form action="{{ route('emp.tickets.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
+                    {{-- <div class="grid grid-cols-2 gap-4"> --}}
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">
                                 <i class="fa-solid fa-user text-indigo-600 mr-2"></i>Reported By
@@ -547,7 +547,7 @@
                                 <input type="hidden" name="added_by" value="{{ Auth::user()->employee->employee_id ?? '' }}">
                             @endif
                         </div>
-                        <div>
+                        {{-- <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">
                                 <i class="fa-solid fa-user-shield text-indigo-600 mr-2"></i>Assigned To
                             </label>
@@ -564,8 +564,8 @@
                                     @endif
                                 @endforeach
                             </select>
-                        </div>
-                    </div>
+                        </div> --}}
+                    {{-- </div> --}}
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
