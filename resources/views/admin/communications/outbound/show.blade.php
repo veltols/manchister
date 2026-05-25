@@ -15,8 +15,19 @@
                 <div class="flex items-center gap-3 mb-4">
                     <span class="px-3 py-1 bg-white/10 rounded-full text-[10px] font-bold uppercase tracking-widest">{{ $record->type->communication_type_name }}</span>
                     <span class="px-3 py-1 {{ $record->priority == 'high' ? 'bg-red-500/20 text-red-300' : 'bg-green-500/20 text-green-300' }} rounded-full text-[10px] font-bold uppercase tracking-widest">{{ $record->priority }} Priority</span>
+                    <span class="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-[10px] font-bold uppercase tracking-widest">{{ $record->confidentiality }}</span>
                 </div>
-                <h1 class="text-4xl font-display font-bold leading-tight mb-2">{{ $record->communication_subject }}</h1>
+                <h1 class="text-4xl font-display font-bold leading-tight mb-4">{{ $record->communication_subject }}</h1>
+                <div class="flex items-center gap-6 mb-4 text-sm">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-building text-slate-400"></i>
+                        <span class="text-slate-300 font-bold">{{ $record->external_party_name }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 border-l border-white/20 pl-6">
+                        <i class="fa-solid fa-calendar text-slate-400"></i>
+                        <span class="text-slate-300 font-medium">{{ $record->requested_date }}</span>
+                    </div>
+                </div>
                 <p class="text-slate-400 font-medium max-w-2xl">{{ $record->communication_description }}</p>
             </div>
         </div>
@@ -38,6 +49,31 @@
 
                 <!-- Tab Content: Details -->
                 <div id="tab-content-details" class="space-y-8 block">
+
+                    <!-- Details Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Purpose -->
+                        <div class="premium-card p-8 bg-indigo-50/30">
+                            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                                <i class="fa-solid fa-bullseye text-indigo-500"></i>
+                                Purpose / Reason
+                            </h3>
+                            <div class="prose prose-slate max-w-none text-slate-700 leading-relaxed font-medium italic">
+                                {!! nl2br(e($record->communication_purpose)) !!}
+                            </div>
+                        </div>
+
+                        <!-- Information Shared -->
+                        <div class="premium-card p-8 bg-slate-50/50">
+                            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                                <i class="fa-solid fa-share-nodes text-teal-500"></i>
+                                Information Shared
+                            </h3>
+                            <div class="p-6 bg-white rounded-2xl border border-slate-100 text-slate-600">
+                                {!! nl2br(e($record->information_shared)) !!}
+                            </div>
+                        </div>
+                    </div>
                     
                     <!-- LM Review Log -->
                     <div class="premium-card p-8 border-l-4 border-green-500">

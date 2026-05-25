@@ -156,7 +156,7 @@
                 <!-- Related Actions if needed -->
                 
                 <!-- Help Card -->
-                <div class="premium-card p-6 bg-gradient-to-br from-slate-900 to-slate-800 text-white relative overflow-hidden">
+                {{-- <div class="premium-card p-6 bg-gradient-to-br from-slate-900 to-slate-800 text-white relative overflow-hidden">
                     <div class="absolute top-0 right-0 -mr-8 -mt-8 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
                     
                     <h4 class="text-lg font-bold mb-2">Need to escalate?</h4>
@@ -168,7 +168,7 @@
                         <i class="fa-regular fa-paper-plane"></i>
                         Open Messages
                     </a>
-                </div>
+                </div> --}}
 
                  @if($service->ss_attachment || $service->ss_result_attachment)
                     <div class="premium-card p-6">

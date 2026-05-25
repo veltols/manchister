@@ -19,8 +19,21 @@
                 <span class="px-3 py-1 bg-white/20 rounded-full text-[10px] font-bold uppercase tracking-widest">
                     {{ $record->priority }} Priority
                 </span>
+                <span class="px-3 py-1 bg-blue-500/30 text-blue-100 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                    {{ $record->confidentiality }}
+                </span>
             </div>
-            <h1 class="text-3xl font-display font-bold mb-2">{{ $record->communication_subject }}</h1>
+            <h1 class="text-3xl font-display font-bold mb-4">{{ $record->communication_subject }}</h1>
+            <div class="flex items-center gap-6 mb-4 text-sm">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-building text-sky-200"></i>
+                    <span class="text-sky-100 font-bold">{{ $record->external_party_name }}</span>
+                </div>
+                <div class="flex items-center gap-2 border-l border-white/20 pl-6">
+                    <i class="fa-solid fa-calendar text-sky-200"></i>
+                    <span class="text-sky-100 font-medium">{{ $record->requested_date }}</span>
+                </div>
+            </div>
             <p class="text-white/70 max-w-2xl">{{ $record->communication_description }}</p>
         </div>
     </div>
@@ -29,6 +42,31 @@
         
         <!-- Details Column -->
         <div class="lg:col-span-2 space-y-6">
+            
+            <!-- Details Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Purpose -->
+                <div class="premium-card p-6 bg-indigo-50/30">
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-bullseye text-indigo-500"></i>
+                        Purpose / Reason
+                    </h3>
+                    <div class="prose prose-slate max-w-none text-slate-700 leading-relaxed font-medium italic text-sm">
+                        {!! nl2br(e($record->communication_purpose)) !!}
+                    </div>
+                </div>
+
+                <!-- Information Shared -->
+                <div class="premium-card p-6 bg-slate-50/50">
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-share-nodes text-sky-500"></i>
+                        Information Shared
+                    </h3>
+                    <div class="p-4 bg-white rounded-xl border border-slate-100 text-slate-600 text-sm">
+                        {!! nl2br(e($record->information_shared)) !!}
+                    </div>
+                </div>
+            </div>
             
             <!-- Initiator details -->
             <div class="premium-card p-6 flex items-center gap-4 bg-slate-50 border border-slate-100">
