@@ -235,10 +235,10 @@
             {{-- Communication Hub --}}
             @php
                 $isLM = \App\Models\Department::where('line_manager_id', $authUser->employee->employee_id ?? 0)->exists();
-                $isPrivileged = $isLM || $authUser->is_gm || $authUser->is_liaison;
+                $isPrivileged = $isLM || $authUser->is_gm;
                 $commLink = $isPrivileged ? route('emp.communication-hub.index') : route('emp.communications.index');
             @endphp
-            @if(!$authUser->is_liaison)
+            {{-- @if(!$authUser->is_liaison) --}}
             <a href="{{ $commLink }}"
                 class="group flex items-center gap-3 p-3 rounded-xl transition-all hover:-translate-y-0.5 {{ request()->routeIs('emp.communication-hub.*') ? 'bg-indigo-50' : 'hover:bg-slate-50' }}"
                 style="{{ request()->routeIs('emp.communication-hub.*') ? 'box-shadow:0 4px 12px rgba(99,102,241,0.12);' : '' }}">
@@ -252,7 +252,7 @@
                 <span
                     class="font-semibold text-base {{ request()->routeIs('emp.communication-hub.*') ? 'text-indigo-800' : 'text-slate-700' }}">Communication</span>
             </a>
-            @endif
+            {{-- @endif --}}
 
           </div>
     </div>

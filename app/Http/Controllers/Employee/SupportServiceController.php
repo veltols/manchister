@@ -58,7 +58,6 @@ class SupportServiceController extends Controller
         }
 
         $ss = new SupportService();
-        $ss->ss_ref = 'SS-' . strtoupper(substr(uniqid(), -6));
         $ss->category_id = $request->category_id;
         $ss->ss_description = $request->ss_description;
         $ss->ss_attachment = $attachment;
@@ -67,11 +66,40 @@ class SupportServiceController extends Controller
         $ss->sent_to_id = $finalReceiverId;
         $ss->status_id = 1; // Pending
         $ss->ss_added_date = now();
-        $ss->save();
 
-        // Log
-        // Log creation to be implemented
-        // $log = new SystemLog(); ...
+        \Illuminate\Support\Facades\DB::transaction(function () use ($ss) {
+            $yymm = date('ym');
+            $lastTicket = SupportService::where('ss_ref', 'like', "SS-{$yymm}%")
+                                        ->lockForUpdate()
+                                        ->orderBy('ss_id', 'desc')
+                                        ->first();
+            if ($lastTicket) {
+                $lastCount = intval(substr($lastTicket->ss_ref, -3));
+                $newCount = $lastCount + 1;
+            } else {
+                $newCount = 1;
+            }
+            
+            $ss_ref = 'SS-' . $yymm . str_pad($newCount, 3, '0', STR_PAD_LEFT);
+            
+            while (SupportService::where('ss_ref', $ss_ref)->exists()) {
+                $newCount++;
+                $ss_ref = 'SS-' . $yymm . str_pad($newCount, 3, '0', STR_PAD_LEFT);
+            }
+            
+            $ss->ss_ref = $ss_ref;
+            $ss->save();
+        });
+
+        $log = new SystemLog();
+        $log->related_table = 'ss_list';
+        $log->related_id    = $ss->ss_id;
+        $log->log_action    = 'Request Created';
+        $log->log_remark    = 'Support request was successfully created';
+        $log->log_date      = now();
+        $log->logger_type   = 'employees_list';
+        $log->logged_by     = $employeeId;
+        $log->save();
 
         // Send Notifications
         \App\Services\NotificationService::send(
@@ -130,7 +158,8 @@ class SupportServiceController extends Controller
     {
         $request->validate([
             'status_id' => 'required|exists:ss_list_status,status_id',
-            'remark'    => 'nullable|string'
+            'remark'    => 'nullable|string',
+            'result_attachment' => 'nullable|file|max:5120'
         ]);
 
         $user = Auth::user();
@@ -145,6 +174,18 @@ class SupportServiceController extends Controller
 
         $oldStatusId = $service->status_id;
         $service->status_id = $request->status_id;
+        
+        if ($request->remark) {
+            $service->ss_remarks = $request->remark;
+        }
+
+        if ($request->hasFile('result_attachment')) {
+            $file = $request->file('result_attachment');
+            $filename = time() . '_res_' . $file->getClientOriginalName();
+            $file->move(public_path('uploads/ss_results'), $filename);
+            $service->ss_result_attachment = 'uploads/ss_results/' . $filename;
+        }
+
         $service->save();
 
         // Log the status change

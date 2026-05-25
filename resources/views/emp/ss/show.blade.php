@@ -170,20 +170,45 @@
                     </a>
                 </div>
 
-                 @if($service->ss_attachment)
+                 @if($service->ss_attachment || $service->ss_result_attachment)
                     <div class="premium-card p-6">
                          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Files</h4>
-                         <a href="{{ asset($service->ss_attachment) }}" target="_blank" class="group block">
+                         @if($service->ss_attachment)
+                         <a href="{{ asset($service->ss_attachment) }}" target="_blank" class="group block mb-3">
                             <div class="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 group-hover:border-indigo-200 group-hover:bg-indigo-50/30 transition-all">
-                                <div class="w-10 h-10 rounded-lg bg-red-50 text-red-500 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
-                                    <i class="fa-solid fa-file-pdf"></i>
+                                <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-paperclip"></i>
                                 </div>
                                 <div class="overflow-hidden">
-                                    <p class="text-sm font-bold text-slate-700 truncate group-hover:text-indigo-700 transition-colors">Attachment</p>
+                                    <p class="text-sm font-bold text-slate-700 truncate group-hover:text-indigo-700 transition-colors">Request Attachment</p>
                                     <p class="text-[10px] text-slate-400 uppercase tracking-wider">Click to Preview</p>
                                 </div>
                             </div>
                          </a>
+                         @endif
+                         
+                         @if($service->ss_result_attachment)
+                         <a href="{{ asset($service->ss_result_attachment) }}" target="_blank" class="group block">
+                            <div class="flex items-center gap-4 p-4 rounded-xl bg-emerald-50 border border-emerald-100 group-hover:border-emerald-200 group-hover:bg-emerald-50/50 transition-all">
+                                <div class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-file-circle-check"></i>
+                                </div>
+                                <div class="overflow-hidden">
+                                    <p class="text-sm font-bold text-emerald-800 truncate transition-colors">Result Attachment</p>
+                                    <p class="text-[10px] text-emerald-600/70 uppercase tracking-wider">Resolution File</p>
+                                </div>
+                            </div>
+                         </a>
+                         @endif
+                    </div>
+                @endif
+                
+                @if($service->ss_remarks)
+                    <div class="premium-card p-6 border-t-4 border-emerald-500">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Latest Remarks</h4>
+                        <div class="p-4 bg-slate-50 rounded-xl text-sm font-medium text-slate-700">
+                            {!! nl2br(e($service->ss_remarks)) !!}
+                        </div>
                     </div>
                 @endif
             </div>
@@ -219,10 +244,15 @@
                         <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Remark (Optional)</label>
                         <textarea id="status_remark" rows="3" class="premium-input w-full" placeholder="Add a note about this status change…"></textarea>
                     </div>
+                    <div id="attachment_container" class="hidden">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Result Attachment (Optional)</label>
+                        <input type="file" id="result_attachment" class="premium-input w-full text-sm p-2">
+                        <div id="result-attachment-preview" class="mt-3"></div>
+                    </div>
                     <div class="pt-2 flex gap-3">
                         <button type="button" onclick="closeModal('updateStatusModal')"
                                 class="flex-1 px-6 py-3 rounded-2xl border-2 border-slate-100 text-slate-500 font-bold hover:bg-slate-50 transition-all">Cancel</button>
-                        <button type="button" onclick="submitStatusUpdate()"
+                        <button type="button" onclick="submitStatusUpdate()" id="btnSubmitStatus"
                                 class="flex-[2] px-6 py-3 bg-gradient-to-br from-indigo-600 to-purple-600 text-white font-bold rounded-2xl shadow-xl hover:scale-105 transition-all">
                             Save Status
                         </button>
@@ -231,33 +261,80 @@
             </div>
         </div>
 
+        <script src="{{ asset('libs/mammoth/mammoth.browser.min.js') }}"></script>
+        <script src="{{ asset('js/attachment-preview.js') }}"></script>
         <script>
+            window.addEventListener('load', () => {
+                if (window.initAttachmentPreview) {
+                    window.initAttachmentPreview({ inputSelector: '#result_attachment', containerSelector: '#result-attachment-preview' });
+                }
+            });
+
+            const _rAttach = document.getElementById('result_attachment');
+            if (_rAttach) {
+                _rAttach.addEventListener('change', function () {
+                    if (this.files?.[0]?.size > 5 * 1024 * 1024) {
+                        Swal.fire({ icon: 'error', title: 'File Too Large', text: 'Max 5MB limit.', confirmButtonColor: '#f43f5e' });
+                        this.value = ''; 
+                        document.getElementById('result-attachment-preview').innerHTML = '';
+                    }
+                });
+            }
+
+            document.getElementById('new_status_id').addEventListener('change', function() {
+                const attachmentContainer = document.getElementById('attachment_container');
+                // ID 3 is usually 'Completed' - show attachment when completed
+                if (this.value == '3' || this.value == '4' || this.value == '5') { 
+                    // Show it for typical end states, adjust as needed. Or just always show it:
+                    attachmentContainer.classList.remove('hidden');
+                } else {
+                    attachmentContainer.classList.add('hidden');
+                }
+            });
+            // trigger on load
+            document.getElementById('new_status_id').dispatchEvent(new Event('change'));
+
             async function submitStatusUpdate() {
                 const statusId = document.getElementById('new_status_id').value;
                 const remark   = document.getElementById('status_remark').value;
+                const attachment = document.getElementById('result_attachment').files[0];
+                const btnSubmit = document.getElementById('btnSubmitStatus');
+
+                btnSubmit.disabled = true;
+                const originalBtnHtml = btnSubmit.innerHTML;
+                btnSubmit.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Saving...';
+
+                const formData = new FormData();
+                formData.append('status_id', statusId);
+                formData.append('remark', remark);
+                if (attachment) {
+                    formData.append('result_attachment', attachment);
+                }
 
                 try {
                     const response = await fetch("{{ route('emp.ss.status', $service->ss_id) }}", {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Content-Type': 'application/json',
                             'Accept': 'application/json',
                         },
-                        body: JSON.stringify({ status_id: statusId, remark })
+                        body: formData
                     });
                     const result = await response.json();
 
                     if (result.success) {
                         closeModal('updateStatusModal');
                         Swal.fire({ icon: 'success', title: 'Status Updated', text: result.message, timer: 2000, showConfirmButton: false });
-                        // Reload page to refresh timeline
                         setTimeout(() => window.location.reload(), 2000);
                     } else {
+                        btnSubmit.disabled = false;
+                        btnSubmit.innerHTML = originalBtnHtml;
                         Swal.fire({ icon: 'error', title: 'Error', text: result.message });
                     }
                 } catch (err) {
                     console.error(err);
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = originalBtnHtml;
                     Swal.fire({ icon: 'error', title: 'Error', text: 'Something went wrong.' });
                 }
             }

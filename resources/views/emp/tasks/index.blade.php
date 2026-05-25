@@ -305,7 +305,7 @@
                         <i class="fa-solid fa-check text-xs"></i>
                         Update Status
                     </button>
-                    <button onclick="openSubtaskModal(activeTaskId)"
+                    <button onclick="openSubtaskModal(activeTaskId)" id="btn-subtask"
                         class="flex items-center gap-2 px-3 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-semibold rounded-xl transition-all">
                         <i class="fa-solid fa-plus text-xs"></i>
                         Subtask
@@ -891,10 +891,14 @@
                 sEl.style.background = `#${task.status?.status_color ?? 'ccc'}18`;
                 sEl.style.color = `#${task.status?.status_color ?? '999'}`;
 
-                // Reset Mark Complete button
+                // Reset Mark Complete button and Update Status button
                 const btnMc = document.getElementById('btn-mark-complete');
+                const btnUpdate = document.getElementById('btn-update-status');
+                const btnSubtask = document.getElementById('btn-subtask');
+                
+                const isDone = task.status_id == 3 || task.task_progress >= 100;
+
                 if (btnMc) {
-                    const isDone = task.status_id == 4 || task.task_progress >= 100;
                     if (isDone) {
                         btnMc.innerHTML = '<i class="fa-solid fa-circle-check text-xs"></i> Completed!';
                         btnMc.className = 'flex items-center gap-2 px-3 py-2 bg-emerald-500 text-white text-sm font-semibold rounded-xl cursor-default';
@@ -903,6 +907,22 @@
                         btnMc.innerHTML = '<i class="fa-solid fa-circle-check text-xs"></i> Mark Complete';
                         btnMc.className = 'flex items-center gap-2 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 hover:text-emerald-800 text-sm font-semibold rounded-xl transition-all hover:scale-105 active:scale-95';
                         btnMc.disabled = false;
+                    }
+                }
+                
+                if (btnUpdate) {
+                    if (isDone) {
+                        btnUpdate.classList.add('hidden');
+                    } else {
+                        btnUpdate.classList.remove('hidden');
+                    }
+                }
+
+                if (btnSubtask) {
+                    if (isDone) {
+                        btnSubtask.classList.add('hidden');
+                    } else {
+                        btnSubtask.classList.remove('hidden');
                     }
                 }
 
@@ -1158,7 +1178,7 @@
 
             try {
                 const fd = new FormData();
-                fd.append('status_id', 4);
+                fd.append('status_id', 3);
                 fd.append('task_progress', 100);
                 fd.append('log_remark', 'Task marked as complete.');
 
@@ -1188,6 +1208,16 @@
                     btn.innerHTML = '<i class="fa-solid fa-circle-check text-xs"></i> Completed!';
                     btn.className = 'flex items-center gap-2 px-3 py-2 bg-emerald-500 text-white text-sm font-semibold rounded-xl cursor-default';
                     btn.disabled = true;
+                    
+                    const btnUpdate = document.getElementById('btn-update-status');
+                    if (btnUpdate) {
+                        btnUpdate.classList.add('hidden');
+                    }
+                    
+                    const btnSubtask = document.getElementById('btn-subtask');
+                    if (btnSubtask) {
+                        btnSubtask.classList.add('hidden');
+                    }
 
                     if (typeof Swal !== 'undefined') {
                         Swal.fire({ icon: 'success', title: 'Task Completed!', text: 'Progress set to 100% and status updated to Done.', timer: 2000, showConfirmButton: false, confirmButtonColor: '#004F68' });

@@ -98,6 +98,13 @@
                                 <i class="fa-solid fa-check text-sm"></i>
                             </button>
                         @endif
+                         @if($notif->related_page)
+                            <a href="{{ url($notif->related_page) }}"
+                                class="flex items-center justify-center w-8 h-8 rounded-full border border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-200 transition-all"
+                                title="Go to Page">
+                                <i class="fa-solid fa-arrow-right text-sm"></i>
+                            </a>
+                        @endif
                     </div>
                 </div>
             @empty

@@ -41,7 +41,7 @@ class UserController extends Controller
         }
 
         // Filter by Active status (1) by default to match view dropdown
-        $status = $request->get('status', '1');
+        $status = '';
         if ($status !== '') {
             $query->whereHas('systemUser', function($q) use ($status) {
                 $q->where('is_active', $status);

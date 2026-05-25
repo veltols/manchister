@@ -227,18 +227,28 @@
         <div class="modal-backdrop" onclick="closeModal('addTaskModal')"></div>
         <div class="modal-content max-w-xl p-6">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-display font-bold text-premium">Create New Task</h2>
-                <button onclick="closeModal('addTaskModal')" class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+                <div>
+                    <h2 class="text-2xl font-display font-bold text-premium" id="task-modal-title">Create New Task</h2>
+                    <p class="text-slate-500 text-sm mt-1">
+                        @if(isset($isLineManager) && $isLineManager)
+                            Assign a new task to an employee.
+                        @else
+                            Task will be sent to your <strong class="text-amber-600">line manager</strong> for review &amp; assignment.
+                        @endif
+                    </p>
+                </div>
+                <button onclick="closeModal('addTaskModal')"
+                    class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
                     <i class="fa-solid fa-times text-xl"></i>
                 </button>
             </div>
-            
-            <form action="{{ route('emp.tasks.store') }}" method="POST" class="space-y-4">
+            <form onsubmit="saveTask(event)" class="space-y-4" enctype="multipart/form-data" id="create-task-form">
                 @csrf
-                
+                <input type="hidden" name="parent_task_id" id="task_parent_id">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">Assign To</label>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Assign
+                            To</label>
                         <select name="assigned_to" class="premium-input w-full px-4 py-3 text-sm" required>
                             <option value="myself">Myself</option>
                             @foreach($departments as $dept)
@@ -247,7 +257,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">Priority</label>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Priority</label>
                         <select name="priority_id" class="premium-input w-full px-4 py-3 text-sm" required>
                             @foreach($priorities as $p)
                                 <option value="{{ $p->priority_id }}">{{ $p->priority_name }}</option>
@@ -255,49 +265,116 @@
                         </select>
                     </div>
                 </div>
-
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">Task Title</label>
-                    <input type="text" name="task_title" class="premium-input w-full px-4 py-3 text-sm" required placeholder="What needs to be done?">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Task Title</label>
+                    <input type="text" name="task_title" class="premium-input w-full px-4 py-3 text-sm" required
+                        placeholder="What needs to be done?">
                 </div>
-                
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">Description</label>
-                    <textarea name="task_description" rows="3" class="premium-input w-full px-4 py-3 text-sm" placeholder="Additional details..."></textarea>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description</label>
+                    <textarea name="task_description" rows="3" class="premium-input w-full px-4 py-3 text-sm"
+                        placeholder="Additional details..."></textarea>
                 </div>
-
                 <div class="grid grid-cols-2 gap-6 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                     <div class="space-y-3">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">Start Schedule</label>
-                        <input type="date" name="task_assigned_date" id="task_assigned_date" class="premium-input w-full text-sm" value="{{ date('Y-m-d') }}" required>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">Start
+                            Schedule</label>
+                        <input type="date" name="task_assigned_date" id="task_assigned_date" class="premium-input w-full text-sm"
+                            value="{{ date('Y-m-d') }}" required>
                         <select name="start_time" id="start_time" class="premium-input w-full text-sm">
                             <option value="">Start Time (Optional)</option>
-                            @for($i=6; $i<=22; $i++)
-                                @php $h = str_pad($i, 2, '0', STR_PAD_LEFT); @endphp
-                                <option value="{{ $h }}:00:00">{{ $h }}:00</option>
-                            @endfor
+                            @for($i = 6; $i <= 22; $i++)
+                                <option value="{{ str_pad($i, 2, '0', STR_PAD_LEFT) }}:00:00">
+                                    {{ str_pad($i, 2, '0', STR_PAD_LEFT) }}:00
+                            </option>@endfor
                         </select>
                     </div>
                     <div class="space-y-3">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">Due Deadline</label>
-                        <input type="date" name="task_due_date" class="premium-input w-full text-sm" required value="{{ date('Y-m-d') }}">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">Due
+                            Deadline</label>
+                        <input type="date" name="task_due_date" class="premium-input w-full text-sm" required>
                         <select name="end_time" class="premium-input w-full text-sm">
                             <option value="">End Time (Optional)</option>
-                            @for($i=6; $i<=22; $i++)
-                                @php $h = str_pad($i, 2, '0', STR_PAD_LEFT); @endphp
-                                <option value="{{ $h }}:00:00" {{ $i == 14 ? 'selected' : '' }}>{{ $h }}:00</option>
-                            @endfor
+                            @for($i = 6; $i <= 22; $i++)
+                                <option value="{{ str_pad($i, 2, '0', STR_PAD_LEFT) }}:00:00" {{ $i == 14 ? 'selected' : '' }}>
+                                    {{ str_pad($i, 2, '0', STR_PAD_LEFT) }}:00
+                            </option>@endfor
                         </select>
                     </div>
                 </div>
-
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                        <i class="fa-solid fa-paperclip text-indigo-500 mr-1"></i> Attachment <span
+                            class="text-slate-300">(Optional)</span>
+                    </label>
+                    <input type="file" name="task_attachment" id="task_attachment"
+                        class="premium-input w-full px-4 py-3 text-sm">
+                    <div id="task-attachment-preview"></div>
+                </div>
                 <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
-                    <button type="button" onclick="closeModal('addTaskModal')" class="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">Cancel</button>
-                    <button type="submit" class="px-6 py-3 premium-button from-brand to-brand-light text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
-                        <i class="fa-solid fa-paper-plane mr-2"></i> Create Task
-                    </button>
+                    <button type="button" onclick="closeModal('addTaskModal')"
+                        class="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">Cancel</button>
+                    <button type="submit"
+                        class="px-6 py-3 bg-[#004F68] hover:bg-[#00384a] text-white font-bold rounded-xl transition-all hover:scale-105">Create
+                        Task</button>
                 </div>
             </form>
         </div>
     </div>
+
+    <script src="{{ asset('libs/mammoth/mammoth.browser.min.js') }}"></script>
+    <script src="{{ asset('js/attachment-preview.js') }}"></script>
+    <script>
+        window.addEventListener('load', () => {
+            if (window.initAttachmentPreview) {
+                window.initAttachmentPreview({ inputSelector: '#task_attachment', containerSelector: '#task-attachment-preview' });
+            }
+        });
+        const _tAttach = document.getElementById('task_attachment');
+        if (_tAttach) {
+            _tAttach.addEventListener('change', function () {
+                if (this.files?.[0]?.size > 10 * 1024 * 1024) {
+                    Swal.fire({ icon: 'error', title: 'File Too Large', text: 'Max 10MB.', confirmButtonColor: '#004F68' });
+                    this.value = ''; document.getElementById('task-attachment-preview').innerHTML = '';
+                }
+            });
+        }
+
+        async function saveTask(e) {
+            e.preventDefault();
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            
+            try {
+                // Add loading indicator
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Creating...';
+
+                const res = await fetch("{{ route('emp.tasks.store') }}", {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: new FormData(e.target)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    closeModal('addTaskModal');
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({ icon: 'success', title: 'Task Created!', text: result.message, timer: 2000, showConfirmButton: false }).then(() => {
+                            window.location.href = "{{ route('emp.tasks.index') }}";
+                        });
+                    } else {
+                        window.location.href = "{{ route('emp.tasks.index') }}";
+                    }
+                } else {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                    alert('Error saving task');
+                }
+            } catch (err) { 
+                console.error(err); 
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        }
+    </script>
 @endsection

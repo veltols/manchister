@@ -38,7 +38,7 @@
                 </select>
                 <select id="filterStatus" class="premium-input px-4 py-2.5 text-sm min-w-[150px] focus:ring-4 focus:ring-indigo-100">
                     <option value="">All Status</option>
-                    <option value="1" selected>Active</option>
+                    <option value="1" >Active</option>
                     <option value="0">Inactive</option>
                 </select>
                 <!-- <button onclick="window.ajaxPagination.loadPage(1)" 

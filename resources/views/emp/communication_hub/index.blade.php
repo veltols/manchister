@@ -128,6 +128,18 @@
                     {{-- Team Review (Line Manager) --}}
                     @php $isLM = \App\Models\Department::where('line_manager_id', Auth::user()->employee->employee_id ?? 0)->exists(); @endphp
                     @if($isLM && !Auth::user()->is_gm)
+                    <a href="{{ route('emp.communications.index') }}" class="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50 group/item transition-colors">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-indigo-600 shadow-sm">
+                                    <i class="fa-solid fa-file-pen"></i>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="font-bold text-slate-700">My Requests</span>
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">History & New</span>
+                                </div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-slate-300 group-hover/item:text-indigo-600 group-hover/item:translate-x-1 transition-all"></i>
+                        </a>
                         <a href="{{ route('emp.lm.communications.index') }}" class="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-teal-50 group/item transition-colors">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-teal-600 shadow-sm">
