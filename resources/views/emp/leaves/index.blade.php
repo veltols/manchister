@@ -163,6 +163,7 @@
                                     \App\Models\HrLeave::STATUS_PENDING => ['bg' => 'from-yellow-400 to-amber-500', 'text' => 'Pending HR', 'icon' => 'clock'],
                                     \App\Models\HrLeave::STATUS_PENDING_APPROVAL => ['bg' => 'from-blue-500 to-cyan-600', 'text' => 'Pending Manager', 'icon' => 'user-check'],
                                     \App\Models\HrLeave::STATUS_APPROVED => ['bg' => 'from-green-500 to-emerald-600', 'text' => 'Approved', 'icon' => 'check-double'],
+                                    \App\Models\HrLeave::STATUS_PENDING_GM => ['bg' => 'from-yellow-400 to-amber-500', 'text' => 'Pending GM', 'icon' => 'clock'],
                                     \App\Models\HrLeave::STATUS_REJECTED => ['bg' => 'from-red-500 to-rose-600', 'text' => 'Rejected', 'icon' => 'times-circle'],
                                     \App\Models\HrLeave::STATUS_ACTION_REQUIRED => ['bg' => 'from-purple-500 to-indigo-600', 'text' => 'Action Required', 'icon' => 'user-edit'],
                                     default => ['bg' => 'from-slate-400 to-slate-500', 'text' => 'Unknown', 'icon' => 'question']
@@ -662,6 +663,7 @@
                 2: {bg: 'from-blue-500 to-cyan-600', text: 'Pending Manager', icon: 'user-check'},
                 3: {bg: 'from-green-500 to-emerald-600', text: 'Approved', icon: 'check-double'},
                 4: {bg: 'from-red-500 to-rose-600', text: 'Rejected', icon: 'times-circle'},
+                5: {bg: 'from-yellow-400 to-amber-500', text: 'Pending GM', icon: 'clock'},
                 6: {bg: 'from-purple-500 to-indigo-600', text: 'Action Required', icon: 'user-edit'},
                 default: {bg: 'from-slate-400 to-slate-500', text: 'Unknown', icon: 'question'}
             };

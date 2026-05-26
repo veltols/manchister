@@ -204,6 +204,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/inbound/{actionId}', [App\Http\Controllers\Employee\InboundLineManagerController::class, 'show'])->name('inbound.show');
         Route::post('/inbound/{actionId}/note', [App\Http\Controllers\Employee\InboundLineManagerController::class, 'submitNote'])->name('inbound.note');
 
+        // Liaison Dashboard
+        Route::get('/liaison-dashboard', [App\Http\Controllers\Employee\LiaisonDashboardController::class, 'index'])->name('liaison.dashboard');
+
         // Inbound Correspondence — Liaison Officer (Form A) — accessible to emp users who are also Liaison Officers
         Route::get('/inbound-liaison', [App\Http\Controllers\HR\InboundController::class, 'index'])->name('inbound-liaison.index');
         Route::get('/inbound-liaison/data', [App\Http\Controllers\HR\InboundController::class, 'getData'])->name('inbound-liaison.data');
