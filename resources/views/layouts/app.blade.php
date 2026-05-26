@@ -34,16 +34,16 @@
                         secondary: '#9333ea',        // Purple-600
                         'secondary-dark': '#7e22ce', // Purple-700
                         brand: {
-                            DEFAULT: 'var(--theme-color)',
+                            DEFAULT: '#004F68',
                             dark: '#00384a',
-                            light: 'var(--theme-secondary)',
+                            light: '#006a8a',
                             accent: '#0088b3',
                         }
                     },
                     backgroundImage: {
                         'gradient-primary': 'linear-gradient(135deg, #4f46e5 0%, #9333ea 100%)',
                         'gradient-custom': 'linear-gradient(135deg, #4f46e5 0%, #9333ea 100%)',
-                        'gradient-brand': 'linear-gradient(135deg, var(--theme-color) 0%, var(--theme-secondary) 100%)',
+                        'gradient-brand': 'linear-gradient(135deg, #004F68 0%, #006a8a 100%)',
                     }
                 }
             }
@@ -97,12 +97,17 @@
         ========================================= */
         .sidebar-gradient-bg {
             background: linear-gradient(180deg,
-                    var(--theme-color) 0%,
-                    var(--theme-secondary) 100%);
+                    #ffffff 0%,
+                    #f0fafd 12%,
+                    #cdeaf4 30%,
+                    #7fc8df 52%,
+                    #1a8aaa 70%,
+                    #006a8a 84%,
+                    #004F68 100%);
             position: relative;
             overflow: hidden;
             border-right: none;
-            box-shadow: 6px 0 32px rgba(0, 0, 0, 0.18);
+            box-shadow: 6px 0 32px rgba(0, 79, 104, 0.18);
         }
 
         /* Animated floating orbs in background */
@@ -188,7 +193,7 @@
             text-transform: uppercase;
             padding: 0 12px;
             margin: 14px 0 5px;
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(0, 0, 0, 0.38);
             position: relative;
             z-index: 10;
             transition: color 0.3s ease;
@@ -200,7 +205,7 @@
         .nav-item {
             position: relative;
             transition: all 0.28s cubic-bezier(0.34, 1.2, 0.64, 1);
-            color: rgba(255, 255, 255, 0.85);
+            color: rgba(0, 30, 50, 0.72);
             text-decoration: none;
             border-radius: 14px;
             overflow: hidden;
@@ -233,7 +238,7 @@
             background: rgba(255, 255, 255, 0.62);
             backdrop-filter: blur(14px);
             -webkit-backdrop-filter: blur(14px);
-            color: var(--theme-color);
+            color: #004F68;
             box-shadow:
                 0 4px 20px rgba(0, 79, 104, 0.14),
                 0 1px 4px rgba(0, 0, 0, 0.07),
@@ -246,13 +251,13 @@
             background: rgba(255, 255, 255, 0.82);
             backdrop-filter: blur(18px);
             -webkit-backdrop-filter: blur(18px);
-            color: var(--theme-color);
+            color: #004F68;
             font-weight: 700;
             box-shadow:
                 0 8px 28px rgba(0, 79, 104, 0.22),
                 0 2px 8px rgba(0, 0, 0, 0.09),
                 inset 0 1px 0 rgba(255, 255, 255, 1);
-            border-left: 3px solid var(--theme-color);
+            border-left: 3px solid #004F68;
             transform: translateX(3px);
             border-top: 1px solid rgba(255, 255, 255, 0.7);
             border-bottom: 1px solid rgba(255, 255, 255, 0.4);
@@ -269,7 +274,7 @@
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background: var(--theme-color);
+            background: #004F68;
             box-shadow: 0 0 8px rgba(0, 79, 104, 0.6);
             animation: activePulse 2s ease-in-out infinite;
         }
@@ -289,7 +294,7 @@
         }
 
         .nav-item.active .nav-icon-wrap {
-            background: linear-gradient(145deg, #003d52 0%, var(--theme-color) 40%, var(--theme-secondary) 75%, #0088b3 100%);
+            background: linear-gradient(145deg, #003d52 0%, #004F68 40%, #006a8a 75%, #0088b3 100%);
             color: #fff;
             box-shadow:
                 0 6px 18px rgba(0, 79, 104, 0.45),
@@ -304,7 +309,7 @@
         ========================================= */
         .nav-icon-wrap {
             background: rgba(255, 255, 255, 0.72);
-            color: var(--theme-color);
+            color: #004F68;
             transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
             box-shadow:
                 0 3px 8px rgba(0, 79, 104, 0.14),
@@ -330,7 +335,7 @@
         }
 
         .nav-item:hover .nav-icon-wrap {
-            background: linear-gradient(145deg, #003d52 0%, var(--theme-color) 35%, var(--theme-secondary) 70%, #1da0c4 100%);
+            background: linear-gradient(145deg, #003d52 0%, #004F68 35%, #006a8a 70%, #1da0c4 100%);
             color: #fff;
             transform: scale(1.12) translateY(-2px) rotate(-3deg);
             box-shadow:
@@ -493,7 +498,7 @@
             align-items: center;
             gap: 0.5rem;
             padding: 0.75rem 1.5rem;
-            background: linear-gradient(135deg, var(--theme-color) 0%, var(--theme-secondary) 100%);
+            background: linear-gradient(135deg, #004F68 0%, #006a8a 100%);
             color: white !important;
             font-weight: 600;
             border-radius: 12px;
@@ -573,17 +578,17 @@
         }
 
         ::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, var(--theme-color), var(--theme-secondary));
+            background: linear-gradient(180deg, #004F68, #006a8a);
             border-radius: 0px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, var(--theme-color), var(--theme-secondary));
+            background: linear-gradient(180deg, #004F68, #006a8a);
         }
 
         /* Premium Text Color */
         .text-premium {
-            background: linear-gradient(135deg, var(--theme-color) 0%, var(--theme-secondary) 100%);
+            background: linear-gradient(135deg, #004F68 0%, #006a8a 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             display: inline-block;
@@ -815,7 +820,7 @@
                             @endif
                         </a>
 
-                        {{-- @if($user && ($user->user_type == 'emp' || $user->user_type == 'eqa')) --}}
+                        @if($user && ($user->user_type == 'emp' || $user->user_type == 'eqa'))
                             <a href="{{ route('emp.settings.index') }}"
                                 class="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 group relative"
                                 title="Settings"
@@ -825,7 +830,7 @@
                                 <i
                                     class="fa-solid fa-cog text-white text-sm relative z-10 drop-shadow-sm group-hover:rotate-90 transition-transform duration-500"></i>
                             </a>
-                        {{-- @endif --}}
+                        @endif
                     </div>
 
                     <div class="w-px h-8 bg-slate-200/60 mx-2 hidden sm:block"></div>
@@ -838,7 +843,7 @@
                             {{-- User Icon & Status Wrapper --}}
                             <div class="relative">
                                 <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition-all relative"
-                                    style="background:linear-gradient(135deg,var(--theme-color),#1a8aaa); box-shadow:0 4px 12px rgba(0,79,104,0.25), inset 0 1px 0 rgba(255,255,255,0.3);">
+                                    style="background:linear-gradient(135deg,#004F68,#1a8aaa); box-shadow:0 4px 12px rgba(0,79,104,0.25), inset 0 1px 0 rgba(255,255,255,0.3);">
                                     <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl"
                                         style="background:rgba(255,255,255,0.2);"></div>
                                     <i class="fa-solid fa-user text-white text-sm relative z-10 drop-shadow-sm"></i>
@@ -851,14 +856,14 @@
 
                             <div class="hidden md:block text-left pr-2">
                                 {{-- <p
-                                    class="text-[12px] font-bold text-slate-800 leading-tight group-hover:text-[var(--theme-color)] transition-colors">
+                                    class="text-[12px] font-bold text-slate-800 leading-tight group-hover:text-[#004F68] transition-colors">
                                     Account</p> --}}
                                 <p
                                     class="text-[10px] text-slate-500 font-medium leading-tight mt-0.5 uppercase tracking-wide">
                                     {{ ucfirst($user?->employee?->first_name) }} {{ ucfirst($user?->employee?->last_name) }}
                                 </p>
                             </div>
-                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-300 group-hover:text-[var(--theme-color)] transition-all hidden sm:block"
+                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-300 group-hover:text-[#004F68] transition-all hidden sm:block"
                                 :class="{ 'rotate-180': open }"></i>
                         </button>
 
@@ -1044,7 +1049,7 @@
                                                     Cancel
                                                 </button>
                                                 <button type="submit"
-                                                    class="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-white bg-[var(--theme-color)] hover:bg-[#00384a] shadow-lg transition-all"
+                                                    class="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-white bg-[#004F68] hover:bg-[#00384a] shadow-lg transition-all"
                                                     id="btnHeaderUpdatePassword">
                                                     Update Password
                                                 </button>
@@ -1101,7 +1106,7 @@
                                                             icon: 'warning',
                                                             title: 'Weak Password',
                                                             text: 'Please ensure your new password meets all security requirements.',
-                                                            confirmButtonColor: 'var(--theme-color)'
+                                                            confirmButtonColor: '#004F68'
                                                         });
                                                         return;
                                                     }
@@ -1112,7 +1117,7 @@
                                                             icon: 'error',
                                                             title: 'Password Mismatch',
                                                             text: 'The new password and confirmation do not match.',
-                                                            confirmButtonColor: 'var(--theme-color)'
+                                                            confirmButtonColor: '#004F68'
                                                         });
                                                     }
                                                 });

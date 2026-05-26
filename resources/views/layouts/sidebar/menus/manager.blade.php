@@ -109,7 +109,7 @@
             {{-- Drawer header --}}
             <div class="mb-5 pb-4 border-b border-slate-100">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl flex items-center justify-center relative overflow-hidden" style="background:linear-gradient(145deg,var(--theme-color),#1a8aaa);
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center relative overflow-hidden" style="background:linear-gradient(145deg,#004F68,#1a8aaa);
                                     box-shadow:0 6px 16px rgba(0,79,104,0.3),inset 0 1px 0 rgba(255,255,255,0.3);">
                         <div class="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl"
                             style="background:rgba(255,255,255,0.3);"></div>
