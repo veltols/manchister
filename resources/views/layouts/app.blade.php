@@ -815,7 +815,7 @@
                             @endif
                         </a>
 
-                        @if($user && ($user->user_type == 'emp' || $user->user_type == 'eqa'))
+                        {{-- @if($user && ($user->user_type == 'emp' || $user->user_type == 'eqa')) --}}
                             <a href="{{ route('emp.settings.index') }}"
                                 class="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 group relative"
                                 title="Settings"
@@ -825,7 +825,7 @@
                                 <i
                                     class="fa-solid fa-cog text-white text-sm relative z-10 drop-shadow-sm group-hover:rotate-90 transition-transform duration-500"></i>
                             </a>
-                        @endif
+                        {{-- @endif --}}
                     </div>
 
                     <div class="w-px h-8 bg-slate-200/60 mx-2 hidden sm:block"></div>
