@@ -351,7 +351,7 @@
 
     {{-- Activity Logs --}}
     <a href="{{ route('admin.system_logs.index') }}"
-        class="nav-item {{ request()->routeIs('admin.system_logs.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 text-slate-600">
+        class="nav-item {{ request()->routeIs('admin.system_logs.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1">
         <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
             <i class="fa-solid fa-clipboard-list text-base"></i>
         </div>
