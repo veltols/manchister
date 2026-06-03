@@ -21,7 +21,8 @@
     $isGroupMember = false;
     if ($authUser && $authUser->employee) {
         $employeeId = $authUser->employee->employee_id;
-        $isGroupMember = \App\Models\Group::where('is_deleted', 0)
+        $isGM = $authUser->is_gm; // adjust field/value as needed
+        $isMember = \App\Models\Group::where('is_deleted', 0)
             ->where(function($q) use ($employeeId) {
                 $q->where('added_by', $employeeId)
                   ->orWhereHas('members', function($sq) use ($employeeId) {
@@ -29,6 +30,7 @@
                   });
             })
             ->exists();
+            $isGroupMember = $isGM || $isMember ;
     }
 @endphp
 
