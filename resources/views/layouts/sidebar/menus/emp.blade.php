@@ -552,7 +552,7 @@
         @endif
     </div>
     @endif
-
+    @if(!$hasAnyRcService)
     <!-- Department Name -->
     <div class="text-center px-2 mt-1">
         <!-- Divider with label -->
@@ -571,6 +571,7 @@
             </p>
         @endif
     </div>
+    @endif
 </div>
 
 <script>
