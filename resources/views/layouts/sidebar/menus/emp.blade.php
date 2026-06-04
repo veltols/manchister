@@ -462,7 +462,7 @@
 <!-- Bottom Section -->
 <div class="mt-auto flex flex-col pt-3 pb-2">
     <!-- Switch Workspace Toggle Container   $hasAnyRcService ||-->
-    @if( Auth::user()->is_liaison)
+    @if($hasAnyRcService || Auth::user()->is_liaison)
         <div id="emp-switch-container" class="px-1 mb-2">
         <!-- Divider with label -->
         <div class="flex items-center gap-2 mb-3 px-2">
@@ -506,7 +506,7 @@
                 
                 <div class="flex-1 text-left">
                     <p class="text-base font-bold text-white leading-none">
-                        {{ $canEqa ? 'EQA Portal' : 'RC Portal' }}
+                        {{ $canEqa ? Auth::user()->employee->department->department_name : Auth::user()->employee->department->department_name }}
                     </p>
                     <p class="text-[10px] mt-0.5" style="color: rgba(255,255,255,0.6);">Switch workspace</p>
                 </div>
