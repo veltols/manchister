@@ -1,8 +1,9 @@
 @extends('layouts.app')
 @section('title', 'GM — Review Decision')
 @section('content')
+@php $routePrefix = request()->routeIs('emp.*') ? 'emp.' : 'admin.'; @endphp
 <div class="max-w-3xl mx-auto space-y-6">
-    <a href="{{ route('admin.probation-reviews.index') }}" class="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-indigo-600"><i class="fa-solid fa-arrow-left"></i> Back</a>
+    <a href="{{ route($routePrefix . 'probation-reviews.' . (request()->routeIs('emp.*') ? 'gm-index' : 'index')) }}" class="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-indigo-600"><i class="fa-solid fa-arrow-left"></i> Back</a>
 
     <div class="premium-card p-6 bg-gradient-to-r {{ $review->status_color }} text-white">
         <p class="text-white/70 text-xs uppercase tracking-widest mb-1">Review #{{ $review->review_id }}</p>
@@ -45,7 +46,7 @@
         <div class="grid grid-cols-2 gap-4">
 
             {{-- Approve Form --}}
-            <form id="approveForm" action="{{ route('admin.probation-reviews.approve', $review->review_id) }}" method="POST" class="space-y-3">
+            <form id="approveForm" action="{{ route($routePrefix . 'probation-reviews.' . (request()->routeIs('emp.*') ? 'gm-approve' : 'approve'), $review->review_id) }}" method="POST" class="space-y-3">
                 @csrf
                 <textarea id="approveComments" name="gm_comments" rows="4"
                     class="premium-input w-full px-4 py-2.5 text-sm"
@@ -57,7 +58,7 @@
             </form>
 
             {{-- Reject Form --}}
-            <form id="rejectForm" action="{{ route('admin.probation-reviews.reject', $review->review_id) }}" method="POST" class="space-y-3">
+            <form id="rejectForm" action="{{ route($routePrefix . 'probation-reviews.' . (request()->routeIs('emp.*') ? 'gm-reject' : 'reject'), $review->review_id) }}" method="POST" class="space-y-3">
                 @csrf
                 <textarea id="rejectComments" name="gm_comments" rows="4" required
                     class="premium-input w-full px-4 py-2.5 text-sm"

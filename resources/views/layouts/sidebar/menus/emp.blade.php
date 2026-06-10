@@ -266,8 +266,8 @@
                 ->where('status', 'reviewed')->count();
             $gmLeavesPending = \App\Models\HrLeave::where('leave_status_id', \App\Models\HrLeave::STATUS_PENDING_GM)->count();
         @endphp
-        <a href="{{ route('admin.probation-reviews.index') }}"
-            class="nav-item {{ request()->routeIs('admin.probation-reviews.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 relative"
+        <a href="{{ route('emp.probation-reviews.gm-index') }}"
+            class="nav-item {{ request()->routeIs('emp.probation-reviews.gm*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 relative"
             style="background: rgba(245,158,11,0.12); color: #92400e;">
             <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                 style="background: rgba(245,158,11,0.25); color: #d97706;">
@@ -278,8 +278,8 @@
                 <span class="absolute top-1 right-2 bg-amber-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm">{{ $gmProbationPending }}</span>
             @endif
         </a>
-        <a href="{{ route('admin.leaves.gm') }}"
-            class="nav-item {{ request()->routeIs('admin.leaves.gm') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 relative"
+        <a href="{{ route('emp.leaves.gm') }}"
+            class="nav-item {{ request()->routeIs('emp.leaves.gm') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 relative"
             style="background: rgba(245,158,11,0.08); color: #92400e;">
             <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                 style="background: rgba(245,158,11,0.2); color: #d97706;">

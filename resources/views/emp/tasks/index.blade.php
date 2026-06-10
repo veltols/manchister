@@ -58,11 +58,33 @@
                             @endif
                         </a>
                     @endif
+                    @if(isset($isGm) && $isGm)
+                        <a href="{{ route('emp.tasks.index', ['view_mode' => 'gm_overview']) }}"
+                            class="tab-btn {{ $viewMode == 'gm_overview' ? 'tab-active' : '' }} flex items-center gap-1.5 text-indigo-700 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100">
+                            <i class="fa-solid fa-building text-xs"></i> GM Overview
+                        </a>
+                    @endif
                 </div>
 
                 {{-- Status Filter --}}
-                <form action="{{ route('emp.tasks.index') }}" method="GET" class="flex items-center">
+                <form action="{{ route('emp.tasks.index') }}" method="GET" class="flex items-center gap-2">
                     <input type="hidden" name="view_mode" value="{{ $viewMode }}">
+                    
+                    @if($viewMode === 'gm_overview' && isset($departments))
+                    <div class="relative">
+                        <i class="fa-solid fa-sitemap absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                        <select name="dept_id" onchange="this.form.submit()"
+                            class="pl-8 pr-8 py-2 text-sm bg-white border border-slate-200 rounded-xl text-slate-600 font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand/30 appearance-none">
+                            <option value="">All Departments</option>
+                            @foreach($departments as $dept)
+                                <option value="{{ $dept->department_id }}" {{ request('dept_id') == $dept->department_id ? 'selected' : '' }}>
+                                    {{ $dept->department_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @endif
+
                     <div class="relative">
                         <i
                             class="fa-solid fa-filter absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
@@ -1220,7 +1242,14 @@
                     }
 
                     if (typeof Swal !== 'undefined') {
-                        Swal.fire({ icon: 'success', title: 'Task Completed!', text: 'Progress set to 100% and status updated to Done.', timer: 2000, showConfirmButton: false, confirmButtonColor: '#004F68' });
+                        Swal.fire({ icon: 'success', title: 'Task Completed!', text: 'Progress set to 100% and status updated to Done.', timer: 1500, showConfirmButton: false, confirmButtonColor: '#004F68' }).then(() => {
+                            // Save task ID so we can reopen the drawer after reload
+                            sessionStorage.setItem('reopenTaskId', activeTaskId);
+                            window.location.reload();
+                        });
+                    } else {
+                        sessionStorage.setItem('reopenTaskId', activeTaskId);
+                        window.location.reload();
                     }
                 } else {
                     btn.disabled = false;
@@ -1455,6 +1484,15 @@
     </div>
 
     <script>
+        // Reopen drawer if we just came back from a Mark Complete reload
+        document.addEventListener('DOMContentLoaded', () => {
+            const reopenId = sessionStorage.getItem('reopenTaskId');
+            if (reopenId) {
+                sessionStorage.removeItem('reopenTaskId');
+                loadTask(parseInt(reopenId));
+            }
+        });
+
         function openAssignModal() {
             if (!activeTaskId) return;
             openModal('assignModal');

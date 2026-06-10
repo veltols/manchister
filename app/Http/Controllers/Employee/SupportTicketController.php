@@ -194,15 +194,15 @@ class SupportTicketController extends Controller
 
         // Send Notifications
         \App\Services\NotificationService::send(
-            "A new ticket has been added, REF: " . $ticket->ticket_ref,
-            "tickets/list",
+            "A new ticket has been created (Ref: $ticket->ticket_ref) and is pending admin review. The admin will assign it to the appropriate user after review.",
+            "tickets/",
             $ticket->added_by
         );
 
         // Notify IT Admin (Always ID 1 in legacy logic)
         \App\Services\NotificationService::send(
             "A new ticket has been added, REF: " . $ticket->ticket_ref,
-            "tickets/list",
+            "tickets",
             1
         );
 
@@ -269,7 +269,7 @@ class SupportTicketController extends Controller
             'log_remark'     => 'nullable|string',
             'category_id'    => 'required|exists:support_tickets_list_cats,category_id',
             'ticket_description' => 'required|string',
-            'ticket_attachment'  => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:8192',
+            'ticket_attachment'  => 'nullable|file|max:5120',
         ]);
 
         $userId = $user->user_id;

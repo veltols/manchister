@@ -24,7 +24,7 @@
             }
             form.submit();
         }
-    }">
+    ">
 
         <div class="flex flex-col md:flex-row items-center justify-between gap-4">
             <div class="flex items-center gap-3">
@@ -37,18 +37,30 @@
                 </div>
             </div>
             
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 flex-wrap justify-end">
                 <template x-if="selected.length > 0">
-                    <button @click="markRead(selected)" 
-                            class="px-5 py-2.5 rounded-xl bg-gradient-brand text-white text-xs font-bold shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:scale-105 transition-all duration-300 flex items-center gap-2 border border-white/10">
-                        <i class="fa-solid fa-check-double"></i>
-                        <span>Mark <span x-text="selected.length"></span> Selected as Read</span>
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button @click="markRead(selected)" 
+                                class="px-4 py-2.5 rounded-xl bg-gradient-brand text-white text-xs font-bold shadow-lg shadow-brand/20 hover:scale-105 transition-all duration-300 flex items-center gap-2">
+                            <i class="fa-solid fa-check-double"></i>
+                            <span>Mark <span x-text="selected.length"></span> as Read</span>
+                        </button>
+                        <button @click="deleteNotifs(selected)"
+                                class="px-4 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold shadow-lg shadow-rose-200 hover:scale-105 transition-all duration-300 flex items-center gap-2">
+                            <i class="fa-solid fa-trash-can"></i>
+                            <span>Delete <span x-text="selected.length"></span> Selected</span>
+                        </button>
+                    </div>
                 </template>
                 <button @click="markRead(null)" 
-                        class="px-6 py-2.5 bg-gradient-brand text-white rounded-xl font-bold shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2 border border-white/10">
+                        class="px-5 py-2.5 bg-gradient-brand text-white rounded-xl font-bold shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2">
                     <i class="fa-solid fa-check-double"></i>
                     <span>Mark All as Read</span>
+                </button>
+                <button @click="deleteNotifs(null)"
+                        class="px-5 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 font-bold text-xs hover:scale-105 transition-all duration-300 flex items-center gap-2">
+                    <i class="fa-solid fa-trash-can"></i>
+                    <span>Delete All</span>
                 </button>
             </div>
         </div>
@@ -56,6 +68,11 @@
         <form id="markReadForm" action="{{ route('emp.notifications.mark_read') }}" method="POST" style="display: none;">
             @csrf
             <input type="hidden" name="ids" id="markReadIds">
+        </form>
+
+        <form id="deleteForm" action="{{ route('emp.notifications.destroy') }}" method="POST" style="display: none;">
+            @csrf
+            <input type="hidden" name="ids" id="deleteIds">
         </form>
 
         <div class="space-y-4" id="notifications-container">
@@ -94,18 +111,23 @@
                     <div class="flex items-center gap-2 shrink-0 ml-auto">
                         @if($notif->is_seen == 0)
                             <button @click="markRead([{{ $notif->notification_id }}])"
-                                class="btn-mark-seen w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
+                                class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
                                 title="Mark as Read">
                                 <i class="fa-solid fa-check text-sm"></i>
                             </button>
                         @endif
                          @if($notif->related_page)
                             <a href="{{ url($notif->related_page) }}"
-                                class="flex items-center justify-center w-8 h-8 rounded-full border border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-200 transition-all"
+                                class="flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-200 transition-all"
                                 title="Go to Page">
                                 <i class="fa-solid fa-arrow-right text-sm"></i>
                             </a>
                         @endif
+                        <button @click="deleteNotifs([{{ $notif->notification_id }}])"
+                            class="w-9 h-9 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-400 hover:text-rose-600 flex items-center justify-center hover:scale-110 transition-all"
+                            title="Delete">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
                     </div>
                     
                 </div>
@@ -184,5 +206,26 @@
                 return html;
             }
         });
+    </script>
+    <script>
+        function deleteNotifs(ids) {
+            const label = Array.isArray(ids) ? ids.length + ' notification(s)' : 'ALL notifications';
+            Swal.fire({
+                title: 'Delete ' + label + '?',
+                text: 'This action cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: '<i class="fa-solid fa-trash-can mr-1"></i> Yes, Delete',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('deleteIds').value = Array.isArray(ids) ? ids.join(',') : '';
+                    document.getElementById('deleteForm').submit();
+                }
+            });
+        }
     </script>
 @endsection

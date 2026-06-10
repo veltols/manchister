@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @section('title', 'GM — Probation Reviews')
 @section('content')
+@php $routePrefix = request()->routeIs('emp.*') ? 'emp.' : 'admin.'; @endphp
 <div class="space-y-6">
     <div><h2 class="text-2xl font-display font-bold text-premium">Probation Review Decisions</h2><p class="text-sm text-slate-500 mt-1">{{ $reviews->total() }} total reviews awaiting or actioned</p></div>
 
@@ -21,7 +22,7 @@
                     <td>@if($review->manager_rating)<span class="text-sm font-semibold text-amber-700">{{ $review->manager_rating }}</span>@else<span class="text-slate-400 text-xs">—</span>@endif</td>
                     <td class="text-center"><span class="inline-flex items-center px-3 py-1.5 rounded-lg bg-gradient-to-r {{ $color }} text-white text-[10px] font-bold shadow-sm whitespace-nowrap">{{ $review->status_label }}</span></td>
                     <td class="text-center">
-                        <a href="{{ route('admin.probation-reviews.show', $review->review_id) }}"
+                        <a href="{{ route($routePrefix . 'probation-reviews.' . (request()->routeIs('emp.*') ? 'gm-show' : 'show'), $review->review_id) }}"
                            class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 flex items-center justify-center transition-colors mx-auto">
                             <i class="fa-solid fa-{{ $review->status === 'reviewed' ? 'gavel' : 'eye' }} text-xs"></i>
                         </a>

@@ -107,7 +107,7 @@ class LeaveController extends Controller
             'start_date'       => 'required|date',
             'end_date'         => 'required|date|after_or_equal:start_date',
             'leave_remarks'    => 'required|string',
-            'leave_attachment' => 'nullable|file|mimes:pdf,jpg,png,jpeg,csv,doc,docx,xls,xlsx|max:8192',
+            'leave_attachment' => 'nullable|file|max:5120',
         ]);
 
         $user       = Auth::user();
@@ -184,7 +184,7 @@ class LeaveController extends Controller
         // --- Determine workflow ---
         $department    = $user->employee->department;
         $lineManagerId = $department ? $department->line_manager_id : 0;
-        $hasManager    = $lineManagerId && $lineManagerId != $employeeId;
+        $hasManager    = $lineManagerId;
 
         // --- Create leave record ---
         // gm_id is intentionally NULL here — it will be set when the LM forwards to GM
@@ -275,7 +275,7 @@ class LeaveController extends Controller
             'start_date'       => 'required|date',
             'end_date'         => 'required|date|after_or_equal:start_date',
             'leave_remarks'    => 'required|string',
-            'leave_attachment' => 'nullable|file|mimes:pdf,jpg,png,jpeg,csv,doc,docx,xls,xlsx|max:8192',
+            'leave_attachment' => 'nullable|file|max:5120',
         ]);
 
         $leaveType = LeaveType::findOrFail($request->leave_type_id);
@@ -336,7 +336,7 @@ class LeaveController extends Controller
         // --- Determine workflow ---
         $department    = $user->employee->department;
         $lineManagerId = $department ? $department->line_manager_id : 0;
-        $hasManager    = $lineManagerId && $lineManagerId != $employeeId;
+        $hasManager    = $lineManagerId;
 
         $leave->leave_type_id    = $request->leave_type_id;
         $leave->start_date       = $request->start_date;

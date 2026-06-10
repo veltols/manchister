@@ -57,13 +57,33 @@
                 </div>
             </div>
 
-            <div class="flex bg-slate-100 p-1.5 rounded-2xl shadow-inner border border-slate-200/50">
-                <a href="?view=day&date={{ $date }}"
-                    class="px-6 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all {{ $view == 'day' ? 'bg-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand' }}">Day</a>
-                <a href="?view=week&date={{ $date }}"
-                    class="px-6 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all {{ $view == 'week' ? 'bg-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand' }}">Week</a>
-                <a href="?view=month&date={{ $date }}"
-                    class="px-6 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all {{ $view == 'month' ? 'bg-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand' }}">Month</a>
+            <div class="flex items-center gap-6">
+                <!-- Live Clock -->
+                <div x-data="{ 
+                    time: '', 
+                    dateStr: '', 
+                    init() { 
+                        this.update(); 
+                        setInterval(() => this.update(), 1000); 
+                    }, 
+                    update() { 
+                        const d = new Date(); 
+                        this.time = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}); 
+                        this.dateStr = d.toLocaleDateString([], {weekday: 'long', year: 'numeric', month: 'short', day: 'numeric'}).toUpperCase(); 
+                    } 
+                }" class="hidden md:flex flex-col items-end pr-6 border-r border-slate-100">
+                    <span class="text-2xl font-black text-slate-700 tracking-tight" x-text="time"></span>
+                    <span class="text-[10px] font-bold text-brand uppercase tracking-widest" x-text="dateStr"></span>
+                </div>
+
+                <div class="flex bg-slate-100 p-1.5 rounded-2xl shadow-inner border border-slate-200/50">
+                    <a href="?view=day&date={{ $date }}"
+                        class="px-6 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all {{ $view == 'day' ? 'bg-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand' }}">Day</a>
+                    <a href="?view=week&date={{ $date }}"
+                        class="px-6 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all {{ $view == 'week' ? 'bg-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand' }}">Week</a>
+                    <a href="?view=month&date={{ $date }}"
+                        class="px-6 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all {{ $view == 'month' ? 'bg-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand' }}">Month</a>
+                </div>
             </div>
         </div>
 

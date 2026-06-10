@@ -27,7 +27,25 @@
                 </a>
             </div>
 
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-6">
+                <!-- Live Clock -->
+                <div x-data="{ 
+                    time: '', 
+                    dateStr: '', 
+                    init() { 
+                        this.update(); 
+                        setInterval(() => this.update(), 1000); 
+                    }, 
+                    update() { 
+                        const d = new Date(); 
+                        this.time = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}); 
+                        this.dateStr = d.toLocaleDateString([], {weekday: 'long', year: 'numeric', month: 'short', day: 'numeric'}).toUpperCase(); 
+                    } 
+                }" class="hidden md:flex flex-col items-end pr-6 border-r border-slate-100">
+                    <span class="text-2xl font-black text-slate-700 tracking-tight" x-text="time"></span>
+                    <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-widest" x-text="dateStr"></span>
+                </div>
+
                 <div class="flex bg-slate-100 rounded-xl p-1 font-bold text-xs uppercase tracking-wider">
                     <a href="#" class="px-4 py-2 rounded-lg bg-white shadow-sm text-indigo-600 transition-all">Month</a>
                     <a href="#"

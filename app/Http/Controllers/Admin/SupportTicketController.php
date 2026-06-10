@@ -203,7 +203,7 @@ class SupportTicketController extends Controller
         // Notification: Notify the employee for whom the ticket was added
         \App\Services\NotificationService::send(
             "A new ticket has been created for you by Admin, REF: " . $ticket->ticket_ref,
-            "tickets/list", 
+            "tickets", 
             $ticket->added_by
         );
 
@@ -289,14 +289,14 @@ class SupportTicketController extends Controller
         // Notify Assignee
         \App\Services\NotificationService::send(
             "A ticket has been assigned to you by Admin, REF: " . $ticket->ticket_ref, 
-            "tickets/list/", 
+            "tickets", 
             $ticket->assigned_to
         );
 
         // Notify Requester
         \App\Services\NotificationService::send(
             "Your ticket has been assigned to an IT Agent, REF: " . $ticket->ticket_ref, 
-            "tickets/list/", 
+            "tickets", 
             $ticket->added_by
         );
 
@@ -373,7 +373,7 @@ class SupportTicketController extends Controller
         // Notify Requester
         \App\Services\NotificationService::send(
             "Your ticket status has been updated to " . ($ticket->status ? $ticket->status->status_name : 'Updated') . ", REF: " . $ticket->ticket_ref, 
-            "tickets/list", 
+            "tickets", 
             $ticket->added_by
         );
         
@@ -381,10 +381,16 @@ class SupportTicketController extends Controller
         if ($ticket->assigned_to && $ticket->assigned_to != 0) {
              \App\Services\NotificationService::send(
                 "Ticket status updated to " . ($ticket->status ? $ticket->status->status_name : 'Updated') . ", REF: " . $ticket->ticket_ref, 
-                "tickets/list", 
+                "tickets", 
                 $ticket->assigned_to
             );
+             \App\Services\NotificationService::send(
+            "Your ticket has been assigned to an IT Agent, REF: " . $ticket->ticket_ref, 
+            "tickets", 
+            $ticket->added_by
+        );
         }
+       
 
         return redirect()->back()->with('success', 'Ticket status updated successfully.');
     }

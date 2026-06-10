@@ -47,4 +47,23 @@ class NotificationController extends Controller
 
         return redirect()->back()->with('success', 'Notifications updated successfully.');
     }
+
+    public function destroy(Request $request)
+    {
+        $user = Auth::user();
+        $employeeId = $user->user_id;
+
+        $ids = $request->input('ids');
+
+        if ($ids) {
+            $idArray = is_array($ids) ? $ids : explode(',', $ids);
+            EmployeeNotification::where('employee_id', $employeeId)
+                ->whereIn('notification_id', $idArray)
+                ->delete();
+        } else {
+            EmployeeNotification::where('employee_id', $employeeId)->delete();
+        }
+
+        return redirect()->back()->with('success', 'Notifications deleted successfully.');
+    }
 }

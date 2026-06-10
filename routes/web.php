@@ -73,6 +73,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/performance', [PerformanceController::class, 'index'])->name('performance.index');
         Route::get('/performance/data', [PerformanceController::class, 'getData'])->name('performance.data');
 
+        // GM Probation Reviews (accessible from emp dashboard for GM users)
+        Route::get('/probation-reviews/gm', [App\Http\Controllers\Admin\ProbationReviewController::class, 'index'])->name('probation-reviews.gm-index');
+        Route::get('/probation-reviews/gm/{id}', [App\Http\Controllers\Admin\ProbationReviewController::class, 'show'])->name('probation-reviews.gm-show');
+        Route::post('/probation-reviews/gm/{id}/approve', [App\Http\Controllers\Admin\ProbationReviewController::class, 'approve'])->name('probation-reviews.gm-approve');
+        Route::post('/probation-reviews/gm/{id}/reject', [App\Http\Controllers\Admin\ProbationReviewController::class, 'reject'])->name('probation-reviews.gm-reject');
+
         // Probation Reviews (Line Manager assessment queue)
         Route::get('/probation-reviews', [App\Http\Controllers\Employee\ProbationReviewController::class, 'index'])->name('probation-reviews.index');
         Route::get('/probation-reviews/{id}', [App\Http\Controllers\Employee\ProbationReviewController::class, 'show'])->name('probation-reviews.show');
@@ -158,6 +164,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/lm/leaves', [App\Http\Controllers\Employee\LmLeaveController::class, 'index'])->name('lm.leaves.index');
         Route::post('/lm/leaves/{id}/approve', [App\Http\Controllers\Employee\LmLeaveController::class, 'approve'])->name('lm.leaves.approve');
         Route::post('/lm/leaves/{id}/reject', [App\Http\Controllers\Employee\LmLeaveController::class, 'reject'])->name('lm.leaves.reject');
+
+        // GM Leaves (accessible from emp dashboard for GM users)
+        Route::get('/leaves/gm', [App\Http\Controllers\Admin\GmLeaveController::class, 'index'])->name('leaves.gm');
+        Route::post('/leaves/{id}/gm-approve', [App\Http\Controllers\Admin\GmLeaveController::class, 'approve'])->name('leaves.gm-approve');
+        Route::post('/leaves/{id}/gm-reject', [App\Http\Controllers\Admin\GmLeaveController::class, 'reject'])->name('leaves.gm-reject');
 
         // Line Manager — Outbound Communications Queue (Stage 2)
         Route::get('/lm/communications', [App\Http\Controllers\Employee\LmCommunicationController::class, 'index'])->name('lm.communications.index');
@@ -259,6 +270,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/notifications', [App\Http\Controllers\Employee\NotificationController::class, 'index'])->name('notifications.index');
         Route::get('/notifications/data', [App\Http\Controllers\Employee\NotificationController::class, 'getData'])->name('notifications.data');
         Route::post('/notifications/mark-read', [App\Http\Controllers\Employee\NotificationController::class, 'markRead'])->name('notifications.mark_read');
+        Route::post('/notifications/delete', [App\Http\Controllers\Employee\NotificationController::class, 'destroy'])->name('notifications.destroy');
 
         // My Tasks
         Route::get('/tasks', [App\Http\Controllers\Employee\TaskController::class, 'index'])->name('tasks.index');
@@ -310,6 +322,7 @@ Route::middleware('auth')->group(function () {
         // Notifications
         Route::get('/notifications', [App\Http\Controllers\HR\NotificationController::class, 'index'])->name('notifications.index');
         Route::post('/notifications/mark-read', [App\Http\Controllers\HR\NotificationController::class, 'markAsRead'])->name('notifications.mark_as_read');
+        Route::post('/notifications/delete', [App\Http\Controllers\HR\NotificationController::class, 'destroy'])->name('notifications.destroy');
 
         // Employees
         Route::get('/employees', [App\Http\Controllers\HR\EmployeeController::class, 'index'])->name('employees.index');
@@ -510,6 +523,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
         Route::get('/notifications', [App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('notifications.index');
         Route::post('/notifications/mark-as-read', [App\Http\Controllers\Admin\NotificationController::class, 'markAsRead'])->name('notifications.mark_as_read');
+        Route::post('/notifications/delete', [App\Http\Controllers\Admin\NotificationController::class, 'destroy'])->name('notifications.destroy');
 
         // Messages
         Route::get('/messages', [App\Http\Controllers\Admin\MessageController::class, 'index'])->name('messages.index');
@@ -625,6 +639,7 @@ Route::middleware('auth')->group(function () {
         // Incidents
         Route::get('/incidents', [App\Http\Controllers\Admin\IncidentController::class, 'index'])->name('incidents.index');
         Route::get('/incidents/data', [App\Http\Controllers\Admin\IncidentController::class, 'getData'])->name('incidents.data');
+        Route::get('/incidents/export', [App\Http\Controllers\Admin\IncidentController::class, 'exportCsv'])->name('incidents.export');
         Route::post('/incidents', [App\Http\Controllers\Admin\IncidentController::class, 'store'])->name('incidents.store');
         Route::post('/incidents/{id}/update', [App\Http\Controllers\Admin\IncidentController::class, 'update'])->name('incidents.update');
         Route::delete('/incidents/{id}', [App\Http\Controllers\Admin\IncidentController::class, 'destroy'])->name('incidents.destroy');

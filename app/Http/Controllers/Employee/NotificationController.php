@@ -33,13 +33,32 @@ class NotificationController extends Controller
                 ->whereIn('notification_id', (array)$ids)
                 ->update(['is_seen' => 1]);
         } else {
-            // Mark all as read if no IDs provided (optional based on UI requirement)
+            // Mark all as read if no IDs provided
             EmployeeNotification::where('employee_id', $employeeId)
                 ->where('is_seen', 0)
                 ->update(['is_seen' => 1]);
         }
 
         return redirect()->back()->with('success', 'Notifications updated successfully.');
+    }
+
+    public function destroy(Request $request)
+    {
+        $user = Auth::user();
+        $employeeId = $user->user_id;
+
+        $ids = $request->input('ids');
+
+        if ($ids) {
+            $idArray = is_array($ids) ? $ids : explode(',', $ids);
+            EmployeeNotification::where('employee_id', $employeeId)
+                ->whereIn('notification_id', $idArray)
+                ->delete();
+        } else {
+            EmployeeNotification::where('employee_id', $employeeId)->delete();
+        }
+
+        return redirect()->back()->with('success', 'Notifications deleted successfully.');
     }
 
     public function getData(Request $request)

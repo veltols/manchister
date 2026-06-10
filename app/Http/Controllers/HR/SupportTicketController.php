@@ -175,14 +175,14 @@ class SupportTicketController extends Controller
         // 1. Notify the employee who the ticket was added for
         \App\Services\NotificationService::send(
             "A new ticket has been created for you by HR, REF: " . $ticket->ticket_ref,
-            "tickets/list",
+            "tickets",
             $ticket->added_by
         );
 
         // 2. Notify IT Admin (System Admin)
         \App\Services\NotificationService::send(
             "A new ticket has been added by HR, REF: " . $ticket->ticket_ref,
-            "tickets/list",
+            "tickets",
             1
         );
 
@@ -398,7 +398,7 @@ class SupportTicketController extends Controller
         // Notify Requester
         \App\Services\NotificationService::send(
             "Your ticket status has been updated to " . ($ticket->status ? $ticket->status->status_name : 'Updated') . ", REF: " . $ticket->ticket_ref,
-            "tickets/list",
+            "tickets",
             $ticket->added_by
         );
 
@@ -406,7 +406,7 @@ class SupportTicketController extends Controller
         if ($ticket->assigned_to && $ticket->assigned_to != 0) {
             \App\Services\NotificationService::send(
                 "A ticket has been assigned to you, REF: " . $ticket->ticket_ref,
-                "tickets/list",
+                "tickets",
                 $ticket->assigned_to
             );
         }

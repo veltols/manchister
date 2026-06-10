@@ -10,9 +10,14 @@
                 <h1 class="text-2xl font-display font-bold text-slate-900">Incidents Log</h1>
                 <p class="text-sm text-slate-500 mt-1" id="incident-count">Total {{ $incidents->total() }} records found</p>
             </div>
-            <button onclick="openModal('reportIncidentModal')" class="premium-button">
-                <i class="fa-solid fa-plus"></i> Report Incident
-            </button>
+            <div class="flex items-center gap-3">
+                <button type="button" onclick="exportIncidentsCsv()" class="premium-button">
+                    <i class="fa-solid fa-file-csv"></i> Export CSV
+                </button>
+                <button onclick="openModal('reportIncidentModal')" class="premium-button">
+                    <i class="fa-solid fa-plus"></i> Report Incident
+                </button>
+            </div>
         </div>
 
         <!-- Filters -->
@@ -21,7 +26,7 @@
                 <div class="relative">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                     <input type="text" id="searchInput" class="premium-input pl-9 pr-4 py-2.5 w-full text-sm"
-                        placeholder="Search by type or description...">
+                        placeholder="Search by ref #, type or description...">
                 </div>
                 <div class="relative">
                     <i class="fa-solid fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
@@ -41,7 +46,9 @@
                 <table class="premium-table w-full">
                     <thead>
                         <tr>
-                            <th class="text-left first:pl-6">Date &amp; Time</th>
+                            <th class="text-left first:pl-6">Ref #</th>
+                            <th class="text-left">Created At</th>
+                            <th class="text-left">Incident Date &amp; Time</th>
                             <th class="text-left">Type</th>
                             <th class="text-left">Description</th>
                             <th class="text-left">Status</th>
@@ -65,8 +72,18 @@
                             @endphp
                             <tr class="group hover:bg-slate-50 transition-colors">
                                 <td class="first:pl-6">
+                                    @php
+                                        $year = \Carbon\Carbon::parse($incident->created_at)->format('Y');
+                                        $refNo = 'INC-' . $year . '-' . str_pad($incident->incident_id, 5, '0', STR_PAD_LEFT);
+                                    @endphp
+                                    <span class="font-bold text-slate-700 text-sm">{{ $refNo }}</span>
+                                </td>
+                                <td>
+                                    <span class="text-xs text-slate-600">{{ \Carbon\Carbon::parse($incident->created_at)->format('M d, Y h:i A') }}</span>
+                                </td>
+                                <td>
                                     <div class="flex flex-col">
-                                        <span class="font-bold text-slate-700 text-sm">{{ \Carbon\Carbon::parse($incident->incident_date)->format('M d, Y') }}</span>
+                                        <span class="font-medium text-slate-700 text-sm">{{ \Carbon\Carbon::parse($incident->incident_date)->format('M d, Y') }}</span>
                                         <span class="text-xs text-slate-400">{{ \Carbon\Carbon::parse($incident->incident_date)->format('h:i A') }}</span>
                                     </div>
                                 </td>
@@ -143,7 +160,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-12">
+                                <td colspan="10" class="text-center py-12">
                                     <div class="flex flex-col items-center justify-center">
                                         <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
                                             <i class="fa-solid fa-shield-virus text-3xl text-slate-300"></i>
@@ -543,7 +560,7 @@
 
                 if (incidents.length === 0) {
                     container.innerHTML = `
-                        <tr><td colspan="8" class="text-center py-12">
+                        <tr><td colspan="10" class="text-center py-12">
                             <div class="flex flex-col items-center justify-center">
                                 <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
                                     <i class="fa-solid fa-shield-virus text-3xl text-slate-300"></i>
@@ -567,8 +584,14 @@
                     html += `
                         <tr class="group hover:bg-slate-50 transition-colors">
                             <td class="first:pl-6">
+                                <span class="font-bold text-slate-700 text-sm">${incident.reference_number}</span>
+                            </td>
+                            <td>
+                                <span class="text-xs text-slate-600">${incident.formatted_created_at}</span>
+                            </td>
+                            <td>
                                 <div class="flex flex-col">
-                                    <span class="font-bold text-slate-700 text-sm">${incident.formatted_date}</span>
+                                    <span class="font-medium text-slate-700 text-sm">${incident.formatted_date}</span>
                                     <span class="text-xs text-slate-400">${incident.formatted_time}</span>
                                 </div>
                             </td>
@@ -645,6 +668,16 @@
                 inputSelector: '#edit_incident_attachment',
                 containerSelector: '#edit-attachment-preview'
             });
+        }
+
+        // ─── Export CSV ───────────────────────────────────────────────
+        function exportIncidentsCsv() {
+            const search = document.getElementById('searchInput')?.value || '';
+            const date = document.getElementById('dateFilter')?.value || '';
+            const reporter = document.getElementById('reporterFilter')?.value || '';
+            
+            const params = new URLSearchParams({ search, date, reporter });
+            window.location.href = `{{ route('admin.incidents.export') }}?${params.toString()}`;
         }
     </script>
 @endpush

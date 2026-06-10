@@ -52,6 +52,44 @@ class TaskController extends Controller
                 })
                 ->orderBy('task_id', 'desc')->paginate(15);
 
+        } elseif ($viewMode === 'gm_overview') {
+            // GM-only: all active tasks across all departments
+            $query = Task::with([
+                'status',
+                'priority',
+                'assignedBy',
+                'assignedTo',
+                'department',
+                'subtasks' => function ($q) {
+                    $q->where(function ($sq) {
+                        $sq->whereNull('pending_line_manager_id')->orWhere('pending_line_manager_id', 0);
+                    })->where('is_rejected', 0);
+                },
+                'subtasks.status',
+                'subtasks.priority',
+                'subtasks.assignedBy',
+                'subtasks.assignedTo',
+                'subtasks.department'
+            ])
+                ->where(function ($q) {
+                    $q->whereNull('pending_line_manager_id')->orWhere('pending_line_manager_id', 0);
+                })
+                ->where('is_rejected', 0);
+
+            $filterDept = request()->input('dept_id');
+            if ($filterDept) {
+                $query->where(function($q) use ($filterDept) {
+                    $q->where('department_id', $filterDept)
+                      ->orWhereHas('assignedTo', fn($sq) => $sq->where('department_id', $filterDept));
+                });
+            }
+            if ($statusId) {
+                $query->where('status_id', $statusId);
+            }
+            $tasks = $query->where(function($q) {
+                    $q->whereNull('parent_task_id')->orWhere('parent_task_id', 0);
+                })->orderBy('task_id', 'desc')->paginate(15);
+
         } else {
             // MAIN ACTIVE LISTS (My Tasks / Others' Tasks)
             // MUST ONLY SHOW APPROVED TASKS
@@ -121,9 +159,10 @@ class TaskController extends Controller
             ->count();
 
         $isLineManager = Department::where('line_manager_id', $employeeId)->exists();
+        $isGm = (bool) ($user->is_gm ?? false);
         $departments = Department::orderBy('department_name')->get();
 
-        return view('emp.tasks.index', compact('tasks', 'statuses', 'priorities', 'employees', 'viewMode', 'statusId', 'pendingCount', 'submittedCount', 'rejectedCount', 'rejectedByMeCount', 'isLineManager', 'departments'));
+        return view('emp.tasks.index', compact('tasks', 'statuses', 'priorities', 'employees', 'viewMode', 'statusId', 'pendingCount', 'submittedCount', 'rejectedCount', 'rejectedByMeCount', 'isLineManager', 'isGm', 'departments'));
     }
 
     public function show(Request $request, $id)
@@ -592,6 +631,24 @@ class TaskController extends Controller
                     })
                     ->where('is_rejected', 0);
                 break;
+
+            case 'gm_overview':
+                // GM-only: all active tasks across all departments
+                $query->where(function ($q) {
+                        $q->whereNull('pending_line_manager_id')
+                            ->orWhere('pending_line_manager_id', 0);
+                    })
+                    ->where('is_rejected', 0);
+                
+                $filterDept = $request->input('dept_id');
+                if ($filterDept) {
+                    $query->where(function($q) use ($filterDept) {
+                        $q->where('department_id', $filterDept)
+                          ->orWhereHas('assignedTo', fn($sq) => $sq->where('department_id', $filterDept));
+                    });
+                }
+                break;
+
 
             default: // 'my_tasks'
                 $query->where('assigned_to', $employeeId)

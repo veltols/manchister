@@ -139,6 +139,7 @@ class IncidentController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('description', 'like', "%{$search}%")
                   ->orWhere('incident_type', 'like', "%{$search}%")
+                  ->orWhere(\Illuminate\Support\Facades\DB::raw("CONCAT('INC-', YEAR(created_at), '-', LPAD(incident_id, 5, '0'))"), 'like', "%{$search}%")
                   ->orWhereHas('reporter.employee', function ($sq) use ($search) {
                       $sq->where(\Illuminate\Support\Facades\DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$search}%")
                          ->orWhere('employee_no', 'like', "%{$search}%");
@@ -172,6 +173,11 @@ class IncidentController extends Controller
 
             $getName = fn($emp) => $emp ? trim($emp->first_name . ' ' . $emp->last_name) : null;
 
+            $year = \Carbon\Carbon::parse($incident->created_at)->format('Y');
+            $refNo = 'INC-' . $year . '-' . str_pad($incident->incident_id, 5, '0', STR_PAD_LEFT);
+
+            $incident->reference_number     = $refNo;
+            $incident->formatted_created_at = \Carbon\Carbon::parse($incident->created_at)->format('M d, Y h:i A');
             $incident->reporter_name        = $reporterName;
             $incident->formatted_date       = \Carbon\Carbon::parse($incident->incident_date)->format('M d, Y');
             $incident->formatted_time       = \Carbon\Carbon::parse($incident->incident_date)->format('h:i A');
@@ -232,5 +238,104 @@ class IncidentController extends Controller
         $log->logger_type   = 'admin';
         $log->logged_by     = Auth::user()->user_id ?? 1;
         $log->save();
+    }
+    public function exportCsv(Request $request)
+    {
+        $search  = $request->get('search');
+        $date    = $request->get('date');
+        $reporter = $request->get('reporter');
+
+        $query = Incident::with('reporter.employee', 'assignedPerson1', 'assignedPerson2', 'assignedPerson3')
+                         ->latest('incident_date');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('description', 'like', "%{$search}%")
+                  ->orWhere('incident_type', 'like', "%{$search}%")
+                  ->orWhere(\Illuminate\Support\Facades\DB::raw("CONCAT('INC-', YEAR(created_at), '-', LPAD(incident_id, 5, '0'))"), 'like', "%{$search}%")
+                  ->orWhereHas('reporter.employee', function ($sq) use ($search) {
+                      $sq->where(\Illuminate\Support\Facades\DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$search}%")
+                         ->orWhere('employee_no', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($date) {
+            $query->whereDate('incident_date', $date);
+        }
+
+        if ($reporter) {
+            $query->where(function ($q) use ($reporter) {
+                $q->whereHas('reporter.employee', function ($sq) use ($reporter) {
+                    $sq->where(\Illuminate\Support\Facades\DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$reporter}%")
+                       ->orWhere('first_name', 'like', "%{$reporter}%")
+                       ->orWhere('last_name', 'like', "%{$reporter}%")
+                       ->orWhere('employee_no', 'like', "%{$reporter}%");
+                })->orWhereHas('reporter', function ($sq) use ($reporter) {
+                    $sq->where('user_email', 'like', "%{$reporter}%");
+                });
+            });
+        }
+
+        $incidents = $query->get();
+
+        $filename = 'incidents_' . date('Y-m-d') . '.csv';
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$filename",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $columns = [
+            'Reference Number',
+            'Created At',
+            'Incident Date',
+            'Incident Time',
+            'Type',
+            'Description',
+            'Status',
+            'Assigned To',
+            'Reported By'
+        ];
+
+        $callback = function() use ($incidents, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            $getName = fn($emp) => $emp ? trim($emp->first_name . ' ' . $emp->last_name) : null;
+
+            foreach ($incidents as $incident) {
+                $reporterName = optional(optional($incident->reporter)->employee)->first_name
+                    ?? optional($incident->reporter)->user_email
+                    ?? 'System';
+
+                $assignees = array_filter([
+                    $getName($incident->assignedPerson1),
+                    $getName($incident->assignedPerson2),
+                    $getName($incident->assignedPerson3)
+                ]);
+                
+                $year = \Carbon\Carbon::parse($incident->created_at)->format('Y');
+                $refNo = 'INC-' . $year . '-' . str_pad($incident->incident_id, 5, '0', STR_PAD_LEFT);
+
+                $row = [
+                    $refNo,
+                    \Carbon\Carbon::parse($incident->created_at)->format('M d, Y h:i A'),
+                    \Carbon\Carbon::parse($incident->incident_date)->format('M d, Y'),
+                    \Carbon\Carbon::parse($incident->incident_date)->format('h:i A'),
+                    $incident->incident_type,
+                    $incident->description,
+                    ucfirst($incident->status ?? 'pending'),
+                    count($assignees) > 0 ? implode(', ', $assignees) : 'Unassigned',
+                    $reporterName
+                ];
+                fputcsv($file, $row);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

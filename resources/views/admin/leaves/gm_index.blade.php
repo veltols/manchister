@@ -3,6 +3,7 @@
 @section('subtitle', 'Final leave decision queue')
 
 @section('content')
+@php $routePrefix = request()->routeIs('emp.*') ? 'emp.' : 'admin.'; @endphp
 <div class="space-y-6 animate-fade-in-up">
 
     {{-- Header --}}
@@ -121,7 +122,7 @@
             {{-- GM Decision Forms --}}
             <div class="mt-4 grid grid-cols-2 gap-3">
                 {{-- Approve --}}
-                <form id="approveForm{{ $leave->leave_id }}" action="{{ route('admin.leaves.gm-approve', $leave->leave_id) }}" method="POST" class="space-y-2">
+                <form id="approveForm{{ $leave->leave_id }}" action="{{ route($routePrefix . 'leaves.gm-approve', $leave->leave_id) }}" method="POST" class="space-y-2">
                     @csrf
                     <textarea id="approveComments{{ $leave->leave_id }}" name="gm_comments" rows="2"
                         class="premium-input w-full px-3 py-2 text-sm"
@@ -133,7 +134,7 @@
                     </button>
                 </form>
                 {{-- Reject --}}
-                <form id="rejectForm{{ $leave->leave_id }}" action="{{ route('admin.leaves.gm-reject', $leave->leave_id) }}" method="POST" class="space-y-2">
+                <form id="rejectForm{{ $leave->leave_id }}" action="{{ route($routePrefix . 'leaves.gm-reject', $leave->leave_id) }}" method="POST" class="space-y-2">
                     @csrf
                     <textarea id="rejectComments{{ $leave->leave_id }}" name="gm_comments" rows="2" required
                         class="premium-input w-full px-3 py-2 text-sm"
