@@ -13,11 +13,18 @@
                 <h2 class="text-2xl font-display font-bold text-premium">Leave Requests</h2>
                 <p class="text-sm text-slate-500 mt-1">{{ $leaves->total() }} total requests</p>
             </div>
-            <button onclick="openModal('addLeaveModal')"
-                class="inline-flex items-center gap-2 px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
-                <i class="fa-solid fa-plus"></i>
-                <span>Add Leave</span>
-            </button>
+            <div class="flex items-center gap-3">
+                <button onclick="exportCsv()"
+                    class="inline-flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
+                    <i class="fa-solid fa-file-csv"></i>
+                    <span>Export CSV</span>
+                </button>
+                <button onclick="openModal('addLeaveModal')"
+                    class="inline-flex items-center gap-2 px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Add Leave</span>
+                </button>
+            </div>
         </div>
         <!-- Filters -->
         <div class="premium-card p-4 animate-fade-in-up">
@@ -381,6 +388,22 @@
 
         function applyFilters() {
             window.ajaxPagination.loadPage(1);
+        }
+
+        function exportCsv() {
+            const params = new URLSearchParams({
+                employee_id: document.getElementById('employee-filter').value,
+                search:      document.getElementById('search-filter').value,
+                type_id:     document.getElementById('type-filter').value,
+                status_id:   document.getElementById('status-filter').value,
+                start_date:  document.getElementById('start-date-filter').value,
+                end_date:    document.getElementById('end-date-filter').value,
+            });
+            // Remove empty params
+            for (const [key, value] of [...params.entries()]) {
+                if (!value) params.delete(key);
+            }
+            window.location.href = '{{ route("hr.leaves.export") }}?' + params.toString();
         }
 
         function resetFilters() {

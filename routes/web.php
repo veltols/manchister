@@ -329,6 +329,7 @@ Route::middleware('auth')->group(function () {
         // Leaves
         Route::get('/leaves', [App\Http\Controllers\HR\LeaveController::class, 'index'])->name('leaves.index');
         Route::get('/leaves/data', [App\Http\Controllers\HR\LeaveController::class, 'getData'])->name('leaves.data');
+        Route::get('/leaves/export', [App\Http\Controllers\HR\LeaveController::class, 'exportCsv'])->name('leaves.export');
         Route::get('/leaves/create', [App\Http\Controllers\HR\LeaveController::class, 'create'])->name('leaves.create');
         Route::post('/leaves', [App\Http\Controllers\HR\LeaveController::class, 'store'])->name('leaves.store');
         Route::post('/leaves/{id}/status', [App\Http\Controllers\HR\LeaveController::class, 'updateStatus'])->name('leaves.status');
@@ -338,6 +339,7 @@ Route::middleware('auth')->group(function () {
         // Permissions (Short Leaves)
         Route::get('/permissions', [App\Http\Controllers\HR\PermissionController::class, 'index'])->name('permissions.index');
         Route::get('/permissions/data', [App\Http\Controllers\HR\PermissionController::class, 'getData'])->name('permissions.data');
+        Route::get('/permissions/export', [App\Http\Controllers\HR\PermissionController::class, 'exportCsv'])->name('permissions.export');
         Route::post('/permissions', [App\Http\Controllers\HR\PermissionController::class, 'store'])->name('permissions.store');
 
         // Attendance

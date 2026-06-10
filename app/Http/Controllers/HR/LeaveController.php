@@ -123,6 +123,89 @@ class LeaveController extends Controller
         ]);
     }
 
+    public function exportCsv(Request $request)
+    {
+        $employeeId = $request->input('employee_id');
+        $search     = $request->input('search');
+        $typeId     = $request->input('type_id');
+        $statusId   = $request->input('status_id');
+        $startDate  = $request->input('start_date');
+        $endDate    = $request->input('end_date');
+
+        $query = HrLeave::with(['employee', 'type'])
+            ->orderBy('leave_id', 'desc');
+
+        if ($employeeId) $query->where('employee_id', $employeeId);
+        if ($search)     $query->where('leave_id', 'LIKE', "%$search%");
+        if ($typeId)     $query->where('leave_type_id', $typeId);
+        if ($statusId)   $query->where('leave_status_id', $statusId);
+        if ($startDate)  $query->whereDate('start_date', '>=', $startDate);
+        if ($endDate)    $query->whereDate('start_date', '<=', $endDate);
+
+        $leaves = $query->get();
+
+        $statusLabels = [
+            HrLeave::STATUS_PENDING          => 'Pending Manager',
+            HrLeave::STATUS_PENDING_APPROVAL => 'With Manager',
+            HrLeave::STATUS_PENDING_GM       => 'Pending GM',
+            HrLeave::STATUS_APPROVED         => 'Approved',
+            HrLeave::STATUS_REJECTED         => 'Rejected',
+            HrLeave::STATUS_ACTION_REQUIRED  => 'Pending Employee',
+        ];
+
+        $filename = 'leaves_export_' . now()->format('Ymd_His') . '.csv';
+
+        $headers = [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Pragma'              => 'no-cache',
+            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires'             => '0',
+        ];
+
+        $callback = function () use ($leaves, $statusLabels) {
+            $handle = fopen('php://output', 'w');
+
+            // UTF-8 BOM for Excel compatibility
+            fprintf($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+            // Header row
+            fputcsv($handle, [
+                'Ref #',
+                'Employee Name',
+                'Leave Type',
+                'Start Date',
+                'End Date',
+                'Total Days',
+                'Status',
+                'Remarks',
+                'Submission Date',
+            ]);
+
+            foreach ($leaves as $leave) {
+                $employeeName = $leave->employee
+                    ? $leave->employee->first_name . ' ' . $leave->employee->last_name
+                    : 'Unknown (' . $leave->employee_id . ')';
+
+                fputcsv($handle, [
+                    $leave->leave_id,
+                    $employeeName,
+                    $leave->type->leave_type_name ?? 'N/A',
+                    $leave->start_date ? $leave->start_date->format('Y-m-d') : '-',
+                    $leave->end_date   ? $leave->end_date->format('Y-m-d')   : '-',
+                    $leave->total_days ?? 0,
+                    $statusLabels[$leave->leave_status_id] ?? 'Unknown',
+                    $leave->leave_remarks ?? '',
+                    $leave->submission_date ? \Carbon\Carbon::parse($leave->submission_date)->format('Y-m-d') : '-',
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
     public function create()
     {
         $employees = Employee::where('is_deleted', 0)

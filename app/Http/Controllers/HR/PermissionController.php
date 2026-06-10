@@ -169,4 +169,77 @@ class PermissionController extends Controller
 
         return redirect()->back()->with('success', 'Permission Request Submitted');
     }
+
+    public function exportCsv(Request $request)
+    {
+        $employeeId = $request->input('employee_id');
+        $search     = $request->input('search');
+        $statusId   = $request->input('status_id');
+        $startDate  = $request->input('start_date');
+        $endDate    = $request->input('end_date');
+
+        $query = LeavePermission::with(['employee', 'status'])->orderBy('permission_id', 'desc');
+
+        if ($employeeId) $query->where('employee_id', $employeeId);
+        if ($search)     $query->where('permission_id', 'LIKE', "%$search%");
+        if ($statusId)   $query->where('permission_status_id', $statusId);
+        if ($startDate)  $query->whereDate('start_date', '>=', $startDate);
+        if ($endDate)    $query->whereDate('start_date', '<=', $endDate);
+
+        $permissions = $query->get();
+
+        $filename = 'permissions_export_' . now()->format('Ymd_His') . '.csv';
+
+        $headers = [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Pragma'              => 'no-cache',
+            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires'             => '0',
+        ];
+
+        $callback = function () use ($permissions) {
+            $handle = fopen('php://output', 'w');
+
+            // UTF-8 BOM for Excel compatibility
+            fprintf($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+            // Header row
+            fputcsv($handle, [
+                'Ref #',
+                'Employee Name',
+                'Date',
+                'Start Time',
+                'End Time',
+                'Total Hours',
+                'Status',
+                'Exception',
+                'Remarks',
+                'Submission Date',
+            ]);
+
+            foreach ($permissions as $p) {
+                $employeeName = $p->employee
+                    ? $p->employee->first_name . ' ' . $p->employee->last_name
+                    : 'Unknown (' . $p->employee_id . ')';
+
+                fputcsv($handle, [
+                    $p->permission_id,
+                    $employeeName,
+                    $p->start_date,
+                    $p->start_time,
+                    $p->end_time,
+                    $p->total_hours ?? 0,
+                    $p->status->permission_status_name ?? 'Pending',
+                    $p->is_exception ? 'Yes' : 'No',
+                    $p->permission_remarks ?? '',
+                    $p->submission_date ? \Carbon\Carbon::parse($p->submission_date)->format('Y-m-d') : '-',
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }
