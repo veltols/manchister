@@ -104,7 +104,7 @@
                                     </div>
                                 </td>
                                 <td class="text-center">
-                                    <span class="font-bold text-indigo-600">{{ $perm->total_hours }}h</span>
+                                    <span class="font-bold text-indigo-600">{{ (float)$perm->total_hours }}h</span>
                                 </td>
                                 <td class="max-w-xs">
                                     <p class="text-sm text-slate-500 truncate" title="{{ $perm->permission_remarks }}">
@@ -198,7 +198,7 @@
                                         </div>
                                     </td>
                                     <td class="text-center font-bold text-indigo-600 text-sm">
-                                        {{ $p->total_hours }}h
+                                        {{ (float)$p->total_hours }}h
                                     </td>
                                     <td>
                                         @php
@@ -392,7 +392,7 @@
                                 </div>
                             </td>
                             <td class="text-center">
-                                <span class="font-bold text-indigo-600">${perm.total_hours}h</span>
+                                <span class="font-bold text-indigo-600">${parseFloat(perm.total_hours)}h</span>
                             </td>
                             <td class="max-w-xs">
                                 <p class="text-sm text-slate-500 truncate" title="${perm.permission_remarks || ''}">

@@ -122,16 +122,16 @@
                     <div class="space-y-6 relative z-10">
                         <div class="flex justify-between items-center">
                             <span class="text-[10px] text-white/70 uppercase font-bold">Allowed</span>
-                            <span class="font-bold text-white">{{ $employee->allowed_permission_hours ?? 8 }} Hours</span>
+                            <span class="font-bold text-white">{{ (float)($employee->allowed_permission_hours ?? 8) }} Hours</span>
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-[10px] text-white/70 uppercase font-bold">Used</span>
-                            <span class="font-bold text-white">{{ $employee->permission_hours_balance ?? 0 }} Hours</span>
+                            <span class="font-bold text-white">{{ (float)($employee->permission_hours_balance ?? 0) }} Hours</span>
                         </div>
                         <div class="pt-4 border-t border-white/10 mt-4 flex justify-between items-center">
                             <span class="text-xs font-bold text-white/90">Remaining</span>
                             <span class="text-2xl font-black text-white">
-                                {{ max(0, ($employee->allowed_permission_hours ?? 8) - ($employee->permission_hours_balance ?? 0)) }}
+                                {{ (float)max(0, ($employee->allowed_permission_hours ?? 8) - ($employee->permission_hours_balance ?? 0)) }}
                                 <span class="text-xs font-bold opacity-50 ml-1">HRS</span>
                             </span>
                         </div>

@@ -94,7 +94,7 @@ class PermissionController extends Controller
         // Calculate total hours
         $start = \Carbon\Carbon::parse($request->start_time);
         $end = \Carbon\Carbon::parse($request->end_time);
-        $totalHours = ceil(abs($start->diffInMinutes($end, false)) / 60);
+        $totalHours = round(abs($start->diffInMinutes($end, false)) / 60, 2);
 
         // Check if employee has enough total permission hours remaining
         $employee = clone $user->employee;

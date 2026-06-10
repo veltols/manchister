@@ -61,7 +61,7 @@
         <div class="premium-card p-5 border-l-4 border-amber-500 bg-gradient-to-br from-white to-amber-50/30">
             <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Permission Balance</div>
             <div class="text-2xl font-display font-bold text-amber-900 mt-1">
-                {{ max(0, ($employee->allowed_permission_hours ?? 8) - ($employee->permission_hours_balance ?? 0)) }} / {{ $employee->allowed_permission_hours ?? 8 }} <span class="text-sm">Hrs</span>
+                {{ (float)max(0, ($employee->allowed_permission_hours ?? 8) - ($employee->permission_hours_balance ?? 0)) }} / {{ (float)($employee->allowed_permission_hours ?? 8) }} <span class="text-sm">Hrs</span>
             </div>
         </div>
         <div class="premium-card p-5 border-l-4 border-blue-500 bg-gradient-to-br from-white to-blue-50/30">
