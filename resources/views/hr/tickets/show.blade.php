@@ -308,7 +308,9 @@
                                 <option value="{{ $statusOpen }}" {{ $ticket->status_id == $statusOpen ? 'selected' : '' }}>Open</option>
                                 <option value="{{ $statusInProgress }}" {{ $ticket->status_id == $statusInProgress ? 'selected' : '' }}>In Progress</option>
                                 <option value="{{ $statusResolved }}" {{ $ticket->status_id == $statusResolved ? 'selected' : '' }}>Resolved</option>
+                                @if($ticket->added_by != Auth::user()->user_id)
                                 <option value="{{ $statusCancelled }}" {{ $ticket->status_id == $statusCancelled ? 'selected' : '' }}>Cancelled</option>
+                                @endif
                             </select>
                         </div>
                         
