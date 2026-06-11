@@ -178,7 +178,7 @@ class InboundController extends Controller
             'subject'               => 'required|string|max:500',
             'description'           => 'nullable|string',
             'purpose'               => 'nullable|string',
-            'attachments.*'         => 'nullable|file|mimes:pdf,doc,docx,jpg,png,jpeg|max:20480',
+            'attachments.*'         => 'nullable|file|max:20480',
         ]);
 
         $record->update([

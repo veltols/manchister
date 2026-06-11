@@ -87,8 +87,8 @@ class ProgramRegistrationController extends Controller
 
         $request->validate([
             'faculty_id' => 'required|integer',
-            'faculty_cv' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
-            'faculty_certificate' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+            'faculty_cv' => 'nullable|file|max:5120',
+            'faculty_certificate' => 'nullable|file|max:5120',
         ]);
 
         $updateData = [];

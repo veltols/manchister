@@ -155,7 +155,7 @@ class SupportTicketController extends Controller
             'priority_id'        => 'required|exists:sys_list_priorities,priority_id',
             'ticket_subject'     => 'required|string|max:255',
             'ticket_description' => 'required|string',
-            'ticket_attachment'  => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:8192'
+            'ticket_attachment'  => 'nullable|file|max:8192'
         ]);
 
         $attachmentPath = '';
@@ -220,7 +220,7 @@ class SupportTicketController extends Controller
             'ticket_remarks' => 'nullable|string',
             'category_id'    => 'required|exists:support_tickets_list_cats,category_id',
             'ticket_description' => 'required|string',
-            'ticket_attachment'  => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:8192',
+            'ticket_attachment'  => 'nullable|file|max:8192',
         ]);
 
         $ticket = SupportTicket::findOrFail($id);

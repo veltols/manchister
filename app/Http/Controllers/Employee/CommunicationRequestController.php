@@ -38,7 +38,7 @@ class CommunicationRequestController extends Controller
             'communication_type_id' => 'required',
             'priority' => 'required|in:low,medium,high',
             'confidentiality' => 'required|in:open,confidential,restricted',
-            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
+            'attachment' => 'nullable|file|max:10240',
         ]);
 
         $user = Auth::user();
@@ -151,7 +151,7 @@ class CommunicationRequestController extends Controller
             'communication_type_id' => 'required',
             'priority' => 'required|in:low,medium,high',
             'confidentiality' => 'required|in:open,confidential,restricted',
-            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
+            'attachment' => 'nullable|file|max:10240',
         ]);
 
         $comm = CommunicationRequest::findOrFail($id);

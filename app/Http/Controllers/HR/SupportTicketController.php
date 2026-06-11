@@ -244,7 +244,7 @@ class SupportTicketController extends Controller
             'ticket_remarks' => 'nullable|string',
             'category_id'    => 'required|exists:support_tickets_list_cats,category_id',
             'ticket_description' => 'required|string',
-            'ticket_attachment'  => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:8192',
+            'ticket_attachment'  => 'nullable|file|max:8192',
         ]);
 
         $userId = $user->user_id;

@@ -55,7 +55,7 @@ class OutboundLiaisonController extends Controller
         $liaisonId = $this->ensureLiaison();
 
         $request->validate([
-            'final_file' => 'required|file|mimes:pdf,jpg,png,docx|max:10240',
+            'final_file' => 'required|file|max:10240',
             'external_party_code' => 'required|string|max:50', // Entity code for ref
         ]);
 
