@@ -30,6 +30,7 @@ class TaskController extends Controller
                 ->where('assigned_by', $employeeId)
                 ->whereNotNull('pending_line_manager_id')
                 ->where('pending_line_manager_id', '!=', 0)
+                ->where('status_id', '!=', 5)
                 ->orderBy('task_id', 'desc')->paginate(15);
 
         } elseif ($viewMode === 'pending') {
@@ -160,7 +161,8 @@ class TaskController extends Controller
                 $query->where('assigned_by', $employeeId)
                     ->whereNotNull('pending_line_manager_id')
                     ->where('pending_line_manager_id', '!=', 0)
-                    ->where('is_rejected', 0);
+                    ->where('is_rejected', 0)
+                    ->where('status_id', '!=', 5);
                 break;
 
             case 'rejected':
@@ -590,6 +592,14 @@ class TaskController extends Controller
             ]);
 
             $task = Task::findOrFail($request->task_id);
+
+            // Deletion specific validations
+            if ($request->status_id == 5) {
+                if ($task->assigned_by != Auth::user()->employee->employee_id) {
+                    return response()->json(['success' => false, 'message' => 'Only the creator can delete this task.']);
+                }
+            }
+
             $oldStatus = $task->status ? $task->status->status_name : 'Unknown';
 
             $task->status_id = $request->status_id;

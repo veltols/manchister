@@ -580,6 +580,7 @@ Route::middleware('auth')->group(function () {
         // Assets
         Route::get('/assets', [App\Http\Controllers\Admin\AssetController::class, 'index'])->name('assets.index');
         Route::get('/assets/check-now', [App\Http\Controllers\Admin\AssetController::class, 'runAlerts'])->name('assets.check_now');
+        Route::get('/assets/data', [App\Http\Controllers\Admin\AssetController::class, 'getData'])->name('assets.data');
         Route::post('/assets', [App\Http\Controllers\Admin\AssetController::class, 'store'])->name('assets.store');
         Route::get('/assets/{id}', [App\Http\Controllers\Admin\AssetController::class, 'show'])->name('assets.show');
         Route::get('/assets/{id}/print', [App\Http\Controllers\Admin\AssetController::class, 'print'])->name('assets.print');
@@ -588,7 +589,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/assets/{id}/status', [App\Http\Controllers\Admin\AssetController::class, 'updateStatus'])->name('assets.update_status');
         Route::post('/assets/{id}/description', [App\Http\Controllers\Admin\AssetController::class, 'updateDescription'])->name('assets.update_description');
         Route::post('/assets/{id}/details', [App\Http\Controllers\Admin\AssetController::class, 'updateDetails'])->name('assets.update_details');
-        Route::get('/assets/data', [App\Http\Controllers\Admin\AssetController::class, 'getData'])->name('assets.data');
 
         // Users
         Route::get('/users', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');

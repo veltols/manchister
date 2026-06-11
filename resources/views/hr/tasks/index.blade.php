@@ -313,7 +313,7 @@
                         <i class="fa-solid fa-check text-xs"></i>
                         Update Status
                     </button>
-                    <button onclick="openSubtaskModal(activeTaskId)"
+                    <button onclick="openSubtaskModal(activeTaskId)" id="btn-subtask"
                         class="flex items-center gap-2 px-3 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-semibold rounded-xl transition-all">
                         <i class="fa-solid fa-plus text-xs"></i>
                         Subtask
@@ -324,6 +324,12 @@
                         Mark Complete
                     </button>
                 </div>
+
+                {{-- Delete Task Action (Moved outside so creator can delete when submitted) --}}
+                <button onclick="deleteTask()" id="btn-delete-task" class="hidden flex items-center gap-2 px-3 py-2 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 hover:text-rose-800 text-sm font-semibold rounded-xl transition-all hover:scale-105 active:scale-95">
+                    <i class="fa-solid fa-trash text-xs"></i>
+                    Delete
+                </button>
 
                 {{-- Approval Actions (Visible to Line Manager) --}}
                 <div id="task-approval-actions" class="hidden flex items-center gap-3">
@@ -632,9 +638,11 @@
                     <select name="status_id" id="update-status-id" class="premium-input w-full px-4 py-3" required
                         onchange="onStatusChange(this)">
                         @foreach($statuses as $status)
+                            @if($status->status_id != 5 && strtolower($status->status_name) != 'deleted')
                             <option value="{{ $status->status_id }}" data-name="{{ strtolower($status->status_name) }}">
                                 {{ $status->status_name }}
                             </option>
+                            @endif
                         @endforeach
                     </select>
                 </div>
@@ -960,16 +968,54 @@
 
                     // Reset Mark Complete button based on current status
                     const btnMc = document.getElementById('btn-mark-complete');
+                    const btnUpdate = document.getElementById('btn-update-status');
+                    const btnSubtask = document.getElementById('btn-subtask');
+                    const btnDelete = document.getElementById('btn-delete-task');
+                    
+                    const isDone = task.status_id == 4 || task.status_id == 3 || task.task_progress >= 100;
+                    const isDeleted = task.status_id == 5 || (task.status && task.status.status_name && task.status.status_name.toLowerCase() === 'deleted');
+                    const currentEmpId = {{ Auth::user()->employee ? Auth::user()->employee->employee_id : (Auth::user()->id ?? 0) }};
+                    const creatorObj = task.assignedBy || task.assigned_by;
+                    const creatorId = creatorObj && typeof creatorObj === 'object' ? creatorObj.employee_id : task.assigned_by;
+                    const isCreator = creatorId == currentEmpId;
+
                     if (btnMc) {
-                        const isDone = task.status_id == 4 || task.task_progress >= 100;
-                        if (isDone) {
+                        if (isDeleted) {
+                            btnMc.classList.add('hidden');
+                        } else if (isDone) {
+                            btnMc.classList.remove('hidden');
                             btnMc.innerHTML = '<i class="fa-solid fa-circle-check text-xs"></i> Completed!';
                             btnMc.className = 'flex items-center gap-2 px-3 py-2 bg-emerald-500 text-white text-sm font-semibold rounded-xl cursor-default';
                             btnMc.disabled = true;
                         } else {
+                            btnMc.classList.remove('hidden');
                             btnMc.innerHTML = '<i class="fa-solid fa-circle-check text-xs"></i> Mark Complete';
                             btnMc.className = 'flex items-center gap-2 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 hover:text-emerald-800 text-sm font-semibold rounded-xl transition-all hover:scale-105 active:scale-95';
                             btnMc.disabled = false;
+                        }
+                    }
+
+                    if (btnUpdate) {
+                        if (isDone || isDeleted) {
+                            btnUpdate.classList.add('hidden');
+                        } else {
+                            btnUpdate.classList.remove('hidden');
+                        }
+                    }
+
+                    if (btnSubtask) {
+                        if (isDone || isDeleted) {
+                            btnSubtask.classList.add('hidden');
+                        } else {
+                            btnSubtask.classList.remove('hidden');
+                        }
+                    }
+
+                    if (btnDelete) {
+                        if (isDeleted || !isCreator) {
+                            btnDelete.classList.add('hidden');
+                        } else {
+                            btnDelete.classList.remove('hidden');
                         }
                     }
 
@@ -992,7 +1038,6 @@
                     document.getElementById('drawer-progress-text').innerText = `${prog}%`;
 
                     // ── Approval Logic Toggles ──────────────────────────
-                    const currentEmpId = {{ Auth::user()->employee ? Auth::user()->employee->employee_id : 0 }};
                     const isPending = task.pending_line_manager_id && task.pending_line_manager_id != 0;
                     const canApprove = isPending && task.pending_line_manager_id == currentEmpId;
                     const isSubmitter = isPending && task.assigned_by == currentEmpId;
@@ -1368,6 +1413,64 @@
                     const result = await res.json();
                     if (result.success) { closeModal('updateStatusModal'); window.location.reload(); }
                 } catch (err) { console.error(err); }
+            }
+
+            async function deleteTask() {
+                if (!activeTaskId) return;
+
+                Swal.fire({
+                    title: 'Delete Task?',
+                    text: "Are you sure you want to delete this task? This action cannot be undone.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#e11d48',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        const btn = document.getElementById('btn-delete-task');
+                        if(btn) {
+                            btn.disabled = true;
+                            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-xs"></i> Deleting...';
+                        }
+
+                        try {
+                            const fd = new FormData();
+                            fd.append('task_id', activeTaskId);
+                            fd.append('status_id', 5);
+                            fd.append('task_progress', document.getElementById('drawer-progress-text').innerText.replace('%', ''));
+                            fd.append('log_remark', 'Task was deleted by creator.');
+
+                            const res = await fetch("{{ route('hr.tasks.status.update') }}", {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                },
+                                body: fd
+                            });
+                            const data = await res.json();
+                            if (data.success) {
+                                Swal.fire({ icon: 'success', title: 'Deleted!', text: 'Task marked as deleted.', timer: 1500, showConfirmButton: false }).then(() => {
+                                    window.location.reload();
+                                });
+                            } else {
+                                if(btn) {
+                                    btn.disabled = false;
+                                    btn.innerHTML = '<i class="fa-solid fa-trash text-xs"></i> Delete';
+                                }
+                                Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Could not delete task.' });
+                            }
+                        } catch (e) {
+                            console.error(e);
+                            if(btn) {
+                                btn.disabled = false;
+                                btn.innerHTML = '<i class="fa-solid fa-trash text-xs"></i> Delete';
+                            }
+                        }
+                    }
+                });
             }
 
             // ── Modal Helpers ────────────────────────────────────────────

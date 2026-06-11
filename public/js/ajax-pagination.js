@@ -35,7 +35,7 @@ class AjaxPagination {
     }
 
     async loadPage(page, updateHistory = true) {
-        if (this.isLoading) return;
+        if (this.isLoading) return Promise.resolve();
 
         this.isLoading = true;
         this.currentPage = page;
@@ -60,8 +60,12 @@ class AjaxPagination {
             const result = await response.json();
 
             if (result.success) {
-                // Update content
-                this.renderCallback(result.data);
+                // Update content via renderCallback
+                const container = document.querySelector(this.containerSelector);
+                const html = this.renderCallback(result.data, result);
+                if (container && html !== undefined) {
+                    container.innerHTML = html;
+                }
 
                 // Update pagination
                 this.renderPagination(result.pagination);
@@ -85,7 +89,6 @@ class AjaxPagination {
                 }
 
                 // Scroll to top smoothly
-                const container = document.querySelector(this.containerSelector);
                 if (container) {
                     container.scrollIntoView({
                         behavior: 'smooth',

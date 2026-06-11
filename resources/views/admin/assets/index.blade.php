@@ -51,6 +51,25 @@
                     </select>
                 </div>
             </div>
+
+            <!-- Search Bar -->
+            <div class="mt-4 pt-4 border-t border-slate-100">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i class="fa-solid fa-magnifying-glass text-slate-400 text-sm"></i>
+                    </div>
+                    <input type="text" 
+                           id="assetSearch" 
+                           placeholder="Search by asset name, ref number, serial, or category..."
+                           value="{{ request('search') }}"
+                           class="premium-input w-full pl-11 pr-10 py-3 text-sm"
+                           oninput="debounceSearch(this.value)">
+                    <button id="clearSearch" onclick="clearSearchInput()" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors" style="display: none;">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+                <p id="searchResultInfo" class="text-xs text-slate-400 mt-2 hidden"></p>
+            </div>
         </div>
 
         <!-- Assets List -->
@@ -390,11 +409,15 @@
         function closeStatusModal() { closeModal('statusModal'); }
 
         // Initialize AJAX Pagination
+        let currentSearch = "{{ request('search') }}";
         window.ajaxPagination = new AjaxPagination({
             endpoint: "{{ route('admin.assets.data') }}",
-            extraParams: {
-                stt: "{{ $stt }}",
-                status_id: "{{ request('status_id') }}"
+            getAdditionalParams: function() {
+                return {
+                    stt: "{{ $stt }}",
+                    status_id: "{{ request('status_id') }}",
+                    search: currentSearch
+                };
             },
             containerSelector: '#assets-container',
             paginationSelector: '#assets-pagination',
@@ -542,6 +565,50 @@
             }
             window.location.href = url.toString();
         }
+
+        // Search functionality
+        let searchTimeout = null;
+        function debounceSearch(value) {
+            clearTimeout(searchTimeout);
+            const clearBtn = document.getElementById('clearSearch');
+            clearBtn.style.display = value ? 'flex' : 'none';
+            searchTimeout = setTimeout(() => { doSearch(value); }, 400);
+        }
+
+        async function doSearch(value) {
+            const infoEl = document.getElementById('searchResultInfo');
+            currentSearch = value;
+            if (value) {
+                infoEl.textContent = `Searching...`;
+                infoEl.classList.remove('hidden');
+            }
+            await window.ajaxPagination.loadPage(1);
+            if (value) {
+                // Read the total from the rendered pagination info if available
+                const paginationContainer = document.querySelector('#assets-pagination');
+                const totalMatch = paginationContainer ? paginationContainer.innerText.match(/of\s+([\d,]+)\s+results/) : null;
+                const total = totalMatch ? totalMatch[1] : '?';
+                infoEl.textContent = `Found ${total} result(s) for "${value}"`;
+                infoEl.classList.remove('hidden');
+            } else {
+                infoEl.classList.add('hidden');
+            }
+        }
+
+        function clearSearchInput() {
+            document.getElementById('assetSearch').value = '';
+            document.getElementById('clearSearch').style.display = 'none';
+            document.getElementById('searchResultInfo').classList.add('hidden');
+            doSearch('');
+        }
+
+        // Show clear button if search already has a value on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const searchVal = document.getElementById('assetSearch').value;
+            if (searchVal) {
+                document.getElementById('clearSearch').style.display = 'flex';
+            }
+        });
 
         function revokeAsset(event, form) {
             event.preventDefault();

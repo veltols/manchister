@@ -19,11 +19,23 @@ class AssetController extends Controller
     {
         $stt = $request->input('stt', 0); // 0=All, 1=About to Expire, 2=Expired
         $statusId = $request->input('status_id');
+        $search = $request->input('search');
 
         $query = Asset::with(['category', 'assignee', 'assignedBy', 'status']);
 
         if ($statusId) {
             $query->where('status_id', $statusId);
+        }
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('asset_name', 'like', "%{$search}%")
+                  ->orWhere('asset_ref', 'like', "%{$search}%")
+                  ->orWhere('asset_serial', 'like', "%{$search}%")
+                  ->orWhereHas('category', function($cq) use ($search) {
+                      $cq->where('category_name', 'like', "%{$search}%");
+                  });
+            });
         }
 
         if ($stt == 1) {
@@ -65,8 +77,48 @@ class AssetController extends Controller
             'expiry_date' => 'nullable|date',
         ]);
 
+        // Category code mapping for reference numbers
+        $categoryCodes = [
+            'desktop'  => 'DT',
+            'monitor'  => 'MN',
+            'printer'  => 'PN',
+            'avaya'    => 'AV',
+            'laptop'   => 'LT',
+            'server'   => 'SV',
+            'phone'    => 'PH',
+            'tablet'   => 'TB',
+            'scanner'  => 'SC',
+            'router'   => 'RT',
+            'switch'   => 'SW',
+            'camera'   => 'CM',
+            'ups'      => 'UP',
+        ];
+
+        // Get the category name and generate code
+        $category = AssetCategory::find($request->category_id);
+        $catName = $category ? strtolower($category->category_name) : 'general';
+        $catCode = 'GN'; // default
+        foreach ($categoryCodes as $keyword => $code) {
+            if (str_contains($catName, $keyword)) {
+                $catCode = $code;
+                break;
+            }
+        }
+
+        // Get the last sequential number for this category code
+        $lastAsset = Asset::where('asset_ref', 'like', "IQC-{$catCode}-%")
+            ->orderBy('asset_id', 'desc')
+            ->first();
+        $nextNum = 1;
+        if ($lastAsset) {
+            $parts = explode('-', $lastAsset->asset_ref);
+            $lastNum = isset($parts[2]) ? intval($parts[2]) : 0;
+            $nextNum = $lastNum + 1;
+        }
+        $refNumber = 'IQC-' . $catCode . '-' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
+
         $asset = new Asset();
-        $asset->asset_ref = 'AST-' . strtoupper(uniqid());
+        $asset->asset_ref = $refNumber;
         $asset->asset_sku = $request->asset_sku ?: 'SKU-' . date('Ym') . '-' . strtoupper(substr(md5(uniqid()), 0, 6));
         $asset->asset_name = $request->asset_name;
         $asset->category_id = $request->category_id;
@@ -235,12 +287,24 @@ class AssetController extends Controller
     {
         $stt = $request->input('stt', 0);
         $statusId = $request->input('status_id');
+        $search = $request->input('search');
         $perPage = $request->get('per_page', 15);
 
         $query = Asset::with(['category', 'assignee', 'assignedBy', 'status']);
 
         if ($statusId) {
             $query->where('status_id', $statusId);
+        }
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('asset_name', 'like', "%{$search}%")
+                  ->orWhere('asset_ref', 'like', "%{$search}%")
+                  ->orWhere('asset_serial', 'like', "%{$search}%")
+                  ->orWhereHas('category', function($cq) use ($search) {
+                      $cq->where('category_name', 'like', "%{$search}%");
+                  });
+            });
         }
 
         if ($stt == 1) {

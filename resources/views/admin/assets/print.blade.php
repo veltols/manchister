@@ -10,7 +10,7 @@
             @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Print Asset Label - {{ $asset->asset_serial }}</title>
+    <title>Print Asset Label - {{ $asset->asset_ref }}</title>
     <link rel="icon" type="image/png" href="{{ $favUrl }}">
     <script src="{{ asset('libs/tailwindcss/tailwind.min.js') }}"></script>
     <link rel="stylesheet" href="{{ asset('libs/fonts/fonts.css') }}">
@@ -64,27 +64,51 @@
     </div>
 
     <!-- Label Card -->
-    <div class="bg-white p-8 label-container">
-        <div class="flex flex-col items-center justify-center">
-            <!-- Barcode -->
-            <div class="flex justify-center">
+    <div class="bg-white rounded-2xl p-8 label-container shadow-xl max-w-sm mx-auto">
+        <div class="flex flex-col items-center justify-center gap-4">
+            <!-- Company Header -->
+            {{-- <div class="flex items-center gap-3 w-full border-b border-slate-200 pb-4">
+                <img src="{{ $logoUrl }}" alt="Logo" class="h-8 object-contain">
+                <div>
+                    <p class="text-xs font-bold text-slate-700 uppercase tracking-widest">Asset Label</p>
+                    <p class="text-[10px] text-slate-400">IQC Asset Management</p>
+                </div>
+            </div> --}}
+
+            <!-- Asset Info -->
+            {{-- <div class="w-full text-center">
+                <p class="text-lg font-bold text-slate-800">{{ $asset->asset_name }}</p>
+                <p class="text-xs text-slate-500">{{ $asset->category->category_name ?? 'General' }}</p>
+            </div> --}}
+
+            <!-- Barcode using asset_ref -->
+            <div class="flex justify-center w-full">
                 <svg id="barcode"></svg>
+            </div>
+
+            <!-- Ref Number -->
+            <div class="w-full text-center border-t border-slate-100 pt-3">
+                <p class="text-[11px] text-slate-400 uppercase tracking-widest">Reference No.</p>
+                <p class="text-base font-mono font-bold text-slate-700">{{ $asset->asset_ref }}</p>
+                @if($asset->assigned_to && $asset->assignee)
+                <p class="text-xs text-indigo-600 font-semibold mt-1">Assigned: {{ $asset->assignee->first_name }} {{ $asset->assignee->last_name }}</p>
+                @endif
             </div>
         </div>
     </div>
 
     <script>
-        JsBarcode("#barcode", "{{ $asset->asset_serial }}", {
+        JsBarcode("#barcode", "{{ $asset->asset_ref }}", {
             format: "CODE128",
             width: 2,
             height: 60,
-            displayValue: true,
+            displayValue: false,
             fontSize: 14,
             font: "Inter",
             textMargin: 8,
             marginTop: 10,
             marginBottom: 10,
-            lineColor: "#334155" // slate-700
+            lineColor: "#334155"
         });
 
         // Auto print on load (optional)

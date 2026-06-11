@@ -122,20 +122,86 @@
         </div>
 
         <!-- Quick Links to Document Types -->
-        <div class="premium-card p-6">
-            <h3 class="text-lg font-display font-bold text-premium mb-6">Available Document Types</h3>
-            <div class="flex flex-wrap gap-4">
-                @foreach($documentTypes as $type)
-                    <div
-                        class="px-5 py-3 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-3 hover:bg-white hover:shadow-md transition-all">
-                        <div class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-brand-dark">
-                            <i class="{{ $type->document_type_icon ?? 'fa-solid fa-file' }}"></i>
-                        </div>
-                        <span class="font-bold text-slate-700 text-sm">{{ $type->document_type_name }}</span>
+      <div class="premium-card p-6">
+    <h3 class="text-lg font-display font-bold text-premium mb-6">
+        Available Document Types
+    </h3>
+
+    <div class="space-y-5">
+        @foreach($documentTypes as $type)
+            <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+
+                <!-- TYPE HEADER -->
+                <div class="px-5 py-4 bg-slate-50 border-b border-slate-200 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-brand-dark">
+                        <i class="{{ $type->document_type_icon ?? 'fa-solid fa-folder' }}"></i>
                     </div>
-                @endforeach
+
+                    <div>
+                        <h4 class="font-bold text-slate-800">
+                            {{ $type->document_type_name }}
+                        </h4>
+                        <p class="text-xs text-slate-500">
+                            {{ $type->documents->count() }} Document(s)
+                        </p>
+                    </div>
+                </div>
+
+                <!-- DOCUMENT LIST -->
+                <div class="p-4">
+
+                    @forelse($type->documents as $document)
+                        <div class="flex items-start justify-between p-3 rounded-xl border border-slate-100 hover:bg-slate-50 transition">
+
+                            <!-- LEFT SIDE -->
+                            <div class="flex items-start gap-3">
+
+                                <div class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mt-1">
+                                    <i class="fa-solid fa-file"></i>
+                                </div>
+
+                                <div>
+                                    <!-- TITLE -->
+                                    <p class="font-semibold text-slate-700">
+                                        {{ $document->document_title }}
+                                    </p>
+
+                                    <!-- DESCRIPTION -->
+                                    @if(!empty($document->document_description))
+                                        <p class="text-xs text-slate-500 mt-1">
+                                            {{ $document->document_description }}
+                                        </p>
+                                    @endif
+                                </div>
+
+                            </div>
+
+                            <!-- RIGHT SIDE (DOWNLOAD ONLY IF ATTACHMENT EXISTS) -->
+                            <div>
+                                @if(!empty($document->document_attachment ) && $document->document_attachment != 'no-img.png')
+                                    <a href="{{ asset('uploads/' . $document->document_attachment) }}"
+                                       download
+                                       class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-600 hover:text-white transition text-sm">
+                                        <i class="fa-solid fa-download"></i>
+                                        Download
+                                    </a>
+                                @endif
+                            </div>
+
+                        </div>
+                    @empty
+                        <div class="text-center py-5 text-slate-400">
+                            <i class="fa-regular fa-folder-open text-2xl mb-2"></i>
+                            <p>No documents available in this type.</p>
+                        </div>
+                    @endforelse
+
+                </div>
+
             </div>
-        </div>
+        @endforeach
+    </div>
+</div>
 
     </div>
 
