@@ -254,6 +254,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/groups/{id}/upload', [App\Http\Controllers\Employee\GroupController::class, 'upload'])->name('groups.upload');
         Route::delete('/groups/{id}/member/{member_id}', [App\Http\Controllers\Employee\GroupController::class, 'removeMember'])->name('groups.member.remove');
         Route::post('/groups/{id}/archive', [App\Http\Controllers\Employee\GroupController::class, 'archiveGroup'])->name('groups.archive');
+        Route::post('/groups/{id}/delete', [App\Http\Controllers\Employee\GroupController::class, 'deleteGroup'])->name('groups.delete');
         Route::post('/groups/{id}/restore', [App\Http\Controllers\Employee\GroupController::class, 'restoreGroup'])->name('groups.restore');
         Route::post('/groups/{id}/copy', [App\Http\Controllers\Employee\GroupController::class, 'copyGroup'])->name('groups.copy');
         Route::post('/groups/{id}/update', [App\Http\Controllers\Employee\GroupController::class, 'updateGroup'])->name('groups.update');

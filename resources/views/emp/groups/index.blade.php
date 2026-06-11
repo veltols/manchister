@@ -64,6 +64,11 @@ $authUser = Auth::user();
                                         <i class="fa-solid fa-box-archive w-4"></i> Archive
                                     </button>
                                     @endif
+                                    @if($authUser && $authUser->is_gm)
+                                     <button onclick="deleteGroupList(event, {{ $group->group_id }})" class="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-amber-600 flex items-center gap-2">
+                                        <i class="fa-solid fa-trash w-4"></i> Delete
+                                    </button>
+                                    @endif
                                     @if($group->added_by == (Auth::user()->employee->employee_id ?? 0))
                                     <button onclick="editGroupFromMenu(event, {{ $group->group_id }})" class="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-blue-600 flex items-center gap-2">
                                         <i class="fa-solid fa-pen-to-square w-4"></i> Edit
@@ -1443,6 +1448,29 @@ $authUser = Auth::user();
                 if (result.isConfirmed) {
                     try {
                         const response = await fetch(`{{ url('emp/groups') }}/${id}/archive`, {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                        });
+                        const res = await response.json();
+                        if(res.success) window.location.reload();
+                    } catch(e) { console.error(e); }
+                }
+            });
+        }
+
+         async function deleteGroupList(event, id) {
+            event.stopPropagation();
+            toggleGroupMenu(event, id);
+            Swal.fire({
+                title: 'Delete Team?',
+                text: "It will be removed from your active lists.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Delete it'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`{{ url('emp/groups') }}/${id}/delete`, {
                             method: 'POST',
                             headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
                         });

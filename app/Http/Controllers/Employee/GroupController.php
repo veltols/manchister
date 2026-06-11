@@ -274,6 +274,20 @@ class GroupController extends Controller
         $group->save();
         return response()->json(['success' => true, 'message' => 'Group archived']);
     }
+    public function deleteGroup(Request $request, $id)
+    {
+        $employeeId = Auth::user()->employee->employee_id ?? 0;
+        $isMember = GroupMember::where('group_id', $id)->where('employee_id', $employeeId)->exists();
+        $group = Group::findOrFail($id);
+        
+        if (!$isMember && $group->added_by != $employeeId) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+        
+        $group->is_deleted = 1;
+        $group->save();
+        return response()->json(['success' => true, 'message' => 'Group Deleted']);
+    }
 
     public function restoreGroup(Request $request, $id)
     {
