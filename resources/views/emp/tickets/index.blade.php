@@ -52,6 +52,17 @@
                     class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 4 ? 'bg-slate-700 text-white shadow-lg' : 'text-slate-500 hover:text-slate-700' }}">
                     Cancelled
                 </a>
+                @php
+                    $myEmpId = Auth::user()->employee->employee_id ?? 0;
+                    $isLM = \App\Models\Department::where('line_manager_id', $myEmpId)->exists();
+                    $isGM = Auth::user()->is_gm;
+                @endphp
+                @if($isLM || $isGM)
+                <a href="{{ route('emp.tickets.index', ['stt' => 5]) }}"
+                    class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all {{ $stt == 5 ? 'bg-gradient-brand text-white shadow-lg' : 'text-slate-500 hover:text-brand-dark' }}">
+                    Pending Approvals
+                </a>
+                @endif
             </div>
             <form action="{{ route('emp.tickets.index') }}" method="GET" class="flex gap-2 w-full sm:w-auto">
                 @if(request('stt'))

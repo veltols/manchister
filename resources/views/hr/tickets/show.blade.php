@@ -21,7 +21,15 @@
                 $statusCancelled = \App\Models\SupportTicketStatus::CANCELLED;
             @endphp
 
-            @if($ticket->status_id == $statusResolved)
+            @if(in_array($ticket->approval_status, ['pending_lm', 'pending_gm']))
+                <button disabled
+                    class="px-5 py-3 bg-slate-100 border border-slate-200 text-slate-400 font-bold rounded-xl shadow-sm cursor-not-allowed flex items-center gap-2">
+                    <i class="fa-solid fa-lock text-sm"></i>
+                    <span>Locked (Awaiting Approval)</span>
+                </button>
+            @elseif($ticket->approval_status == 'rejected')
+                <!-- Approval is rejected, do not show Edit Ticket / Status button -->
+            @elseif($ticket->status_id == $statusResolved)
                 <button onclick="reopenTicket()"
                     class="px-6 py-3 bg-brand text-white font-bold rounded-xl shadow-lg hover:bg-brand-dark hover:scale-105 transition-all duration-200 flex items-center gap-2">
                     <i class="fa-solid fa-rotate-left text-sm"></i>
@@ -299,41 +307,18 @@
                         @endif
                     </div>
                     
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">
-                                <i class="fa-solid fa-spinner text-indigo-500 mr-1.5"></i>Status
-                            </label>
-                            <select name="status_id" class="premium-input w-full px-4 py-3 text-sm" required>
-                                <option value="{{ $statusOpen }}" {{ $ticket->status_id == $statusOpen ? 'selected' : '' }}>Open</option>
-                                <option value="{{ $statusInProgress }}" {{ $ticket->status_id == $statusInProgress ? 'selected' : '' }}>In Progress</option>
-                                <option value="{{ $statusResolved }}" {{ $ticket->status_id == $statusResolved ? 'selected' : '' }}>Resolved</option>
-                                @if($ticket->added_by != Auth::user()->user_id)
-                                <option value="{{ $statusCancelled }}" {{ $ticket->status_id == $statusCancelled ? 'selected' : '' }}>Cancelled</option>
-                                @endif
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">
-                                <i class="fa-solid fa-user-shield text-indigo-500 mr-1.5"></i>Assign To (Optional)
-                            </label>
-                            <select name="assigned_to" class="premium-input w-full px-4 py-3 text-sm">
-                                <option value="">-- Keep Current --</option>
-                               
-                                @foreach($groupedEmployees as $dept)
-                                    @if($dept->employees->count() > 0)
-                                        <optgroup label="{{ $dept->department_name }}">
-                                            @foreach($dept->employees as $emp)
-                                                <option value="{{ $emp->employee_id }}" {{ $ticket->assigned_to == $emp->employee_id ? 'selected' : '' }}>
-                                                    {{ $emp->first_name }} {{ $emp->last_name }}
-                                                </option>
-                                            @endforeach
-                                        </optgroup>
-                                    @endif
-                                @endforeach
-                            </select>
-                        </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-spinner text-indigo-500 mr-1.5"></i>Status
+                        </label>
+                        <select name="status_id" class="premium-input w-full px-4 py-3 text-sm" required>
+                            <option value="{{ $statusOpen }}" {{ $ticket->status_id == $statusOpen ? 'selected' : '' }}>Open</option>
+                            <option value="{{ $statusInProgress }}" {{ $ticket->status_id == $statusInProgress ? 'selected' : '' }}>In Progress</option>
+                            <option value="{{ $statusResolved }}" {{ $ticket->status_id == $statusResolved ? 'selected' : '' }}>Resolved</option>
+                            @if($ticket->added_by != Auth::user()->user_id)
+                            <option value="{{ $statusCancelled }}" {{ $ticket->status_id == $statusCancelled ? 'selected' : '' }}>Cancelled</option>
+                            @endif
+                        </select>
                     </div>
 
                 </div>

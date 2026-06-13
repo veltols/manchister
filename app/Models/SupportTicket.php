@@ -61,6 +61,11 @@ class SupportTicket extends Model
             ->latest('log_id');
     }
 
+    public function approvalApprover()
+    {
+        return $this->belongsTo(Employee::class, 'approval_sent_to', 'employee_id');
+    }
+
     public static function generateReference()
     {
         $yearMonth = now()->format('y') . now()->format('m'); // e.g. "2605"

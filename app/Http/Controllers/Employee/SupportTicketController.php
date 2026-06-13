@@ -49,10 +49,12 @@ class SupportTicketController extends Controller
             }
         }
 
+        $employeeId = $user->employee ? $user->employee->employee_id : 0;
         $query = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'latestLog.logger'])
-            ->where(function($q) use ($user) {
+            ->where(function($q) use ($user, $employeeId) {
                 $q->where('added_by', $user->user_id)
-                  ->orWhere('assigned_to', $user->user_id);
+                  ->orWhere('assigned_to', $user->user_id)
+                  ->orWhere('approval_sent_to', $employeeId);
             });
 
         // Filter by Status
@@ -68,6 +70,9 @@ class SupportTicketController extends Controller
             }
         } elseif ($stt == \App\Models\SupportTicketStatus::CANCELLED) { // Cancelled
             $query->where('status_id', \App\Models\SupportTicketStatus::CANCELLED);
+        } elseif ($stt == 5) {
+            $query->whereIn('approval_status', ['pending_lm', 'pending_gm'])
+                  ->where('approval_sent_to', $employeeId);
         }
 
         if ($request->filled('search')) {
@@ -211,11 +216,14 @@ class SupportTicketController extends Controller
 
     public function show($id)
     {
-        $userId = Auth::user()->user_id;
-        $ticket = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'logs.logger', 'latestLog.logger'])
-            ->where(function($q) use ($userId) {
+        $user = Auth::user();
+        $userId = $user->user_id;
+        $employeeId = $user->employee ? $user->employee->employee_id : 0;
+        $ticket = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'logs.logger', 'latestLog.logger', 'approvalApprover'])
+            ->where(function($q) use ($userId, $employeeId) {
                 $q->where('added_by', $userId)
-                  ->orWhere('assigned_to', $userId);
+                  ->orWhere('assigned_to', $userId)
+                  ->orWhere('approval_sent_to', $employeeId);
             })
             ->findOrFail($id);
 
@@ -281,6 +289,30 @@ class SupportTicketController extends Controller
         $currentStatusId = (int)$ticket->status_id;
         $newStatusId = (int)$request->status_id;
         $statusResolved = \App\Models\SupportTicketStatus::RESOLVED;
+
+        if ($currentStatusId != $newStatusId) {
+            $statusOpen = \App\Models\SupportTicketStatus::OPEN;
+            $statusInProgress = \App\Models\SupportTicketStatus::IN_PROGRESS;
+            $statusCancelled = \App\Models\SupportTicketStatus::CANCELLED;
+
+            if ($currentStatusId == $statusOpen) {
+                if (!in_array($newStatusId, [$statusInProgress, $statusCancelled])) {
+                    return redirect()->back()->with('error', 'From Open, you can only move to In Progress or Cancelled.');
+                }
+            } elseif ($currentStatusId == $statusInProgress) {
+                if (!in_array($newStatusId, [$statusResolved, $statusCancelled])) {
+                    return redirect()->back()->with('error', 'From In Progress, you can only move to Resolved or Cancelled.');
+                }
+            } elseif ($currentStatusId == $statusResolved) {
+                if ($newStatusId != $statusOpen) {
+                    return redirect()->back()->with('error', 'Resolved tickets can only be Reopened.');
+                }
+            } elseif ($currentStatusId == $statusCancelled) {
+                if ($newStatusId != $statusOpen) {
+                    return redirect()->back()->with('error', 'Cancelled tickets can only be Reopened.');
+                }
+            }
+        }
 
         $ticket->ticket_subject = $request->ticket_subject;
         $ticket->priority_id    = $request->priority_id;
@@ -413,10 +445,12 @@ class SupportTicketController extends Controller
         $stt = $request->input('stt', 0);
         $perPage = $request->get('per_page', 10);
 
+        $employeeId = $user->employee ? $user->employee->employee_id : 0;
         $query = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'latestLog.logger'])
-            ->where(function($q) use ($user) {
+            ->where(function($q) use ($user, $employeeId) {
                 $q->where('added_by', $user->user_id)
-                  ->orWhere('assigned_to', $user->user_id);
+                  ->orWhere('assigned_to', $user->user_id)
+                  ->orWhere('approval_sent_to', $employeeId);
             });
 
         if ($stt == \App\Models\SupportTicketStatus::OPEN) {
@@ -427,6 +461,9 @@ class SupportTicketController extends Controller
             $query->where('status_id', \App\Models\SupportTicketStatus::RESOLVED);
         } elseif ($stt == 4) {
             $query->where('status_id', \App\Models\SupportTicketStatus::OPEN)->where('assigned_to', 0);
+        } elseif ($stt == 5) {
+            $query->whereIn('approval_status', ['pending_lm', 'pending_gm'])
+                  ->where('approval_sent_to', $employeeId);
         }
 
         if ($request->filled('search')) {
@@ -451,5 +488,102 @@ class SupportTicketController extends Controller
                 'to' => $tickets->lastItem(),
             ]
         ]);
+    }
+
+    public function approve(Request $request, $id)
+    {
+        $request->validate([
+            'remarks' => 'nullable|string'
+        ]);
+
+        $user = Auth::user();
+        $employeeId = $user->employee ? $user->employee->employee_id : 0;
+        $ticket = SupportTicket::findOrFail($id);
+
+        if ((int)$ticket->approval_sent_to !== $employeeId || !in_array($ticket->approval_status, ['pending_lm', 'pending_gm'])) {
+            return redirect()->back()->with('error', 'Unauthorized — this ticket is not awaiting your approval.');
+        }
+
+        $ticket->approval_status = 'approved';
+        $ticket->approval_remarks = $request->remarks;
+        $ticket->approval_action_date = now();
+        $ticket->save();
+
+        // Log System Action
+        $log = new \App\Models\SystemLog();
+        $log->related_table = 'support_tickets_list';
+        $log->related_id = $ticket->ticket_id;
+        $log->log_action = 'Ticket Approved';
+        $log->log_remark = 'Approved by manager. Remarks: ' . ($request->remarks ?? 'None');
+        $log->log_date = now();
+        $log->logged_by = $employeeId;
+        $log->logger_type = 'employees_list';
+        $log->log_type = 'int';
+        $log->save();
+
+        // Notify Admin (ID 1)
+        \App\Services\NotificationService::send(
+            "Ticket (Ref: {$ticket->ticket_ref}) has been APPROVED.",
+            "tickets/{$ticket->ticket_id}",
+            1
+        );
+
+        // Notify Creator
+        \App\Services\NotificationService::send(
+            "Your ticket (Ref: {$ticket->ticket_ref}) has been APPROVED.",
+            "tickets/{$ticket->ticket_id}",
+            $ticket->added_by
+        );
+
+        return redirect()->back()->with('success', 'Ticket approved successfully.');
+    }
+
+    public function reject(Request $request, $id)
+    {
+        $request->validate([
+            'remarks' => 'required|string|min:5'
+        ]);
+
+        $user = Auth::user();
+        $employeeId = $user->employee ? $user->employee->employee_id : 0;
+        $ticket = SupportTicket::findOrFail($id);
+
+        if ((int)$ticket->approval_sent_to !== $employeeId || !in_array($ticket->approval_status, ['pending_lm', 'pending_gm'])) {
+            return redirect()->back()->with('error', 'Unauthorized — this ticket is not awaiting your approval.');
+        }
+
+        $ticket->approval_status = 'rejected';
+        $ticket->approval_remarks = $request->remarks;
+        $ticket->approval_action_date = now();
+        $ticket->status_id = \App\Models\SupportTicketStatus::CANCELLED;
+        $ticket->save();
+
+        // Log System Action
+        $log = new \App\Models\SystemLog();
+        $log->related_table = 'support_tickets_list';
+        $log->related_id = $ticket->ticket_id;
+        $log->log_action = 'Ticket Rejected';
+        $log->log_remark = 'Rejected by manager. Remarks: ' . $request->remarks;
+        $log->log_date = now();
+        $log->logged_by = $employeeId;
+        $log->logger_type = 'employees_list';
+        $log->log_type = 'int';
+        $log->save();
+
+        // Notify Admin (ID 1)
+        \App\Services\NotificationService::send(
+            "Ticket (Ref: {$ticket->ticket_ref}) has been REJECTED.",
+            "tickets/{$ticket->ticket_id}",
+            1
+        );
+
+        // Notify Creator
+        \App\Services\NotificationService::send(
+            "Your ticket (Ref: {$ticket->ticket_ref}) has been REJECTED. Remarks: {$request->remarks}",
+            "tickets/{$ticket->ticket_id}",
+            $ticket->added_by
+        );
+
+        return redirect()->back()->with('success', 'Ticket rejected successfully.');
     }
 }

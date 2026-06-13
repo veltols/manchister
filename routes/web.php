@@ -146,6 +146,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/tickets/{id}/status', [App\Http\Controllers\Employee\SupportTicketController::class, 'updateStatus'])->name('tickets.update_status');
         Route::post('/tickets/{id}/details', [App\Http\Controllers\Employee\SupportTicketController::class, 'updateDetails'])->name('tickets.update_details');
         Route::get('/tickets/data', [App\Http\Controllers\Employee\SupportTicketController::class, 'getData'])->name('tickets.data');
+        Route::post('/tickets/{id}/approve', [App\Http\Controllers\Employee\SupportTicketController::class, 'approve'])->name('tickets.approve');
+        Route::post('/tickets/{id}/reject', [App\Http\Controllers\Employee\SupportTicketController::class, 'reject'])->name('tickets.reject');
 
         // Request Center Hub
         Route::get('/requests', [App\Http\Controllers\Employee\RequestController::class, 'index'])->name('requests.index');
@@ -578,6 +580,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/tickets/{id}/details', [App\Http\Controllers\Admin\SupportTicketController::class, 'updateDetails'])->name('tickets.update_details');
         Route::get('/tickets/{id}', [App\Http\Controllers\Admin\SupportTicketController::class, 'show'])->name('tickets.show');
         Route::get('/tickets/data', [App\Http\Controllers\Admin\SupportTicketController::class, 'getData'])->name('tickets.data');
+        Route::post('/tickets/{id}/request-approval', [App\Http\Controllers\Admin\SupportTicketController::class, 'requestApproval'])->name('tickets.request_approval');
 
         // Assets
         Route::get('/assets', [App\Http\Controllers\Admin\AssetController::class, 'index'])->name('assets.index');

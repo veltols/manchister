@@ -116,7 +116,6 @@ class SupportTicketController extends Controller
 
         $request->validate([
             'added_by'           => 'required|exists:employees_list,employee_id',
-            'assigned_to'        => 'required|exists:employees_list,employee_id',
             'ticket_subject'     => 'required|string|max:255',
             'ticket_description' => 'required|string',
             'category_id'        => 'required|integer',
@@ -155,8 +154,8 @@ class SupportTicketController extends Controller
 
         $ticket->ticket_added_date = now();
         $ticket->status_id = SupportTicketStatus::OPEN;
-        $ticket->assigned_to = (int) $request->assigned_to;
-        $ticket->assigned_date = now();
+        $ticket->assigned_to = 0;
+        $ticket->assigned_date = null;
         $ticket->save();
 
         // Create Initial Log
@@ -191,12 +190,7 @@ class SupportTicketController extends Controller
 
     public function show($id)
     {
-        $userId = Auth::user()->user_id;
         $ticket = SupportTicket::with(['category', 'priority', 'status', 'addedBy', 'logs.logger', 'latestLog.logger'])
-            ->where(function($q) use ($userId) {
-                $q->where('added_by', $userId)
-                  ->orWhere('assigned_to', $userId);
-            })
             ->findOrFail($id);
 
         $statuses = \App\Models\SupportTicketStatus::all();
@@ -247,15 +241,35 @@ class SupportTicketController extends Controller
             'ticket_attachment'  => 'nullable|file|max:8192',
         ]);
 
-        $userId = $user->user_id;
-        $ticket = SupportTicket::where(function($q) use ($userId) {
-                $q->where('added_by', $userId)
-                  ->orWhere('assigned_to', $userId);
-            })->findOrFail($id);
+        $ticket = SupportTicket::findOrFail($id);
 
         $currentStatusId = (int)$ticket->status_id;
         $newStatusId = (int)$request->status_id;
         $statusResolved = \App\Models\SupportTicketStatus::RESOLVED;
+
+        if ($currentStatusId != $newStatusId) {
+            $statusOpen = \App\Models\SupportTicketStatus::OPEN;
+            $statusInProgress = \App\Models\SupportTicketStatus::IN_PROGRESS;
+            $statusCancelled = \App\Models\SupportTicketStatus::CANCELLED;
+
+            if ($currentStatusId == $statusOpen) {
+                if (!in_array($newStatusId, [$statusInProgress, $statusCancelled])) {
+                    return redirect()->back()->with('error', 'From Open, you can only move to In Progress or Cancelled.');
+                }
+            } elseif ($currentStatusId == $statusInProgress) {
+                if (!in_array($newStatusId, [$statusResolved, $statusCancelled])) {
+                    return redirect()->back()->with('error', 'From In Progress, you can only move to Resolved or Cancelled.');
+                }
+            } elseif ($currentStatusId == $statusResolved) {
+                if ($newStatusId != $statusOpen) {
+                    return redirect()->back()->with('error', 'Resolved tickets can only be Reopened.');
+                }
+            } elseif ($currentStatusId == $statusCancelled) {
+                if ($newStatusId != $statusOpen) {
+                    return redirect()->back()->with('error', 'Cancelled tickets can only be Reopened.');
+                }
+            }
+        }
 
         $ticket->ticket_subject = $request->ticket_subject;
         $ticket->priority_id    = $request->priority_id;
@@ -284,11 +298,6 @@ class SupportTicketController extends Controller
         $ticket->status_id = $newStatusId;
         
         $logAction = 'Ticket Updated';
-        if ($request->has('assigned_to') && $request->assigned_to != "" && $request->assigned_to != $ticket->assigned_to) {
-            $ticket->assigned_to = $request->assigned_to;
-            $ticket->assigned_date = now();
-            $logAction = 'Ticket Assigned & Updated';
-        }
         
         if ($currentStatusId != $newStatusId && $newStatusId == $statusResolved) {
             $ticket->ticket_end_date = now();
@@ -318,11 +327,7 @@ class SupportTicketController extends Controller
             'ticket_remarks' => 'required|string',
         ]);
 
-        $userId = Auth::user()->user_id;
-        $ticket = SupportTicket::where(function($q) use ($userId) {
-                $q->where('added_by', $userId)
-                  ->orWhere('assigned_to', $userId);
-            })->findOrFail($id);
+        $ticket = SupportTicket::findOrFail($id);
         $currentStatusId = (int)$ticket->status_id;
         $newStatusId = (int)$request->status_id;
 
@@ -374,11 +379,6 @@ class SupportTicketController extends Controller
             $logAction = "Ticket Reopened";
         }
 
-        if ($request->has('assigned_to') && $request->assigned_to != "" && $request->assigned_to != $ticket->assigned_to) {
-            $ticket->assigned_to = $request->assigned_to;
-            $ticket->assigned_date = now();
-            $logAction = "Ticket Assigned";
-        }
 
         $ticket->save();
 

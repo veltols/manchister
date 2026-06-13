@@ -21,7 +21,15 @@
                 $statusCancelled = \App\Models\SupportTicketStatus::CANCELLED;
             @endphp
 
-            @if($ticket->status_id == $statusResolved)
+            @if(in_array($ticket->approval_status, ['pending_lm', 'pending_gm']))
+                <button disabled
+                    class="px-5 py-3 bg-slate-100 border border-slate-200 text-slate-400 font-bold rounded-xl shadow-sm cursor-not-allowed flex items-center gap-2">
+                    <i class="fa-solid fa-lock text-sm"></i>
+                    <span>Locked (Awaiting Approval)</span>
+                </button>
+            @elseif($ticket->approval_status == 'rejected')
+                <!-- Approval is rejected, do not show Edit Ticket / Status button -->
+            @elseif($ticket->status_id == $statusResolved)
                 <button onclick="reopenTicket()"
                     class="px-6 py-3 bg-brand text-white font-bold rounded-xl shadow-lg hover:bg-brand-dark hover:scale-105 transition-all duration-200 flex items-center gap-2">
                     <i class="fa-solid fa-rotate-left text-sm"></i>
@@ -178,8 +186,84 @@
                 </div>
             </div>
 
-            <!-- Right Column: Context/Help -->
             <div class="space-y-6">
+                
+                <!-- Approval Status / Action Card -->
+                @php $myEmployeeId = Auth::user()->employee->employee_id ?? 0; @endphp
+                @if($ticket->approval_status)
+                    <div class="premium-card p-6 space-y-4">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                            <i class="fa-solid fa-signature text-indigo-500"></i>
+                            <span>Ticket Approval</span>
+                        </h4>
+
+                        @if(in_array($ticket->approval_status, ['pending_lm', 'pending_gm']) && (int)$ticket->approval_sent_to === $myEmployeeId)
+                            <!-- Approve / Reject Form -->
+                            <form method="POST" class="space-y-4">
+                                @csrf
+                                <p class="text-xs text-slate-500 leading-relaxed">
+                                    You have been requested to review and approve this ticket. Please add remarks and make a decision below.
+                                </p>
+                                <div class="space-y-2">
+                                    <label class="block text-xs font-bold text-slate-700">Remarks / Reason</label>
+                                    <textarea name="remarks" rows="2" class="premium-input w-full p-3 text-xs" placeholder="Add remarks or justification..."></textarea>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button type="submit" formaction="{{ route('emp.tickets.approve', $ticket->ticket_id) }}" 
+                                            class="flex-1 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs shadow-md shadow-emerald-600/10 hover:shadow-emerald-600/25 transition-all text-center">
+                                        <i class="fa-solid fa-check mr-1"></i>Approve
+                                    </button>
+                                    <button type="submit" formaction="{{ route('emp.tickets.reject', $ticket->ticket_id) }}" 
+                                            class="flex-1 py-2.5 bg-rose-600 text-white font-bold rounded-xl text-xs shadow-md shadow-rose-600/10 hover:shadow-rose-600/25 transition-all text-center">
+                                        <i class="fa-solid fa-times mr-1"></i>Reject
+                                    </button>
+                                </div>
+                            </form>
+                        @elseif(in_array($ticket->approval_status, ['pending_lm', 'pending_gm']))
+                            <div class="p-4 rounded-xl bg-amber-50/50 border border-amber-100 text-amber-800 space-y-2.5">
+                                <div class="flex items-center gap-2 font-bold text-xs">
+                                    <i class="fa-solid fa-spinner animate-spin"></i>
+                                    <span>Awaiting Approval</span>
+                                </div>
+                                <p class="text-xs text-amber-700/90 leading-relaxed">
+                                    Awaiting approval from <strong>{{ $ticket->approvalApprover->full_name ?? 'Manager' }}</strong>.
+                                </p>
+                            </div>
+                        @elseif($ticket->approval_status === 'approved')
+                            <div class="p-4 rounded-xl bg-emerald-50/50 border border-emerald-100 text-emerald-800 space-y-2.5">
+                                <div class="flex items-center gap-2 font-bold text-xs">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    <span>Approved</span>
+                                </div>
+                                <p class="text-xs text-emerald-700/90 leading-relaxed">
+                                    Approved by <strong>{{ $ticket->approvalApprover->full_name ?? 'Manager' }}</strong> on 
+                                    <span>{{ \Carbon\Carbon::parse($ticket->approval_action_date)->format('M d, Y H:i') }}</span>.
+                                </p>
+                                @if($ticket->approval_remarks)
+                                    <div class="text-[11px] bg-white p-2.5 rounded-lg border border-emerald-100 italic text-slate-600">
+                                        "{{ $ticket->approval_remarks }}"
+                                    </div>
+                                @endif
+                            </div>
+                        @elseif($ticket->approval_status === 'rejected')
+                            <div class="p-4 rounded-xl bg-rose-50/50 border border-rose-100 text-rose-800 space-y-2.5">
+                                <div class="flex items-center gap-2 font-bold text-xs">
+                                    <i class="fa-solid fa-circle-xmark"></i>
+                                    <span>Rejected</span>
+                                </div>
+                                <p class="text-xs text-rose-700/90 leading-relaxed">
+                                    Rejected by <strong>{{ $ticket->approvalApprover->full_name ?? 'Manager' }}</strong> on 
+                                    <span>{{ \Carbon\Carbon::parse($ticket->approval_action_date)->format('M d, Y H:i') }}</span>.
+                                </p>
+                                @if($ticket->approval_remarks)
+                                    <div class="text-[11px] bg-white p-2.5 rounded-lg border border-rose-100 italic text-slate-600">
+                                        "{{ $ticket->approval_remarks }}"
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
+                @endif
                 
                  <!-- Attachments Preview -->
                  @if($ticket->ticket_attachment && $ticket->ticket_attachment != 'no-img.png')

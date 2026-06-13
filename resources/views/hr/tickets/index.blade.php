@@ -509,50 +509,30 @@
             <form action="{{ route('hr.tickets.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">
-                                <i class="fa-solid fa-user text-indigo-600 mr-2"></i>Reported By
-                            </label>
-                            @php
-                                $isAdmin = in_array(Auth::user()->user_type, ['root', 'sys_admin']);
-                            @endphp
-                            <select name="added_by" class="premium-input w-full px-4 py-3 text-sm" required {{ !$isAdmin ? 'disabled' : '' }}>
-                                @if(!$isAdmin)
-                                    <option value="{{ Auth::user()->employee->employee_id ?? '' }}" selected>
-                                        {{ Auth::user()->employee->first_name ?? '' }} {{ Auth::user()->employee->last_name ?? '' }}
-                                    </option>
-                                @else
-                                    <option value="">Select Employee</option>
-                                    @foreach($employees as $emp)
-                                        <option value="{{ $emp->employee_id }}" {{ Auth::user()->employee && Auth::user()->employee->employee_id == $emp->employee_id ? 'selected' : '' }}>
-                                            {{ $emp->first_name }} {{ $emp->last_name }}
-                                        </option>
-                                    @endforeach
-                                @endif
-                            </select>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-user text-indigo-600 mr-2"></i>Reported By
+                        </label>
+                        @php
+                            $isAdmin = in_array(Auth::user()->user_type, ['root', 'sys_admin']);
+                        @endphp
+                        <select name="added_by" class="premium-input w-full px-4 py-3 text-sm" required {{ !$isAdmin ? 'disabled' : '' }}>
                             @if(!$isAdmin)
-                                <input type="hidden" name="added_by" value="{{ Auth::user()->employee->employee_id ?? '' }}">
-                            @endif
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">
-                                <i class="fa-solid fa-user-shield text-indigo-600 mr-2"></i>Assigned To
-                            </label>
-                            <select name="assigned_to" class="premium-input w-full px-4 py-3 text-sm" required>
-                                <option value="">Select Assignee...</option>
-                               
-                                @foreach($groupedEmployees as $dept)
-                                    @if($dept->employees->count() > 0)
-                                        <optgroup label="{{ $dept->department_name }}">
-                                            @foreach($dept->employees as $emp)
-                                                <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
-                                            @endforeach
-                                        </optgroup>
-                                    @endif
+                                <option value="{{ Auth::user()->employee->employee_id ?? '' }}" selected>
+                                    {{ Auth::user()->employee->first_name ?? '' }} {{ Auth::user()->employee->last_name ?? '' }}
+                                </option>
+                            @else
+                                <option value="">Select Employee</option>
+                                @foreach($employees as $emp)
+                                    <option value="{{ $emp->employee_id }}" {{ Auth::user()->employee && Auth::user()->employee->employee_id == $emp->employee_id ? 'selected' : '' }}>
+                                        {{ $emp->first_name }} {{ $emp->last_name }}
+                                    </option>
                                 @endforeach
-                            </select>
-                        </div>
+                            @endif
+                        </select>
+                        @if(!$isAdmin)
+                            <input type="hidden" name="added_by" value="{{ Auth::user()->employee->employee_id ?? '' }}">
+                        @endif
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">

@@ -229,6 +229,35 @@ class SupportTicketController extends Controller
         $newStatusId = (int)$request->status_id;
         $statusResolved = \App\Models\SupportTicketStatus::RESOLVED;
 
+        // Legacy Reopen logic handling
+        if ($newStatusId == 100) {
+            $newStatusId = \App\Models\SupportTicketStatus::OPEN;
+        }
+
+        if ($currentStatusId != $newStatusId) {
+            $statusOpen = \App\Models\SupportTicketStatus::OPEN;
+            $statusInProgress = \App\Models\SupportTicketStatus::IN_PROGRESS;
+            $statusCancelled = \App\Models\SupportTicketStatus::CANCELLED;
+
+            if ($currentStatusId == $statusOpen) {
+                if (!in_array($newStatusId, [$statusInProgress, $statusCancelled])) {
+                    return redirect()->back()->with('error', 'From Open, you can only move to In Progress or Cancelled.');
+                }
+            } elseif ($currentStatusId == $statusInProgress) {
+                if (!in_array($newStatusId, [$statusResolved, $statusCancelled])) {
+                    return redirect()->back()->with('error', 'From In Progress, you can only move to Resolved or Cancelled.');
+                }
+            } elseif ($currentStatusId == $statusResolved) {
+                if ($newStatusId != $statusOpen) {
+                    return redirect()->back()->with('error', 'Resolved tickets can only be Reopened.');
+                }
+            } elseif ($currentStatusId == $statusCancelled) {
+                if ($newStatusId != $statusOpen) {
+                    return redirect()->back()->with('error', 'Cancelled tickets can only be Reopened.');
+                }
+            }
+        }
+
         $ticket->ticket_subject = $request->ticket_subject;
         $ticket->priority_id    = $request->priority_id;
         $ticket->added_by       = $request->added_by;
@@ -347,10 +376,16 @@ class SupportTicketController extends Controller
 
         $ticket->status_id = $newStatusId;
 
+        $originalAssignedTo = $ticket->assigned_to;
+        $assignmentChanged = false;
+
         // Handle Assignment Change if provided
         if ($request->has('assigned_to') && !empty($request->assigned_to)) {
-            $ticket->assigned_to = $request->assigned_to;
-            $ticket->assigned_date = now();
+            if ($ticket->assigned_to != $request->assigned_to) {
+                $ticket->assigned_to = $request->assigned_to;
+                $ticket->assigned_date = now();
+                $assignmentChanged = true;
+            }
         }
         
         // Set end date if resolved
@@ -384,11 +419,14 @@ class SupportTicketController extends Controller
                 "tickets", 
                 $ticket->assigned_to
             );
-             \App\Services\NotificationService::send(
-            "Your ticket has been assigned to an IT Agent, REF: " . $ticket->ticket_ref, 
-            "tickets", 
-            $ticket->added_by
-        );
+            
+            if ($assignmentChanged) {
+                 \App\Services\NotificationService::send(
+                    "Your ticket has been assigned to an IT Agent, REF: " . $ticket->ticket_ref, 
+                    "tickets", 
+                    $ticket->added_by
+                );
+            }
         }
        
 
@@ -459,5 +497,71 @@ class SupportTicketController extends Controller
                 'to' => $tickets->lastItem(),
             ]
         ]);
+    }
+
+    public function requestApproval(Request $request, $id)
+    {
+        $request->validate([
+            'target' => 'required|in:lm,gm',
+            'remarks' => 'nullable|string'
+        ]);
+
+        $ticket = SupportTicket::findOrFail($id);
+
+        if (in_array($ticket->approval_status, ['pending_lm', 'pending_gm'])) {
+            return redirect()->back()->with('error', 'This ticket already has a pending approval request.');
+        }
+
+        $approverId = 0;
+
+        if ($request->target === 'lm') {
+            $department = \App\Models\Department::find($ticket->department_id);
+            $approverId = $department ? $department->line_manager_id : 0;
+            if (!$approverId || $approverId == 0) {
+                return redirect()->back()->with('error', 'LM not assigned to this department.');
+            }
+        } else {
+            // GM gets first in multiple and is not dependent on department
+            $gm = \App\Models\User::where('is_gm', 1)->where('is_active', 1)->first();
+            if (!$gm) {
+                return redirect()->back()->with('error', 'No active GM user found in the system.');
+            }
+            $approverId = $gm->user_id; // user_id is the employee_id
+        }
+
+        // Update ticket approval columns
+        $ticket->approval_status = $request->target === 'lm' ? 'pending_lm' : 'pending_gm';
+        $ticket->approval_sent_to = $approverId;
+        $ticket->approval_sent_date = now();
+        $ticket->approval_remarks = null;
+        $ticket->approval_action_date = null;
+        $ticket->save();
+
+        // Create HrApproval record
+        \App\Models\HrApproval::create([
+            'related_table' => 'support_tickets_list',
+            'related_id' => $ticket->ticket_id,
+            'sent_date' => now(),
+            'sent_to_id' => $approverId,
+            'log_remark' => $request->remarks,
+            'added_by' => Auth::user()->employee->employee_id ?? 1
+        ]);
+
+        // Log System Action
+        $approverName = $request->target === 'lm' ? 'Line Manager' : 'GM';
+        $this->logAction(
+            $ticket->ticket_id,
+            'Approval Requested',
+            "Approval requested from $approverName. Remarks: " . ($request->remarks ?? 'None')
+        );
+
+        // Notify Approver
+        \App\Services\NotificationService::send(
+            "Support ticket (Ref: " . $ticket->ticket_ref . ") requires your approval.",
+            "tickets/" . $ticket->ticket_id,
+            $approverId
+        );
+
+        return redirect()->back()->with('success', 'Ticket approval requested successfully.');
     }
 }
