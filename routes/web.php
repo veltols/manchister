@@ -359,8 +359,10 @@ Route::middleware('auth')->group(function () {
         // Attendance
         Route::get('/attendance', [App\Http\Controllers\HR\AttendanceController::class, 'index'])->name('attendance.index');
         Route::get('/attendance/data', [App\Http\Controllers\HR\AttendanceController::class, 'getData'])->name('attendance.data');
+        Route::get('/attendance/export', [App\Http\Controllers\HR\AttendanceController::class, 'exportCsv'])->name('attendance.export');
         Route::post('/attendance', [App\Http\Controllers\HR\AttendanceController::class, 'store'])->name('attendance.store');
         Route::post('/attendance/sync-absents', [App\Http\Controllers\HR\AttendanceController::class, 'syncAbsents'])->name('attendance.sync_absents');
+        Route::post('/attendance/{id}/update', [App\Http\Controllers\HR\AttendanceController::class, 'update'])->name('attendance.update');
 
         // Departments
         Route::get('/departments', [App\Http\Controllers\HR\DepartmentController::class, 'index'])->name('departments.index');

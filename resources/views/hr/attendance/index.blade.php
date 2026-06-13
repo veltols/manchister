@@ -23,6 +23,11 @@
                         <span>Finalize Absents</span>
                     </button>
                 </form>
+                <a href="{{ route('hr.attendance.export') }}"
+                    class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:bg-emerald-700 hover:scale-105 transition-all duration-200">
+                    <i class="fa-solid fa-file-csv text-lg"></i>
+                    <span>Export CSV</span>
+                </a>
                 <button onclick="openModal('addAttendanceModal')"
                     class="inline-flex items-center gap-2 px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
                     <i class="fa-solid fa-plus"></i>
@@ -96,6 +101,7 @@
                             <th class="text-center">Total</th>
                             <th class="text-center">Status</th>
                             <th class="text-left">Remarks</th>
+                            <th class="text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="attendance-container">
@@ -143,10 +149,27 @@
                                     </span>
                                 </td>
                                 <td><span class="text-sm text-slate-600">{{ $attendance->attendance_remarks }}</span></td>
+                                <td class="text-right">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <button onclick="editAttendance(this)" 
+                                            data-id="{{ $attendance->attendance_id }}"
+                                            data-employee-name="{{ $attendance->employee ? $attendance->employee->first_name . ' ' . $attendance->employee->last_name : 'Unknown' }}"
+                                            data-checkin-date="{{ $attendance->checkin_date instanceof \Illuminate\Support\Carbon ? $attendance->checkin_date->format('Y-m-d') : (\Carbon\Carbon::parse($attendance->checkin_date)->format('Y-m-d')) }}"
+                                            data-checkin-time="{{ $attendance->checkin_time }}"
+                                            data-checkout-date="{{ $attendance->checkout_date ? \Carbon\Carbon::parse($attendance->checkout_date)->format('Y-m-d') : '' }}"
+                                            data-checkout-time="{{ $attendance->checkout_time }}"
+                                            data-status="{{ $attendance->attendance_status }}"
+                                            data-remarks="{{ $attendance->attendance_remarks }}"
+                                            class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
+                                            title="Edit">
+                                            <i class="fa-solid fa-pen text-sm"></i>
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-12">
+                                <td colspan="8" class="text-center py-12">
                                     <div class="flex flex-col items-center gap-3">
                                         <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
                                             <i class="fa-solid fa-clock text-2xl text-slate-400"></i>
@@ -175,11 +198,11 @@
             paginationSelector: '#attendance-pagination',
             perPage: 20,
             renderCallback: function(entries) {
-                const container = document.querySelector('#attendance-container');
-                if (entries.length === 0) {
-                    container.innerHTML = `
-                        <tr>
-                            <td colspan="6" class="text-center py-12">
+                                const container = document.querySelector('#attendance-container');
+                                if (entries.length === 0) {
+                                    container.innerHTML = `
+                                        <tr>
+                                            <td colspan="8" class="text-center py-12">
                                 <div class="flex flex-col items-center gap-3">
                                     <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
                                         <i class="fa-solid fa-clock text-2xl text-slate-400"></i>
@@ -243,6 +266,23 @@
                                 </span>
                             </td>
                             <td><span class="text-sm text-slate-600">${entry.attendance_remarks || ''}</span></td>
+                            <td class="text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <button onclick="editAttendance(this)" 
+                                        data-id="${entry.attendance_id}"
+                                        data-employee-name="${fullName}"
+                                        data-checkin-date="${entry.checkin_date || ''}"
+                                        data-checkin-time="${entry.checkin_time || ''}"
+                                        data-checkout-date="${entry.checkout_date || ''}"
+                                        data-checkout-time="${entry.checkout_time || ''}"
+                                        data-status="${entry.attendance_status || 'present'}"
+                                        data-remarks="${entry.attendance_remarks || ''}"
+                                        class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center hover:scale-110 transition-all shadow-md"
+                                        title="Edit">
+                                        <i class="fa-solid fa-pen text-sm"></i>
+                                    </button>
+                                </div>
+                            </td>
                         </tr>
                     `;
                 });
@@ -260,6 +300,46 @@
                 total: {{ $attendances->total() }}
             });
         @endif
+
+        function editAttendance(button) {
+            const id = button.getAttribute('data-id');
+            const employeeName = button.getAttribute('data-employee-name');
+            const checkinDate = button.getAttribute('data-checkin-date');
+            const checkinTime = button.getAttribute('data-checkin-time');
+            const checkoutDate = button.getAttribute('data-checkout-date');
+            const checkoutTime = button.getAttribute('data-checkout-time');
+            const status = button.getAttribute('data-status');
+            const remarks = button.getAttribute('data-remarks');
+
+            // Format date to YYYY-MM-DD
+            const formatDate = (dateStr) => {
+                if (!dateStr || dateStr === 'null') return '';
+                return dateStr.split('T')[0].split(' ')[0];
+            };
+
+            const formatTime = (timeStr) => {
+                if (!timeStr || timeStr === 'null') return '';
+                const parts = timeStr.split(':');
+                if (parts.length >= 2) {
+                    return parts[0].padStart(2, '0') + ':' + parts[1].padStart(2, '0');
+                }
+                return timeStr;
+            };
+
+            document.getElementById('edit_employee_name').innerText = `Employee: ${employeeName}`;
+            document.getElementById('edit_checkin_date').value = formatDate(checkinDate);
+            document.getElementById('edit_checkin_time').value = formatTime(checkinTime);
+            document.getElementById('edit_checkout_date').value = formatDate(checkoutDate);
+            document.getElementById('edit_checkout_time').value = formatTime(checkoutTime);
+            document.getElementById('edit_attendance_status').value = status || 'present';
+            document.getElementById('edit_attendance_remarks').value = remarks && remarks !== 'null' ? remarks : '';
+
+            // Update action URL dynamically
+            const form = document.getElementById('editAttendanceForm');
+            form.action = `/hr/attendance/${id}/update`;
+
+            openModal('editAttendanceModal');
+        }
     </script>
     @endpush
 
@@ -313,6 +393,79 @@
                     <button type="submit"
                         class="px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">Save
                         Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Attendance Modal -->
+    <div class="modal" id="editAttendanceModal">
+        <div class="modal-backdrop" onclick="closeModal('editAttendanceModal')"></div>
+        <div class="modal-content max-w-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-display font-bold text-premium">Edit Attendance</h2>
+                    <p class="text-sm text-slate-500 mt-1" id="edit_employee_name"></p>
+                </div>
+                <button onclick="closeModal('editAttendanceModal')"
+                    class="w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form id="editAttendanceForm" method="POST">
+                @csrf
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Check-in Date</label>
+                            <input type="date" name="checkin_date" id="edit_checkin_date"
+                                class="premium-input w-full px-4 py-3 text-sm" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Check-in Time</label>
+                            <input type="time" name="checkin_time" id="edit_checkin_time" 
+                                class="premium-input w-full px-4 py-3 text-sm" required>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Check-out Date</label>
+                            <input type="date" name="checkout_date" id="edit_checkout_date"
+                                class="premium-input w-full px-4 py-3 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Check-out Time</label>
+                            <input type="time" name="checkout_time" id="edit_checkout_time" 
+                                class="premium-input w-full px-4 py-3 text-sm">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Status</label>
+                        <select name="attendance_status" id="edit_attendance_status" class="premium-input w-full px-4 py-3 text-sm" required>
+                            <option value="present">Present</option>
+                            <option value="late">Late</option>
+                            <option value="absent">Absent</option>
+                            <option value="on leave">On Leave</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Remarks</label>
+                        <textarea name="attendance_remarks" id="edit_attendance_remarks" rows="2" class="premium-input w-full px-4 py-3 text-sm"
+                            placeholder="Optional remarks"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
+                    <button type="button" onclick="closeModal('editAttendanceModal')"
+                        class="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">Cancel</button>
+                    <button type="submit"
+                        class="px-6 py-3 premium-button from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
+                        Update Entry
+                    </button>
                 </div>
             </form>
         </div>

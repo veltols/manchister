@@ -789,7 +789,7 @@
                             <i
                                 class="fa-solid fa-comment-dots text-white text-sm relative z-10 drop-shadow-sm group-hover:scale-110 transition-transform"></i>
                             @if($unreadMessages > 0)
-                                <span class="absolute -top-1.5 -right-1.5 flex h-4 w-4 z-20">
+                                <span class="unread-messages-badge absolute -top-1.5 -right-1.5 flex h-4 w-4 z-20">
                                     <span
                                         class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
                                     <span
@@ -1222,6 +1222,7 @@
         @auth
             (function () {
                 const messageLink = document.querySelector('a[href="{{ route($chatRoute) }}"]');
+                let lastMessageCount = {{ $unreadMessages }};
 
                 console.log('Message count polling initialized');
                 console.log('Message link:', messageLink);
@@ -1253,8 +1254,27 @@
                                 const count = data.unread_count;
                                 console.log('Count:', count);
 
+                                // If new messages arrived, play tune and notify user with popup
+                                if (count > lastMessageCount) {
+                                    // Play sound
+                                    const audio = new Audio("{{ asset('tune/notification_tone.mp3') }}");
+                                    audio.play().catch(error => console.error('Audio play failed:', error));
+
+                                    // SweetAlert popup/toast message
+                                    if (typeof Toast !== 'undefined') {
+                                        Toast.fire({
+                                            icon: 'info',
+                                            title: 'New Message',
+                                            text: 'You have received a new message.',
+                                        });
+                                    }
+                                }
+
+                                // Update tracker
+                                lastMessageCount = count;
+
                                 // Remove any existing badge first
-                                const existingBadge = messageLink.querySelector('span.absolute.top-2.right-2');
+                                const existingBadge = messageLink.querySelector('.unread-messages-badge');
                                 if (existingBadge) {
                                     existingBadge.remove();
                                     console.log('Removed existing badge');
@@ -1264,10 +1284,10 @@
                                 if (count > 0) {
                                     const displayCount = count > 9 ? '9+' : count;
                                     const badgeContainer = document.createElement('span');
-                                    badgeContainer.className = 'absolute top-2 right-2 flex h-4 w-4';
+                                    badgeContainer.className = 'unread-messages-badge absolute -top-1.5 -right-1.5 flex h-4 w-4 z-20';
                                     badgeContainer.innerHTML = `
-                                                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                                                                        <span class="relative inline-flex rounded-full h-4 w-4 bg-indigo-600 text-[9px] text-white font-bold items-center justify-center transition-transform duration-200 ease-out">
+                                                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                                                                        <span class="relative inline-flex flex-col rounded-full h-4 w-4 bg-teal-500 border-2 border-white text-[9px] text-white font-bold items-center justify-center transition-transform duration-200 ease-out">
                                                                             ${displayCount}
                                                                         </span>
                                                                     `;

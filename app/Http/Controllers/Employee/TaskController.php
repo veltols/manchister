@@ -213,7 +213,8 @@ class TaskController extends Controller
             'task_assigned_date' => 'required|date',
             'task_due_date' => 'required|date|after_or_equal:task_assigned_date',
             'priority_id' => 'required|exists:sys_list_priorities,priority_id',
-            'task_attachment' => 'nullable|file|max:10240',
+            'task_attachments' => 'nullable|array',
+            'task_attachments.*' => 'file|max:10240',
             'parent_task_id' => 'nullable|exists:tasks_list,task_id'
         ]);
 
@@ -297,11 +298,14 @@ class TaskController extends Controller
         $task->priority_id = $request->priority_id;
         $task->parent_task_id = $request->parent_task_id ?? 0;
 
-        if ($request->hasFile('task_attachment')) {
-            $file = $request->file('task_attachment');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('uploads/tasks'), $filename);
-            $task->task_attachment = 'uploads/tasks/' . $filename;
+        if ($request->hasFile('task_attachments')) {
+            $paths = [];
+            foreach ($request->file('task_attachments') as $file) {
+                $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
+                $file->move(public_path('uploads/tasks'), $filename);
+                $paths[] = 'uploads/tasks/' . $filename;
+            }
+            $task->task_attachment = json_encode($paths);
         }
 
         $firstStatus = TaskStatus::orderBy('status_id')->first();

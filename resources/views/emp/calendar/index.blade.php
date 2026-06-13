@@ -10,7 +10,7 @@
         openTaskModal(day, hour) {
             document.getElementById('task_assigned_date').value = day;
             if (hour) {
-                document.getElementById('start_time').value = hour + ':00:00';
+                document.getElementById('start_time').value = hour + ':00';
             }
             openModal('addTaskModal');
         }
@@ -301,25 +301,14 @@
                             Schedule</label>
                         <input type="date" name="task_assigned_date" id="task_assigned_date" class="premium-input w-full text-sm"
                             value="{{ date('Y-m-d') }}" required>
-                        <select name="start_time" id="start_time" class="premium-input w-full text-sm">
-                            <option value="">Start Time (Optional)</option>
-                            @for($i = 6; $i <= 22; $i++)
-                                <option value="{{ str_pad($i, 2, '0', STR_PAD_LEFT) }}:00:00">
-                                    {{ str_pad($i, 2, '0', STR_PAD_LEFT) }}:00
-                            </option>@endfor
-                        </select>
+                        <input type="time" name="start_time" id="start_time" class="premium-input w-full text-sm"
+                            onchange="if(this.value) { let [h, m] = this.value.split(':'); this.form.end_time.value = String((parseInt(h) + 1) % 24).padStart(2, '0') + ':' + m; }">
                     </div>
                     <div class="space-y-3">
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">Due
                             Deadline</label>
                         <input type="date" name="task_due_date" class="premium-input w-full text-sm" required>
-                        <select name="end_time" class="premium-input w-full text-sm">
-                            <option value="">End Time (Optional)</option>
-                            @for($i = 6; $i <= 22; $i++)
-                                <option value="{{ str_pad($i, 2, '0', STR_PAD_LEFT) }}:00:00" {{ $i == 14 ? 'selected' : '' }}>
-                                    {{ str_pad($i, 2, '0', STR_PAD_LEFT) }}:00
-                            </option>@endfor
-                        </select>
+                        <input type="time" name="end_time" class="premium-input w-full text-sm">
                     </div>
                 </div>
                 <div>
@@ -327,7 +316,7 @@
                         <i class="fa-solid fa-paperclip text-indigo-500 mr-1"></i> Attachment <span
                             class="text-slate-300">(Optional)</span>
                     </label>
-                    <input type="file" name="task_attachment" id="task_attachment"
+                    <input type="file" name="task_attachments[]" id="task_attachment" multiple
                         class="premium-input w-full px-4 py-3 text-sm">
                     <div id="task-attachment-preview"></div>
                 </div>

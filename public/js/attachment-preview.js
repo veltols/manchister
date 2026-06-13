@@ -12,8 +12,9 @@ class AttachmentPreview {
         this.input = document.querySelector(options.inputSelector);
         this.container = document.querySelector(options.containerSelector);
         this.onRemove = options.onRemove || null;
-        this.currentFile = null;
-        this.currentBlobUrl = null;
+        this.currentFiles = [];
+        this.currentBlobUrls = [];
+        this.currentModalBlobUrl = null;
 
         if (!this.input || !this.container) {
             console.warn('AttachmentPreview: Input or Container not found', options);
@@ -77,57 +78,87 @@ class AttachmentPreview {
     }
 
     handleFileSelect(e) {
-        const file = e.target.files[0];
-        if (!file) {
+        const files = Array.from(e.target.files);
+        if (!files || files.length === 0) {
             this.clearPreview();
             return;
         }
 
-        this.currentFile = file;
-        const fileName = file.name;
-        const fileSize = this.formatBytes(file.size);
-        const extension = fileName.split('.').pop().toLowerCase();
+        this.currentFiles = files;
+        this.container.innerHTML = ''; // Clear container
 
-        console.log('AttachmentPreview: File selected', fileName);
-        this.container.innerHTML = `
-            <div class="mt-4 p-4 rounded-2xl bg-white border-2 border-brand/10 shadow-lg shadow-brand/5 animate-fade-in-up group hover:border-brand/30 transition-all">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-4">
-                        <div id="preview-thumbnail" class="w-12 h-12 rounded-xl bg-slate-50 text-brand flex items-center justify-center overflow-hidden border border-slate-100 group-hover:bg-brand/5 transition-colors">
-                            <i class="fa-solid ${this.getIconForExtension(extension)} text-xl"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm font-bold text-slate-700 truncate max-w-[200px]" title="${fileName}">${fileName}</p>
-                            <div class="flex items-center gap-2 mt-0.5">
-                                <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">${fileSize} • ${extension}</p>
-                                <button type="button" id="open-full-preview" class="text-[10px] text-brand font-bold hover:underline">Quick Look</button>
+        files.forEach((file, index) => {
+            const fileName = file.name;
+            const fileSize = this.formatBytes(file.size);
+            const extension = fileName.split('.').pop().toLowerCase();
+
+            console.log('AttachmentPreview: File selected', fileName);
+            
+            const previewHtml = `
+                <div class="mt-4 p-4 rounded-2xl bg-white border-2 border-brand/10 shadow-lg shadow-brand/5 animate-fade-in-up group hover:border-brand/30 transition-all">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="preview-thumbnail w-12 h-12 rounded-xl bg-slate-50 text-brand flex items-center justify-center overflow-hidden border border-slate-100 group-hover:bg-brand/5 transition-colors">
+                                <i class="fa-solid ${this.getIconForExtension(extension)} text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-slate-700 truncate max-w-[200px]" title="${fileName}">${fileName}</p>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">${fileSize} • ${extension}</p>
+                                    <button type="button" class="open-full-preview text-[10px] text-brand font-bold hover:underline" data-index="${index}">Quick Look</button>
+                                </div>
                             </div>
                         </div>
+                        <button type="button" class="remove-preview-btn w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition-all" data-index="${index}">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
                     </div>
-                    <button type="button" id="remove-preview-btn" class="w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition-all">
-                        <i class="fa-solid fa-trash-can text-sm"></i>
-                    </button>
                 </div>
-            </div>
-        `;
+            `;
+            
+            const div = document.createElement('div');
+            div.innerHTML = previewHtml.trim();
+            const el = div.firstChild;
+            this.container.appendChild(el);
 
-        // Update inline thumbnail if possible
-        const fileType = file.type;
-        if (fileType.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                const thumb = this.container.querySelector('#preview-thumbnail');
-                thumb.innerHTML = `<img src="${ev.target.result}" class="w-full h-full object-cover">`;
-            };
-            reader.readAsDataURL(file);
-        }
+            // Update inline thumbnail if possible
+            const fileType = file.type;
+            if (fileType.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const thumb = el.querySelector('.preview-thumbnail');
+                    thumb.innerHTML = `<img src="${ev.target.result}" class="w-full h-full object-cover">`;
+                };
+                reader.readAsDataURL(file);
+            }
 
-        this.container.querySelector('#remove-preview-btn').addEventListener('click', () => this.clearPreview());
-        this.container.querySelector('#open-full-preview').addEventListener('click', () => this.openModal());
+            el.querySelector('.remove-preview-btn').addEventListener('click', (ev) => {
+                const idx = parseInt(ev.currentTarget.getAttribute('data-index'));
+                this.removeFile(idx);
+            });
+            el.querySelector('.open-full-preview').addEventListener('click', (ev) => {
+                const idx = parseInt(ev.currentTarget.getAttribute('data-index'));
+                this.openModal(idx);
+            });
+        });
     }
 
-    openModal() {
-        if (!this.currentFile) return;
+    removeFile(index) {
+        if (!this.currentFiles) return;
+        const dt = new DataTransfer();
+        this.currentFiles.forEach((f, i) => {
+            if (i !== index) dt.items.add(f);
+        });
+        this.input.files = dt.files;
+        
+        // Retrigger handleFileSelect to re-render
+        const event = new Event('change');
+        this.input.dispatchEvent(event);
+    }
+
+    openModal(index = 0) {
+        const file = this.currentFiles ? this.currentFiles[index] : null;
+        if (!file) return;
 
         const modal = document.getElementById('premium-preview-modal');
         const content = modal.querySelector('#modal-preview-content');
@@ -136,7 +167,6 @@ class AttachmentPreview {
         const infoLabel = modal.querySelector('#modal-file-info');
         const downloadBtn = modal.querySelector('#modal-download-btn');
 
-        const file = this.currentFile;
         const extension = file.name.split('.').pop().toLowerCase();
         const fileType = file.type;
 
@@ -147,9 +177,9 @@ class AttachmentPreview {
         infoLabel.innerText = `${this.formatBytes(file.size)} • ${fileType || 'binary'}`;
 
         // Prepare Download Link
-        if (this.currentBlobUrl) URL.revokeObjectURL(this.currentBlobUrl);
-        this.currentBlobUrl = URL.createObjectURL(file);
-        downloadBtn.href = this.currentBlobUrl;
+        if (this.currentModalBlobUrl) URL.revokeObjectURL(this.currentModalBlobUrl);
+        this.currentModalBlobUrl = URL.createObjectURL(file);
+        downloadBtn.href = this.currentModalBlobUrl;
         downloadBtn.download = file.name;
 
         modal.classList.add('active');
@@ -157,12 +187,12 @@ class AttachmentPreview {
         // Render Content
         if (fileType.startsWith('image/')) {
             const img = document.createElement('img');
-            img.src = this.currentBlobUrl;
+            img.src = this.currentModalBlobUrl;
             img.className = 'max-w-full max-h-full rounded-2xl shadow-xl transition-all hover:scale-[1.01]';
             content.innerHTML = '';
             content.appendChild(img);
         } else if (fileType === 'application/pdf') {
-            content.innerHTML = `<iframe src="${this.currentBlobUrl}#toolbar=1" class="w-full h-full rounded-[1.5rem] border-0 bg-white shadow-xl"></iframe>`;
+            content.innerHTML = `<iframe src="${this.currentModalBlobUrl}#toolbar=1" class="w-full h-full rounded-[1.5rem] border-0 bg-white shadow-xl"></iframe>`;
         } else if (extension === 'docx') {
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -212,11 +242,15 @@ class AttachmentPreview {
     }
 
     clearPreview() {
-        if (this.currentBlobUrl) {
-            URL.revokeObjectURL(this.currentBlobUrl);
-            this.currentBlobUrl = null;
+        if (this.currentModalBlobUrl) {
+            URL.revokeObjectURL(this.currentModalBlobUrl);
+            this.currentModalBlobUrl = null;
         }
-        this.currentFile = null;
+        if (this.currentBlobUrls) {
+            this.currentBlobUrls.forEach(url => URL.revokeObjectURL(url));
+            this.currentBlobUrls = [];
+        }
+        this.currentFiles = [];
         this.input.value = '';
         this.container.innerHTML = '';
         if (this.onRemove) this.onRemove();

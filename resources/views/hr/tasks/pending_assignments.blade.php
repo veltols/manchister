@@ -127,10 +127,18 @@
                             </td>
                             <td>
                                 @if($task->task_attachment)
-                                    <a href="{{ asset($task->task_attachment) }}" target="_blank"
-                                        class="inline-flex items-center gap-1 px-2 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-colors">
-                                        <i class="fa-solid fa-paperclip"></i> View File
-                                    </a>
+                                    @php
+                                        $attachments = json_decode($task->task_attachment, true) ?? [$task->task_attachment];
+                                        if (!is_array($attachments)) $attachments = [$task->task_attachment];
+                                    @endphp
+                                    <div class="flex flex-col gap-1">
+                                    @foreach($attachments as $attach)
+                                        <a href="{{ asset($attach) }}" target="_blank"
+                                            class="inline-flex items-center gap-1 px-2 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-colors" title="{{ basename($attach) }}">
+                                            <i class="fa-solid fa-paperclip"></i> View File
+                                        </a>
+                                    @endforeach
+                                    </div>
                                 @else
                                     <span class="text-slate-300 text-sm">—</span>
                                 @endif
@@ -331,7 +339,7 @@ const taskData = {
         createdBy: "{{ $task->assignedBy ? $task->assignedBy->first_name . ' ' . $task->assignedBy->last_name : '—' }}",
         dueDate: "{{ \Carbon\Carbon::parse($task->task_due_date)->format('d M Y') }}",
         startDate: "{{ \Carbon\Carbon::parse($task->task_assigned_date)->format('d M Y') }}",
-        attachment: "{{ $task->task_attachment ? asset($task->task_attachment) : '' }}",
+        attachment: {!! $task->task_attachment ? json_encode($task->task_attachment) : 'null' !!},
         employees: [
             @php
                 $taskDeptId = $task->department_id;
@@ -398,11 +406,8 @@ const taskData = {
                 </div>
             </div>
             <div id="d-attachment-wrap" class="hidden">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Attachment</p>
-                <a id="d-attachment" href="#" target="_blank"
-                    class="inline-flex items-center gap-2 px-3 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-colors">
-                    <i class="fa-solid fa-paperclip"></i> View Attachment
-                </a>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Attachments</p>
+                <div id="d-attachment-container" class="space-y-1"></div>
             </div>
         </div>
     </div>
@@ -581,11 +586,25 @@ const taskData = {
         document.getElementById('d-start').innerText = t.startDate;
         document.getElementById('d-created-by').innerText = t.createdBy;
         const attachWrap = document.getElementById('d-attachment-wrap');
+        const attachContainer = document.getElementById('d-attachment-container');
         if (t.attachment) {
-            document.getElementById('d-attachment').href = t.attachment;
+            let files = [];
+            try {
+                files = JSON.parse(t.attachment);
+            } catch(e) {
+                files = [t.attachment];
+            }
+            if (!Array.isArray(files)) { files = [t.attachment]; }
+
+            let html = '';
+            files.forEach(file => {
+                html += `<a href="{{ url('/') }}/${file}" target="_blank" class="inline-flex items-center gap-2 px-3 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-colors mr-2 mb-2"><i class="fa-solid fa-paperclip"></i> View File</a>`;
+            });
+            attachContainer.innerHTML = html;
             attachWrap.classList.remove('hidden');
         } else {
             attachWrap.classList.add('hidden');
+            attachContainer.innerHTML = '';
         }
         openModal('detailModal');
     }

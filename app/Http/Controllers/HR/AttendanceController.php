@@ -133,4 +133,108 @@ class AttendanceController extends Controller
         
         return redirect()->back()->with('success', "Daily attendance finalized. Marked $markedCount employees as absent/on leave.");
     }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'checkin_date' => 'required|date',
+            'checkin_time' => 'required',
+            'checkout_date' => 'nullable|date',
+            'checkout_time' => 'nullable',
+            'attendance_status' => 'required|in:present,late,absent,on leave',
+            'attendance_remarks' => 'nullable|string',
+        ]);
+
+        $attendance = Attendance::findOrFail($id);
+        $attendance->checkin_date = $request->checkin_date;
+        $attendance->checkin_time = $request->checkin_time;
+
+        if ($request->checkout_date && $request->checkout_time) {
+            $attendance->checkout_date = $request->checkout_date;
+            $attendance->checkout_time = $request->checkout_time;
+            
+            $checkinDateTime = \Carbon\Carbon::parse($request->checkin_date . ' ' . $request->checkin_time);
+            $checkoutDateTime = \Carbon\Carbon::parse($request->checkout_date . ' ' . $request->checkout_time);
+            if ($checkoutDateTime->greaterThan($checkinDateTime)) {
+                $attendance->total_hours = round($checkinDateTime->diffInMinutes($checkoutDateTime) / 60, 2);
+            } else {
+                $attendance->total_hours = 0.00;
+            }
+        } else {
+            $attendance->checkout_date = null;
+            $attendance->checkout_time = null;
+            $attendance->total_hours = null;
+        }
+
+        $attendance->attendance_status = $request->attendance_status;
+        $attendance->attendance_remarks = $request->attendance_remarks;
+        $attendance->save();
+
+        return redirect()->back()->with('success', 'Attendance updated successfully.');
+    }
+
+    public function exportCsv(Request $request)
+    {
+        $attendances = Attendance::with('employee')
+            ->orderBy('checkin_date', 'desc')
+            ->orderBy('checkin_time', 'desc')
+            ->get();
+
+        $filename = 'attendance_export_' . now()->format('Ymd_His') . '.csv';
+
+        $headers = [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Pragma'              => 'no-cache',
+            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires'             => '0',
+        ];
+
+        $callback = function () use ($attendances) {
+            $handle = fopen('php://output', 'w');
+
+            // UTF-8 BOM for Excel compatibility
+            fprintf($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+            // Header row
+            fputcsv($handle, [
+                'Ref #',
+                'Employee ID',
+                'Employee Name',
+                'Check-in Date',
+                'Check-in Time',
+                'Check-out Date',
+                'Check-out Time',
+                'Total Hours',
+                'Status',
+                'Remarks',
+                'Added Date',
+            ]);
+
+            foreach ($attendances as $a) {
+                $employeeName = $a->employee
+                    ? $a->employee->first_name . ' ' . $a->employee->last_name
+                    : 'Unknown';
+
+                fputcsv($handle, [
+                    $a->attendance_id,
+                    $a->employee_id,
+                    $employeeName,
+                    $a->checkin_date ? $a->checkin_date->format('Y-m-d') : '-',
+                    $a->checkin_time ?? '-',
+                    $a->checkout_date ? \Carbon\Carbon::parse($a->checkout_date)->format('Y-m-d') : '-',
+                    $a->checkout_time ?? '-',
+                    $a->total_hours ?? '0.00',
+                    strtoupper($a->attendance_status ?? 'present'),
+                    $a->attendance_remarks ?? '',
+                    $a->added_date ? $a->added_date->format('Y-m-d H:i:s') : '-',
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }
+

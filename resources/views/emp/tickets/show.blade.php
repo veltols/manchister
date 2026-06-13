@@ -205,7 +205,7 @@
                     
                     <h4 class="text-lg font-bold mb-2">Need faster support?</h4>
                     <p class="text-sm text-slate-400 leading-relaxed">
-                        If this ticket is critical, please contact the IT department directly via email.
+                        If this ticket is critical, please contact the IT department directly via email it@iqc.net.
                     </p>
                 </div>
             </div>

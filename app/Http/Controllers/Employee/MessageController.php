@@ -14,6 +14,7 @@ class MessageController extends Controller
 {
     public function index()
     {
+        
         $employeeId = Auth::user()->employee->employee_id ?? 0;
 
         // Fetch conversations where user is a participant

@@ -420,26 +420,12 @@
                 <div id="drawer-desc" class="text-slate-700 text-sm leading-relaxed prose prose-slate max-w-none"></div>
             </div>
 
-            {{-- Attachment --}}
+            {{-- Attachments --}}
             <div id="drawer-attachment-wrap" class="px-6 py-5 border-b border-slate-100 hidden">
                 <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
-                    <i class="fa-solid fa-paperclip mr-1"></i> Attachment
+                    <i class="fa-solid fa-paperclip mr-1"></i> Attachments
                 </h3>
-                <a id="drawer-attachment-link" href="#" target="_blank" class="group block">
-                    <div
-                        class="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 group-hover:border-[#004F68]/20 group-hover:bg-[#004F68]/5 transition-all">
-                        <div id="drawer-attachment-icon-box"
-                            class="w-10 h-10 rounded-lg bg-white shadow-sm text-[#004F68] flex items-center justify-center text-lg flex-shrink-0 group-hover:scale-110 transition-transform">
-                            <i id="drawer-attachment-icon" class="fa-solid fa-file"></i>
-                        </div>
-                        <div class="overflow-hidden">
-                            <p id="drawer-attachment-name"
-                                class="text-sm font-bold text-slate-700 truncate group-hover:text-[#004F68]">File</p>
-                            <p class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Click to View /
-                                Download</p>
-                        </div>
-                    </div>
-                </a>
+                <div id="drawer-attachments-list" class="space-y-2"></div>
             </div>
 
             {{-- ── Comments + Activity Tabs ────────────────────────────── --}}
@@ -554,7 +540,7 @@
                         <select name="assigned_to" class="premium-input w-full px-4 py-3 text-sm" required>
                             <option value="myself">Myself</option>
                             @foreach($departments as $dept)
-                                <option value="dept_{{ $dept->department_id }}">{{ $dept->department_name }} Department</option>
+                                <option value="dept_{{ $dept->department_id }}">{{ $dept->department_name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -583,33 +569,22 @@
                             Schedule</label>
                         <input type="date" name="task_assigned_date" class="premium-input w-full text-sm"
                             value="{{ date('Y-m-d') }}" required>
-                        <select name="start_time" class="premium-input w-full text-sm">
-                            <option value="">Start Time (Optional)</option>
-                            @for($i = 6; $i <= 22; $i++)
-                                <option value="{{ str_pad($i, 2, '0', STR_PAD_LEFT) }}:00:00">
-                                    {{ str_pad($i, 2, '0', STR_PAD_LEFT) }}:00
-                            </option>@endfor
-                        </select>
+                        <input type="time" name="start_time" class="premium-input w-full text-sm"
+                            onchange="if(this.value) { let [h, m] = this.value.split(':'); this.form.end_time.value = String((parseInt(h) + 1) % 24).padStart(2, '0') + ':' + m; }">
                     </div>
                     <div class="space-y-3">
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">Due
                             Deadline</label>
                         <input type="date" name="task_due_date" class="premium-input w-full text-sm" required>
-                        <select name="end_time" class="premium-input w-full text-sm">
-                            <option value="">End Time (Optional)</option>
-                            @for($i = 6; $i <= 22; $i++)
-                                <option value="{{ str_pad($i, 2, '0', STR_PAD_LEFT) }}:00:00" {{ $i == 14 ? 'selected' : '' }}>
-                                    {{ str_pad($i, 2, '0', STR_PAD_LEFT) }}:00
-                            </option>@endfor
-                        </select>
+                        <input type="time" name="end_time" class="premium-input w-full text-sm">
                     </div>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                        <i class="fa-solid fa-paperclip text-indigo-500 mr-1"></i> Attachment <span
+                        <i class="fa-solid fa-paperclip text-indigo-500 mr-1"></i> Attachments <span
                             class="text-slate-300">(Optional)</span>
                     </label>
-                    <input type="file" name="task_attachment" id="task_attachment"
+                    <input type="file" name="task_attachments[]" id="task_attachment" multiple
                         class="premium-input w-full px-4 py-3 text-sm">
                     <div id="task-attachment-preview"></div>
                 </div>
@@ -1007,17 +982,42 @@
                 if (slider) { slider.value = prog; document.getElementById('update-progress-value').innerText = prog + '%'; }
 
                 const attachWrap = document.getElementById('drawer-attachment-wrap');
+                const attachList = document.getElementById('drawer-attachments-list');
                 if (task.task_attachment) {
                     attachWrap.classList.remove('hidden');
-                    document.getElementById('drawer-attachment-link').href = `{{ url('/') }}/${task.task_attachment}`;
-                    const parts = task.task_attachment.split('/');
-                    const fname = parts[parts.length - 1].replace(/^\d+_/, '');
-                    document.getElementById('drawer-attachment-name').textContent = fname;
-                    const ext = fname.split('.').pop().toLowerCase();
-                    const icons = { pdf: 'fa-file-pdf', doc: 'fa-file-word', docx: 'fa-file-word', xls: 'fa-file-excel', xlsx: 'fa-file-excel', jpg: 'fa-file-image', jpeg: 'fa-file-image', png: 'fa-file-image', zip: 'fa-file-archive' };
-                    document.getElementById('drawer-attachment-icon').className = `fa-solid ${icons[ext] || 'fa-file'}`;
+                    let files = [];
+                    try {
+                        files = JSON.parse(task.task_attachment);
+                    } catch(e) {
+                        files = [task.task_attachment]; // fallback for old single string records
+                    }
+                    if (!Array.isArray(files)) { files = [task.task_attachment]; }
+                    
+                    let html = '';
+                    files.forEach(file => {
+                        const parts = file.split('/');
+                        const fname = parts[parts.length - 1].replace(/^\d+_[a-z0-9]+_/, '').replace(/^\d+_/, '');
+                        const ext = fname.split('.').pop().toLowerCase();
+                        const icons = { pdf: 'fa-file-pdf', doc: 'fa-file-word', docx: 'fa-file-word', xls: 'fa-file-excel', xlsx: 'fa-file-excel', jpg: 'fa-file-image', jpeg: 'fa-file-image', png: 'fa-file-image', zip: 'fa-file-archive' };
+                        const iconCls = icons[ext] || 'fa-file';
+                        html += `
+                            <a href="{{ url('/') }}/${file}" target="_blank" class="group block mb-2">
+                                <div class="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 group-hover:border-[#004F68]/20 group-hover:bg-[#004F68]/5 transition-all">
+                                    <div class="w-10 h-10 rounded-lg bg-white shadow-sm text-[#004F68] flex items-center justify-center text-lg flex-shrink-0 group-hover:scale-110 transition-transform">
+                                        <i class="fa-solid ${iconCls}"></i>
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <p class="text-sm font-bold text-slate-700 truncate group-hover:text-[#004F68]">${fname}</p>
+                                        <p class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Click to View / Download</p>
+                                    </div>
+                                </div>
+                            </a>
+                        `;
+                    });
+                    attachList.innerHTML = html;
                 } else {
                     attachWrap.classList.add('hidden');
+                    attachList.innerHTML = '';
                 }
 
                 renderLogs(task.logs);

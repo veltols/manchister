@@ -1,0 +1,10 @@
+ALTER TABLE hr_employees_permissions
+MODIFY COLUMN total_hours DECIMAL(5,2);
+
+ALTER TABLE employees_list
+MODIFY COLUMN permission_hours_balance DECIMAL(5,2);
+
+ALTER TABLE employees_list
+MODIFY COLUMN allowed_permission_hours DECIMAL(5,2);
+
+INSERT INTO `sys_list_status` (`status_id`, `status_name`, `status_name_ar`, `status_color`) VALUES (NULL, 'Deleted', 'Deleted', '565b61');
