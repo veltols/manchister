@@ -13,6 +13,7 @@ use App\Models\ExitInterview;
 use App\Models\HrDocument;
 use App\Models\HrGroup;
 use App\Models\Task;
+use App\Models\ProbationReview;
 
 class RequestsController extends Controller
 {
@@ -25,6 +26,7 @@ class RequestsController extends Controller
             'attendance' => Attendance::count(),
             'exit_interviews' => ExitInterview::count(),
             'performance' => Performance::count(),
+            'probation_reviews' => ProbationReview::count(),
             'documents' => HrDocument::count(),
             'groups' => HrGroup::count(),
             'tasks' => Task::count(),

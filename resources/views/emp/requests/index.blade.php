@@ -119,6 +119,56 @@
                 </p>
             </div>
 
+            @if(Auth::user()->is_gm)
+                <!-- GM: Manage Permissions -->
+                <a href="{{ route('emp.permissions-gm.index') }}"
+                    class="hub-card group bg-gradient-to-br from-white to-amber-50/20 p-6 rounded-3xl border border-amber-200/50 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 relative">
+                    <div
+                        class="w-16 h-16 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600 mb-6 group-hover:bg-amber-500 group-hover:text-white transition-all duration-500">
+                        <i class="fa-solid fa-clock-rotate-left text-2xl"></i>
+                    </div>
+                    <div class="absolute top-6 right-6 px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-[9px] font-bold uppercase tracking-wider">GM Action</div>
+                    <h3 class="text-xl font-bold text-premium mb-2">Manage Permissions</h3>
+                    <p class="text-sm text-slate-500">Review and manage short leave permission requests for employees.</p>
+                    <div class="mt-6 flex items-center text-amber-600 font-bold text-sm uppercase tracking-widest">
+                        <span>Manage Permissions</span>
+                        <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
+                    </div>
+                </a>
+
+                <!-- GM: Manage Disciplinary -->
+                <a href="{{ route('emp.disciplinary-gm.index') }}"
+                    class="hub-card group bg-gradient-to-br from-white to-rose-50/20 p-6 rounded-3xl border border-rose-200/50 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 relative">
+                    <div
+                        class="w-16 h-16 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-600 mb-6 group-hover:bg-rose-600 group-hover:text-white transition-all duration-500">
+                        <i class="fa-solid fa-gavel text-2xl"></i>
+                    </div>
+                    <div class="absolute top-6 right-6 px-2 py-0.5 bg-rose-100 text-rose-800 rounded-full text-[9px] font-bold uppercase tracking-wider">GM Action</div>
+                    <h3 class="text-xl font-bold text-premium mb-2">Manage Disciplinary</h3>
+                    <p class="text-sm text-slate-500">Record, review, and monitor employee warnings and proceedings.</p>
+                    <div class="mt-6 flex items-center text-rose-600 font-bold text-sm uppercase tracking-widest">
+                        <span>Manage Disciplinary</span>
+                        <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
+                    </div>
+                </a>
+
+                <!-- GM: Performance Reviews -->
+                <a href="{{ route('emp.performance-gm.index') }}"
+                    class="hub-card group bg-gradient-to-br from-white to-indigo-50/20 p-6 rounded-3xl border border-indigo-200/50 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 relative">
+                    <div
+                        class="w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-500">
+                        <i class="fa-solid fa-star text-2xl"></i>
+                    </div>
+                    <div class="absolute top-6 right-6 px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded-full text-[9px] font-bold uppercase tracking-wider">GM Action</div>
+                    <h3 class="text-xl font-bold text-premium mb-2">Performance Reviews</h3>
+                    <p class="text-sm text-slate-500">Track and manage employee growth, scores, and manager feedback.</p>
+                    <div class="mt-6 flex items-center text-indigo-600 font-bold text-sm uppercase tracking-widest">
+                        <span>Manage Reviews</span>
+                        <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
+                    </div>
+                </a>
+            @endif
+
         </div>
 
         <!-- Quick Links to Document Types -->

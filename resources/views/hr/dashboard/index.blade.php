@@ -766,6 +766,7 @@
                         </a>
 
                         {{-- Performance --}}
+                        {{--
                         <a href="{{ route('hr.performance.index') }}" class="quick-action-card"
                            style="background:linear-gradient(135deg,#f59e0b 0%,#d97706 60%,#b45309 100%); box-shadow:0 6px 20px rgba(245,158,11,0.3);">
                             <div class="qa-icon" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3);">
@@ -777,6 +778,7 @@
                             </div>
                             <i class="fa-solid fa-chevron-right text-white/60 relative z-10"></i>
                         </a>
+                        --}}
 
                     </div>
                 </div>

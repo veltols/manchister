@@ -315,6 +315,28 @@ Route::middleware('auth')->group(function () {
         // Settings
         Route::get('/settings', [App\Http\Controllers\Employee\SettingsController::class, 'index'])->name('settings.index');
         Route::post('/settings', [App\Http\Controllers\Employee\SettingsController::class, 'update'])->name('settings.update');
+
+        // GM HR-like actions
+        Route::prefix('permissions-gm')->name('permissions-gm.')->group(function () {
+            Route::get('/', [App\Http\Controllers\HR\PermissionController::class, 'index'])->name('index');
+            Route::get('/data', [App\Http\Controllers\HR\PermissionController::class, 'getData'])->name('data');
+            Route::get('/export', [App\Http\Controllers\HR\PermissionController::class, 'exportCsv'])->name('export');
+            Route::post('/', [App\Http\Controllers\HR\PermissionController::class, 'store'])->name('store');
+        });
+
+        Route::prefix('disciplinary-gm')->name('disciplinary-gm.')->group(function () {
+            Route::get('/', [App\Http\Controllers\HR\DisciplinaryController::class, 'index'])->name('index');
+            Route::get('/data', [App\Http\Controllers\HR\DisciplinaryController::class, 'getData'])->name('data');
+            Route::post('/', [App\Http\Controllers\HR\DisciplinaryController::class, 'store'])->name('store');
+            Route::post('/{id}/update', [App\Http\Controllers\HR\DisciplinaryController::class, 'update'])->name('update');
+        });
+
+        Route::prefix('performance-gm')->name('performance-gm.')->group(function () {
+            Route::get('/', [App\Http\Controllers\HR\PerformanceController::class, 'index'])->name('index');
+            Route::get('/data', [App\Http\Controllers\HR\PerformanceController::class, 'getData'])->name('data');
+            Route::post('/', [App\Http\Controllers\HR\PerformanceController::class, 'store'])->name('store');
+            Route::post('/{id}/update', [App\Http\Controllers\HR\PerformanceController::class, 'update'])->name('update');
+        });
     });
 
     // HR Portal

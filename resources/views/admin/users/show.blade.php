@@ -366,7 +366,8 @@
                             $categoryMap = [
                                 'External Services' => ['Training Providers Management', 'Learners Affairs', 'Claim Certificate'],
                                 'Strategy Services' => ['Strategy Management', 'Operational Planning', 'Self Studies'],
-                                'EQA Services'      => ['EQA']
+                                'EQA Services'      => ['EQA'],
+                                'HR Services'       => ['Attendance Log', 'HR documents', 'Probation Review', 'Exit Interview']
                             ];
                         @endphp
 
@@ -399,7 +400,7 @@
                                                         {{-- Left: Icon + Text --}}
                                                         <div class="flex items-center gap-3 flex-1 min-w-0">
                                                             <div class="srv-icon {{ $isEnabled ? 'on' : 'off' }}" id="srv-icon-{{ $sid }}">
-                                                                <i class="fa-solid fa-layer-group"></i>
+                                                                <i class="{{ $service->service_icon ?? 'fa-solid fa-layer-group' }}"></i>
                                                             </div>
                                                             <div class="min-w-0">
                                                                 <p class="font-bold text-slate-800 text-sm truncate">{{ $service->service_title }}</p>
@@ -451,7 +452,7 @@
                                                 <div class="srv-card {{ $isEnabled ? 'is-enabled' : '' }}" id="srv-card-{{ $sid }}">
                                                     <div class="flex items-center gap-3 flex-1 min-w-0">
                                                         <div class="srv-icon {{ $isEnabled ? 'on' : 'off' }}" id="srv-icon-{{ $sid }}">
-                                                            <i class="fa-solid fa-layer-group"></i>
+                                                            <i class="{{ $service->service_icon ?? 'fa-solid fa-layer-group' }}"></i>
                                                         </div>
                                                         <div class="min-w-0">
                                                             <p class="font-bold text-slate-800 text-sm truncate">{{ $service->service_title }}</p>

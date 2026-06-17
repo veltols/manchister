@@ -71,20 +71,7 @@
         <span class="text-base font-semibold">HR Documents</span>
     </a>
 
-    {{-- Probation Performance Reviews --}}
-    @php
-        $hrProbationPending = \App\Models\ProbationReview::where('status', 'pending_manager')->count();
-    @endphp
-    <a href="{{ route('hr.probation-reviews.index') }}"
-        class="nav-item {{ request()->routeIs('hr.probation-reviews.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl mb-1 relative">
-        <div class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
-            <i class="fa-solid fa-clipboard-check text-base"></i>
-        </div>
-        <span class="text-base font-semibold">Probation Reviews</span>
-        @if($hrProbationPending > 0)
-            <span class="absolute top-1 right-2 bg-indigo-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm">{{ $hrProbationPending }}</span>
-        @endif
-    </a>
+
 
     {{-- Apps Drawer Trigger --}}
     <div x-data="{ open: false }" @click.away="open = false" class="relative">

@@ -4,6 +4,116 @@
 @section('subtitle', 'Select a module to manage requests and operations')
 
 @section('content')
+    @php
+        $modules = [
+            [
+                'title' => 'Leaves Management',
+                'desc' => 'Process annual, sick, and specialized leave requests.',
+                'icon' => 'fa-calendar-check',
+                'route' => 'hr.leaves.index',
+                'count' => $stats['leaves'],
+                'color' => 'emerald',
+                'gradient' => 'from-emerald-500 to-teal-600'
+            ],
+            /*
+            [
+                'title' => 'Permissions',
+                'desc' => 'Manage short leave permissions and hourly absences.',
+                'icon' => 'fa-clock',
+                'route' => 'hr.permissions.index',
+                'count' => $stats['permissions'],
+                'color' => 'blue',
+                'gradient' => 'from-blue-500 to-indigo-600'
+            ],
+            [
+                'title' => 'Disciplinary Actions',
+                'desc' => 'Record and monitor employee warnings and proceedings.',
+                'icon' => 'fa-gavel',
+                'route' => 'hr.disciplinary.index',
+                'count' => $stats['disciplinary'],
+                'color' => 'rose',
+                'gradient' => 'from-rose-500 to-orange-600'
+            ],
+            */
+            [
+                'title' => 'Attendance Logs',
+                'desc' => 'Daily check-in/out records and automated tracking.',
+                'icon' => 'fa-clipboard-user',
+                'route' => 'hr.attendance.index',
+                'count' => $stats['attendance'],
+                'color' => 'amber',
+                'gradient' => 'from-amber-400 to-orange-500',
+                'service_id' => 10008
+            ],
+            [
+                'title' => 'Exit Interviews',
+                'desc' => 'Manage the offboarding process and feedback surveys.',
+                'icon' => 'fa-door-open',
+                'route' => 'hr.exit_interviews.index',
+                'count' => $stats['exit_interviews'],
+                'color' => 'purple',
+                'gradient' => 'from-purple-500 to-indigo-700',
+                'service_id' => 10011
+            ],
+            [
+                'title' => 'Probation Reviews',
+                'desc' => 'Track employee probation reviews and evaluation status.',
+                'icon' => 'fa-clipboard-check',
+                'route' => 'hr.probation-reviews.index',
+                'count' => $stats['probation_reviews'],
+                'color' => 'indigo',
+                'gradient' => 'from-indigo-500 to-blue-700',
+                'service_id' => 10010
+            ],
+            /*
+            [
+                'title' => 'Performance reviews',
+                'desc' => 'Track employee growth, scores, and manager feedback.',
+                'icon' => 'fa-star',
+                'route' => 'hr.performance.index',
+                'count' => $stats['performance'],
+                'color' => 'indigo',
+                'gradient' => 'from-indigo-500 to-blue-700'
+            ],
+            */
+            [
+                'title' => 'HR Documents',
+                'desc' => 'Internal policies, procedures, and official templates.',
+                'icon' => 'fa-file-invoice',
+                'route' => 'hr.documents.index',
+                'count' => $stats['documents'],
+                'color' => 'cyan',
+                'gradient' => 'from-cyan-500 to-blue-600',
+                'service_id' => 10009
+            ],
+            [
+                'title' => 'Groups & Committees',
+                'desc' => 'Internal team collaboration and committee units.',
+                'icon' => 'fa-users-rectangle',
+                'route' => 'hr.groups.index',
+                'count' => $stats['groups'],
+                'color' => 'blue',
+                'gradient' => 'from-blue-600 to-indigo-700'
+            ],
+            [
+                'title' => 'Task Management',
+                'desc' => 'Track assignments, deadlines, and project progress.',
+                'icon' => 'fa-list-check',
+                'route' => 'hr.tasks.index',
+                'count' => $stats['tasks'],
+                'color' => 'indigo',
+                'gradient' => 'from-indigo-600 to-violet-600'
+            ]
+        ];
+
+        $allowedStatsTotal = 0;
+        foreach($modules as $module) {
+            if(!isset($module['service_id']) || auth()->user()->hasService($module['service_id'])) {
+                $allowedStatsTotal += $module['count'];
+            }
+        }
+    @endphp
+
     <div class="space-y-8 animate-fade-in-up">
 
         <!-- Sub Navigation -->
@@ -29,7 +139,7 @@
                 <div class="flex gap-4 mt-8">
                     <div class="px-4 py-2 bg-white/10 backdrop-blur-md rounded-xl border border-white/10">
                         <span class="text-white/60 text-xs font-bold uppercase tracking-wider block">Total Operations</span>
-                        <span class="text-white text-2xl font-bold">{{ array_sum($stats) }}</span>
+                        <span class="text-white text-2xl font-bold">{{ $allowedStatsTotal }}</span>
                     </div>
                     <div class="px-4 py-2 bg-emerald-500/20 backdrop-blur-md rounded-xl border border-emerald-500/20">
                         <span class="text-emerald-300 text-xs font-bold uppercase tracking-wider block">System Health</span>
@@ -42,126 +152,42 @@
         <!-- Modules Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-            @php
-                $modules = [
-                    [
-                        'title' => 'Leaves Management',
-                        'desc' => 'Process annual, sick, and specialized leave requests.',
-                        'icon' => 'fa-calendar-check',
-                        'route' => 'hr.leaves.index',
-                        'count' => $stats['leaves'],
-                        'color' => 'emerald',
-                        'gradient' => 'from-emerald-500 to-teal-600'
-                    ],
-                    [
-                        'title' => 'Permissions',
-                        'desc' => 'Manage short leave permissions and hourly absences.',
-                        'icon' => 'fa-clock',
-                        'route' => 'hr.permissions.index',
-                        'count' => $stats['permissions'],
-                        'color' => 'blue',
-                        'gradient' => 'from-blue-500 to-indigo-600'
-                    ],
-                    [
-                        'title' => 'Disciplinary Actions',
-                        'desc' => 'Record and monitor employee warnings and proceedings.',
-                        'icon' => 'fa-gavel',
-                        'route' => 'hr.disciplinary.index',
-                        'count' => $stats['disciplinary'],
-                        'color' => 'rose',
-                        'gradient' => 'from-rose-500 to-orange-600'
-                    ],
-                    [
-                        'title' => 'Attendance Logs',
-                        'desc' => 'Daily check-in/out records and automated tracking.',
-                        'icon' => 'fa-clipboard-user',
-                        'route' => 'hr.attendance.index',
-                        'count' => $stats['attendance'],
-                        'color' => 'amber',
-                        'gradient' => 'from-amber-400 to-orange-500'
-                    ],
-                    [
-                        'title' => 'Exit Interviews',
-                        'desc' => 'Manage the offboarding process and feedback surveys.',
-                        'icon' => 'fa-door-open',
-                        'route' => 'hr.exit_interviews.index',
-                        'count' => $stats['exit_interviews'],
-                        'color' => 'purple',
-                        'gradient' => 'from-purple-500 to-indigo-700'
-                    ],
-                    [
-                        'title' => 'Performance reviews',
-                        'desc' => 'Track employee growth, scores, and manager feedback.',
-                        'icon' => 'fa-star',
-                        'route' => 'hr.performance.index',
-                        'count' => $stats['performance'],
-                        'color' => 'indigo',
-                        'gradient' => 'from-indigo-500 to-blue-700'
-                    ],
-                    [
-                        'title' => 'HR Documents',
-                        'desc' => 'Internal policies, procedures, and official templates.',
-                        'icon' => 'fa-file-invoice',
-                        'route' => 'hr.documents.index',
-                        'count' => $stats['documents'],
-                        'color' => 'cyan',
-                        'gradient' => 'from-cyan-500 to-blue-600'
-                    ],
-                    [
-                        'title' => 'Groups & Committees',
-                        'desc' => 'Internal team collaboration and committee units.',
-                        'icon' => 'fa-users-rectangle',
-                        'route' => 'hr.groups.index',
-                        'count' => $stats['groups'],
-                        'color' => 'blue',
-                        'gradient' => 'from-blue-600 to-indigo-700'
-                    ],
-                    [
-                        'title' => 'Task Management',
-                        'desc' => 'Track assignments, deadlines, and project progress.',
-                        'icon' => 'fa-list-check',
-                        'route' => 'hr.tasks.index',
-                        'count' => $stats['tasks'],
-                        'color' => 'indigo',
-                        'gradient' => 'from-indigo-600 to-violet-600'
-                    ]
-                ];
-            @endphp
-
             @foreach($modules as $module)
-                <a href="{{ route($module['route']) }}"
-                    class="premium-card group hover:scale-[1.02] active:scale-[0.98] transition-all duration-300">
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <div
-                                class="w-14 h-14 rounded-2xl bg-{{ $module['color'] }}-50 text-{{ $module['color'] }}-600 flex items-center justify-center text-2xl shadow-sm group-hover:bg-{{ $module['color'] }}-600 group-hover:text-white transition-all duration-300">
-                                <i class="fa-solid {{ $module['icon'] }}"></i>
+                @if(!isset($module['service_id']) || auth()->user()->hasService($module['service_id']))
+                    <a href="{{ route($module['route']) }}"
+                        class="premium-card group hover:scale-[1.02] active:scale-[0.98] transition-all duration-300">
+                        <div class="p-8">
+                            <div class="flex justify-between items-start mb-6">
+                                <div
+                                    class="w-14 h-14 rounded-2xl bg-{{ $module['color'] }}-50 text-{{ $module['color'] }}-600 flex items-center justify-center text-2xl shadow-sm group-hover:bg-{{ $module['color'] }}-600 group-hover:text-white transition-all duration-300">
+                                    <i class="fa-solid {{ $module['icon'] }}"></i>
+                                </div>
+                                <div
+                                    class="px-3 py-1 bg-{{ $module['color'] }}-100/50 text-{{ $module['color'] }}-700 rounded-full text-xs font-bold uppercase tracking-tighter">
+                                    {{ $module['count'] }} Records
+                                </div>
                             </div>
+
+                            <h3
+                                class="text-xl font-display font-bold text-slate-800 mb-2 group-hover:text-indigo-600 transition-colors">
+                                {{ $module['title'] }}
+                            </h3>
+                            <p class="text-slate-500 font-medium text-sm leading-relaxed mb-6">{{ $module['desc'] }}</p>
+
                             <div
-                                class="px-3 py-1 bg-{{ $module['color'] }}-100/50 text-{{ $module['color'] }}-700 rounded-full text-xs font-bold uppercase tracking-tighter">
-                                {{ $module['count'] }} Records
+                                class="flex items-center text-xs font-bold text-indigo-500 group-hover:translate-x-1 transition-transform">
+                                MANAGE MODULE <i class="fa-solid fa-arrow-right ml-2"></i>
                             </div>
                         </div>
 
-                        <h3
-                            class="text-xl font-display font-bold text-slate-800 mb-2 group-hover:text-indigo-600 transition-colors">
-                            {{ $module['title'] }}
-                        </h3>
-                        <p class="text-slate-500 font-medium text-sm leading-relaxed mb-6">{{ $module['desc'] }}</p>
-
-                        <div
-                            class="flex items-center text-xs font-bold text-indigo-500 group-hover:translate-x-1 transition-transform">
-                            MANAGE MODULE <i class="fa-solid fa-arrow-right ml-2"></i>
+                        <!-- Progress Line at the bottom -->
+                        <div class="h-1.5 w-full bg-slate-100 overflow-hidden mt-auto">
+                            <div
+                                class="h-full bg-gradient-to-r {{ $module['gradient'] }} w-full opacity-10 group-hover:opacity-100 transition-opacity duration-500">
+                            </div>
                         </div>
-                    </div>
-
-                    <!-- Progress Line at the bottom -->
-                    <div class="h-1.5 w-full bg-slate-100 overflow-hidden mt-auto">
-                        <div
-                            class="h-full bg-gradient-to-r {{ $module['gradient'] }} w-full opacity-10 group-hover:opacity-100 transition-opacity duration-500">
-                        </div>
-                    </div>
-                </a>
+                    </a>
+                @endif
             @endforeach
 
         </div>

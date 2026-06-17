@@ -5,7 +5,16 @@
 
 @section('content')
     <div class="space-y-6">
-        @include('hr.partials.requests_nav')
+        @if(request()->is('emp/*') || request()->routeIs('emp.*'))
+            <div class="mb-4">
+                <a href="{{ route('emp.requests.index') }}" class="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Back to Requests Hub</span>
+                </a>
+            </div>
+        @else
+            @include('hr.partials.requests_nav')
+        @endif
 
         <!-- Header with Action Button -->
         <div class="flex items-center justify-between">
@@ -160,7 +169,7 @@
                 </button>
             </div>
 
-            <form action="{{ route('hr.permissions.store') }}" method="POST">
+            <form action="{{ request()->is('emp/*') || request()->routeIs('emp.*') ? route('emp.permissions-gm.store') : route('hr.permissions.store') }}" method="POST">
                 @csrf
                 <div class="space-y-4">
                     <div>
@@ -229,7 +238,7 @@
     <script src="{{ asset('js/ajax-pagination.js') }}"></script>
     <script>
         window.ajaxPagination = new AjaxPagination({
-            endpoint: "{{ route('hr.permissions.data') }}",
+            endpoint: "{{ request()->is('emp/*') || request()->routeIs('emp.*') ? route('emp.permissions-gm.data') : route('hr.permissions.data') }}",
             containerSelector: '#permissions-container',
             paginationSelector: '#permissions-pagination',
             getAdditionalParams: () => ({
@@ -323,11 +332,11 @@
             for (const [key, value] of [...params.entries()]) {
                 if (!value) params.delete(key);
             }
-            window.location.href = '{{ route("hr.permissions.export") }}?' + params.toString();
+            window.location.href = '{{ request()->is("emp/*") || request()->routeIs("emp.*") ? route("emp.permissions-gm.export") : route("hr.permissions.export") }}?' + params.toString();
         }
 
         function resetFilters() {
-            window.location.href = "{{ route('hr.permissions.index') }}";
+            window.location.href = "{{ request()->is('emp/*') || request()->routeIs('emp.*') ? route('emp.permissions-gm.index') : route('hr.permissions.index') }}";
         }
     </script>
     @endpush

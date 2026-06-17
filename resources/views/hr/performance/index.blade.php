@@ -5,7 +5,16 @@
 
 @section('content')
     <div class="space-y-6">
-        @include('hr.partials.requests_nav')
+        @if(request()->is('emp/*') || request()->routeIs('emp.*'))
+            <div class="mb-4">
+                <a href="{{ route('emp.requests.index') }}" class="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Back to Requests Hub</span>
+                </a>
+            </div>
+        @else
+            @include('hr.partials.requests_nav')
+        @endif
 
         <!-- Header with Action Button -->
         <div class="flex items-center justify-between">
@@ -22,7 +31,7 @@
 
         <!-- Filter -->
         <div>
-            <form action="{{ route('hr.performance.index') }}" method="GET">
+            <form action="{{ request()->is('emp/*') || request()->routeIs('emp.*') ? route('emp.performance-gm.index') : route('hr.performance.index') }}" method="GET">
                 <select name="employee_id" onchange="this.form.submit()" class="premium-input px-4 py-3 text-sm">
                     <option value="">Filter by Employee</option>
                     @foreach($employees as $emp)
@@ -94,7 +103,7 @@
     <script src="{{ asset('js/ajax-pagination.js') }}"></script>
     <script>
         window.ajaxPagination = new AjaxPagination({
-            endpoint: "{{ route('hr.performance.data') }}",
+            endpoint: "{{ request()->is('emp/*') || request()->routeIs('emp.*') ? route('emp.performance-gm.data') : route('hr.performance.data') }}",
             containerSelector: '#performance-container',
             paginationSelector: '#performance-pagination',
             renderCallback: function(records) {
@@ -186,7 +195,7 @@
                 </button>
             </div>
 
-            <form id="perfForm" action="{{ route('hr.performance.store') }}" method="POST">
+            <form id="perfForm" action="{{ request()->is('emp/*') || request()->routeIs('emp.*') ? route('emp.performance-gm.store') : route('hr.performance.store') }}" method="POST">
                 @csrf
                 <div class="space-y-4">
                     <div id="empSelectDiv">
@@ -231,7 +240,7 @@
     <script>
         function openModal(id) {
             document.getElementById(id).style.display = 'block';
-            document.getElementById('perfForm').action = "{{ route('hr.performance.store') }}";
+            document.getElementById('perfForm').action = "{{ request()->is('emp/*') || request()->routeIs('emp.*') ? route('emp.performance-gm.store') : route('hr.performance.store') }}";
             document.getElementById('modalTitle').innerText = "New Performance Record";
             document.getElementById('empSelectDiv').style.display = 'block';
             document.getElementById('perfForm').reset();
@@ -242,7 +251,7 @@
         function editPerformance(data) {
             openModal('addPerfModal');
             document.getElementById('modalTitle').innerText = "Edit Performance Record";
-            document.getElementById('perfForm').action = "/hr/performance/" + data.performance_id + "/update";
+            document.getElementById('perfForm').action = ({{ request()->is('emp/*') || request()->routeIs('emp.*') ? 'true' : 'false' }} ? "/emp/performance-gm/" : "/hr/performance/") + data.performance_id + "/update";
 
             document.getElementById('p_object').value = data.performance_object;
             document.getElementById('p_kpi').value = data.performance_kpi;

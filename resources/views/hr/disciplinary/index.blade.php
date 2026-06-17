@@ -5,7 +5,16 @@
 
 @section('content')
     <div class="space-y-6">
-        @include('hr.partials.requests_nav')
+        @if(request()->is('emp/*') || request()->routeIs('emp.*'))
+            <div class="mb-4">
+                <a href="{{ route('emp.requests.index') }}" class="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Back to Requests Hub</span>
+                </a>
+            </div>
+        @else
+            @include('hr.partials.requests_nav')
+        @endif
 
         <!-- Header with Action Button -->
         <div class="flex items-center justify-between">
@@ -166,7 +175,7 @@
     <script src="{{ asset('js/ajax-pagination.js') }}"></script>
     <script>
         window.ajaxPagination = new AjaxPagination({
-            endpoint: "{{ route('hr.disciplinary.data') }}",
+            endpoint: "{{ request()->is('emp/*') || request()->routeIs('emp.*') ? route('emp.disciplinary-gm.data') : route('hr.disciplinary.data') }}",
             containerSelector: '#da-container',
             paginationSelector: '#da-pagination',
             getAdditionalParams: () => ({
@@ -261,7 +270,7 @@
         }
 
         function resetFilters() {
-            window.location.href = "{{ route('hr.disciplinary.index') }}";
+            window.location.href = "{{ request()->is('emp/*') || request()->routeIs('emp.*') ? route('emp.disciplinary-gm.index') : route('hr.disciplinary.index') }}";
         }
     </script>
     @endpush
@@ -278,7 +287,7 @@
                 </button>
             </div>
 
-            <form action="{{ route('hr.disciplinary.store') }}" method="POST">
+            <form action="{{ request()->is('emp/*') || request()->routeIs('emp.*') ? route('emp.disciplinary-gm.store') : route('hr.disciplinary.store') }}" method="POST">
                 @csrf
                 <div class="space-y-4">
                     <div>
@@ -359,7 +368,7 @@
 
     <script>
         function openEditModal(id, statusId, remark) {
-            document.getElementById('editDAForm').action = "/hr/disciplinary/" + id + "/update";
+            document.getElementById('editDAForm').action = ({{ request()->is('emp/*') || request()->routeIs('emp.*') ? 'true' : 'false' }} ? "/emp/disciplinary-gm/" : "/hr/disciplinary/") + id + "/update";
             document.getElementById('edit_status_id').value = statusId;
             document.getElementById('edit_remark').value = remark;
             openModal('editDAModal');
