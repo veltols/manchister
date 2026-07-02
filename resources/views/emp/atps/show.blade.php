@@ -383,6 +383,16 @@
                             Send Credentials
                         </button>
                     </form>
+
+                    <form action="{{ route('emp.atps.login', $atp->atp_id) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="w-full p-3.5 rounded-xl border border-slate-100 text-xs font-bold text-slate-600 hover:border-brand/30 hover:bg-slate-50 transition-all flex items-center gap-3 group">
+                            <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center group-hover:bg-indigo-500 group-hover:text-white transition-all">
+                                <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                            </div>
+                            Manage ATP Portal
+                        </button>
+                    </form>
                     
                     @if($atp->atp_status_id != 4)
                     <form action="{{ route('emp.atps.accredit', $atp->atp_id) }}" method="POST">

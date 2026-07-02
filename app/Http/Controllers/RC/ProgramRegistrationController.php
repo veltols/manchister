@@ -28,8 +28,7 @@ class ProgramRegistrationController extends Controller
     public function faculty()
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
 
         $faculties = DB::table('atps_list_faculties')->where('atp_id', $atp->atp_id)->get();
         $facultyTypes = DB::table('atps_list_faculties_types')->orderBy('faculty_type_id')->get();
@@ -40,8 +39,7 @@ class ProgramRegistrationController extends Controller
     public function saveFaculty(Request $request)
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
 
         $request->validate([
             'faculty_name' => 'required|string',
@@ -73,8 +71,7 @@ class ProgramRegistrationController extends Controller
     public function deleteFaculty($id)
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
         DB::table('atps_list_faculties')->where('faculty_id', $id)->where('atp_id', $atp->atp_id)->delete();
         return redirect()->route('rc.portal.program_registration.faculty')->with('success', 'Faculty member deleted.');
     }
@@ -82,8 +79,7 @@ class ProgramRegistrationController extends Controller
     public function uploadCV(Request $request)
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
 
         $request->validate([
             'faculty_id' => 'required|integer',
@@ -116,8 +112,7 @@ class ProgramRegistrationController extends Controller
     public function qualificationMapping()
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
 
         $qualifications = DB::table('atps_list_qualifications')->where('atp_id', $atp->atp_id)->get();
 
@@ -139,8 +134,7 @@ class ProgramRegistrationController extends Controller
     public function saveQualificationMapping(Request $request)
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
 
         $request->validate([
             'qualification_id' => 'required|integer',
@@ -180,8 +174,7 @@ class ProgramRegistrationController extends Controller
     public function submit()
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
 
         return view('rc.portal.program_registration.submit', $this->baseData($atp));
     }
@@ -189,8 +182,7 @@ class ProgramRegistrationController extends Controller
     public function processSubmission(Request $request)
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
 
         $request->validate([
             'terms' => 'accepted'

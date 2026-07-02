@@ -34,8 +34,7 @@ class AccreditationController extends Controller
     public function initialForm()
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
 
         $existing = DB::table('atps_form_init')->where('atp_id', $atp->atp_id)->first();
         $sectors = DB::table('atps_list_categories')->get();
@@ -49,8 +48,7 @@ class AccreditationController extends Controller
     public function saveInitialForm(Request $request)
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
 
         $request->validate([
             'est_name' => 'required|string|max:255',
@@ -95,8 +93,7 @@ class AccreditationController extends Controller
     public function qualifications()
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
 
         $qualifications = DB::table('atps_list_qualifications')
             ->where('atp_id', $atp->atp_id)
@@ -111,8 +108,7 @@ class AccreditationController extends Controller
     public function saveQualification(Request $request)
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
 
         $request->validate([
             'qualification_name' => 'required|string',
@@ -147,8 +143,7 @@ class AccreditationController extends Controller
     public function deleteQualification($id)
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
         DB::table('atps_list_qualifications')->where('qualification_id', $id)->where('atp_id', $atp->atp_id)->delete();
         return redirect()->route('rc.portal.accreditation.qualifications')->with('success', 'Qualification deleted.');
     }
@@ -159,8 +154,7 @@ class AccreditationController extends Controller
     public function faculty()
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
 
         $faculties = DB::table('atps_list_faculties')->where('atp_id', $atp->atp_id)->get();
         $facultyTypes = DB::table('atps_list_faculties_types')->orderBy('faculty_type_id')->get();
@@ -174,8 +168,7 @@ class AccreditationController extends Controller
     public function saveFaculty(Request $request)
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
 
         $request->validate([
             'faculty_name' => 'required|string',
@@ -207,8 +200,7 @@ class AccreditationController extends Controller
     public function deleteFaculty($id)
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
         DB::table('atps_list_faculties')->where('faculty_id', $id)->where('atp_id', $atp->atp_id)->delete();
         return redirect()->route('rc.portal.accreditation.faculty')->with('success', 'Faculty member deleted.');
     }
@@ -219,8 +211,7 @@ class AccreditationController extends Controller
     public function learners()
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
 
         $statistics = DB::table('atps_learners_statistics')->where('atp_id', $atp->atp_id)->get();
         $qualifications = DB::table('atps_list_qualifications')->where('atp_id', $atp->atp_id)->get();
@@ -234,8 +225,7 @@ class AccreditationController extends Controller
     public function saveLearners(Request $request)
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
 
         $request->validate([
             'qualification_id' => 'required',
@@ -264,8 +254,7 @@ class AccreditationController extends Controller
     public function deleteLearnerStatistic($id)
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
         DB::table('atps_learners_statistics')->where('statistic_id', $id)->where('atp_id', $atp->atp_id)->delete();
         return redirect()->route('rc.portal.accreditation.learners')->with('success', 'Statistic removed.');
     }
@@ -276,8 +265,7 @@ class AccreditationController extends Controller
     public function electronicSystems()
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
 
         $platforms = DB::table('atps_electronic_systems')->where('atp_id', $atp->atp_id)->get();
 
@@ -290,8 +278,7 @@ class AccreditationController extends Controller
     public function saveElectronicSystems(Request $request)
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
 
         $request->validate([
             'platform_name' => 'required|string|max:255',
@@ -312,8 +299,7 @@ class AccreditationController extends Controller
     public function deleteElectronicSystem($id)
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
         DB::table('atps_electronic_systems')->where('platform_id', $id)->where('atp_id', $atp->atp_id)->delete();
         return redirect()->route('rc.portal.accreditation.electronic_systems')->with('success', 'Platform removed.');
     }
@@ -324,8 +310,7 @@ class AccreditationController extends Controller
     public function attachments()
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
         $existing = DB::table('atps_form_init')->where('atp_id', $atp->atp_id)->first();
         return view(
             'rc.portal.accreditation.attachments',
@@ -336,8 +321,7 @@ class AccreditationController extends Controller
     public function saveAttachments(Request $request)
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
 
         $fields = [
             'delivery_plan',
@@ -372,8 +356,7 @@ class AccreditationController extends Controller
     public function submit()
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
 
         $existing = DB::table('atps_form_init')->where('atp_id', $atp->atp_id)->first();
 
@@ -389,8 +372,7 @@ class AccreditationController extends Controller
     public function processSubmission(Request $request)
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
 
         DB::table('atps_form_init')
             ->where('atp_id', $atp->atp_id)

@@ -24,8 +24,7 @@ class PortalController extends Controller
     public function dashboard()
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
 
         // Active (pending/open) requests from atps_list_requests
         $activeRequests = collect();
@@ -57,8 +56,7 @@ class PortalController extends Controller
     public function wizardStep1()
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
 
         // All phases ordered
         $phases = DB::table('a_registration_phases')->orderBy('phase_id')->get();
@@ -155,8 +153,7 @@ class PortalController extends Controller
     public function submitStep1(Request $request)
     {
         $atp = $this->getAtp();
-        if (!$atp)
-            return redirect()->route('login');
+        if (!$atp) return auth()->check() ? redirect()->route('emp.atps.index')->with('error', 'Please select a Training Provider to manage first.') : redirect()->route('login');
         return redirect()->route('rc.portal.dashboard')->with('success', 'Form Submitted');
     }
 }

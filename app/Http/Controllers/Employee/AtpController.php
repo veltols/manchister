@@ -268,6 +268,14 @@ class AtpController extends Controller
         return back()->with('success', 'Training Provider has been successfully accredited.');
     }
 
+    // ─── Login as ATP (Impersonation) ─────────────────────────────────────────
+    public function loginAsAtp($id)
+    {
+        $atp = Atp::findOrFail($id);
+        session(['atp_id' => $atp->atp_id]);
+        return redirect()->route('rc.portal.dashboard')->with('success', 'You are now managing the portal for ' . $atp->atp_name);
+    }
+
     // ─── JSON Data (AJAX pagination) ─────────────────────────────────────────
     public function getData(Request $request)
     {

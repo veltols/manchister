@@ -301,6 +301,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/atps/eqa-users', [App\Http\Controllers\Employee\AtpFormController::class, 'getEqaUsers'])->name('atps.eqa-users');
         Route::post('/atps/{id}/send-email', [App\Http\Controllers\Employee\AtpController::class, 'sendEmail'])->name('atps.send-email');
         Route::post('/atps/{id}/accredit', [App\Http\Controllers\Employee\AtpController::class, 'accredit'])->name('atps.accredit');
+        Route::post('/atps/{id}/login', [App\Http\Controllers\Employee\AtpController::class, 'loginAsAtp'])->name('atps.login');
         Route::get('/atps/data', [App\Http\Controllers\Employee\AtpController::class, 'getData'])->name('atps.data');
         Route::resource('atps', App\Http\Controllers\Employee\AtpController::class)->names('atps');
 
