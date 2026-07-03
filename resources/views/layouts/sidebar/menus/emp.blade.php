@@ -334,31 +334,6 @@
             </div>
             <span class="text-base font-semibold">Training Providers</span>
         </a>
-
-        <!-- Divider with label for ATP Sub-menus -->
-        <div class="flex items-center gap-2 mb-2 mt-2 px-2">
-            <div class="flex-1 h-px bg-slate-200"></div>
-            <span class="text-[9px] font-bold tracking-widest text-slate-400 uppercase">ATP Portal Access</span>
-            <div class="flex-1 h-px bg-slate-200"></div>
-        </div>
-
-        <a href="{{ route('rc.portal.dashboard') }}"
-            class="nav-item {{ request()->routeIs('rc.portal.dashboard') ? 'active' : '' }} flex items-center gap-3 px-3 py-2 rounded-xl mb-1 ml-3 relative">
-            <div class="w-1.5 h-1.5 rounded-full bg-slate-300 absolute left-[-6px]"></div>
-            <div class="nav-icon-wrap w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0">
-                <i class="fa-solid fa-chart-line text-xs"></i>
-            </div>
-            <span class="text-sm font-semibold">ATP Dashboard</span>
-        </a>
-
-        <a href="{{ route('rc.portal.wizard.step1') }}"
-            class="nav-item {{ request()->routeIs('rc.portal.accreditation.*') || request()->routeIs('rc.portal.wizard.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-2 rounded-xl mb-1 ml-3 relative">
-            <div class="w-1.5 h-1.5 rounded-full bg-slate-300 absolute left-[-6px]"></div>
-            <div class="nav-icon-wrap w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0">
-                <i class="fa-solid fa-briefcase text-xs"></i>
-            </div>
-            <span class="text-sm font-semibold">Accreditation</span>
-        </a>
     @endif
 
     @if($canStrategy)

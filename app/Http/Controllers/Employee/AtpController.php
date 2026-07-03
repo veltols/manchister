@@ -152,6 +152,9 @@ class AtpController extends Controller
     public function show($id)
     {
         $atp = Atp::with(['status', 'category', 'type', 'creator', 'emirate', 'contacts'])->findOrFail($id);
+        
+        // Auto-login (impersonate) as this ATP for seamless portal access
+        session(['atp_id' => $atp->atp_id]);
 
         $apps = [];
 
@@ -239,7 +242,86 @@ class AtpController extends Controller
             ->orderBy('log_id', 'desc')
             ->get();
 
-        return view('emp.atps.show', compact('atp', 'apps', 'logs', 'renewals', 'cancellations', 'leRecords'));
+        // ─── Accreditation Phase Logic (Ported from PortalController) ─────────────
+        $phases = DB::table('a_registration_phases')->orderBy('phase_id')->get();
+        $currentPhaseId = (int) $atp->phase_id;
+        $is_phase_ok = (int) $atp->is_phase_ok;
+        $currentPhase = $phases->firstWhere('phase_id', $currentPhaseId);
+
+        $form_status = '';
+        $rc_comment = '';
+        if ($currentPhase && $currentPhase->table_check) {
+            $row = DB::table($currentPhase->table_check)
+                ->where('atp_id', $atp->atp_id)
+                ->select('form_status', 'rc_comment')
+                ->first();
+            if ($row) {
+                $form_status = $row->form_status ?? '';
+                $rc_comment = $row->rc_comment ?? '';
+            }
+        }
+
+        $todos = collect();
+        $showTodos = in_array($form_status, ['review', 'pending_submission']) || $is_phase_ok == 1;
+
+        if ($showTodos) {
+            $rawTodos = DB::table('a_registration_phases_todos')
+                ->where('phase_id', $currentPhaseId)
+                ->where('is_hidden', 0)
+                ->get();
+
+            $allGood = true;
+            foreach ($rawTodos as $todo) {
+                $isDone = false;
+
+                if ($todo->is_submit == 0 && $todo->table_check) {
+                    if (!$todo->col_check) {
+                        $count = DB::table($todo->table_check)
+                            ->where('atp_id', $atp->atp_id)
+                            ->count();
+                        $isDone = $count > 0;
+                    } else {
+                        $val = DB::table($todo->table_check)
+                            ->where('atp_id', $atp->atp_id)
+                            ->value($todo->col_check);
+                        $isDone = !empty($val);
+                    }
+                    if (!$isDone)
+                        $allGood = false;
+                }
+
+                $todoRouteMap = [
+                    1 => route('rc.portal.accreditation.initial_form'),
+                    3 => route('rc.portal.accreditation.qualifications'),
+                    4 => route('rc.portal.accreditation.faculty'),
+                    5 => route('rc.portal.accreditation.learners'),
+                    6 => route('rc.portal.accreditation.electronic_systems'),
+                    7 => route('rc.portal.accreditation.attachments'),
+                    8 => route('rc.portal.accreditation.submit'),
+                    10 => route('rc.portal.program_registration.faculty'),
+                    11 => route('rc.portal.program_registration.qualification_mapping'),
+                    12 => route('rc.portal.program_registration.submit'),
+                ];
+                
+                $baseLink = $todoRouteMap[$todo->todo_id] ?? route('rc.portal.dashboard');
+                // The URL to trigger loginAsAtp with redirect parameter
+                $resolvedLink = route('emp.atps.login', ['id' => $atp->atp_id, 'redirect_to' => urlencode($baseLink)]);
+
+                $todos->push((object) [
+                    'todo_id' => $todo->todo_id,
+                    'title' => $todo->todo_title,
+                    'is_submit' => $todo->is_submit,
+                    'todo_link' => $resolvedLink,
+                    'isDone' => $isDone,
+                    'allGood' => $allGood,
+                ]);
+            }
+        }
+
+        return view('emp.atps.show', compact(
+            'atp', 'apps', 'logs', 'renewals', 'cancellations', 'leRecords',
+            'phases', 'currentPhaseId', 'is_phase_ok', 'currentPhase', 'form_status', 'rc_comment', 'todos', 'showTodos'
+        ));
     }
 
     // ─── Send Email ───────────────────────────────────────────────────────────
@@ -269,10 +351,15 @@ class AtpController extends Controller
     }
 
     // ─── Login as ATP (Impersonation) ─────────────────────────────────────────
-    public function loginAsAtp($id)
+    public function loginAsAtp(Request $request, $id)
     {
         $atp = Atp::findOrFail($id);
         session(['atp_id' => $atp->atp_id]);
+        
+        if ($request->filled('redirect_to')) {
+            return redirect(urldecode($request->redirect_to))->with('success', 'You are now managing the portal for ' . $atp->atp_name);
+        }
+        
         return redirect()->route('rc.portal.dashboard')->with('success', 'You are now managing the portal for ' . $atp->atp_name);
     }
 
