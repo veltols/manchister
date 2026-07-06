@@ -227,7 +227,7 @@
 @endpush
 
 @section('content')
-<div class="max-w-7xl mx-auto space-y-8 animate-fade-in-up" x-data="{ activeTab: 'accreditation' }">
+<div class="max-w-7xl mx-auto space-y-8 animate-fade-in-up" x-data="{ activeTab: 'todo_0' }">
     <!-- ATP Header & Summary -->
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <!-- Main Stats & Info -->
@@ -301,457 +301,50 @@
 
             <!-- Tabs Navigation -->
             <div class="flex flex-wrap items-center gap-2 p-1 bg-slate-100/50 rounded-2xl w-full">
+                {{-- Commented old tabs
                 <button @click="activeTab = 'accreditation'" 
                         :class="activeTab === 'accreditation' ? 'bg-gradient-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white'"
                         class="px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
                     <i class="fa-solid fa-route"></i>
                     Accreditation Journey
                 </button>
-                <button @click="activeTab = 'apps'" 
-                        :class="activeTab === 'apps' ? 'bg-gradient-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white'"
-                        class="px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-list-check"></i>
-                    Applications
-                </button>
-                <button @click="activeTab = 'renewals'" 
-                        :class="activeTab === 'renewals' ? 'bg-gradient-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white'"
-                        class="px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-rotate"></i>
-                    Renewals
-                </button>
-                <button @click="activeTab = 'cancellations'" 
-                        :class="activeTab === 'cancellations' ? 'bg-gradient-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white'"
-                        class="px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-ban"></i>
-                    Cancellations
-                </button>
-                <button @click="activeTab = 'le'" 
-                        :class="activeTab === 'le' ? 'bg-gradient-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white'"
-                        class="px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-graduation-cap"></i>
-                    Learner Enrollment
-                </button>
-                <button @click="activeTab = 'contacts'" 
-                        :class="activeTab === 'contacts' ? 'bg-gradient-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white'"
-                        class="px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-address-book"></i>
-                    Contacts
-                </button>
-                <button @click="activeTab = 'logs'" 
-                        :class="activeTab === 'logs' ? 'bg-gradient-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white'"
-                        class="px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-history"></i>
-                    Logs
-                </button>
+                <button @click="activeTab = 'apps'" ... >Applications</button>
+                ...
+                --}}
+                @if($showTodos && $todos->count())
+                    @foreach($todos as $index => $todo)
+                        <button @click="activeTab = 'todo_{{ $index }}'" 
+                                :class="activeTab === 'todo_{{ $index }}' ? 'bg-gradient-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white'"
+                                class="px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
+                            <i class="fa-solid {{ $todo->isDone ? 'fa-check-circle text-emerald-400' : 'fa-circle-dot text-slate-300' }}"></i>
+                            {{ $todo->title }}
+                        </button>
+                    @endforeach
+                @else
+                    <div class="px-5 py-2.5 text-slate-400 text-xs font-bold">No forms available for the current phase.</div>
+                @endif
             </div>
 
             <!-- Tab Content -->
             <div class="space-y-6">
-                <!-- Accreditation Tab -->
-                <div x-show="activeTab === 'accreditation'" class="animate-fade-in-up" x-cloak>
-                    @php
-                        $phaseCount = $phases->count();
-                        $doneCount = $phases->filter(function ($p) use ($currentPhaseId) {
-                            return $p->phase_id < $currentPhaseId;
-                        })->count();
-                        $progressPct = $phaseCount > 1 ? round(($doneCount / ($phaseCount - 1)) * 100) : 0;
-                    @endphp
-
-                    <div class="overflow-hidden bg-transparent">
-                        {{-- Stepper Header --}}
-                        <div style="border-radius:24px 24px 0 0; overflow:hidden; border:1px solid rgba(0,0,0,0.05); background: white;">
-                            <div class="phase-stepper">
-                                @foreach($phases as $phase)
-                                    @php
-                                        $state = 'pending';
-                                        if ($phase->phase_id < $currentPhaseId) $state = 'done';
-                                        elseif ($phase->phase_id == $currentPhaseId) $state = 'active';
-
-                                        $phaseIcons = [
-                                            1 => 'fa-file-signature',
-                                            2 => 'fa-book-open-reader',
-                                            3 => 'fa-building-shield',
-                                            4 => 'fa-certificate',
-                                        ];
-
-                                        $icon = $phaseIcons[$phase->phase_id] ?? 'fa-circle-dot';
-
-                                        if ($state === 'done') $icon = 'fa-check';
-                                        if ($state === 'active' && $is_phase_ok == 0) $icon = 'fa-triangle-exclamation';
-                                    @endphp
-                                    <div class="phase-step {{ $state }}">
-                                        <div class="phase-icon">
-                                            <i class="fa-solid {{ $icon }}"></i>
-                                        </div>
-                                        <span class="phase-label">{{ $phase->phase_title }}</span>
-                                    </div>
-                                @endforeach
-                            </div>
-
-                            {{-- Progress Bar --}}
-                            <div class="glow-line" style="background: rgba(0,0,0,0.05);">
-                                <div class="glow-fill" style="width: {{ $progressPct }}%;"></div>
+                {{-- Old tabs commented as per client request. --}}
+                @if($showTodos && $todos->count())
+                    @foreach($todos as $index => $todo)
+                        <div x-show="activeTab === 'todo_{{ $index }}'" class="animate-fade-in-up w-full h-[800px]" x-cloak>
+                            <div class="premium-card h-full w-full overflow-hidden">
+                                <iframe src="{{ $todo->todo_link }}" class="w-full h-full border-0 rounded-2xl"></iframe>
                             </div>
                         </div>
-
-                        {{-- ── Body ── --}}
-                        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
-
-                            {{-- LEFT: Phase Info Card --}}
-                            <div class="info-card shadow-sm border border-slate-100">
-                                @if($currentPhase)
-                                    <div class="flex items-center gap-4 mb-8">
-                                        <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white flex-shrink-0"
-                                            style="background:linear-gradient(135deg,#004F68,#006a8a); box-shadow:0 10px 20px rgba(0,79,104,0.15);">
-                                            <i class="fa-solid fa-compass text-lg"></i>
-                                        </div>
-                                        <div>
-                                            <p class="text-[10px] text-slate-400 uppercase tracking-[0.2em] font-black mb-1">Navigation / Focus</p>
-                                            <h2 class="text-xl font-black text-slate-800 tracking-tight">{{ $currentPhase->phase_title }}</h2>
-                                        </div>
-                                    </div>
-
-                                    <div class="prose prose-slate max-w-none">
-                                        <p class="text-[15px] text-slate-500 leading-relaxed font-medium">
-                                            {{ $currentPhase->phase_description }}
-                                        </p>
-                                    </div>
-
-                                    <div class="mt-8 space-y-4">
-                                        <div class="timeline-badge">
-                                            <i class="fa-solid fa-calendar-check text-amber-500"></i>
-                                            <span class="text-xs font-bold uppercase tracking-wider">Estimated Timeline:</span>
-                                            <span class="text-sm font-semibold">{{ $currentPhase->phase_timeline }}</span>
-                                        </div>
-
-                                        @if(in_array($form_status, ['review', 'rejected']) && $rc_comment)
-                                            <div class="rc-comment-card mt-6">
-                                                <div class="flex items-center gap-2 mb-2">
-                                                    <i class="fa-solid fa-message-exclamation text-rose-500"></i>
-                                                    <span class="text-[10px] font-black uppercase tracking-widest text-rose-600">Reviewer Feedback</span>
-                                                </div>
-                                                <p class="text-sm text-slate-700 leading-relaxed font-medium">{!! nl2br(e($rc_comment)) !!}</p>
-                                            </div>
-                                        @endif
-                                    </div>
-                                @else
-                                    <div class="flex flex-col items-center justify-center h-full text-center py-12">
-                                        <div class="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center mb-4">
-                                            <i class="fa-solid fa-face-smile-wink text-3xl text-slate-200"></i>
-                                        </div>
-                                        <p class="text-slate-400 font-bold uppercase tracking-widest text-xs">Waiting for initialization</p>
-                                    </div>
-                                @endif
-                            </div>
-
-                            {{-- RIGHT: Tasks Card --}}
-                            <div class="info-card shadow-sm border border-slate-100">
-                                <div class="flex items-center gap-4 mb-8">
-                                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white flex-shrink-0"
-                                        style="background:linear-gradient(135deg,#7c38ed,#9333ea); box-shadow:0 10px 20px rgba(124,56,237,0.15);">
-                                        <i class="fa-solid fa-tasks text-lg"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] text-slate-400 uppercase tracking-[0.2em] font-black mb-1">Execution / Status</p>
-                                        <h2 class="text-xl font-black text-slate-800 tracking-tight">Requirement Checklist</h2>
-                                    </div>
-                                </div>
-
-                                <div class="space-y-3">
-                                    @if($form_status === 'rejected')
-                                        <div class="text-center py-12 px-6 rounded-3xl bg-rose-50/50 border border-rose-100">
-                                            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
-                                                <i class="fa-solid fa-xmark text-rose-500 text-2xl"></i>
-                                            </div>
-                                            <h3 class="text-rose-900 font-black text-lg mb-1 tracking-tight">Phase Rejected</h3>
-                                            <p class="text-rose-600/70 text-sm font-medium">Please address the feedback in the red box on the left.</p>
-                                        </div>
-
-                                    @elseif($showTodos && $todos->count())
-                                        @php $globalAllGood = true; @endphp
-                                        @foreach($todos as $todo)
-                                            @php
-                                                $isSubmit = $todo->is_submit == 1;
-                                                if (!$todo->isDone && !$isSubmit) $globalAllGood = false;
-                                            @endphp
-                                            <div class="todo-item {{ $todo->isDone ? 'done' : '' }}">
-                                                <div class="flex items-center gap-4">
-                                                    <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 {{ $todo->isDone ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400' }}">
-                                                        <i class="fa-solid {{ $todo->isDone ? 'fa-check' : ($isSubmit ? 'fa-hourglass' : 'fa-circle-dot') }} text-xs"></i>
-                                                    </div>
-                                                    <span class="text-sm font-bold text-slate-700 tracking-tight">{{ $todo->title }}</span>
-                                                </div>
-
-                                                @if(!$isSubmit)
-                                                    <a href="{{ $todo->todo_link }}" class="todo-btn {{ $todo->isDone ? 'btn-edit' : 'btn-fill' }}">
-                                                        <i class="fa-solid {{ $todo->isDone ? 'fa-pen-to-square' : 'fa-arrow-right' }}"></i>
-                                                        <span>{{ $todo->isDone ? 'Modify' : 'Begin' }}</span>
-                                                    </a>
-                                                @else
-                                                    <a href="{{ $todo->todo_link }}" class="todo-btn btn-submit {{ !$globalAllGood ? 'disabled' : '' }}">
-                                                        <i class="fa-solid fa-paper-plane"></i>
-                                                        <span>Finalize</span>
-                                                    </a>
-                                                @endif
-                                            </div>
-                                        @endforeach
-
-                                    @elseif($currentPhaseId == 3)
-                                        <div class="text-center py-12 px-6 rounded-3xl bg-indigo-50/50 border border-indigo-100">
-                                            <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-md">
-                                                <i class="fa-solid fa-building-shield text-indigo-500 text-3xl"></i>
-                                            </div>
-                                            @php
-                                                $visitDate = \Illuminate\Support\Facades\DB::table('eqa_008')->where('atp_id', $atp->atp_id)->value('visit_date');
-                                            @endphp
-                                            @if($visitDate)
-                                                <h3 class="text-indigo-900 font-black text-xl mb-1 tracking-tight">Visit Confirmed</h3>
-                                                <div class="inline-block px-4 py-1 rounded-full bg-indigo-100 text-indigo-700 text-sm font-black mt-2">
-                                                    {{ \Carbon\Carbon::parse($visitDate)->format('d M Y') }}
-                                                </div>
-                                                <p class="text-indigo-600/70 text-sm font-medium mt-4">Please ensure all facilities are ready for the audit.</p>
-                                            @else
-                                                <h3 class="text-indigo-900 font-black text-xl mb-1 tracking-tight">Visit Pending</h3>
-                                                <p class="text-indigo-600/70 text-sm font-medium mt-2">The EQA department is reviewing your schedule.</p>
-                                            @endif
-                                        </div>
-
-                                    @else
-                                        <div class="text-center py-16">
-                                            <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-100">
-                                                <i class="fa-solid fa-shield-halved text-4xl text-slate-100"></i>
-                                            </div>
-                                            <h3 class="text-slate-400 font-black text-lg uppercase tracking-[0.15em]">Phase Locked</h3>
-                                            <p class="text-slate-300 text-sm font-medium mt-2">Complete the current phase to unlock.</p>
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
+                    @endforeach
+                @else
+                    <div class="text-center py-16">
+                        <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-100">
+                            <i class="fa-solid fa-shield-halved text-4xl text-slate-100"></i>
                         </div>
+                        <h3 class="text-slate-400 font-black text-lg uppercase tracking-[0.15em]">Phase Locked</h3>
+                        <p class="text-slate-300 text-sm font-medium mt-2">Complete the current phase to unlock.</p>
                     </div>
-                </div>
-
-                <!-- Applications Tab -->
-                <div x-show="activeTab === 'apps'" class="animate-fade-in-up">
-                    <div class="premium-card overflow-hidden">
-                        <table class="w-full text-left">
-                            <thead class="bg-slate-50 border-b border-slate-100">
-                                <tr>
-                                    <th class="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Application Name</th>
-                                    <th class="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Type</th>
-                                    <th class="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Status</th>
-                                    <th class="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-50">
-                                @forelse($apps as $app)
-                                    <tr class="hover:bg-slate-50/50 transition-colors">
-                                        <td class="px-8 py-6">
-                                            <div class="font-bold text-premium">{{ $app['name'] }}</div>
-                                            <div class="text-[10px] text-slate-400 mt-1">Added: {{ $app['start_date'] ? \Carbon\Carbon::parse($app['start_date'])->format('d M Y') : 'N/A' }}</div>
-                                        </td>
-                                        <td class="px-8 py-6">
-                                            <span class="px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500">{{ $app['type'] }}</span>
-                                        </td>
-                                        <td class="px-8 py-6 text-center">
-                                            <span class="px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider
-                                                {{ $app['form_status'] == 'approved' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600' }}">
-                                                {{ $app['form_status'] }}
-                                            </span>
-                                        </td>
-                                        <td class="px-8 py-6 text-right">
-                                            @if($app['type'] == 'Program')
-                                                <a href="{{ route('emp.atps.forms.registration-request', $atp->atp_id) }}" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
-                                                    <i class="fa-solid fa-eye text-xs"></i>
-                                                </a>
-                                            @elseif($app['type'] == 'Compliance')
-                                                <a href="{{ route('emp.atps.forms.sed', $atp->atp_id) }}" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
-                                                    <i class="fa-solid fa-eye text-xs"></i>
-                                                </a>
-                                            @elseif($app['type'] == 'Initial')
-                                                <a href="{{ route('emp.atps.forms.initial', $atp->atp_id) }}" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
-                                                    <i class="fa-solid fa-eye text-xs"></i>
-                                                </a>
-                                            @else
-                                                <button class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 text-slate-300 cursor-not-allowed text-xs" disabled>
-                                                    <i class="fa-solid fa-eye-slash"></i>
-                                                </button>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr><td colspan="4" class="px-8 py-10 text-center text-slate-400 text-sm italic">No records found</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Renewals Tab -->
-                <div x-show="activeTab === 'renewals'" class="animate-fade-in-up">
-                    <div class="premium-card overflow-hidden">
-                        <table class="w-full text-left">
-                            <thead class="bg-slate-50 border-b border-slate-100">
-                                <tr>
-                                    <th class="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Application</th>
-                                    <th class="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Submitted Date</th>
-                                    <th class="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-50">
-                                @forelse($renewals as $renew)
-                                    <tr class="hover:bg-slate-50/50 transition-colors">
-                                        <td class="px-8 py-6 font-bold text-premium">Renewal Registration</td>
-                                        <td class="px-8 py-6 text-sm text-slate-600">{{ $renew->submitted_date ?? '---' }}</td>
-                                        <td class="px-8 py-6">
-                                            <span class="px-3 py-1 rounded-lg text-[10px] font-bold bg-blue-50 text-blue-600 uppercase">{{ $renew->form_status }}</span>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr><td colspan="3" class="px-8 py-10 text-center text-slate-400 text-sm italic">No renewal records found</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Cancellations Tab -->
-                <div x-show="activeTab === 'cancellations'" class="animate-fade-in-up">
-                    <div class="premium-card overflow-hidden">
-                        <table class="w-full text-left">
-                            <thead class="bg-slate-50 border-b border-slate-100">
-                                <tr>
-                                    <th class="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Submit Date</th>
-                                    <th class="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active Date</th>
-                                    <th class="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-50">
-                                @forelse($cancellations as $cancel)
-                                    <tr class="hover:bg-slate-50/50 transition-colors">
-                                        <td class="px-8 py-6 text-sm text-slate-600">{{ $cancel->submission_date }}</td>
-                                        <td class="px-8 py-6 text-sm text-slate-600">{{ $cancel->approved_date }}</td>
-                                        <td class="px-8 py-6">
-                                            <span class="px-3 py-1 rounded-lg text-[10px] font-bold bg-red-50 text-red-600 uppercase">{{ $cancel->cancel_status }}</span>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr><td colspan="3" class="px-8 py-10 text-center text-slate-400 text-sm italic">No cancellation requests</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- LE Tab -->
-                <div x-show="activeTab === 'le'" class="animate-fade-in-up">
-                    <div class="premium-card overflow-hidden">
-                        <table class="w-full text-left">
-                            <thead class="bg-slate-50 border-b border-slate-100">
-                                <tr>
-                                    <th class="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Qualification</th>
-                                    <th class="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cohort</th>
-                                    <th class="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Learners</th>
-                                    <th class="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Duration</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-50">
-                                @forelse($leRecords as $le)
-                                    <tr class="hover:bg-slate-50/50 transition-colors">
-                                        <td class="px-8 py-6">
-                                            <div class="font-bold text-premium">{{ $le->qualification_name }}</div>
-                                            <div class="text-[10px] text-slate-400 mt-1">Submitted: {{ $le->submission_date }}</div>
-                                        </td>
-                                        <td class="px-8 py-6 text-sm text-slate-600">{{ $le->cohort }}</td>
-                                        <td class="px-8 py-6">
-                                            <span class="px-3 py-1 bg-slate-100 rounded-lg text-xs font-bold text-brand">{{ $le->learners_no }}</span>
-                                        </td>
-                                        <td class="px-8 py-6 text-xs text-slate-500 font-medium whitespace-nowrap">
-                                            {{ $le->start_date }} → {{ $le->end_date }}
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr><td colspan="4" class="px-8 py-10 text-center text-slate-400 text-sm italic">No enrollment records found</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Contacts Tab -->
-                <div x-show="activeTab === 'contacts'" class="animate-fade-in-up">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        @forelse($atp->contacts as $contact)
-                        <div class="premium-card p-8 group">
-                            <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">Contact #{{ $loop->iteration }}</h4>
-                            <div class="space-y-4">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-brand group-hover:text-white transition-all">
-                                        <i class="fa-solid fa-user"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Name</div>
-                                        <div class="text-sm font-bold text-premium">{{ $contact->contact_name }}</div>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-4">
-                                    <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
-                                        <i class="fa-solid fa-briefcase"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Designation</div>
-                                        <div class="text-sm font-bold text-premium">{{ $contact->contact_designation }}</div>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-4">
-                                    <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
-                                        <i class="fa-solid fa-envelope"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email</div>
-                                        <div class="text-sm font-bold text-premium">{{ $contact->contact_email }}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        @empty
-                        <div class="col-span-full py-10 text-center text-slate-400 italic">No contacts registered.</div>
-                        @endforelse
-                    </div>
-                </div>
-
-                <!-- Logs Tab -->
-                <div x-show="activeTab === 'logs'" class="animate-fade-in-up">
-                    <div class="premium-card overflow-hidden">
-                        <table class="w-full text-left">
-                            <thead class="bg-slate-50 border-b border-slate-100">
-                                <tr>
-                                    <th class="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Action</th>
-                                    <th class="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Date</th>
-                                    <th class="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Performed By</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-50">
-                                @forelse($logs as $log)
-                                    <tr class="hover:bg-slate-50/50 transition-colors">
-                                        <td class="px-8 py-5 text-sm font-bold text-premium text-brand">{{ $log->log_action }}</td>
-                                        <td class="px-8 py-5 text-xs text-slate-500">{{ \Carbon\Carbon::parse($log->log_date)->format('d M Y H:i') }}</td>
-                                        <td class="px-8 py-5">
-                                            <div class="flex items-center gap-3">
-                                                <div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-[10px] font-bold text-slate-400">
-                                                    {{ substr($log->logger->first_name ?? 'S', 0, 1) }}
-                                                </div>
-                                                <span class="text-xs font-bold text-slate-600">{{ $log->logger->first_name ?? 'System' }} {{ $log->logger->last_name ?? '' }}</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr><td colspan="3" class="px-8 py-10 text-center text-slate-400 italic">No logs found</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                @endif
             </div>
         </div>
 

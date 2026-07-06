@@ -676,7 +676,23 @@
             --theme-color: #{{ str_replace('#', '', $themeColor ?? '004F68') }};
             --theme-secondary: #{{ str_replace('#', '', $themeSecondary ?? '00384a') }};
         }
+        
+        /* Iframe Mode Overrides */
+        html.is-iframe header, 
+        html.is-iframe aside, 
+        html.is-iframe .sidebar-gradient-bg {
+            display: none !important;
+        }
+        html.is-iframe main {
+            padding: 0 !important;
+        }
     </style>
+    <script>
+        // Automatically detect if we are running inside an iframe
+        if (window !== window.top) {
+            document.documentElement.classList.add('is-iframe');
+        }
+    </script>
 </head>
 
 <body class="bg-slate-50 font-sans h-screen flex overflow-hidden">
