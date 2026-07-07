@@ -227,7 +227,7 @@
 @endpush
 
 @section('content')
-<div class="max-w-7xl mx-auto space-y-8 animate-fade-in-up" x-data="{ activeTab: 'todo_0' }">
+<div class="max-w-7xl mx-auto space-y-8 animate-fade-in-up" x-data="{ selectedForm: 'todo_0' }">
     <!-- ATP Header & Summary -->
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <!-- Main Stats & Info -->
@@ -299,52 +299,81 @@
                 </div>
             </div>
 
-            <!-- Tabs Navigation -->
-            <div class="flex flex-wrap items-center gap-2 p-1 bg-slate-100/50 rounded-2xl w-full">
-                {{-- Commented old tabs
-                <button @click="activeTab = 'accreditation'" 
-                        :class="activeTab === 'accreditation' ? 'bg-gradient-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white'"
-                        class="px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-route"></i>
-                    Accreditation Journey
-                </button>
-                <button @click="activeTab = 'apps'" ... >Applications</button>
-                ...
-                --}}
+            <!-- Form Navigation Tabs -->
+            <div class="flex flex-wrap items-center gap-4 mb-6 w-full border-b border-slate-100 pb-4">
                 @if($showTodos && $todos->count())
                     @foreach($todos as $index => $todo)
-                        <button @click="activeTab = 'todo_{{ $index }}'" 
-                                :class="activeTab === 'todo_{{ $index }}' ? 'bg-gradient-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:text-brand hover:bg-white'"
+                        <button @click="selectedForm = 'todo_{{ $index }}'; setTimeout(() => document.getElementById('iframe-container').scrollIntoView({behavior: 'smooth', block: 'start'}), 100);" 
+                                :class="selectedForm === 'todo_{{ $index }}' ? 'bg-[#005c75] text-white shadow-md' : 'text-slate-500 hover:text-[#005c75] hover:bg-slate-50 bg-transparent'"
                                 class="px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
-                            <i class="fa-solid {{ $todo->isDone ? 'fa-check-circle text-emerald-400' : 'fa-circle-dot text-slate-300' }}"></i>
+                            <i class="fa-solid {{ $todo->isDone ? 'fa-check-circle text-emerald-400' : 'fa-circle-dot' }}" :class="selectedForm === 'todo_{{ $index }}' ? 'text-white/80' : 'text-slate-300'"></i>
                             {{ $todo->title }}
                         </button>
                     @endforeach
-                @else
-                    <div class="px-5 py-2.5 text-slate-400 text-xs font-bold">No forms available for the current phase.</div>
                 @endif
             </div>
 
-            <!-- Tab Content -->
-            <div class="space-y-6">
-                {{-- Old tabs commented as per client request. --}}
-                @if($showTodos && $todos->count())
-                    @foreach($todos as $index => $todo)
-                        <div x-show="activeTab === 'todo_{{ $index }}'" class="animate-fade-in-up w-full h-[800px]" x-cloak>
-                            <div class="premium-card h-full w-full overflow-hidden">
-                                <iframe src="{{ $todo->todo_link }}" class="w-full h-full border-0 rounded-2xl"></iframe>
+            <!-- Content Area -->
+            <div class="space-y-6 relative">
+                <div class="animate-fade-in-up">
+                    @if($showTodos && $todos->count())
+                        <div class="bg-white rounded-2xl shadow-[0_2px_15px_rgba(0,0,0,0.02)] border border-slate-100 overflow-hidden mb-8">
+                            <table class="w-full text-left">
+                                <thead class="bg-white border-b border-slate-50">
+                                    <tr>
+                                        <th class="px-8 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest w-1/2">Application Name</th>
+                                        <th class="px-8 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Status</th>
+                                        <th class="px-8 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-50/60 bg-white">
+                                    @foreach($todos as $index => $todo)
+                                    <tr class="hover:bg-slate-50/30 transition-colors group">
+                                        <td class="px-8 py-6">
+                                            <span class="text-sm font-medium text-[#005c75]">{{ $todo->title }}</span>
+                                        </td>
+                                        <td class="px-8 py-6 text-center">
+                                            @if($todo->isDone)
+                                                <span class="px-3 py-1 rounded border border-emerald-100 text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-600">
+                                                    COMPLETED
+                                                </span>
+                                            @else
+                                                <span class="px-3 py-1 rounded border border-orange-100 text-[10px] font-bold uppercase tracking-wider bg-[#fff7ed] text-[#fb923c]">
+                                                    PENDING_SUBMISSION
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="px-8 py-6 text-right">
+                                            <button @click="selectedForm = 'todo_{{ $index }}'; setTimeout(() => document.getElementById('iframe-container').scrollIntoView({behavior: 'smooth', block: 'start'}), 100);" 
+                                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[#ecfdf5] text-[#10b981] hover:bg-[#10b981] hover:text-white transition-all shadow-sm">
+                                                <i class="fa-solid fa-eye text-xs"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div id="iframe-container" class="space-y-6">
+                            @foreach($todos as $index => $todo)
+                                <div x-show="selectedForm === 'todo_{{ $index }}'" class="animate-fade-in-up w-full h-[800px] mb-8" x-cloak>
+                                    <div class="premium-card h-full w-full overflow-hidden border border-slate-100 shadow-sm rounded-2xl bg-white">
+                                        <iframe src="{{ $todo->todo_link }}" class="w-full h-full border-0"></iframe>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center py-16">
+                            <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-100">
+                                <i class="fa-solid fa-shield-halved text-4xl text-slate-100"></i>
                             </div>
+                            <h3 class="text-slate-400 font-black text-lg uppercase tracking-[0.15em]">Phase Locked</h3>
+                            <p class="text-slate-300 text-sm font-medium mt-2">Complete the current phase to unlock.</p>
                         </div>
-                    @endforeach
-                @else
-                    <div class="text-center py-16">
-                        <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-100">
-                            <i class="fa-solid fa-shield-halved text-4xl text-slate-100"></i>
-                        </div>
-                        <h3 class="text-slate-400 font-black text-lg uppercase tracking-[0.15em]">Phase Locked</h3>
-                        <p class="text-slate-300 text-sm font-medium mt-2">Complete the current phase to unlock.</p>
-                    </div>
-                @endif
+                    @endif
+                </div>
             </div>
         </div>
 
