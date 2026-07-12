@@ -48,7 +48,7 @@ class OperationalProjectController extends Controller
         ]);
 
         $user   = Auth::user();
-        $deptId = $user->employee ? $user->employee->department_id : 0;
+        $deptId = StrategicPlan::where('plan_id', $request->plan_id)->first();
 
         $count = OperationalProject::count() + 1;
         $ref   = 'OP-' . str_pad($count, 3, '0', STR_PAD_LEFT);
@@ -64,7 +64,7 @@ class OperationalProjectController extends Controller
             'plan_id'                 => $request->plan_id,
             'project_analysis'        => $request->project_analysis,
             'project_recommendations' => $request->project_recommendations,
-            'department_id'           => $deptId,
+            'department_id'           => $deptId->plan_values ?? 0,
             'project_status_id'       => 1,
             'added_by'                => auth()->user()->user_id,
             'added_date'              => now(),
