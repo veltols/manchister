@@ -49,7 +49,7 @@ class OperationalProjectController extends Controller
 
         $user   = Auth::user();
         $deptId = StrategicPlan::where('plan_id', $request->plan_id)->first();
-
+ 
         $count = OperationalProject::count() + 1;
         $ref   = 'OP-' . str_pad($count, 3, '0', STR_PAD_LEFT);
 
