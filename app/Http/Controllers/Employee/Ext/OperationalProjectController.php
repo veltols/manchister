@@ -64,7 +64,7 @@ class OperationalProjectController extends Controller
             'plan_id'                 => $request->plan_id,
             'project_analysis'        => $request->project_analysis,
             'project_recommendations' => $request->project_recommendations,
-            'department_id'           => $deptId->plan_values ?? 0,
+            'department_id'           => $deptId->plan_level ?? 0,
             'project_status_id'       => 1,
             'added_by'                => auth()->user()->user_id,
             'added_date'              => now(),
