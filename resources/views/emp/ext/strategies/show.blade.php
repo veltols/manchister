@@ -4,6 +4,10 @@
 @section('subtitle', $plan->plan_title ?? 'Plan Details')
 
 @section('content')
+@php
+    $totalWeight = $plan->themes->sum('theme_weight');
+    $availableWeight = max(0, 100 - $totalWeight);
+@endphp
 <div x-data="{
     activeTab: 'overview',
     editPlanOpen: false,
@@ -13,15 +17,19 @@
     editThemeTitle: '',
     editThemeDesc: '',
     editThemeWeight: 0,
+    editThemeOriginalWeight: 0,
     addObjOpen: false,
     addObjThemeId: '',
+    addObjMaxWeight: 0,
     addKpiOpen: false,
     addKpiThemeId: '',
     addKpiObjId: '',
+    addKpiMaxWeight: 0,
     addMsOpen: false,
     addMsThemeId: '',
     addMsObjId: '',
     addMsKpiId: '',
+    addMsMaxWeight: 0,
     addExtMapOpen: false,
     addExtThemeId: '',
     addExtObjId: ''
@@ -130,7 +138,6 @@
 
         {{-- Statistics Grid --}}
         @php
-            $totalWeight = $plan->themes->sum('theme_weight');
             $externalDist = [];
             foreach($plan->externalMaps as $map) {
                 $extName = $map->external_entity_name;
@@ -195,13 +202,23 @@
         <div class="flex justify-between items-center mb-5">
             <h3 class="text-base font-bold text-slate-700">Strategic Themes & Pillars</h3>
             @if(!$plan->is_published)
-            <button @click="addThemeOpen = true" class="premium-button px-4 py-2 text-sm">
-                <i class="fa-solid fa-plus text-xs"></i> Add Theme
-            </button>
+                @if($availableWeight > 0)
+                <button @click="addThemeOpen = true" class="premium-button px-4 py-2 text-sm">
+                    <i class="fa-solid fa-plus text-xs"></i> Add Theme
+                </button>
+                @else
+                <div class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 flex items-center gap-2">
+                    <i class="fa-solid fa-check-circle"></i> 100% Weight Reached
+                </div>
+                @endif
             @endif
         </div>
 
         @forelse($plan->themes as $theme)
+            @php
+                $themeObjWeight = $theme->objectives->sum('objective_weight');
+                $themeAvailableObjWeight = max(0, 100 - $themeObjWeight);
+            @endphp
             <div class="premium-card mb-5 overflow-hidden">
                 {{-- Theme Header --}}
                 <div class="flex justify-between items-start p-5 border-b border-slate-50"
@@ -223,21 +240,31 @@
                     @if(!$plan->is_published)
                     <div class="flex items-center gap-2 flex-shrink-0 ml-4">
                         <button
-                            @click="editThemeOpen = true; editThemeId = {{ $theme->theme_id }}; editThemeTitle = '{{ addslashes($theme->theme_title) }}'; editThemeDesc = '{{ addslashes($theme->theme_description) }}'; editThemeWeight = {{ $theme->theme_weight }}"
+                            @click="editThemeOpen = true; editThemeId = {{ $theme->theme_id }}; editThemeTitle = '{{ addslashes($theme->theme_title) }}'; editThemeDesc = '{{ addslashes($theme->theme_description) }}'; editThemeWeight = {{ $theme->theme_weight }}; editThemeOriginalWeight = {{ $theme->theme_weight }}"
                             class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-indigo-600 transition-colors flex items-center justify-center">
                             <i class="fa-solid fa-pencil text-xs"></i>
                         </button>
+                        @if($themeAvailableObjWeight > 0)
                         <button
-                            @click="addObjOpen = true; addObjThemeId = {{ $theme->theme_id }}"
+                            @click="addObjOpen = true; addObjThemeId = {{ $theme->theme_id }}; addObjMaxWeight = {{ $themeAvailableObjWeight }}"
                             class="premium-button px-3 py-1.5 text-xs">
                             <i class="fa-solid fa-plus text-xs"></i> Objective
                         </button>
+                        @else
+                        <div class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1.5 rounded border border-emerald-100 flex items-center gap-1">
+                            <i class="fa-solid fa-check-circle"></i> 100% Reached
+                        </div>
+                        @endif
                     </div>
                     @endif
                 </div>
 
                 {{-- Objectives --}}
                 @forelse($theme->objectives as $obj)
+                    @php
+                        $objKpiWeight = $obj->kpis->sum('kpi_weight');
+                        $objAvailableKpiWeight = max(0, 100 - $objKpiWeight);
+                    @endphp
                     <div class="px-5 py-4 border-b border-slate-50 last:border-0" x-data="{ open: false }">
                         <div class="flex justify-between items-start">
                             <div class="flex-1">
@@ -264,11 +291,17 @@
                                     <span x-text="open ? 'Hide KPIs' : 'Show KPIs ({{ $obj->kpis->count() }})'"></span>
                                 </button>
                                 @if(!$plan->is_published)
-                                <button
-                                    @click="addKpiOpen = true; addKpiThemeId = {{ $theme->theme_id }}; addKpiObjId = {{ $obj->objective_id }}"
-                                    class="premium-button px-2.5 py-1.5 text-xs">
-                                    <i class="fa-solid fa-plus text-xs"></i> KPI
-                                </button>
+                                    @if($objAvailableKpiWeight > 0)
+                                    <button
+                                        @click="addKpiOpen = true; addKpiThemeId = {{ $theme->theme_id }}; addKpiObjId = {{ $obj->objective_id }}; addKpiMaxWeight = {{ $objAvailableKpiWeight }}"
+                                        class="premium-button px-2.5 py-1.5 text-xs">
+                                        <i class="fa-solid fa-plus text-xs"></i> KPI
+                                    </button>
+                                    @else
+                                    <div class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1.5 rounded border border-emerald-100 flex items-center gap-1">
+                                        <i class="fa-solid fa-check-circle"></i> 100% Reached
+                                    </div>
+                                    @endif
                                 @endif
                             </div>
                         </div>
@@ -276,6 +309,10 @@
                         {{-- KPIs --}}
                         <div x-show="open" x-transition class="mt-4 ml-4 space-y-3">
                             @forelse($obj->kpis as $kpi)
+                                @php
+                                    $kpiMsWeight = $kpi->milestones->sum('milestone_weight');
+                                    $kpiAvailableMsWeight = max(0, 100 - $kpiMsWeight);
+                                @endphp
                                 <div class="bg-slate-50 rounded-xl p-4 border border-slate-100">
                                     <div class="flex justify-between items-start gap-3">
                                         <div class="flex-1">
@@ -298,11 +335,17 @@
                                             @endif
                                         </div>
                                         @if(!$plan->is_published)
-                                        <button
-                                            @click="addMsOpen = true; addMsThemeId = {{ $theme->theme_id }}; addMsObjId = {{ $obj->objective_id }}; addMsKpiId = {{ $kpi->kpi_id }}"
-                                            class="premium-button px-2.5 py-1.5 text-xs flex-shrink-0">
-                                            <i class="fa-solid fa-plus text-xs"></i> Milestone
-                                        </button>
+                                            @if($kpiAvailableMsWeight > 0)
+                                            <button
+                                                @click="addMsOpen = true; addMsThemeId = {{ $theme->theme_id }}; addMsObjId = {{ $obj->objective_id }}; addMsKpiId = {{ $kpi->kpi_id }}; addMsMaxWeight = {{ $kpiAvailableMsWeight }}"
+                                                class="premium-button px-2.5 py-1.5 text-xs flex-shrink-0">
+                                                <i class="fa-solid fa-plus text-xs"></i> Milestone
+                                            </button>
+                                            @else
+                                            <div class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1.5 rounded border border-emerald-100 flex items-center gap-1 flex-shrink-0">
+                                                <i class="fa-solid fa-check-circle"></i> 100% Reached
+                                            </div>
+                                            @endif
                                         @endif
                                     </div>
                                     {{-- Milestones --}}
@@ -327,10 +370,16 @@
                     <div class="p-6 text-center">
                         <p class="text-sm text-slate-400 italic">No objectives defined for this theme yet.</p>
                         @if(!$plan->is_published)
-                        <button @click="addObjOpen = true; addObjThemeId = {{ $theme->theme_id }}"
-                            class="mt-2 text-xs text-indigo-500 hover:text-indigo-700 font-semibold">
-                            + Add first objective
-                        </button>
+                            @if($themeAvailableObjWeight > 0)
+                            <button @click="addObjOpen = true; addObjThemeId = {{ $theme->theme_id }}; addObjMaxWeight = {{ $themeAvailableObjWeight }}"
+                                class="mt-2 text-xs text-indigo-500 hover:text-indigo-700 font-semibold">
+                                + Add first objective
+                            </button>
+                            @else
+                            <div class="mt-2 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1.5 rounded border border-emerald-100 inline-flex items-center gap-1">
+                                <i class="fa-solid fa-check-circle"></i> 100% Weight Reached
+                            </div>
+                            @endif
                         @endif
                     </div>
                 @endforelse
@@ -991,7 +1040,8 @@
                         <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest">Weight (%)</label>
                         <span class="text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg px-2 py-0.5" x-text="weight + '%'"></span>
                     </div>
-                    <input type="range" name="theme_weight" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" min="0" max="100" step="5" x-model="weight">
+                    <input type="range" name="theme_weight" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" min="0" max="{{ $availableWeight }}" step="5" x-model="weight">
+                    <p class="text-[10px] text-slate-400 mt-1">Available weight: {{ $availableWeight }}%</p>
                 </div>
                 <div class="flex justify-end pt-2">
                     <button type="submit" class="premium-button px-8 py-2.5">
@@ -1026,7 +1076,8 @@
                         <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest">Weight (%)</label>
                         <span class="text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg px-2 py-0.5" x-text="editThemeWeight + '%'"></span>
                     </div>
-                    <input type="range" name="theme_weight" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" min="0" max="100" step="5" x-model="editThemeWeight">
+                    <input type="range" name="theme_weight" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" min="0" :max="{{ $availableWeight }} + editThemeOriginalWeight" step="5" x-model="editThemeWeight">
+                    <p class="text-[10px] text-slate-400 mt-1">Available weight limit for this theme: <span x-text="({{ $availableWeight }} + editThemeOriginalWeight) + '%'"></span></p>
                 </div>
                 <div class="flex justify-end pt-2">
                     <button type="submit" class="premium-button px-8 py-2.5">
@@ -1072,7 +1123,8 @@
                             <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest">Weight (%)</label>
                             <span class="text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg px-2 py-0.5" x-text="weight + '%'"></span>
                         </div>
-                        <input type="range" name="objective_weight" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" min="0" max="100" step="5" x-model="weight">
+                        <input type="range" name="objective_weight" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" min="0" :max="addObjMaxWeight" step="5" x-model="weight">
+                        <p class="text-[10px] text-slate-400 mt-1">Available weight: <span x-text="addObjMaxWeight + '%'"></span></p>
                     </div>
                 </div>
                 <div class="flex justify-end pt-2">
@@ -1146,7 +1198,8 @@
                         <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest">Weight (%)</label>
                         <span class="text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg px-2 py-0.5" x-text="weight + '%'"></span>
                     </div>
-                    <input type="range" name="kpi_weight" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" min="0" max="100" step="5" x-model="weight">
+                    <input type="range" name="kpi_weight" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" min="0" :max="addKpiMaxWeight" step="5" x-model="weight">
+                    <p class="text-[10px] text-slate-400 mt-1">Available weight: <span x-text="addKpiMaxWeight + '%'"></span></p>
                 </div>
                 <div class="flex justify-end pt-2">
                     <button type="submit" class="premium-button px-8 py-2.5">
@@ -1261,7 +1314,8 @@
                         <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest">Weight (%)</label>
                         <span class="text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg px-2 py-0.5" x-text="weight + '%'"></span>
                     </div>
-                    <input type="range" name="milestone_weight" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" min="0" max="100" step="5" x-model="weight">
+                    <input type="range" name="milestone_weight" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" min="0" :max="addMsMaxWeight" step="5" x-model="weight">
+                    <p class="text-[10px] text-slate-400 mt-1">Available weight: <span x-text="addMsMaxWeight + '%'"></span></p>
                 </div>
                 <div class="flex justify-end pt-2">
                     <button type="submit" class="premium-button px-8 py-2.5">
