@@ -17,8 +17,8 @@ class OperationalProjectController extends Controller
     {
         $user   = Auth::user();
         $deptId = $user->employee ? $user->employee->department_id : 0;
-
-        $projects = OperationalProject::where('department_id', $deptId)
+        $employeeId = $user->employee ? $user->employee->employee_id : 0;
+        $projects = OperationalProject::where('added_by', $employeeId)
             ->orderBy('project_id', 'desc')
             ->with(['plan', 'department'])
             ->withCount(['milestones', 'kpis'])
