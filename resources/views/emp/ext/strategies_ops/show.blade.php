@@ -10,7 +10,7 @@
         linkThemeId: 0,
         linkObjId: 0,
         addMsOpen: false, addMsKpiId: 0, addMsKpiTitle: '',
-        addMsWeight: 0,
+        addMsWeight: 0, addMsMaxWeight: 0,
         editOpen: false,
     }"
      class="space-y-6 animate-fade-in-up">
@@ -134,15 +134,35 @@
                         <textarea name="milestone_description" rows="2" placeholder="Optional notes..."
                                   class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-brand-dark resize-none transition-colors"></textarea>
                     </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Assign To *</label>
+                        <select name="employee_id" required
+                                class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-brand-dark transition-colors">
+                            <option value="">— Select Employee —</option>
+                            @php
+                                $groupedEmployees = $employees->groupBy(function($emp) {
+                                    return $emp->department ? $emp->department->department_name : 'No Department';
+                                })->sortKeys();
+                            @endphp
+                            @foreach($groupedEmployees as $deptName => $deptEmployees)
+                                <optgroup label="{{ $deptName }}">
+                                    @foreach($deptEmployees as $emp)
+                                        <option value="{{ $emp->employee_id }}">{{ $emp->employee_name }}</option>
+                                    @endforeach
+                                </optgroup>
+                            @endforeach
+                        </select>
+                    </div>
                     <div class="grid grid-cols-3 gap-3">
                     <div class="space-y-2">
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 flex justify-between">
                             Weight (%) <span class="text-indigo-600 font-black" x-text="addMsWeight + '%'"></span>
                         </label>
-                        <div class="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                            <input type="range" name="milestone_weight" min="0" max="100" step="5"
+                        <div class="flex flex-col gap-1 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            <input type="range" name="milestone_weight" min="0" :max="addMsMaxWeight" step="5"
                                    x-model="addMsWeight"
-                                   class="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                                   class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                            <p class="text-[10px] text-slate-400">Available weight: <span x-text="addMsMaxWeight + '%'"></span></p>
                         </div>
                     </div>
                         <div>
@@ -477,7 +497,11 @@
                 </thead>
                 <tbody class="divide-y divide-slate-50">
                     @forelse($project->kpis as $pk)
-                        @php $lk = $pk->linkedKpi; @endphp
+                        @php 
+                            $lk = $pk->linkedKpi; 
+                            $kpiMsWeight = $project->milestones->where('kpi_id', $lk?->kpi_id)->sum('milestone_weight');
+                            $availableWeight = max(0, 100 - $kpiMsWeight);
+                        @endphp
                         <tr class="hover:bg-slate-50/50 transition-colors">
                             <td class="px-6 py-4">
                                 <span class="text-xs font-semibold text-slate-600 truncate block max-w-[120px]">{{ $project->plan?->plan_title ?? '—' }}</span>
@@ -497,10 +521,16 @@
                             @if($project->project_status_id == 1)
                                 <td class="px-6 py-4">
                                     <div class="flex items-center justify-center gap-3">
-                                        <button @click="addMsOpen = true; addMsKpiId = {{ $lk?->kpi_id ?? 0 }}; addMsKpiTitle = '{{ addslashes($lk?->kpi_title ?? '') }}'"
+                                        @if($availableWeight > 0)
+                                        <button @click="addMsOpen = true; addMsKpiId = {{ $lk?->kpi_id ?? 0 }}; addMsKpiTitle = '{{ addslashes($lk?->kpi_title ?? '') }}'; addMsMaxWeight = {{ $availableWeight }}"
                                             class="text-amber-500 hover:text-amber-700 transition-colors" title="Add Milestone">
                                             <i class="fa-solid fa-flag text-sm"></i>
                                         </button>
+                                        @else
+                                        <div class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 flex items-center gap-1" title="100% Reached">
+                                            <i class="fa-solid fa-check"></i> Milestones 100% Reached
+                                        </div>
+                                        @endif
                                         <form action="{{ route('emp.ext.strategies.projects.kpis.destroy', $pk->linked_kpi_id ?? 0) }}" method="POST" class="inline" 
                                               onsubmit="return confirmDeletion(event, 'Remove KPI Link?', 'This will decouple the operational project from this strategic KPI.')">
                                             @csrf @method('DELETE')
@@ -564,7 +594,7 @@
                                     <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-400 uppercase">
                                         {{ substr($ms->owner->first_name ?? '?', 0, 1) }}
                                     </div>
-                                    <span class="text-xs text-slate-600 font-medium">{{ $ms->owner->first_name ?? '—' }}</span>
+                                    <span class="text-xs text-slate-600 font-medium">{{ $ms->owner->employee_name ?? '—' }}</span>
                                 </div>
                             </td>
                             <td class="px-6 py-4">

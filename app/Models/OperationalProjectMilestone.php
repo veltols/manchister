@@ -25,4 +25,9 @@ class OperationalProjectMilestone extends Model
     {
         return $this->belongsTo(StrategicPlanObjective::class, 'objective_id', 'objective_id');
     }
+
+    public function owner()
+    {
+        return $this->belongsTo(Employee::class, 'employee_id', 'employee_id');
+    }
 }

@@ -10,6 +10,7 @@ use App\Models\OperationalProjectKpi;
 use App\Models\StrategicPlan;
 use App\Models\StrategicPlanKpi;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Employee;
 
 class OperationalProjectController extends Controller
 {
@@ -82,7 +83,7 @@ class OperationalProjectController extends Controller
             'kpis.linkedKpi.objective',
             'kpis.linkedKpi.theme',
             'kpis.milestones',
-            'milestones',
+            'milestones.owner',
         ])->findOrFail($id);
 
         $availableKpis = $project->plan
@@ -92,7 +93,20 @@ class OperationalProjectController extends Controller
                 ->get()
             : collect();
 
-        return view('emp.ext.strategies_ops.show', compact('project', 'availableKpis'));
+        $user = Auth::user();
+        $employeeId = $user->employee ? $user->employee->employee_id : 0;
+
+        $employees = Employee::where('employee_id', '!=', $employeeId)
+            ->where('is_deleted', 0)
+            ->where('is_hidden', 0)
+            ->with(['designation', 'department'])
+            ->whereHas('systemUser', function($q) {
+                $q->where('is_active', 1);
+            })
+            ->orderBy('first_name')
+            ->get();
+
+        return view('emp.ext.strategies_ops.show', compact('project', 'availableKpis', 'employees'));
     }
 
     public function update(Request $request, $id)
@@ -147,6 +161,7 @@ class OperationalProjectController extends Controller
             'milestone_description' => 'nullable|string',
             'milestone_weight'      => 'required|integer|min:0|max:100',
             'kpi_id'                => 'required|integer',
+            'employee_id'           => 'required|integer',
             'start_date'            => 'required|date',
             'end_date'              => 'required|date',
         ]);
@@ -167,7 +182,7 @@ class OperationalProjectController extends Controller
             'plan_id'               => $kpi->plan_id,
             'project_id'            => $projectId,
             'order_no'              => $count,
-            'employee_id'           => auth()->user()->user_id,
+            'employee_id'           => $request->employee_id,
             'added_by'              => auth()->user()->user_id,
             'added_date'            => now(),
         ]);
