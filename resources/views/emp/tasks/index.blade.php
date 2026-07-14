@@ -144,7 +144,7 @@
                                 </button>
                                 <span
                                     class="font-medium text-slate-800 group-hover:text-[#004F68] transition-colors line-clamp-1">
-                                    {{ $task->task_title }}
+                                    {{ $task->task_title }} @if($task?->operationalProject) (<small> Operational Projects:- {{  $task?->operationalProject?->project_name ?? '—' }}</small>)@endif
                                 </span>
                                 @if($viewMode === 'rejected')
                                     <span
