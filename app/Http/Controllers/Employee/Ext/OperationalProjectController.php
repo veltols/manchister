@@ -11,6 +11,11 @@ use App\Models\StrategicPlan;
 use App\Models\StrategicPlanKpi;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Employee;
+use App\Models\Department;
+use App\Models\SystemLog;
+use App\Models\TaskStatus;
+use App\Models\Task;
+use Illuminate\Support\Facades\DB;
 
 class OperationalProjectController extends Controller
 {
@@ -156,22 +161,64 @@ class OperationalProjectController extends Controller
             ->with('success', 'KPI linked successfully.');
     }
 
-    public function storeMilestone(Request $request, $projectId)
-    {
-        $request->validate([
-            'milestone_title'       => 'required|string|max:255',
-            'milestone_description' => 'nullable|string',
-            'milestone_weight'      => 'required|integer|min:0|max:100',
-            'kpi_id'                => 'required|integer',
-            'employee_id'           => 'required|integer',
-            'start_date'            => 'required|date',
-            'end_date'              => 'required|date',
-        ]);
+    // public function storeMilestone(Request $request, $projectId)
+    // {
+    //     $request->validate([
+    //         'milestone_title'       => 'required|string|max:255',
+    //         'milestone_description' => 'nullable|string',
+    //         'milestone_weight'      => 'required|integer|min:0|max:100',
+    //         'kpi_id'                => 'required|integer',
+    //         'employee_id'           => 'required|integer',
+    //         'start_date'            => 'required|date',
+    //         'end_date'              => 'required|date',
+    //     ]);
 
-        $kpi   = StrategicPlanKpi::findOrFail($request->kpi_id);
+    //     $kpi   = StrategicPlanKpi::findOrFail($request->kpi_id);
+    //     $count = OperationalProjectMilestone::where('kpi_id', $kpi->kpi_id)->count() + 1;
+
+    //     OperationalProjectMilestone::create([
+    //         'milestone_ref'         => ($kpi->kpi_ref ?? 'KPI') . '.' . $count,
+    //         'milestone_title'       => $request->milestone_title,
+    //         'milestone_description' => $request->milestone_description,
+    //         'milestone_weight'      => $request->milestone_weight,
+    //         'start_date'            => $request->start_date,
+    //         'end_date'              => $request->end_date,
+    //         'kpi_id'                => $kpi->kpi_id,
+    //         'objective_id'          => $kpi->objective_id,
+    //         'theme_id'              => $kpi->theme_id,
+    //         'plan_id'               => $kpi->plan_id,
+    //         'project_id'            => $projectId,
+    //         'order_no'              => $count,
+    //         'employee_id'           => $request->employee_id,
+    //         'added_by'              => auth()->user()->user_id,
+    //         'added_date'            => now(),
+    //     ]);
+
+    //     return redirect()->route('emp.ext.strategies.projects.show', $projectId)
+    //         ->with('success', 'Milestone added successfully.');
+    // }
+
+
+public function storeMilestone(Request $request, $projectId)
+{
+    $request->validate([
+        'milestone_title'       => 'required|string|max:255',
+        'milestone_description' => 'nullable|string',
+        'milestone_weight'      => 'required|integer|min:0|max:100',
+        'kpi_id'                => 'required|integer',
+        'employee_id'           => 'required|integer',
+        'start_date'            => 'required|date',
+        'end_date'              => 'required|date',
+    ]);
+
+    DB::transaction(function () use ($request, $projectId) {
+
+        $kpi = StrategicPlanKpi::findOrFail($request->kpi_id);
+
         $count = OperationalProjectMilestone::where('kpi_id', $kpi->kpi_id)->count() + 1;
 
-        OperationalProjectMilestone::create([
+        // Create Milestone
+        $milestone = OperationalProjectMilestone::create([
             'milestone_ref'         => ($kpi->kpi_ref ?? 'KPI') . '.' . $count,
             'milestone_title'       => $request->milestone_title,
             'milestone_description' => $request->milestone_description,
@@ -189,10 +236,64 @@ class OperationalProjectController extends Controller
             'added_date'            => now(),
         ]);
 
-        return redirect()->route('emp.ext.strategies.projects.show', $projectId)
-            ->with('success', 'Milestone added successfully.');
-    }
+        $employee = Auth::user()->employee;
+        $employeeId = $employee ? $employee->employee_id : 0;
 
+        $pendingLineManagerId = Department::where(
+            'department_id',
+           $request->employee_id
+        )->value('line_manager_id');
+        $task = new Task();
+        $task->task_title = $milestone->milestone_title;
+        $task->task_description = $milestone->milestone_description;
+
+        $task->task_assigned_date = $milestone->start_date;
+        $task->task_due_date = $milestone->end_date;
+
+        $task->assigned_by = $employeeId;
+        $task->assigned_to = 0;
+        $task->department_id =  $request->employee_id;
+        $task->pending_line_manager_id = $pendingLineManagerId;
+
+        $task->priority_id = 2;
+        $task->parent_task_id = 0;
+        $task->operational_project_id = $milestone->project_id;
+        $task->operational_milestone_id = $milestone->milestone_id;
+        // Optional (recommended)
+        // $task->operational_milestone_id = $milestone->milestone_id;
+
+        $firstStatus = TaskStatus::orderBy('status_id')->first();
+        $task->status_id = $firstStatus ? $firstStatus->status_id : 1;
+     
+        $task->save();
+
+
+        // Notify Department Manager
+        if ($pendingLineManagerId) {
+            \App\Services\NotificationService::send(
+                "A new task has been created from the Operational Milestone '{$milestone->milestone_title}' and requires your review and assignment.",
+                "emp/tasks/pending",
+                $pendingLineManagerId
+            );
+        }
+
+        // System Log
+        SystemLog::create([
+            'log_action'    => 'Task_Added',
+            'log_remark'    => "Task was automatically created from Operational Milestone '{$milestone->milestone_title}' and is awaiting department manager assignment.",
+            'related_table' => 'tasks_list',
+            'related_id'    => $task->task_id,
+            'log_date'      => now(),
+            'logged_by'     => $employeeId,
+            'logger_type'   => 'employees_list',
+            'log_type'      => 'int',
+        ]);
+    });
+
+    return redirect()
+        ->route('emp.ext.strategies.projects.show', $projectId)
+        ->with('success', 'Operational milestone and related task created successfully.');
+}
     public function destroyKpiLink($id)
     {
         $pk = OperationalProjectKpi::findOrFail($id);

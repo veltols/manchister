@@ -30,4 +30,12 @@ class OperationalProjectMilestone extends Model
     {
         return $this->belongsTo(Employee::class, 'employee_id', 'employee_id');
     }
+    public function ownerDepartment()
+    {
+        return $this->belongsTo(Department::class, 'employee_id', 'department_id');
+    }
+    public function tasks()
+{
+    return $this->hasMany(Task::class, 'operational_milestone_id', 'milestone_id');
+}
 }

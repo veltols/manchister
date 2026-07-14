@@ -34,4 +34,8 @@ class OperationalProject extends Model
     {
         return $this->hasMany(OperationalProjectKpi::class, 'project_id', 'project_id');
     }
+    public function tasks()
+{
+    return $this->hasMany(Task::class, 'operational_project_id', 'project_id');
+}
 }

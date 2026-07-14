@@ -121,4 +121,14 @@ class Task extends Model
         }
         return $diff->i . 'm remaining';
     }
+
+    public function operationalProject()
+{
+    return $this->belongsTo(OperationalProject::class, 'operational_project_id', 'project_id');
+}
+
+public function operationalMilestone()
+{
+    return $this->belongsTo(OperationalProjectMilestone::class, 'operational_milestone_id', 'milestone_id');
+}
 }

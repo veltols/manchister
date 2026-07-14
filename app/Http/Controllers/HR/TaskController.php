@@ -318,7 +318,6 @@ class TaskController extends Controller
             if (!$pendingLineManagerId) {
                 // Fallback: if department has no line manager, get general line manager
                 $pendingLineManagerId = Department::whereNotNull('line_manager_id')
-                    ->orderBy('updated_at', 'desc')
                     ->value('line_manager_id');
             }
             // If the creator IS the line manager of the assigned department, bypass approval
@@ -339,7 +338,6 @@ class TaskController extends Controller
             }
             if (!$pendingLineManagerId) {
                 $pendingLineManagerId = Department::whereNotNull('line_manager_id')
-                    ->orderBy('updated_at', 'desc')
                     ->value('line_manager_id');
             }
             if ($pendingLineManagerId && $pendingLineManagerId == $employeeId) {
@@ -560,7 +558,7 @@ class TaskController extends Controller
             $lineManagerId = Department::where('department_id', Auth::user()->employee->department_id)->value('line_manager_id');
         }
         if (!$lineManagerId) {
-            $lineManagerId = Department::whereNotNull('line_manager_id')->orderBy('updated_at', 'desc')->value('line_manager_id');
+            $lineManagerId = Department::whereNotNull('line_manager_id')->value('line_manager_id');
         }
         if ($lineManagerId == $employeeId)
             $lineManagerId = null;

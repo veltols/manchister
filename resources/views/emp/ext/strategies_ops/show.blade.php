@@ -141,9 +141,9 @@
                             <option value="">— Select Owner —</option>
                             @foreach($managerDepartments as $dept)
                                 @if($dept->lineManager)
-                                    <optgroup label="{{ $dept->department_name }}">
-                                        <option value="{{ $dept->lineManager->employee_id }}">{{ $dept->lineManager->employee_name }}</option>
-                                    </optgroup>
+                                    {{-- <optgroup label="{{ $dept->department_name }}"> --}}
+                                        <option value="{{ $dept->department_id  }}">{{ $dept->department_name }}</option>
+                                    {{-- </optgroup> --}}
                                 @endif
                             @endforeach
                         </select>
@@ -586,10 +586,8 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-2">
-                                    <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-400 uppercase">
-                                        {{ substr($ms->owner->first_name ?? '?', 0, 1) }}
-                                    </div>
-                                    <span class="text-xs text-slate-600 font-medium">{{ $ms->owner->employee_name ?? '—' }}</span>
+                                   
+                                    <span class="text-xs text-slate-600 font-medium">{{ $ms->ownerDepartment->department_name ?? '—' }}</span>
                                 </div>
                             </td>
                             <td class="px-6 py-4">
