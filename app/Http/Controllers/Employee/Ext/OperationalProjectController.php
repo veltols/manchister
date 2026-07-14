@@ -101,7 +101,8 @@ class OperationalProjectController extends Controller
             ->where('is_hidden', 0)
             ->with(['designation', 'department'])
             ->whereHas('systemUser', function($q) {
-                $q->where('is_active', 1);
+                $q->where('is_active', 1)
+                    ->where('is_gm', 1);
             })
             ->orderBy('first_name')
             ->get();
