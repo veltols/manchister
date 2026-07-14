@@ -77,6 +77,7 @@
                         <tr>
                             <th class="text-left pl-6">#</th>
                             <th class="text-left">Task</th>
+                            <th class="text-left">Operational Projects</th>
                             <th class="text-left">Priority</th>
                             <th class="text-left">Created By</th>
                             <th class="text-left">Suggested For</th>
@@ -101,6 +102,9 @@
                                     <p class="text-sm text-slate-500 mt-0.5 line-clamp-1">{{ $task->task_description }}</p>
                                     @endif
                                 </div>
+                            </td>
+                            <td>
+                                {{  $task?->operationalProject?->project_name ?? '—' }}
                             </td>
                             <td>
                                 @if($task->priority)
