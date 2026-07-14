@@ -96,18 +96,19 @@ class OperationalProjectController extends Controller
         $user = Auth::user();
         $employeeId = $user->employee ? $user->employee->employee_id : 0;
 
-        $employees = Employee::where('employee_id', '!=', $employeeId)
-            ->where('is_deleted', 0)
-            ->where('is_hidden', 0)
-            ->with(['designation', 'department'])
-            ->whereHas('systemUser', function($q) {
-                $q->where('is_active', 1)
-                    ->where('is_gm', 1);
-            })
-            ->orderBy('first_name')
+        $managerDepartments = \App\Models\Department::whereNotNull('line_manager_id')
+            ->where('line_manager_id', '!=', 0)
+            ->with(['lineManager' => function($q) {
+                $q->where('is_deleted', 0)
+                  ->where('is_hidden', 0)
+                  ->whereHas('systemUser', function($sq) {
+                      $sq->where('is_active', 1);
+                  });
+            }])
+            ->orderBy('department_name')
             ->get();
 
-        return view('emp.ext.strategies_ops.show', compact('project', 'availableKpis', 'employees'));
+        return view('emp.ext.strategies_ops.show', compact('project', 'availableKpis', 'managerDepartments', 'employeeId'));
     }
 
     public function update(Request $request, $id)

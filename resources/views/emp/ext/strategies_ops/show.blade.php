@@ -135,21 +135,16 @@
                                   class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-brand-dark resize-none transition-colors"></textarea>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Assign To *</label>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Owner *</label>
                         <select name="employee_id" required
                                 class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-brand-dark transition-colors">
-                            <option value="">— Select Employee —</option>
-                            @php
-                                $groupedEmployees = $employees->groupBy(function($emp) {
-                                    return $emp->department ? $emp->department->department_name : 'No Department';
-                                })->sortKeys();
-                            @endphp
-                            @foreach($groupedEmployees as $deptName => $deptEmployees)
-                                <optgroup label="{{ $deptName }}">
-                                    @foreach($deptEmployees as $emp)
-                                        <option value="{{ $emp->employee_id }}">{{ $emp->employee_name }}</option>
-                                    @endforeach
-                                </optgroup>
+                            <option value="">— Select Owner —</option>
+                            @foreach($managerDepartments as $dept)
+                                @if($dept->lineManager)
+                                    <optgroup label="{{ $dept->department_name }}">
+                                        <option value="{{ $dept->lineManager->employee_id }}">{{ $dept->lineManager->employee_name }}</option>
+                                    </optgroup>
+                                @endif
                             @endforeach
                         </select>
                     </div>
